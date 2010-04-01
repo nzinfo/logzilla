@@ -1,0 +1,14 @@
+# http://nms.gdd.net/index.php/LogZilla_Installation_Guide#Apache
+#
+# LogZilla
+# Create a file in /etc/apache2/sites-available called "logzilla" and add the following to it: 
+# Then, for Ubuntu, type: 
+#
+# a2ensite logzilla
+Alias /logs "/path_to_logzilla/html/"
+ <Directory "/path_to_logzilla/html/">
+ Options Indexes MultiViews FollowSymLinks
+ AllowOverride All
+ Order allow,deny
+ Allow from all
+ </Directory>

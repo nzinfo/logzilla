@@ -1,0 +1,13 @@
+Known Bugs:
+* Search filters (on the hosts grid) do not allow for negative searching (not or !)
+* Can't set height on chart portlets to 100% so I have to set a hard number - this results in being unable to resize vertically.
+* Time picker doesn't recognize a date flip (i.e. if you select from 23:00 to 01:00 the next day, the timepicker does not update the datepicker to the next day)
+* Can't drag a scroll bar down - it tries to move the portal - you have to use the mouse scroll. 
+
+
+TODO:
+* Add context sensitive help to portlet ?'s by filling in mysql help table with descriptions for all portlets
+* Create documentation for:
+    1. Installation
+    2. Administration Guide
+    3. User Guide
