@@ -75,13 +75,15 @@ print "Getting ready to replace paths in all files with \"$lzbase\"\n";
 my $ok  = &p("Ok to continue?", "y");
 if ($ok =~ /[Yy]/) {
 	my $search = "/path_to_logzilla";
-	foreach my $file (qx(grep -Rl $search ../* | egrep -v "install.pl")) {
+    print "Updating file paths\n";
+	foreach my $file (qx(grep -Rl $search ../* | egrep -v "install.pl|.svn|.sql|CHANGELOG")) {
 		chomp $file;
 		print "Modifying $file\n";
 		system "perl -i -pe 's|$search|$lzbase|g' $file" and warn "Could not modify $file $!\n";
 	}
 	my $search = "/path_to_logs";
-	foreach my $file (qx(grep -Rl $search ../* | egrep -v "install.pl")) {
+    print "Updating log paths\n";
+	foreach my $file (qx(grep -Rl $search ../* | egrep -v "install.pl|.svn|.sql|CHANGELOG")) {
 		chomp $file;
 		print "Modifying $file\n";
 		system "perl -i -pe 's|$search|$logpath|g' $file" and warn "Could not modify $file $!\n";

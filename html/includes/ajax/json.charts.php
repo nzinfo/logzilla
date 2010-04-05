@@ -20,6 +20,7 @@ require_once ($basePath . "/../common_funcs.php");
 require_once ($basePath . "/../ofc/php/open-flash-chart.php");
 $dbLink = db_connect_syslog(DBADMIN, DBADMINPW);
 $chartId = get_input('chartId');
+#$chartId = 'chart_mps';
 
 // ------------------------------------------------------
 // BEGIN Ad-hoc chart variables
@@ -325,24 +326,38 @@ switch ($chartId) {
     case "chart_mps":
         $title = new title( "Last 30 Seconds" );
     $bar = new line();
+    $bar2 = new line();
     // -------------------------
     // Get Messages Per Second 
+    // Alternate method - this will smooth out all the spikes:
+    // select round(SUM(counter)/30) as count from logs where lo BETWEEN NOW() - INTERVAL 30 SECOND and NOW() - INTERVAL 0 SECOND;
     // -------------------------
     $array = array();
+    $avg = array();
     $n=1;
     for($i = 0; $i<=29 ; $i++) {
-        $sql = "SELECT DATE_FORMAT(NOW() - INTERVAL $i SECOND, '%k:%i:%s') as hm, SUM(counter) as count from $_SESSION[TBL_MAIN] where lo BETWEEN NOW() - INTERVAL $n SECOND and NOW() - INTERVAL $i SECOND";
+        $sql = "SELECT DATE_FORMAT(NOW() - INTERVAL $i SECOND, '%k:%i:%s') AS hm, SUM(counter) AS count, (SELECT value FROM cache WHERE name='chart_mps_avg') AS avg FROM $_SESSION[TBL_MAIN] WHERE lo BETWEEN NOW() - INTERVAL $n SECOND AND NOW() - INTERVAL $i SECOND";
         $n++;
         $queryresult = perform_query($sql, $dbLink, $_SERVER['PHP_SELF']);
         while ($line = fetch_array($queryresult)) {
-            $array[] = intval($line['count']);
+            $c = intval($line['count']);
+            $array[] = $c;
+            $v = intval($line['avg']);
+            if ($v){
+                $avg[] = $v;
+            }
             $hm[] = $line['hm'];
         }
     }
-    $bar->set_values( array_reverse($array) );
+
+    $bar->set_values( ($array) );
+    $bar2->set_values( ($avg) );
+    $bar2->set_colour( "#40FF40" );
+    $bar2->set_tooltip("#val#<br>Average [#x_label#]");
     $chart = new open_flash_chart();
     $chart->set_title( $title );
     $chart->add_element( $bar );
+    $chart->add_element( $bar2 );
     //
     // create a Y Axis object
     //
@@ -575,9 +590,14 @@ switch ($chartId) {
     // Below will update this hour every time the page is refreshed, otherwise we get stale data
     $sql = "REPLACE INTO cache (name,value,updatetime) SELECT CONCAT('chart_mph_',DATE_FORMAT(NOW(), '%Y-%m-%d_%H')), SUM(counter), NOW() from ".$_SESSION['TBL_MAIN']." where lo BETWEEN DATE_FORMAT(CURDATE(), '%Y-%m-%d %h:00:00') AND DATE_FORMAT(CURDATE(), '%Y-%m-%d %h:59:59')";
     $result = perform_query($sql, $dbLink, $_SERVER['PHP_SELF']);
-    // Added below to delete missed hours from cache (if you don't use the chart it inserts a 0 for that hour)
-   	$sql = "DELETE FROM cache WHERE name like 'chart_mph%' AND value=0";
-   	$result = perform_query($sql, $dbLink, $_SERVER['PHP_SELF']);
+    // Added below to delete missed polls from cache (if you don't use the chart it inserts a 0)
+    $sql = "SELECT ROUND((AVG(value))*.25) FROM cache WHERE name LIKE 'chart_mph%'";
+    $result = perform_query($sql, $dbLink, $_SERVER['PHP_SELF']);
+    $line = fetch_array($result);
+    $i = intval($line[0]);
+    if ($i <=0) $i = 1;
+    $sql = "DELETE FROM cache WHERE name like 'chart_mph%' AND value<$i";
+    $result = perform_query($sql, $dbLink, $_SERVER['PHP_SELF']);
 
     // Now process the rest
     for($i = 0; $i<=$_SESSION['CACHE_CHART_MPH'] ; $i++) {
@@ -743,7 +763,7 @@ switch ($chartId) {
     default:
     $chartType = get_input('chartType');
     $chartType = (!empty($chartType)) ? $chartType : "pie";
-    $sql = "SELECT id, host, facility, priority, tag, program, msg, seq, counter, fo, lo, notes, SUM(counter) as count FROM ".$_SESSION['TBL_MAIN']." $where GROUP BY $groupby ORDER BY count LIMIT $limit";
+    $sql = "SELECT id, host, facility, priority, tag, program, msg, counter, fo, lo, notes, SUM(counter) as count FROM ".$_SESSION['TBL_MAIN']." $where GROUP BY $groupby ORDER BY count LIMIT $limit";
     $title = new title( date("D M d Y") );
     $ctype = new pie();
     $result = perform_query($sql, $dbLink, $_SERVER['PHP_SELF']);

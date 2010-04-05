@@ -110,6 +110,11 @@ if ($facilities) {
     $where .= ")";
 }
 
+$mne = get_input('mne');
+$qstring .= "&mne=$mne";
+if ($mne) $where .= " AND mne='$mne'";
+
+
 // portlet-sphinxquery
 $msg_mask = get_input('msg_mask');
 $msg_mask = html_entity_decode($msg_mask);

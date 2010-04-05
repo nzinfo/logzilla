@@ -88,9 +88,7 @@ $dedup_tot = (100 - (round(100/($mph * 100),4)) * 100);
         <td>
         <select name="orderby" id="orderby">
         <option value="id">Database ID</option>
-        <?php  if ( $_SESSION["DEDUP"] == "1" ) { ?>
         <option value="counter">Count</option>
-        <?php  } ?>
         <option value="host">Host</option>
         <option value="program">Program</option>
         <option value="facility">Facility</option>

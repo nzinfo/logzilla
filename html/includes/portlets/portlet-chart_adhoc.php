@@ -30,6 +30,30 @@ if ((has_portlet_access($_SESSION['username'], 'Graph Results') == TRUE) || ($_S
     $page = get_input('page');
     $qstring .= "?page=$page";
 
+$show_suppressed = get_input('show_suppressed');
+$qstring .= "&show_suppressed=$show_suppressed";
+    switch ($show_suppressed) {
+        case "suppressed":
+        $where.= " AND suppress > NOW()";  
+        $where .= " OR host IN (SELECT name from suppress where col='host' AND expire>NOW())";
+        $where .= " OR facility IN (SELECT name from suppress where col='facility' AND expire>NOW())";
+        $where .= " OR priority IN (SELECT name from suppress where col='priority' AND expire>NOW())";
+        $where .= " OR program IN (SELECT name from suppress where col='program' AND expire>NOW())";
+        $where .= " OR msg IN (SELECT name from suppress where col='msg' AND expire>NOW())";
+        $where .= " OR counter IN (SELECT name from suppress where col='counter' AND expire>NOW())";
+        $where .= " OR notes IN (SELECT name from suppress where col='notes' AND expire>NOW())";
+            break;
+        case "unsuppressed":
+        $where.= " AND suppress < NOW()";  
+        $where .= " AND host NOT IN (SELECT name from suppress where col='host' AND expire>NOW())";
+        $where .= " AND facility NOT IN (SELECT name from suppress where col='facility' AND expire>NOW())";
+        $where .= " AND priority NOT IN (SELECT name from suppress where col='priority' AND expire>NOW())";
+        $where .= " AND program NOT IN (SELECT name from suppress where col='program' AND expire>NOW())";
+        $where .= " AND msg NOT IN (SELECT name from suppress where col='msg' AND expire>NOW())";
+        $where .= " AND counter NOT IN (SELECT name from suppress where col='counter' AND expire>NOW())";
+        $where .= " AND notes NOT IN (SELECT name from suppress where col='notes' AND expire>NOW())";
+        break;
+}
     // Special - this gets posted via javascript since it comes from the hosts grid
     // Form code is somewhere near line 843 of js_footer.php
     $hosts = get_input('hosts');
@@ -301,6 +325,9 @@ if ((has_portlet_access($_SESSION['username'], 'Graph Results') == TRUE) || ($_S
         case "priority":
             $propername = "Priorities";
         break;
+        case "mne":
+            $propername = "Mnemonics";
+        break;
     }
     $ucTopx = ucfirst($topx);
 
@@ -423,6 +450,9 @@ if ((has_portlet_access($_SESSION['username'], 'Graph Results') == TRUE) || ($_S
             case "Priorities":
                 $ctype->on_click('pclick_pri');
             break;
+            case "Mnemonics":
+                $ctype->on_click('pclick_mne');
+            break;
         }
         $ctype->set_values( $pievalues );
         $chart = new open_flash_chart();
@@ -510,6 +540,16 @@ function pclick_pri(index)
     var postvars = $("#postvars").val();
     postvars = postvars.replace(/&priorities[]=/g, "");
     var url = (postvars + "&priorities[]=" + value);
+    url = url.replace(/Graph/g, "Results");
+    self.location=url;
+}
+function pclick_mne(index)
+{
+    var value = JSON.stringify(data['elements'][0]['values'][index]['label']);
+    value = value.replace(/"/g, "");
+    var postvars = $("#postvars").val();
+    postvars = postvars.replace(/&mne=/g, "");
+    var url = (postvars + "&mne=" + value);
     url = url.replace(/Graph/g, "Results");
     self.location=url;
 }
