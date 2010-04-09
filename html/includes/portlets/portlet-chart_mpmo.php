@@ -16,7 +16,7 @@ $basePath = dirname( __FILE__ );
 require_once ($basePath . "/../common_funcs.php");
 if ((has_portlet_access($_SESSION['username'], 'Messages Per Month') == TRUE) || ($_SESSION['AUTHTYPE'] == "none")) { 
 ?>
-<div id="chart_mpmo"></div>
+<div id="chart_mmo"></div>
 <?php } else { ?>
 <script type="text/javascript">
 $('#portlet_Messages_Per_Month').remove()

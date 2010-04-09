@@ -17,23 +17,10 @@ $dbLink = db_connect_syslog(DBADMIN, DBADMINPW);
 // -------------------------
 // Get Messages Per Second and return to JSON
 // -------------------------
-$array = array();
-$n = 1;
-for($i = 0; $i<=30 ; $i++) {
-   	$sql = "SELECT SUM(counter) as count from ".$_SESSION["TBL_MAIN"]." where lo BETWEEN NOW() - INTERVAL $n SECOND and NOW() - INTERVAL $i SECOND";
-   	$queryresult = perform_query($sql, $dbLink, $_SERVER['PHP_SELF']);
-   	while ($line = fetch_array($queryresult)) {
-		$array[] = $line['count'];
-   	}
-	$n++;
+$sql = "SELECT value as count FROM cache WHERE name LIKE 'chart_mps_%' AND updatetime BETWEEN NOW() - INTERVAL 59 SECOND and NOW() -  INTERVAL 0 SECOND ORDER BY updatetime ASC";
+$queryresult = perform_query($sql, $dbLink, $_SERVER['PHP_SELF']);
+while ($line = fetch_array($queryresult)) {
+    $num[] = $line['count'];
 }
-echo json_encode($array);
-/*
-if (LOG_QUERIES == 'TRUE') {
-   	$myFile = "/tmp/logzilla_query.log";
-   	$fh = fopen($myFile, 'a') or die("can't open file $myFile");
-   	fwrite($fh, date("h:i:s") ." - json.sparkline.mps.php result: " .json_encode($array)."\n");
-   	fclose($fh);
-}
-*/
+echo json_encode($num);
 ?>

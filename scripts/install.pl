@@ -165,6 +165,9 @@ if ($ok =~ /[Yy]/) {
 		") or die "Could not create $dbtable table: $DBI::errstr";
 	$sth->execute;
 
+# Create sphinx table
+    my $res = `mysql -u$dbroot -p$dbrootpass $dbname < sql/sphinx.sql`;
+    print $res;
 
 # Create cache table
     my $res = `mysql -u$dbroot -p$dbrootpass $dbname < sql/cache.sql`;

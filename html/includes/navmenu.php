@@ -112,3 +112,7 @@ session_start();
     echo "<li><a href=$_SERVER[SITE_URL]?pageId=logout>Logout</a></li>";
     } ?>
     <!-- END Top Level with 2nd Level -->
+<!-- BEGIN Sparkline -->
+<span class="dynamicsparkline sparkbox">Loading MPS Chart...</span>
+<!-- END Sparkline -->
+

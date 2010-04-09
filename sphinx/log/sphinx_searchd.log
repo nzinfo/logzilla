@@ -1,0 +1,9 @@
+[Mon Apr  5 00:55:59.739 2010] [12037] accepting connections
+[Mon Apr  5 00:56:41.793 2010] [12037] rotating indices (seamless=1)
+[Mon Apr  5 00:56:41.958 2010] [12037] rotating index 'idx_logs': success
+[Mon Apr  5 00:56:41.963 2010] [12037] rotating finished
+[Mon Apr  5 00:56:59.570 2010] [12037] rotating indices (seamless=1)
+[Mon Apr  5 00:56:59.571 2010] [12037] rotating index 'idx_delta_logs': success
+[Mon Apr  5 00:56:59.571 2010] [12037] rotating finished
+[Mon Apr  5 20:25:46.588 2010] [12037] caught SIGTERM, shutting down
+[Mon Apr  5 20:25:46.722 2010] [12037] shutdown complete

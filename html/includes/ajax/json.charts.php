@@ -11,7 +11,6 @@
  *
  */
 
-
 // set manually for command line debugging:
 // $chartId = "chart_mpw";
 
@@ -20,7 +19,6 @@ require_once ($basePath . "/../common_funcs.php");
 require_once ($basePath . "/../ofc/php/open-flash-chart.php");
 $dbLink = db_connect_syslog(DBADMIN, DBADMINPW);
 $chartId = get_input('chartId');
-#$chartId = 'chart_mps';
 
 // ------------------------------------------------------
 // BEGIN Ad-hoc chart variables
@@ -281,76 +279,33 @@ $graphtype = get_input('graphtype');
 switch ($chartId) {
 
     case "chart_mpm":
-        $where.= " AND msg='$msg_mask'";  
-    $title = new title( "Last 30 Minutes" );
-    $bar = new line();
-    // -------------------------
-    // Get Messages Per Minute 
-    // -------------------------
-    $array = array();
-    $n=1;
-    for($i = 0; $i<=29 ; $i++) {
-        $sql = "SELECT DATE_FORMAT(NOW() - INTERVAL $i MINUTE, '%k:%i') as hm, SUM(counter) as count from $_SESSION[TBL_MAIN] where lo BETWEEN NOW() - INTERVAL $n MINUTE and NOW() - INTERVAL $i MINUTE";
-        $n++;
-        $queryresult = perform_query($sql, $dbLink, $_SERVER['PHP_SELF']);
-        while ($line = fetch_array($queryresult)) {
-            $array[] = intval($line['count']);
-            $hm[] = $line['hm'];
-        }
-    }
-    $bar->set_values( array_reverse($array) );
-    $chart = new open_flash_chart();
-    $chart->set_title( $title );
-    $chart->add_element( $bar );
-    //
-    // create a Y Axis object
-    //
-    $y = new y_axis();
-    // grid steps:
-    $y->set_range( 0, max($array), round(max($array)/10));
-    $chart->set_y_axis( $y );
-    $x_labels = new x_axis_labels();
-    $x_labels->set_vertical();
-    $x_labels->set_labels( array_reverse($hm) );
-    $x = new x_axis();
-    $x->set_labels( $x_labels );
-    $chart->set_x_axis( $x );
-    /*
-       $m = new ofc_menu("#E0E0ff", "#707070");
-       $m->values(array(new ofc_menu_item_camera('Save Image','save_image')));
-       $chart->set_menu($m);
-     */
-    echo $chart->toPrettyString();
-    break;
-
-    case "chart_mps":
-        $title = new title( "Last 30 Seconds" );
+    $title = new title( "Last Hour" );
     $bar = new line();
     $bar2 = new line();
     // -------------------------
-    // Get Messages Per Second 
-    // Alternate method - this will smooth out all the spikes:
-    // select round(SUM(counter)/30) as count from logs where lo BETWEEN NOW() - INTERVAL 30 SECOND and NOW() - INTERVAL 0 SECOND;
+    // Get Messages Per Minute 
     // -------------------------
-    $array = array();
+    $array = array(1);
     $avg = array();
-    $n=1;
-    for($i = 0; $i<=29 ; $i++) {
-        $sql = "SELECT DATE_FORMAT(NOW() - INTERVAL $i SECOND, '%k:%i:%s') AS hm, SUM(counter) AS count, (SELECT value FROM cache WHERE name='chart_mps_avg') AS avg FROM $_SESSION[TBL_MAIN] WHERE lo BETWEEN NOW() - INTERVAL $n SECOND AND NOW() - INTERVAL $i SECOND";
-        $n++;
-        $queryresult = perform_query($sql, $dbLink, $_SERVER['PHP_SELF']);
-        while ($line = fetch_array($queryresult)) {
-            $c = intval($line['count']);
-            $array[] = $c;
-            $v = intval($line['avg']);
-            if ($v){
-                $avg[] = $v;
-            }
-            $hm[] = $line['hm'];
+    $hm = array();
+    $sql = "SELECT name,value,updatetime, (SELECT ROUND(SUM(value)/60) FROM cache WHERE name LIKE 'chart_mpm_%') AS avg FROM cache WHERE name LIKE 'chart_mpm_%' AND updatetime BETWEEN NOW() - INTERVAL 59 MINUTE and NOW() - INTERVAL 0 MINUTE ORDER BY updatetime ASC";
+    $queryresult = perform_query($sql, $dbLink, $_SERVER['PHP_SELF']);
+    while ($line = fetch_array($queryresult)) {
+        $hms[] = preg_replace('/.*(\d\d):(\d\d):\d\d$/m', "$1:$2", $line['updatetime']);
+        $count = intval($line['value']);
+        if (!is_int($count)) {
+            $count = 0;
+        }
+        $array[] = $count;
+        $v = intval($line['avg']);
+        if (is_int($v)){
+            $avg[] = $v;
         }
     }
-
-    $bar->set_values( ($array) );
+    if (empty($array)) $array[] = 0;
+    $bar->set_values( $array );
+    // Not sure why tooltip isn't working...
+    $bar->set_tooltip("#val#<br>Average [#x_label#]");
     $bar2->set_values( ($avg) );
     $bar2->set_colour( "#40FF40" );
     $bar2->set_tooltip("#val#<br>Average [#x_label#]");
@@ -367,14 +322,67 @@ switch ($chartId) {
     $chart->set_y_axis( $y );
     $x_labels = new x_axis_labels();
     $x_labels->set_vertical();
-    $x_labels->set_labels( array_reverse($hm) );
+    $x_labels->set_labels( $hms );
     $x = new x_axis();
     $x->set_labels( $x_labels );
     $chart->set_x_axis( $x );
     echo $chart->toPrettyString();
     break;
 
-    case "chart_mpmo":
+    case "chart_mps":
+        $title = new title( "Last Minute" );
+    $bar = new line();
+    $bar2 = new line();
+    // -------------------------
+    // Get Messages Per Second 
+    // Alternate method - this will smooth out all the spikes:
+    // select round(SUM(counter)/30) as count from logs where lo BETWEEN NOW() - INTERVAL 30 SECOND and NOW() - INTERVAL 0 SECOND;
+    // -------------------------
+    $array = array(1);
+    $avg = array();
+    $hms = array();
+    $sql = "SELECT name,value,updatetime, (SELECT ROUND(SUM(value)/(SELECT count(*) FROM cache WHERE name LIKE 'chart_mps_%')) FROM cache WHERE name LIKE 'chart_mps_%') AS avg FROM cache WHERE name LIKE 'chart_mps_%' AND updatetime BETWEEN NOW() - INTERVAL 59 SECOND and NOW() - INTERVAL 0 SECOND ORDER BY updatetime ASC";
+    $queryresult = perform_query($sql, $dbLink, $_SERVER['PHP_SELF']);
+    while ($line = fetch_array($queryresult)) {
+        $hms[] = preg_replace('/.*(\d\d):(\d\d):(\d\d)$/m', "$1:$2:$3", $line['updatetime']);
+        $count = intval($line['value']);
+        if (!is_int($count)) {
+            $count = 0;
+        }
+        $array[] = $count;
+        $v = intval($line['avg']);
+        if (is_int($v)){
+            $avg[] = $v;
+        }
+    }
+    if (empty($array)) $array[] = 0;
+    $bar->set_values( $array );
+    // Not sure why tooltip isn't working...
+    $bar->set_tooltip("#val#<br>Average [#x_label#]");
+    $bar2->set_values( ($avg) );
+    $bar2->set_colour( "#40FF40" );
+    $bar2->set_tooltip("#val#<br>Average [#x_label#]");
+    $chart = new open_flash_chart();
+    $chart->set_title( $title );
+    $chart->add_element( $bar );
+    $chart->add_element( $bar2 );
+    //
+    // create a Y Axis object
+    //
+    $y = new y_axis();
+    // grid steps:
+    $y->set_range( 0, max($array), round(max($array)/10));
+    $chart->set_y_axis( $y );
+    $x_labels = new x_axis_labels();
+    $x_labels->set_vertical();
+    $x_labels->set_labels( $hms );
+    $x = new x_axis();
+    $x->set_labels( $x_labels );
+    $chart->set_x_axis( $x );
+    echo $chart->toPrettyString();
+    break;
+
+    case "chart_mmo":
         $title = new title( date("D M d Y") );
     $bar = new bar_rounded_glass();
    	// -------------------------
@@ -382,11 +390,11 @@ switch ($chartId) {
    	// -------------------------
    	$array = array();
     // Below will update today every time the page is refreshed, otherwise we get stale data
-    $sql = "REPLACE INTO cache (name,value,updatetime)  SELECT CONCAT('chart_mpmo_',DATE_FORMAT(NOW(), '%Y-%m_%b')), SUM(counter), NOW() from ".$_SESSION['TBL_MAIN']." where lo BETWEEN CONCAT(CURDATE(), ' 00:00:00') - INTERVAL 1 MONTH AND CONCAT(CURDATE(), ' 23:59:59');";
+    $sql = "REPLACE INTO cache (name,value,updatetime)  SELECT CONCAT('chart_mmo_',DATE_FORMAT(NOW(), '%Y-%m_%b')), SUM(counter), NOW() from ".$_SESSION['TBL_MAIN']." where lo BETWEEN CONCAT(CURDATE(), ' 00:00:00') - INTERVAL 1 MONTH AND CONCAT(CURDATE(), ' 23:59:59');";
     $result = perform_query($sql, $dbLink, $_SERVER['PHP_SELF']);
    	for($i = 0; $i<=12 ; $i++) {
 		// Check cache first
-		$sql = "SELECT name, value, updatetime FROM cache WHERE name=CONCAT('chart_mpmo_',DATE_FORMAT(NOW() - INTERVAL $i MONTH, '%Y-%m_%b'))";
+		$sql = "SELECT name, value, updatetime FROM cache WHERE name=CONCAT('chart_mmo_',DATE_FORMAT(NOW() - INTERVAL $i MONTH, '%Y-%m_%b'))";
 	   	$result = perform_query($sql, $dbLink, $_SERVER['PHP_SELF']);
 	   	if(num_rows($result) > 0) {
 		   	while ($line = fetch_array($result)) {
@@ -397,9 +405,9 @@ switch ($chartId) {
 		   	}
 	   	} else {
 		   	// Insert into cache if it doesn't exist, then select the data from cache
-		   	$sql = "INSERT INTO cache (name,value,updatetime)  SELECT CONCAT('chart_mpmo_',DATE_FORMAT(NOW() - INTERVAL $i MONTH, '%Y-%m_%b')), SUM(counter) as count, NOW() from ".$_SESSION['TBL_MAIN']." where lo BETWEEN CONCAT(CURDATE(), ' 00:00:00') - INTERVAL $i MONTH and CONCAT(CURDATE(), ' 23:59:59') - INTERVAL $i MONTH ON duplicate KEY UPDATE updatetime=NOW()";
+		   	$sql = "INSERT INTO cache (name,value,updatetime)  SELECT CONCAT('chart_mmo_',DATE_FORMAT(NOW() - INTERVAL $i MONTH, '%Y-%m_%b')), SUM(counter) as count, NOW() from ".$_SESSION['TBL_MAIN']." where lo BETWEEN CONCAT(CURDATE(), ' 00:00:00') - INTERVAL $i MONTH and CONCAT(CURDATE(), ' 23:59:59') - INTERVAL $i MONTH ON duplicate KEY UPDATE updatetime=NOW()";
 		   	$result = perform_query($sql, $dbLink, $_SERVER['PHP_SELF']);
-		$sql = "SELECT name, value, updatetime FROM cache WHERE name=CONCAT('chart_mpmo_',DATE_FORMAT(NOW() - INTERVAL $i MONTH, '%Y-%m_%b'))";
+		$sql = "SELECT name, value, updatetime FROM cache WHERE name=CONCAT('chart_mmo_',DATE_FORMAT(NOW() - INTERVAL $i MONTH, '%Y-%m_%b'))";
 		   	$result = perform_query($sql, $dbLink, $_SERVER['PHP_SELF']);
 		   	while ($line = fetch_array($result)) {
 			   	$pieces = explode("_", $line['name']);
@@ -410,7 +418,7 @@ switch ($chartId) {
 	   	}
 	}
 	// Delete any old entries
-   	$sql = "DELETE FROM cache WHERE name like 'chart_mpmo%' AND updatetime< NOW() - INTERVAL ".$_SESSION['CHART_MPD_DAYS']." MONTH";
+   	$sql = "DELETE FROM cache WHERE name like 'chart_mmo%' AND updatetime< NOW() - INTERVAL ".$_SESSION['CHART_MPD_DAYS']." MONTH";
    	$result = perform_query($sql, $dbLink, $_SERVER['PHP_SELF']);
 	// Set bar values
    	$bar->set_values( array_reverse($array) );
@@ -581,78 +589,54 @@ switch ($chartId) {
     break;
 
     case "chart_mph":
-        $title = new title( date("D M d Y") );
+        $title = new title( "Last Day" );
     $bar = new bar_rounded_glass();
+    $bar2 = new line();
    	// -------------------------
     // Get Messages Per Hour
     // -------------------------
     $array = array();
-    // Below will update this hour every time the page is refreshed, otherwise we get stale data
-    $sql = "REPLACE INTO cache (name,value,updatetime) SELECT CONCAT('chart_mph_',DATE_FORMAT(NOW(), '%Y-%m-%d_%H')), SUM(counter), NOW() from ".$_SESSION['TBL_MAIN']." where lo BETWEEN DATE_FORMAT(CURDATE(), '%Y-%m-%d %h:00:00') AND DATE_FORMAT(CURDATE(), '%Y-%m-%d %h:59:59')";
-    $result = perform_query($sql, $dbLink, $_SERVER['PHP_SELF']);
-    // Added below to delete missed polls from cache (if you don't use the chart it inserts a 0)
-    $sql = "SELECT ROUND((AVG(value))*.25) FROM cache WHERE name LIKE 'chart_mph%'";
-    $result = perform_query($sql, $dbLink, $_SERVER['PHP_SELF']);
-    $line = fetch_array($result);
-    $i = intval($line[0]);
-    if ($i <=0) $i = 1;
-    $sql = "DELETE FROM cache WHERE name like 'chart_mph%' AND value<$i";
-    $result = perform_query($sql, $dbLink, $_SERVER['PHP_SELF']);
-
-    // Now process the rest
-    for($i = 0; $i<=$_SESSION['CACHE_CHART_MPH'] ; $i++) {
-        // Check cache first
-        $sql = "SELECT name, value, updatetime FROM cache WHERE name=CONCAT('chart_mph_',DATE_FORMAT(CURDATE(), '%Y-%m-%d_$i'))";
-	   	$result = perform_query($sql, $dbLink, $_SERVER['PHP_SELF']);
-	   	if(num_rows($result) > 0) {
-		   	while ($line = fetch_array($result)) {
-			   	$pieces = explode("_", $line['name']);
-				$date = explode("-", $pieces[2]);
-			   	$hours[] = sprintf('%02d', $i);
-			   	$array[] = intval($line['value']);
-		   	}
-        } else {
-            // Insert into cache if it doesn't exist, then select the data from cache
-            $sql = "INSERT INTO cache (name,value,updatetime) SELECT CONCAT('chart_mph_',DATE_FORMAT(CURDATE(), '%Y-%m-%d_$i')), SUM(counter), NOW() from ".$_SESSION['TBL_MAIN']." where lo BETWEEN CONCAT(CURDATE(), ' $i:00:00') and CONCAT(CURDATE(), ' $i:59:59') ON duplicate KEY UPDATE updatetime=NOW()";
-                $result = perform_query($sql, $dbLink, $_SERVER['PHP_SELF']);
-		$sql = "SELECT name, value, updatetime FROM cache WHERE name=CONCAT('chart_mph_',DATE_FORMAT(CURDATE(), '%Y-%m-%d_$i'))";
-		   	$result = perform_query($sql, $dbLink, $_SERVER['PHP_SELF']);
-		   	while ($line = fetch_array($result)) {
-			   	$pieces = explode("_", $line['name']);
-				$date = explode("-", $pieces[2]);
-			   	$hours[] = sprintf('%02d', $i);
-			   	$array[] = intval($line['value']);
-		   	}
-	   	}
-	}
-	// Delete any old entries
-   	$sql = "DELETE FROM cache WHERE name like 'chart_mph%' AND updatetime< NOW() - INTERVAL ".$_SESSION['CACHE_CHART_MPH']." HOUR";
-   	$result = perform_query($sql, $dbLink, $_SERVER['PHP_SELF']);
-	// Set bar values
-   	$bar->set_values( $array );
-   	$chart = new open_flash_chart();
-   	$chart->set_title( $title );
-   	$chart->add_element( $bar );
-   	//
-   	// create a Y Axis object
-   	//
-   	$y = new y_axis();
-   	// grid steps:
-   	$y->set_range( 0, max($array), round(max($array)/10));
-   	$chart->set_y_axis( $y );
-
-	$x_labels = new x_axis_labels();
-   	$x_labels->set_vertical();
-   	$x_labels->set_labels( $hours );
-   	$x = new x_axis();
-   	$x->set_labels( $x_labels );
-   	$chart->set_x_axis( $x );
-	/*
-   	$m = new ofc_menu("#E0E0ff", "#707070");
-   	$m->values(array(new ofc_menu_item_camera('Save Image','save_image')));
-   	$chart->set_menu($m);
-	*/
-	echo $chart->toPrettyString();
+    $avg = array();
+    $hms = array();
+    $sql = "SELECT name,value,updatetime, (SELECT ROUND(SUM(value)/24) FROM cache WHERE name LIKE 'chart_mph_%') AS avg, DATE_FORMAT(updatetime, '%a-%h%p') as DH FROM cache WHERE name LIKE 'chart_mph_%' AND updatetime BETWEEN NOW() - INTERVAL 23 HOUR and NOW() - INTERVAL 0 HOUR ORDER BY updatetime ASC";
+    $queryresult = perform_query($sql, $dbLink, $_SERVER['PHP_SELF']);
+    while ($line = fetch_array($queryresult)) {
+        // $hms[] = preg_replace('/.*(\d\d):\d\d:\d\d$/m', "$1", $line['updatetime']);
+        $hms[] = $line['DH'];
+        $count = intval($line['value']);
+        if (!is_int($count)) {
+            $count = 0;
+        }
+        $array[] = $count;
+        $v = intval($line['avg']);
+        if (is_int($v)){
+            $avg[] = $v;
+        }
+    }
+    if (empty($array)) $array[] = 0;
+    $bar->set_values( $array );
+    // $bar->set_tooltip("#val#<br>Average MPS = ".commify($avg[0]));
+    $bar2->set_values( ($avg) );
+    $bar2->set_colour( "#40FF40" );
+    $bar2->set_tooltip("#val#<br>Average [#x_label#]");
+    $chart = new open_flash_chart();
+    $chart->set_title( $title );
+    $chart->add_element( $bar );
+    $chart->add_element( $bar2 );
+    //
+    // create a Y Axis object
+    //
+    $y = new y_axis();
+    // grid steps:
+    $y->set_range( 0, max($array), round(max($array)/10));
+    $chart->set_y_axis( $y );
+    $x_labels = new x_axis_labels();
+    $x_labels->set_vertical();
+    $x_labels->set_labels( $hms );
+    $x = new x_axis();
+    $x->set_labels( $x_labels );
+    $chart->set_x_axis( $x );
+    echo $chart->toPrettyString();
     break;
 
     case "chart_tophosts":

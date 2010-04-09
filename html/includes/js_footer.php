@@ -129,10 +129,10 @@ if( !mps_done ) {
     $('#portlet-header_Messages_Per_Second').append('&nbsp;&nbsp;&nbsp;<a href="javascript:reload_chart(\'chart_mps\',\'includes/ajax/json.charts.php?chartId=chart_mps\')">[Refresh]</a>');
     mps_done = true;
 }
-var mpmo_done;
-if( !mpmo_done ) {
-    $('#portlet-header_Top_Hosts').append('&nbsp;&nbsp;&nbsp;<a href="javascript:reload_chart(\'chart_mpmo\',\'includes/ajax/json.charts.php?chartId=chart_mpmo\')">[Refresh]</a>');
-    mpmo_done = true;
+var mmo_done;
+if( !mmo_done ) {
+    $('#portlet-header_Top_Hosts').append('&nbsp;&nbsp;&nbsp;<a href="javascript:reload_chart(\'chart_mmo\',\'includes/ajax/json.charts.php?chartId=chart_mmo\')">[Refresh]</a>');
+    mmo_done = true;
 }
 var tm_done;
 if( !tm_done ) {
@@ -318,6 +318,7 @@ function reloadIE(id, display, url) {
 </script>
 <!-- BEGIN Sparklines 
 Removed due to performance issues...
+-->
 <script type="text/javascript" src="includes/js/jquery/plugins/jquery.sparkline.min.js"></script>
 <script type="text/javascript">
 $(document).ready(function(){
@@ -340,7 +341,7 @@ mdraw = function() {
 	   	travel = 0;
 $.getJSON('includes/ajax/json.sparkline.mps.php', function(data) {
   // $('.dynamicsparkline').sparkline(data, {width: points.length*20, height: '45px'});
-  $('.dynamicsparkline').sparkline(data, {width: '150px', height: '45px'});
+  $('.dynamicsparkline').sparkline(data, {width: '20%', height: '30px', type: 'line'});
 });
    	}
    	lasttime = timenow;
@@ -351,7 +352,6 @@ $.sparkline_display_visible();
 // $('#sparkbox').draggable();
 });
 </script>
--->
 <!-- END Sparklines -->
 
 <!-- BEGIN AND/OR Sliders-->
@@ -445,7 +445,7 @@ $(document).ready(function(){
 		// MPS (includes a reload timer for auto updating)
 	   	swfobject.embedSWF("includes/ofc/open-flash-chart.swf", "chart_mps", "100%", graph_page_h, "9.0.0", "expressInstall.swf", {"data-file":"includes/ajax/json.charts.php?chartId=chart_mps"}, {"wmode":"transparent"});
 		// Top 10 Hosts
-	   	swfobject.embedSWF("includes/ofc/open-flash-chart.swf", "chart_mpmo", "100%", graph_page_h, "9.0.0", "expressInstall.swf", {"data-file":"includes/ajax/json.charts.php?chartId=chart_mpmo"}, {"wmode":"transparent"});
+	   	swfobject.embedSWF("includes/ofc/open-flash-chart.swf", "chart_mmo", "100%", graph_page_h, "9.0.0", "expressInstall.swf", {"data-file":"includes/ajax/json.charts.php?chartId=chart_mmo"}, {"wmode":"transparent"});
 		// Top 10 Messages
 	   	swfobject.embedSWF("includes/ofc/open-flash-chart.swf", "chart_topmsgs", "100%", full_graph_height, "9.0.0", "expressInstall.swf", {"data-file":"includes/ajax/json.charts.php?chartId=chart_topmsgs"}, {"wmode":"transparent"});
 //------------------------------------

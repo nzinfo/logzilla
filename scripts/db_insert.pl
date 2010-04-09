@@ -29,7 +29,7 @@ use Text::LevenshteinXS qw(distance);
 use File::Spec;
 use File::Basename;
 use File::Tail;
-use Benchmark;
+#use Benchmark;
 #use Benchmark::Stopwatch;
 
 
@@ -185,7 +185,7 @@ print STDOUT "\n$datetime\nStarting $logfile for $file_path at pid $$\n" if (($d
 print STDOUT "Using Database: $db\n" if (($debug > 0) and ($verbose));
 
 if (!$daemon) {
-    if (($debug gt 0) or ($verbose)) { 
+    if (($debug > 0) or ($verbose)) { 
         print STDOUT "Debug level: $debug\n";
         print STDOUT "Table: $dbtable\n";
         print STDOUT "Adminuser: $dbuser\n";
@@ -237,10 +237,10 @@ if (!$dbh) {
     print STDOUT "Can't connect to $db database: ", $DBI::errstr, "\n";
     exit;
 }
-my $db_select = $dbh->prepare("SELECT * FROM $dbtable WHERE host=? AND facility=? AND priority=? AND tag=? AND fo between ? AND ?");
-my $db_select_id = $dbh->prepare("SELECT * FROM $dbtable WHERE id=?");
-my $db_update = $dbh->prepare("UPDATE $dbtable SET counter=?, fo=?, lo=? WHERE id=?");
-my $db_del = $dbh->prepare("DELETE FROM $dbtable WHERE id=?");
+my $db_select = $dbh->prepare("SELECT id,msg FROM $dbtable WHERE host IN (?) AND facility IN (?) AND priority IN (?) AND tag IN (?) AND fo BETWEEN ? AND ?");
+my $db_select_id = $dbh->prepare("SELECT counter,fo,lo FROM $dbtable WHERE id IN (?)");
+my $db_update = $dbh->prepare("UPDATE $dbtable SET counter=?, fo=?, lo=? WHERE id IN (?)");
+my $db_del = $dbh->prepare("DELETE FROM $dbtable WHERE id IN (?)");
 my $db_insert = $dbh->prepare("INSERT INTO $dbtable (host,facility,priority,tag,program,msg,mne,fo,lo) VALUES (?,?,?,?,?,?,?,?,?)");
 my $dumpfile = "/dev/shm/infile.txt";
 my $sql = qq{LOAD DATA LOCAL INFILE '$dumpfile' INTO TABLE logs FIELDS TERMINATED BY "\\t" LINES TERMINATED BY "\\n" (host,facility,priority,tag,program,msg,mne,fo,lo)};
@@ -250,11 +250,18 @@ my $queue;
 my @dumparr;
 
 my $q_start_time = (time);
-my $q_time_limit = (time + $q_time);
+my $q_end_time =  "";
+my $q_time_limit = ($q_start_time + $q_time);
+my $mps_timer_start = (time);
+my ($mps, @mps, $sec);
+my ($mpm, @mpm, $min);
+my ($mph, @mph, $hr);
+my ($mpd, @mpd, $day);
+my $now;
 
 open (DUMP, ">$dumpfile") or die "can't open $dumpfile: $!\n";
 close (DUMP);
-$db_load->{TraceLevel} = 4 if (($debug > 1) and ($verbose));
+$db_load->{TraceLevel} = 4 if (($debug > 2) and ($verbose));
 #my $stopwatch;
 #$stopwatch = Benchmark::Stopwatch->new->start;
 #$stopwatch->lap('Start Dump');
@@ -262,46 +269,132 @@ $db_load->{TraceLevel} = 4 if (($debug > 1) and ($verbose));
 #print STDOUT $stopwatch->stop->summary;
 
 
+#my $dt = DateTime->new();
 while (<FH>){
+    #$sec = strftime("%S", localtime);
+    #print STDOUT "\n#############\nLoop Start sec = $sec\n";
+    $mps++;
+    $q_end_time = (time);
     if (($#dumparr < $q_limit) && (time < $q_time_limit)) {
         $queue = $_;
         push(@dumparr, do_msg($queue));
         #push (@dumparr, "host\tfacility\tpriority\ttag\tprg\tmsg\tmne\t$datetime_now\t$datetime_now\t\n");
-    } else {
-        my $q_end_time = (time);
-        if (time >= $q_time_limit) {
-            print STDOUT "Queue time limit reached ($q_time seconds)\n" if ($debug > 0) ;
-            print LOG "Queue time limit reached ($q_time seconds)\n" if ($debug > 0);
-        } else {
-            print LOG "\nDump Limit Reached: $q_limit\n" if ($debug gt 0);
-            print STDOUT "\nDump Limit Reached: $q_limit\n" if ($debug gt 0);
+    } else { 
+        if ($#dumparr > 0 ) {
+            if (time >= $q_time_limit) {
+                print STDOUT "\n\nQueue time limit reached ($q_time seconds)\n" if ($debug > 0) ;
+                print LOG "\n\nQueue time limit reached ($q_time seconds)\n" if ($debug > 0);
+            } else {
+                my $t = ($q_end_time - $q_start_time);
+                my $tmp_mps = round(($q_limit / $t));
+                print LOG "\n\nQueue Limit Reached: $q_limit messages in $t seconds ($tmp_mps MPS)\n" if ($debug > 0);
+                print STDOUT "\n\nQueue Limit Reached: $q_limit messages in $t seconds ($tmp_mps MPS)\n" if ($debug > 0);
+            }
+            foreach my $var (@mps) {
+                if ($var =~ m/(.*),(.*),(.*)/) {
+                    $db_insert_mpX->execute("$1", "$2", "$3");
+                    print STDOUT "Inserting MPS string: $1, $2, $3\n" if ($debug > 1);
+                }
+            }
+            $q_start_time = (time);
+            open (DUMP, ">$dumpfile") or die "can't open $dumpfile: $!\n";
+            print LOG "Starting insert: " . strftime("%H:%M:%S", localtime) ."\n" if ($debug > 0);
+            print STDOUT "Starting insert: " . strftime("%H:%M:%S", localtime) ."\n" if (($debug > 0) and ($verbose));
+            print STDOUT "Importing $#dumparr messages into the database\n" if ($debug > 0);
+            print LOG "Importing $#dumparr messages into the database\n" if ($debug > 0);
+            print DUMP @dumparr;
+            close (DUMP);
+            $db_load->execute();
+            if ($db_load->errstr()) {
+                print STDOUT "FATAL: Unable to execute SQL statement: ", $db_load->errstr(), "\n" if ($debug > 0);
+            }
+            print LOG "Ending insert: " . strftime("%H:%M:%S", localtime) ."\n" if ($debug > 0);
+            print STDOUT "Ending insert: " . strftime("%H:%M:%S", localtime) ."\n" if (($debug > 0) and ($verbose));
+            @dumparr = ();
+            $q_start_time = (time);
+            $q_time_limit = (time + $q_time);
         }
-        my $mps = round(($#dumparr / ($q_end_time - $q_start_time) ));
-        print STDOUT "Average MPS = $mps\n" if ($debug > 0);
-        print LOG "Average MPS = $mps\n" if ($debug > 0);
-        my $now = strftime("%Y-%m-%d %H:%M:%S", localtime);
-        $db_insert_mpX->execute("chart_mps_avg", "$mps", "$now");
-        #my $mpm = $mps * 60;
-        #$db_insert_mpX->execute("chart_mpm_avg", "$mpm", "$now");
-        $q_start_time = (time);
-        open (DUMP, ">$dumpfile") or die "can't open $dumpfile: $!\n";
-        print LOG "Starting insert: " . strftime("%H:%M:%S", localtime) ."\n" if ($debug gt 0);
-        print STDOUT "Starting insert: " . strftime("%H:%M:%S", localtime) ."\n" if (($debug > 0) and ($verbose));
-        print STDOUT "Importing $#dumparr messages into the database.\n" if ($debug gt 0);
-        print LOG "Importing $#dumparr messages into the database.\n" if ($debug gt 0);
-        print DUMP @dumparr;
-        close (DUMP);
-        $db_load->execute();
-        if ($db_load->errstr()) {
-            print STDOUT "FATAL: Unable to execute SQL statement: ", $db_load->errstr(), "\n" if ($debug gt 0);
-        }
-        @dumparr = ();
-        print LOG "Ending insert: " . strftime("%H:%M:%S", localtime) ."\n" if ($debug gt 0);
-        print STDOUT "Ending insert: " . strftime("%H:%M:%S", localtime) ."\n" if (($debug > 0) and ($verbose));
-        $q_start_time = (time);
-        $q_time_limit = (time + $q_time);
     }
+    my $mps_timer_end = (time);
+    my $secs = ($mps_timer_end - $mps_timer_start);
+    if ($secs > 0) {
+        $mps = ($mps/$secs);
+        if ($mps < 1) {
+            $mps = ($mps * $secs);
+        }
+        $now = strftime("%Y-%m-%d %H:%M:%S", localtime);
+        $day = strftime("%d", localtime);
+        $hr = strftime("%H", localtime);
+        $min = strftime("%M", localtime);
+        $sec = strftime("%S", localtime);
+        #print STDOUT "min = $min\n";
+        $mps = round($mps);
+        print STDOUT "\n#######\nCurrent MPS = $mps\n#######\n" if ($debug > 2);
+        print LOG "\n#######\nCurrent MPS = $mps\n#######\n" if ($debug > 2);
+        $mpm += $mps;
+        $mph += $mpm;
+        push(@mps, "chart_mps_$sec,$mps,$now");
+        if ($#mps == 60) {
+            # Grab the average messages per second and store it
+            #my $avg_mps = round(($#dumparr / ($q_end_time - $q_start_time)));
+            #print STDOUT "Average MPS = $avg_mps\n" if ($debug > 0);
+            #print LOG "Average MPS = $avg_mps\n" if ($debug > 0);
+            my $now = strftime("%Y-%m-%d %H:%M:%S", localtime);
+            #$db_insert_mpX->{TraceLevel} = 4 if (($debug > 4) and ($verbose));
+            #$db_insert_mpX->execute("chart_avg_mps", "$avg_mps", "$now");
+
+            push(@mpm, "chart_mpm_$min,$mpm,$now");
+            #my $total = 0;
+            #($total+=$_) for @mpm; 
+            #my $avg_mpm = ($total/60);
+            $db_insert_mpX->{TraceLevel} = 4 if (($debug > 4) and ($verbose));
+            $db_insert_mpX->execute("chart_mpm_$min", "$mpm", "$now");
+            #$db_insert_mpX->execute("chart_avg_mpm", "$avg_mpm", "$now");
+            print STDOUT "Messages Per Minute = $mpm\n" if ($debug > 1);
+            print LOG "Messages Per Minute = $mpm\n" if ($debug > 1);
+            $mpm = 0;
+            @mps = ();
+        }
+        # Temp: exit after 5 minutes for testing
+        if ($#mpm == 5) {
+            #print STDOUT "Test Exit\n";
+            #exit;
+        }
+        if ($#mpm == 60) {
+            push(@mph, "chart_mph_$hr,$mph,$now");
+            #my $total = 0;
+            #($total+=$_) for @mph; 
+            #my $avg_mph = ($total/60);
+            $db_insert_mpX->execute("chart_mph_$hr", "$mph", "$now");
+            #$db_insert_mpX->execute("chart_avg_mph", "$avg_mph", "$now");
+            print STDOUT "Messages Per Hour = $mph\n" if ($debug > 1);
+            print LOG "Messages Per Hour = $mph\n" if ($debug > 1);
+            $mph = 0;
+            @mpm = ();
+        }
+        if ($#mph == 24) {
+            push(@mpd, "chart_mpd_$day,$mpd,$now");
+            #my $total = 0;
+            #($total+=$_) for @mpd; 
+            #my $avg_mpd = ($total/24);
+            $db_insert_mpX->execute("chart_mpd_$day", "$mpd", "$now");
+            #$db_insert_mpX->execute("chart_avg_mpd", "$avg_mpd", "$now");
+            print STDOUT "Messages Per Day = $mpd\n" if ($debug > 1);
+            print LOG "Messages Per Day = $mpd\n" if ($debug > 1);
+            my $mpd = 0;
+            @mph = ();
+        }
+        $mps = 0;
+        $mps_timer_start = (time);
+    }
+    #$sec = strftime("%S", localtime);
+    #print STDOUT "#############\nLoop End sec = $sec\n";
 }
+
+$dbh->disconnect();
+close(LOG);
+
+# Subs
 sub round {
     my($number) = shift;
     return int($number + .5);
@@ -310,10 +403,10 @@ sub round {
 sub do_msg {
     $msg = $_[0];
     # start benchmark timer 
-    $bmstart = new Benchmark;
+    #$bmstart = new Benchmark;
     #if (($pid = fork) == 0) {
     # Prepare database statements for later use
-    print LOG "\n\nINCOMING MESSAGE:\n$msg\n" if ($debug gt 0);
+    print LOG "\n\nINCOMING MESSAGE:\n$msg\n" if ($debug > 0);
     print STDOUT "\n\nINCOMING MESSAGE:\n$msg\n" if (($debug > 2) and ($verbose));
 
     # Get current date and time
@@ -365,7 +458,7 @@ sub do_msg {
         #if ($seq !~ /\d/) {
         #	$seq = 0;
         #}
-        if ($debug gt 0) { 
+        if ($debug > 0) { 
             print LOG "HOST: $host\n";
             print LOG "FAC: $facility\n";
             print LOG "PRI: $priority\n";
@@ -390,18 +483,18 @@ sub do_msg {
     } else {
         # If something gets inserted wrong from the PIPE we'll set host = blank so we can error out later
         $host = "";
-        print LOG "INVALID MESSAGE FORMAT:\n$msg\n" if ($debug gt 0);
+        print LOG "INVALID MESSAGE FORMAT:\n$msg\n" if ($debug > 0);
         print STDOUT "INVALID MESSAGE FORMAT:\n$msg\n" if (($debug > 0) and ($verbose));
     }
     # If the SQZ feature is enabled, continue, if not we'll just insert the record afterward
-    if($dedup eq "1") {
+    if($dedup eq 1) {
         $insert = 1;
         # Debug: set trace level to 4 to get query string executed
-        # $db_select->{TraceLevel} = 4;
+        $db_select->{TraceLevel} = 4 if (($debug > 2) and ($verbose));
         # Select any records between now and $dedup_window seconds ago that match this host, facility, etc.
         $db_select->execute($host, $facility, $priority, $tag, $datetime_past, $datetime_now);
         if ($db_select->errstr()) {
-            print LOG "FATAL: Unable to execute SQL statement: ", $db_select->errstr(), "\n" if ($debug gt 0);
+            print LOG "FATAL: Unable to execute SQL statement: ", $db_select->errstr(), "\n" if ($debug > 0);
             print STDOUT "FATAL: Unable to execute SQL statement: ", $db_select->errstr(), "\n";
             exit;
         }
@@ -414,15 +507,15 @@ sub do_msg {
             if ($distance < $dedup_dist ) {
                 # Store the identical record into an array for later processing
                 push(@rows, $ref->{'id'});
-                print LOG "A duplicate message was found with database id: ".$ref->{'id'}." having a distance of $distance\n" if ($debug gt 0);
-                print STDOUT "A duplicate message was found with database id: ".$ref->{'id'}." having a distance of $distance\n" if (($debug gt 0) and ($verbose));
+                print LOG "A duplicate message was found with database id: ".$ref->{'id'}." having a distance of $distance\n" if ($debug > 3);
+                print STDOUT "A duplicate message was found with database id: ".$ref->{'id'}." having a distance of $distance\n" if (($debug > 3) and ($verbose));
             }
         }
         # If rows matched above, we're now going to process them for deduplication
         my $numrows = scalar @rows;
         if ($numrows > 0) {
-            print LOG "Found $numrows duplicate rows\n" if ($debug gt 0);
-            print STDOUT "Found $numrows duplicate rows\n" if (($debug > 0) and ($verbose));
+            print LOG "Found $numrows duplicate rows\n" if ($debug > 3);
+            print STDOUT "Found $numrows duplicate rows\n" if (($debug > 3) and ($verbose));
             # Next, sort the row id's so that we know the oldest in order to update it later (we only want to update the oldest row and delete the newer ones that are duplicates)
             @rows = sort @rows; 
             # Set the first row as the update row and grab info
@@ -436,15 +529,15 @@ sub do_msg {
             }
             # Next, for each row found, we're going to select it and get some information such as the fo and counter
             for (my $i=0; $i <= $#rows; $i++) {
-                print LOG "Processing rows:\n\tSource: $rows[0]\n\tCurrent: $rows[$i]\n" if ($debug gt 0);
-                print STDOUT "Processing rows:\n\tSource: $rows[0]\n\tCurrent: $rows[$i]\n" if (($debug > 0) and ($verbose));
+                print LOG "Processing rows:\n\tSource: $rows[0]\n\tCurrent: $rows[$i]\n" if ($debug > 3);
+                print STDOUT "Processing rows:\n\tSource: $rows[0]\n\tCurrent: $rows[$i]\n" if (($debug > 3) and ($verbose));
                 $db_select_id->execute($rows[$i]);
                 while (my $ref = $db_select_id->fetchrow_hashref()) {
-                    print LOG "Counter from DBID $rows[$i] = ".$ref->{'counter'}."\n" if ($debug gt 0);
-                    print STDOUT "Counter from DBID $rows[$i] = ".$ref->{'counter'}."\n" if (($debug > 0) and ($verbose));
+                    print LOG "Counter from DBID $rows[$i] = ".$ref->{'counter'}."\n" if ($debug > 3);
+                    print STDOUT "Counter from DBID $rows[$i] = ".$ref->{'counter'}."\n" if (($debug > 3) and ($verbose));
                     $counter = ($counter + $ref->{'counter'});
-                    print LOG "New Counter = $counter\n" if ($debug gt 0);
-                    print STDOUT "New Counter = $counter\n" if (($debug > 0) and ($verbose));
+                    print LOG "New Counter = $counter\n" if ($debug > 3);
+                    print STDOUT "New Counter = $counter\n" if (($debug > 3) and ($verbose));
                 }
                 # Sort the arrays so that we get the first ones
                 @fos = sort @fos; 
@@ -452,13 +545,13 @@ sub do_msg {
                 # if the row returned is greater than 0 (i.e. not the FIRST record) then delete it as a duplicate.
                 # Skip the first record (which will be the source ID)
                 if ($rows[0] != $rows[$i]) {
-                    print LOG "DELETING DB Record: $rows[$i] which is a duplicate record of $rows[0]\n" if ($debug gt 0);
-                    print STDOUT "DELETING DB Record: $rows[$i] which is a duplicate record of $rows[0]\n" if (($debug > 0) and ($verbose));
+                    print LOG "DELETING DB Record: $rows[$i] which is a duplicate record of $rows[0]\n" if ($debug > 3);
+                    print STDOUT "DELETING DB Record: $rows[$i] which is a duplicate record of $rows[0]\n" if (($debug > 3) and ($verbose));
                     $db_del->execute($rows[$i]);
                 }
                 # Else, if the row returned is the FIRST record, we need to update it with new counter, fo and lo
-                print LOG "UPDATING DB Record: $update_id with new counter and timestamps\n" if ($debug gt 0);
-                print STDOUT "UPDATING DB Record: $update_id with new counter and timestamps\n" if (($debug > 0) and ($verbose));
+                print LOG "UPDATING DB Record: $update_id with new counter and timestamps\n" if ($debug > 3);
+                print STDOUT "UPDATING DB Record: $update_id with new counter and timestamps\n" if (($debug > 3) and ($verbose));
                 $db_update->execute($counter,$fo,$datetime_now,$update_id);
             }
             # Since we've already done an update of the first record, we don't need to insert anything after this
@@ -475,17 +568,17 @@ sub do_msg {
             $queue = "$host\t$facility\t$priority\t$tag\t$prg\t$msg\t$mne\t$datetime_now\t$datetime_now\t\n";
             #$db_insert->execute($host, $facility, $priority, $tag, $prg, $msg, $mne, $datetime_now, $datetime_now);
             #if ($db_insert->errstr()) {
-            #print LOG "FATAL: Can't execute SQL insert statement (", $dbh->errstr(), ")\n" if ($debug gt 0);
+            #print LOG "FATAL: Can't execute SQL insert statement (", $dbh->errstr(), ")\n" if ($debug > 3);
             #print STDOUT "FATAL: Can't execute SQL insert statement (", $dbh->errstr(), ")\n";
             #}
             # $dbh->{TraceLevel} = 4;
         } else {
-            print LOG "Error inserting record $msg\n" if ($debug gt 0); 
-            print STDOUT "Error inserting record $msg\n" if (($debug > 0) and ($verbose)); 
+            print LOG "Error inserting record $msg\n" if ($debug > 3); 
+            print STDOUT "Error inserting record $msg\n" if (($debug > 3) and ($verbose)); 
         }
     } else {
-        print LOG "insert = $insert, Skipping insert of this message since it was a duplicate\n" if ($debug gt 0);
-        print STDOUT "insert = $insert, Skipping insert of this message since it was a duplicate\n" if (($debug > 0) and ($verbose));
+        print LOG "insert = $insert, Skipping insert of this message since it was a duplicate\n" if ($debug > 3);
+        print STDOUT "insert = $insert, Skipping insert of this message since it was a duplicate\n" if (($debug > 3) and ($verbose));
     }
     #exit(0);
     #} elsif ($pid > 0) {
@@ -497,11 +590,9 @@ sub do_msg {
     #print STDOUT "Could not fork: errno is $!\n" if (($debug > 0) and ($verbose));
     #}
     # end benchmark timer 
-    $bmend = new Benchmark;
-    my $bmdiff = timediff($bmend, $bmstart);
-    print LOG "Total processing time was", timestr($bmdiff, 'all'), " seconds\n" if ($debug > 0);
-    print STDOUT "Total processing time was", timestr($bmdiff, 'all'), " seconds\n" if (($debug > 2) and ($verbose));
+    #$bmend = new Benchmark;
+    #my $bmdiff = timediff($bmend, $bmstart);
+    #print LOG "Total processing time was", timestr($bmdiff, 'all'), " seconds\n" if ($debug > 0);
+    #print STDOUT "Total processing time was", timestr($bmdiff, 'all'), " seconds\n" if (($debug > 2) and ($verbose));
     return $queue;
 }
-$dbh->disconnect();
-close(LOG);
