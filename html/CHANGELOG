@@ -53,6 +53,8 @@ CHANGELOG
  - db_insert: removed SEQ field
  - Changed server settings to re-populate session variables so that changes take effect immediately (instead of logging out).
  - added number of results return as well as the total matching rows to the results page
+ - Added MPS ticker to header along with average MPS
+ - db_insert now uses mysql's LOAD DATA INFILE so that larger systems won't bottleneck at 1kmps (a Mysql limit on number of inerts per second). The load data command allows for around 8kmps currently, and much higher later on when I make a few more changes.
 
 
 3.0Beta16

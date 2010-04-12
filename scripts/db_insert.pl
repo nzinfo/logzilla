@@ -18,6 +18,7 @@
 # 2010-03-01 - Removed str2hex, unfortunately, while db queries were faster, searching would 
 #              only allow for case-sensitive searches and no regex.
 # 2010-04-04 - Removed forking and added load data infile (now able to process spikes up to ~16kmps)
+# 2010-04-12 - Fixed issue with 1s granularity
 #
 
 
@@ -29,8 +30,6 @@ use Text::LevenshteinXS qw(distance);
 use File::Spec;
 use File::Basename;
 use File::Tail;
-#use Benchmark;
-#use Benchmark::Stopwatch;
 
 
 $| = 1;
@@ -41,7 +40,7 @@ $| = 1;
 use vars qw/ %opt /;
 
 # Set command line vars
-my ($debug, $config, $logfile, $verbose, $selftest, $dbh, $tailfile, $daemon, $pidfile);
+my ($debug, $config, $logfile, $verbose, $dbh, $tailfile, $daemon, $pidfile);
 
 #
 # Command line options processing
@@ -49,7 +48,7 @@ my ($debug, $config, $logfile, $verbose, $selftest, $dbh, $tailfile, $daemon, $p
 sub init()
 {
     use Getopt::Std;
-    my $opt_string = 'hd:c:l:svt:bp:';
+    my $opt_string = 'hd:c:l:vt:bp:';
     getopts( "$opt_string", \%opt ) or usage();
     usage() if $opt{h};
     $tailfile = defined($opt{'t'}) ? $opt{'t'} : '/path_to_logs/syslog.log';
@@ -58,29 +57,10 @@ sub init()
     $logfile = $opt{'l'} if $opt{'l'};
     $verbose = $opt{'v'} if $opt{'v'};
     $daemon = $opt{'b'} if $opt{'b'};
-    $selftest = $opt{'s'} if $opt{'s'};
     $config = defined($opt{'c'}) ? $opt{'c'} : "/path_to_logzilla/html/config/config.php";
 }
 
 init();
-
-if ($selftest) {
-    print "This command is deprecated now that File::Tail is being used\n";
-    #my $cmd = "$0";
-    #$cmd .= " -d 1"; # Force debug on so test results are shown 
-    #$cmd .= " -c " . $opt{'c'} if $opt{'c'};
-    #$cmd .= " -l " . $opt{'l'} if $opt{'l'};
-    #$cmd .= " -t " . $opt{'t'} if $opt{'t'};
-    #$cmd .= " -v "; # Force verbose mode so results are printed to screen
-    #my $date = strftime("%Y-%m-%d", localtime);
-    #my $time = strftime("%H:%M:%S", localtime);
-    #print STDOUT "\nPERFORMING SELF TEST USING COMMAND:\n$cmd\n\n";
-    #my $res = `printf "host\tlocal7\terr\ttest\t$date\t$time\tDB_INS_TEST\t12345: %%SYS-5-CONFIG_I: Configured from 172.16.0.123 by Fred Flinstone <fred\@flinstone.com>\n" | $cmd`;
-    #print STDOUT "$res\n";
-    #print STDOUT "SELF TEST COMPLETE!\n";
-    #exit;
-}
-
 
 #
 # Help message
@@ -153,9 +133,8 @@ while (my @settings = $sth->fetchrow_array()) {
     $q_limit = $settings[1] if ($settings[0] =~ /^Q_LIMIT$/);
 }
 
-# If debug is set in config.php, then increment debug to at least 1
+# If debug is set in the settings table, then increment debug to at least 1
 $debug++ if $DEBUG eq "1";
-#$debug = 0 if ($daemon);
 
 
 # Initialize some vars for later use
@@ -237,10 +216,10 @@ if (!$dbh) {
     print STDOUT "Can't connect to $db database: ", $DBI::errstr, "\n";
     exit;
 }
-my $db_select = $dbh->prepare("SELECT id,msg FROM $dbtable WHERE host IN (?) AND facility IN (?) AND priority IN (?) AND tag IN (?) AND fo BETWEEN ? AND ?");
-my $db_select_id = $dbh->prepare("SELECT counter,fo,lo FROM $dbtable WHERE id IN (?)");
-my $db_update = $dbh->prepare("UPDATE $dbtable SET counter=?, fo=?, lo=? WHERE id IN (?)");
-my $db_del = $dbh->prepare("DELETE FROM $dbtable WHERE id IN (?)");
+my $db_select = $dbh->prepare("SELECT id,msg FROM $dbtable WHERE host=? AND facility=? AND priority=? AND tag=? AND fo BETWEEN ? AND ?");
+my $db_select_id = $dbh->prepare("SELECT counter,fo,lo FROM $dbtable WHERE id=?");
+my $db_update = $dbh->prepare("UPDATE $dbtable SET counter=?, fo=?, lo=? WHERE id=?");
+my $db_del = $dbh->prepare("DELETE FROM $dbtable WHERE id=?");
 my $db_insert = $dbh->prepare("INSERT INTO $dbtable (host,facility,priority,tag,program,msg,mne,fo,lo) VALUES (?,?,?,?,?,?,?,?,?)");
 my $dumpfile = "/dev/shm/infile.txt";
 my $sql = qq{LOAD DATA LOCAL INFILE '$dumpfile' INTO TABLE logs FIELDS TERMINATED BY "\\t" LINES TERMINATED BY "\\n" (host,facility,priority,tag,program,msg,mne,fo,lo)};
@@ -249,11 +228,11 @@ my $db_load = $dbh->prepare("$sql");
 my $queue;
 my @dumparr;
 
-my $q_start_time = (time);
-my $q_end_time =  "";
-my $q_time_limit = ($q_start_time + $q_time);
-my $mps_timer_start = (time);
-my ($mps, @mps, $sec);
+my $start_time = (time);
+my $end_time;
+my $time_limit = ($start_time + $q_time);
+my $mps_timer_start = $start_time;
+my ($mps, $tmp_mps, @mps, $sec);
 my ($mpm, @mpm, $min);
 my ($mph, @mph, $hr);
 my ($mpd, @mpd, $day);
@@ -262,31 +241,29 @@ my $now;
 open (DUMP, ">$dumpfile") or die "can't open $dumpfile: $!\n";
 close (DUMP);
 $db_load->{TraceLevel} = 4 if (($debug > 2) and ($verbose));
-#my $stopwatch;
-#$stopwatch = Benchmark::Stopwatch->new->start;
-#$stopwatch->lap('Start Dump');
-#$stopwatch->lap('Stop Dump');
-#print STDOUT $stopwatch->stop->summary;
-
-
-#my $dt = DateTime->new();
 while (<FH>){
-    #$sec = strftime("%S", localtime);
-    #print STDOUT "\n#############\nLoop Start sec = $sec\n";
     $mps++;
-    $q_end_time = (time);
-    if (($#dumparr < $q_limit) && (time < $q_time_limit)) {
-        $queue = $_;
-        push(@dumparr, do_msg($queue));
+    if (($#dumparr < $q_limit) && ($start_time <= $time_limit)) {
+        #print STDOUT "Pushing\n";
+        #print STDOUT "Dumparr count = ". $#dumparr ."\n";
+        #print STDOUT "Q_limit = ". $q_limit ."\n";
+        #print STDOUT "Start time = ". $start_time ."\n";
+        #print STDOUT "Time limit = ". $time_limit ."\n";
+        push(@dumparr, do_msg($_));
         #push (@dumparr, "host\tfacility\tpriority\ttag\tprg\tmsg\tmne\t$datetime_now\t$datetime_now\t\n");
+        $start_time++;
     } else { 
         if ($#dumparr > 0 ) {
-            if (time >= $q_time_limit) {
+            if ($start_time >= $time_limit) {
                 print STDOUT "\n\nQueue time limit reached ($q_time seconds)\n" if ($debug > 0) ;
                 print LOG "\n\nQueue time limit reached ($q_time seconds)\n" if ($debug > 0);
             } else {
-                my $t = ($q_end_time - $q_start_time);
-                my $tmp_mps = round(($q_limit / $t));
+                my $t = ($end_time - $start_time);
+                if ($t > 0) {
+                    $tmp_mps = round($q_limit / $t);
+                } else {
+                    $tmp_mps = round($q_limit / 1);
+                }
                 print LOG "\n\nQueue Limit Reached: $q_limit messages in $t seconds ($tmp_mps MPS)\n" if ($debug > 0);
                 print STDOUT "\n\nQueue Limit Reached: $q_limit messages in $t seconds ($tmp_mps MPS)\n" if ($debug > 0);
             }
@@ -296,7 +273,6 @@ while (<FH>){
                     print STDOUT "Inserting MPS string: $1, $2, $3\n" if ($debug > 1);
                 }
             }
-            $q_start_time = (time);
             open (DUMP, ">$dumpfile") or die "can't open $dumpfile: $!\n";
             print LOG "Starting insert: " . strftime("%H:%M:%S", localtime) ."\n" if ($debug > 0);
             print STDOUT "Starting insert: " . strftime("%H:%M:%S", localtime) ."\n" if (($debug > 0) and ($verbose));
@@ -311,8 +287,8 @@ while (<FH>){
             print LOG "Ending insert: " . strftime("%H:%M:%S", localtime) ."\n" if ($debug > 0);
             print STDOUT "Ending insert: " . strftime("%H:%M:%S", localtime) ."\n" if (($debug > 0) and ($verbose));
             @dumparr = ();
-            $q_start_time = (time);
-            $q_time_limit = (time + $q_time);
+            $start_time = (time);
+            $time_limit = ($start_time + $q_time);
         }
     }
     my $mps_timer_end = (time);
@@ -335,21 +311,10 @@ while (<FH>){
         $mph += $mpm;
         push(@mps, "chart_mps_$sec,$mps,$now");
         if ($#mps == 60) {
-            # Grab the average messages per second and store it
-            #my $avg_mps = round(($#dumparr / ($q_end_time - $q_start_time)));
-            #print STDOUT "Average MPS = $avg_mps\n" if ($debug > 0);
-            #print LOG "Average MPS = $avg_mps\n" if ($debug > 0);
             my $now = strftime("%Y-%m-%d %H:%M:%S", localtime);
-            #$db_insert_mpX->{TraceLevel} = 4 if (($debug > 4) and ($verbose));
-            #$db_insert_mpX->execute("chart_avg_mps", "$avg_mps", "$now");
-
             push(@mpm, "chart_mpm_$min,$mpm,$now");
-            #my $total = 0;
-            #($total+=$_) for @mpm; 
-            #my $avg_mpm = ($total/60);
             $db_insert_mpX->{TraceLevel} = 4 if (($debug > 4) and ($verbose));
             $db_insert_mpX->execute("chart_mpm_$min", "$mpm", "$now");
-            #$db_insert_mpX->execute("chart_avg_mpm", "$avg_mpm", "$now");
             print STDOUT "Messages Per Minute = $mpm\n" if ($debug > 1);
             print LOG "Messages Per Minute = $mpm\n" if ($debug > 1);
             $mpm = 0;
@@ -362,11 +327,7 @@ while (<FH>){
         }
         if ($#mpm == 60) {
             push(@mph, "chart_mph_$hr,$mph,$now");
-            #my $total = 0;
-            #($total+=$_) for @mph; 
-            #my $avg_mph = ($total/60);
             $db_insert_mpX->execute("chart_mph_$hr", "$mph", "$now");
-            #$db_insert_mpX->execute("chart_avg_mph", "$avg_mph", "$now");
             print STDOUT "Messages Per Hour = $mph\n" if ($debug > 1);
             print LOG "Messages Per Hour = $mph\n" if ($debug > 1);
             $mph = 0;
@@ -374,11 +335,7 @@ while (<FH>){
         }
         if ($#mph == 24) {
             push(@mpd, "chart_mpd_$day,$mpd,$now");
-            #my $total = 0;
-            #($total+=$_) for @mpd; 
-            #my $avg_mpd = ($total/24);
             $db_insert_mpX->execute("chart_mpd_$day", "$mpd", "$now");
-            #$db_insert_mpX->execute("chart_avg_mpd", "$avg_mpd", "$now");
             print STDOUT "Messages Per Day = $mpd\n" if ($debug > 1);
             print LOG "Messages Per Day = $mpd\n" if ($debug > 1);
             my $mpd = 0;
@@ -387,10 +344,8 @@ while (<FH>){
         $mps = 0;
         $mps_timer_start = (time);
     }
-    #$sec = strftime("%S", localtime);
-    #print STDOUT "#############\nLoop End sec = $sec\n";
+    $end_time = (time);
 }
-
 $dbh->disconnect();
 close(LOG);
 

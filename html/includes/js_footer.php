@@ -321,15 +321,27 @@ Removed due to performance issues...
 -->
 <script type="text/javascript" src="includes/js/jquery/plugins/jquery.sparkline.min.js"></script>
 <script type="text/javascript">
+average = function(a){
+    var r = {mean: 0, variance: 0, deviation: 0}, t = a.length;
+    for(var m, s = 0, l = t; l--; s += a[l]);
+    for(m = r.mean = s / t, l = t, s = 0; l--; s += Math.pow(a[l] - m, 2));
+    return r.deviation = Math.sqrt(r.variance = s / t), r;
+}
 $(document).ready(function(){
 /** 
  ** Draws the Messages per second sparkline
  **/
-var refreshinterval = 1000; // update display every 1 second
+var average = function(a){
+    var r = {mean: 0, variance: 0, deviation: 0}, t = a.length;
+    for(var m, s = 0, l = t; l--; s += a[l]);
+    for(m = r.mean = s / t, l = t, s = 0; l--; s += Math.pow(a[l] - m, 2));
+    return r.deviation = Math.sqrt(r.variance = s / t), r;
+}
+var refreshinterval = <?php echo ($_SESSION['Q_TIME']*1000)?>; // update display every 1 second
 var lasttime;
 var travel = 0;
 var points = [];
-var points_max = 10;
+var points_max = 60;
 mdraw = function() {
    	var md = new Date();
    	var timenow = md.getTime();
@@ -339,10 +351,30 @@ mdraw = function() {
 	   	if (points.length > points_max)
 		   	points.splice(0,1);
 	   	travel = 0;
-$.getJSON('includes/ajax/json.sparkline.mps.php', function(data) {
-  // $('.dynamicsparkline').sparkline(data, {width: points.length*20, height: '45px'});
-  $('.dynamicsparkline').sparkline(data, {width: '20%', height: '30px', type: 'line'});
-});
+        $.getJSON('includes/ajax/json.sparkline.mps.php', function(data) {
+        // $('.dynamicsparkline').sparkline(data, {width: points.length*20, height: '45px'});
+            if(data) {
+                // Add sparkline:
+                $('.dynamicsparkline').sparkline(data, {width: ((data.length - 1) * 2), height: '30px', type: 'line'});
+                // Added average MPS text if data exists:
+                var total = 0;
+                    for(var i = 0; i < data.length; i++){
+                    var thisVal = parseInt(data[i]);
+                    if(!isNaN(thisVal)){
+                        total += thisVal;
+                    };
+                };
+                var avg = Math.round(total / (data.length - 1));
+                if(!isNaN(avg)){
+                    $('#spark_mps').text("Average MPS = " + avg);
+                } else {
+                    $('#spark_mps').text("NaN");
+                    };
+            } else {
+            $('.dynamicsparkline').text("No Data");
+            $('#spark_mps').text("");
+            };
+        });
    	}
    	lasttime = timenow;
    	mtimer = setTimeout(mdraw, refreshinterval);

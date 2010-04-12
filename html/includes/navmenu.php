@@ -113,6 +113,7 @@ session_start();
     } ?>
     <!-- END Top Level with 2nd Level -->
 <!-- BEGIN Sparkline -->
-<span class="dynamicsparkline sparkbox">Loading MPS Chart...</span>
+<span class="dynamicsparkline sparkbox">Loading MPS Chart - will update every <?php echo $_SESSION['Q_TIME']?> second(s)</span>
+<span class="sparkbox" id="spark_mps"></span>
 <!-- END Sparkline -->
 
