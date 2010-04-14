@@ -1,0 +1,101 @@
+[Mon Apr 12 17:31:31.556 2010] 0.001 sec [any/0/rel 0 (0,50)] [idx_logs] cylinder
+[Mon Apr 12 17:32:05.513 2010] 0.000 sec [any/0/rel 0 (0,50)] [idx_logs] Mon
+[Mon Apr 12 17:32:13.109 2010] 0.022 sec [any/0/rel 42 (0,50)] [idx_logs] Mon
+[Mon Apr 12 17:33:50.451 2010] 0.000 sec [any/0/rel 1 (0,50)] [idx_logs] 864
+[Mon Apr 12 17:34:46.141 2010] 0.001 sec [any/0/rel 1 (0,50)] [idx_logs] 864
+[Mon Apr 12 17:35:21.739 2010] 0.000 sec [any/0/rel 1 (0,50)] [idx_logs] 864
+[Mon Apr 12 17:52:21.267 2010] 0.000 sec [any/0/rel 0 (0,50)] [idx_logs] win
+[Mon Apr 12 17:52:44.799 2010] 0.000 sec [any/0/rel 0 (0,50)] [idx_logs] win
+[Mon Apr 12 17:55:17.454 2010] 0.000 sec [any/0/rel 0 (0,50)] [idx_logs] win
+[Mon Apr 12 17:55:31.351 2010] 0.000 sec [any/0/rel 0 (0,50)] [idx_logs] win
+[Mon Apr 12 17:55:41.991 2010] 0.000 sec [any/0/rel 0 (0,50)] [idx_logs] win
+[Mon Apr 12 17:56:53.660 2010] 0.001 sec [any/0/rel 0 (0,50)] [idx_logs] win
+[Mon Apr 12 17:57:15.286 2010] 0.000 sec [any/0/rel 0 (0,50)] [idx_logs] win
+[Mon Apr 12 17:57:48.521 2010] 0.000 sec [any/0/rel 0 (0,50)] [idx_logs] win
+[Mon Apr 12 17:58:06.591 2010] 0.000 sec [any/0/rel 0 (0,50)] [idx_logs] win
+[Mon Apr 12 17:58:46.839 2010] 0.001 sec [any/0/rel 0 (0,50)] [idx_logs] win
+[Mon Apr 12 17:59:27.389 2010] 0.000 sec [any/0/rel 0 (0,50)] [idx_logs] win
+[Mon Apr 12 17:59:53.482 2010] 0.000 sec [any/0/rel 0 (0,50)] [idx_logs] win
+[Mon Apr 12 18:00:18.027 2010] 0.000 sec [any/0/rel 0 (0,50)] [idx_logs] win
+[Mon Apr 12 18:00:50.183 2010] 0.000 sec [any/0/rel 0 (0,50)] [idx_logs] Win
+[Mon Apr 12 18:01:21.055 2010] 0.000 sec [any/0/rel 0 (0,50)] [idx_logs] a
+[Mon Apr 12 18:01:42.406 2010] 0.002 sec [any/0/rel 0 (0,50)] [idx_logs] Win
+[Mon Apr 12 18:02:08.868 2010] 0.000 sec [any/0/rel 42 (0,50)] [idx_logs] Mon
+[Mon Apr 12 18:02:48.607 2010] 0.000 sec [any/0/rel 42 (0,50)] [idx_logs] Mon
+[Mon Apr 12 18:03:27.245 2010] 0.000 sec [any/0/rel 0 (0,50)] [idx_logs] Win
+[Mon Apr 12 18:04:41.483 2010] 0.000 sec [any/0/rel 0 (0,50)] [idx_logs] Win
+[Mon Apr 12 18:05:08.990 2010] 0.000 sec [all/0/rel 0 (0,50)] [idx_logs] Win
+[Mon Apr 12 18:11:07.847 2010] 0.000 sec [any/0/rel 0 (0,50)] [idx_logs] Win
+[Mon Apr 12 18:20:52.841 2010] 0.000 sec [all/0/rel 42 (0,50)] [idx_logs] Mon
+[Mon Apr 12 18:21:24.148 2010] 0.000 sec [all/0/rel 42 (0,50)] [idx_logs] Mon
+[Mon Apr 12 18:23:55.647 2010] 0.000 sec [all/0/rel 42 (0,50)] [idx_logs] Mon
+[Mon Apr 12 18:24:40.883 2010] 0.000 sec [all/0/rel 42 (0,50)] [idx_logs] Mon
+[Mon Apr 12 18:24:52.765 2010] 0.000 sec [all/0/rel 42 (0,50)] [idx_logs] Mon
+[Mon Apr 12 18:24:54.729 2010] 0.000 sec [all/0/rel 42 (0,50)] [idx_logs] Mon
+[Mon Apr 12 18:25:18.423 2010] 0.000 sec [all/0/rel 42 (0,50)] [idx_logs] Mon
+[Mon Apr 12 18:26:38.494 2010] 0.000 sec [all/0/rel 42 (0,50)] [idx_logs] Mon
+[Mon Apr 12 18:26:55.409 2010] 0.001 sec [all/0/rel 42 (0,50)] [idx_logs] Mon
+[Mon Apr 12 18:27:08.447 2010] 0.000 sec [all/0/rel 42 (0,50)] [idx_logs] Mon
+[Mon Apr 12 18:29:32.668 2010] 0.001 sec [scan/0/rel 42 (0,50)] [idx_logs]
+[Mon Apr 12 18:30:54.134 2010] 0.000 sec [scan/0/rel 42 (0,50)] [idx_logs]
+[Mon Apr 12 18:31:51.554 2010] 0.000 sec [scan/0/rel 42 (0,50)] [idx_logs]
+[Mon Apr 12 18:32:11.052 2010] 0.000 sec [scan/0/rel 42 (0,50)] [idx_logs]
+[Mon Apr 12 18:32:33.389 2010] 0.000 sec [scan/0/rel 42 (0,50)] [idx_logs]
+[Mon Apr 12 18:32:53.004 2010] 0.000 sec [scan/0/rel 42 (0,50)] [idx_logs]
+[Mon Apr 12 18:33:20.527 2010] 0.000 sec [scan/0/rel 42 (0,50)] [idx_logs]
+[Mon Apr 12 18:35:08.572 2010] 0.000 sec [scan/0/rel 42 (0,50)] [idx_logs]
+[Mon Apr 12 18:35:56.576 2010] 0.001 sec [scan/0/rel 42 (0,50)] [idx_logs]
+[Mon Apr 12 18:38:15.181 2010] 0.000 sec [scan/0/rel 42 (0,50)] [idx_logs]
+[Mon Apr 12 18:46:20.700 2010] 0.001 sec [scan/0/rel 22264 (0,50)] [idx_logs]
+[Mon Apr 12 18:47:03.624 2010] 0.001 sec [scan/0/rel 22264 (0,50)] [idx_logs]
+[Mon Apr 12 21:09:23.589 2010] 0.076 sec [scan/0/rel 22264 (0,50)] [idx_logs]
+[Mon Apr 12 21:42:54.337 2010] 0.110 sec [scan/0/rel 322170 (0,50)] [idx_logs]
+[Mon Apr 12 21:43:26.340 2010] 0.006 sec [all/0/rel 201 (0,50)] [idx_logs] config
+[Mon Apr 12 21:44:33.281 2010] 0.125 sec [scan/0/rel 322170 (0,50)] [idx_logs]
+[Mon Apr 12 21:45:41.050 2010] 0.011 sec [scan/0/rel 322170 (0,50)] [idx_logs]
+[Mon Apr 12 21:46:09.823 2010] 0.060 sec [all/0/rel 47 (0,50)] [idx_logs] config_i
+[Mon Apr 12 21:47:46.482 2010] 0.000 sec [all/0/rel 47 (0,50)] [idx_logs] config_i
+[Mon Apr 12 21:48:13.412 2010] 0.049 sec [all/0/rel 47 (0,50)] [idx_logs] config_i
+[Mon Apr 12 21:48:49.136 2010] 0.018 sec [all/0/rel 47 (0,50)] [idx_logs] config_i
+[Mon Apr 12 22:42:49.533 2010] 0.001 sec [all/0/rel 60 (0,50)] [idx_logs] config_i
+[Mon Apr 12 22:44:45.026 2010] 0.001 sec [all/0/rel 60 (0,50)] [idx_logs] config_i
+[Mon Apr 12 22:45:52.834 2010] 0.001 sec [all/0/rel 60 (0,50)] [idx_logs] config_i
+[Mon Apr 12 23:01:54.101 2010] 0.001 sec [all/0/rel 60 (0,50)] [idx_logs] config_i
+[Mon Apr 12 23:02:18.727 2010] 0.071 sec [all/0/rel 343260 (0,50)] [idx_logs] interface
+[Mon Apr 12 23:02:48.596 2010] 0.000 sec [all/0/rel 0 (0,50)] [idx_logs] a
+[Mon Apr 12 23:04:53.621 2010] 0.000 sec [all/0/rel 0 (0,50)] [idx_logs] a
+[Mon Apr 12 23:06:56.190 2010] 0.000 sec [all/0/rel 0 (0,50)] [idx_logs] a
+[Mon Apr 12 23:07:27.344 2010] 0.000 sec [all/0/rel 0 (0,50)] [idx_logs] a
+[Mon Apr 12 23:08:04.069 2010] 0.000 sec [all/0/rel 0 (0,50)] [idx_logs] a
+[Mon Apr 12 23:08:13.596 2010] 0.018 sec [all/0/rel 0 (0,50)] [idx_logs] a
+[Mon Apr 12 23:08:44.277 2010] 0.000 sec [all/0/rel 0 (0,50)] [idx_logs] a
+[Mon Apr 12 23:09:20.852 2010] 0.020 sec [all/0/rel 0 (0,50)] [idx_logs] a
+[Mon Apr 12 23:09:33.421 2010] 0.012 sec [all/0/rel 0 (0,50)] [idx_logs] a
+[Mon Apr 12 23:10:01.414 2010] 0.017 sec [all/0/rel 0 (0,50)] [idx_logs] int
+[Mon Apr 12 23:10:20.283 2010] 0.012 sec [all/0/rel 60 (0,50)] [idx_logs] config_i
+[Mon Apr 12 23:10:37.971 2010] 0.086 sec [all/0/rel 0 (0,50)] [idx_logs] conf
+[Mon Apr 12 23:10:49.585 2010] 0.000 sec [all/0/rel 0 (0,50)] [idx_logs] confi
+[Mon Apr 12 23:11:01.590 2010] 0.024 sec [all/0/rel 259 (0,50)] [idx_logs] config
+[Mon Apr 12 23:11:57.647 2010] 0.098 sec [all/0/rel 0 (0,50)] [idx_logs] a
+[Mon Apr 12 23:13:59.848 2010] 0.012 sec [all/0/rel 0 (0,50)] [idx_logs] a
+[Mon Apr 12 23:14:50.553 2010] 0.025 sec [all/0/rel 0 (0,50)] [idx_logs] a
+[Mon Apr 12 23:17:08.364 2010] 0.039 sec [all/0/rel 0 (0,1000)] [idx_logs] a
+[Mon Apr 12 23:26:40.460 2010] 0.035 sec [all/0/rel 389626 (0,1000)] [idx_logs] interface
+[Mon Apr 12 23:37:05.714 2010] 0.097 sec [all/0/rel 162413 (0,1000)] [idx_logs] link
+[Mon Apr 12 23:37:48.504 2010] 0.000 sec [all/0/rel 0 (0,1000)] [idx_logs] conf
+[Mon Apr 12 23:38:54.053 2010] 0.000 sec [all/0/rel 42 (0,1000)] [idx_logs] mon
+[Mon Apr 12 23:39:16.801 2010] 0.000 sec [all/0/rel 18 (0,1000)] [idx_logs] target
+[Mon Apr 12 23:39:33.634 2010] 0.002 sec [all/0/rel 8553 (0,1000)] [idx_logs] sys
+[Mon Apr 12 23:53:20.868 2010] 0.066 sec [all/0/rel 72295 (0,1000)] [idx_logs] info
+[Mon Apr 12 23:54:10.032 2010] 0.045 sec [all/0/rel 72295 (0,1000)] [idx_logs] info
+[Mon Apr 12 23:54:30.316 2010] 0.570 sec [all/0/rel 72295 (0,1000)] [idx_logs] info
+[Tue Apr 13 00:05:33.781 2010] 0.028 sec [all/0/rel 288 (0,1000)] [idx_logs] config
+[Tue Apr 13 00:05:46.415 2010] 0.017 sec [all/0/rel 67 (0,1000)] [idx_logs] config_i
+[Tue Apr 13 00:06:00.895 2010] 0.012 sec [all/0/rel 0 (0,1000)] [idx_logs] ink
+[Tue Apr 13 00:06:08.069 2010] 0.051 sec [all/0/rel 162413 (0,1000)] [idx_logs] link
+[Tue Apr 13 00:07:50.467 2010] 0.011 sec [all/0/rel 79 (0,1000)] [idx_logs] config_i
+[Tue Apr 13 09:33:29.618 2010] 1.059 sec [all/0/rel 445431 (0,1000)] [idx_logs] interface
+[Tue Apr 13 10:01:44.272 2010] 0.118 sec [all/0/rel 1184978 (0,1000)] [idx_logs] interface
+[Tue Apr 13 10:02:01.552 2010] 0.002 sec [all/0/rel 228 (0,1000)] [idx_logs] config_i
+[Tue Apr 13 10:03:42.792 2010] 0.118 sec [all/0/rel 1184978 (0,1000)] [idx_logs] interface
+[Tue Apr 13 10:03:58.606 2010] 0.103 sec [all/0/rel 1184978 (0,1000)] [idx_logs] interface

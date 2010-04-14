@@ -35,6 +35,7 @@ http://playground.emanuelblagonic.com/creating-nested-drop-down-menus/
 <!-- END Top Menu Navigation -->
 
 <?php
+$start_time = microtime(true);
 $page = get_input('page');
 $page = (!empty($page)) ? $page : "Main";
 $pagecontent = "<div id=\"pagecontent\" style=\"position:absolute; width: 100%; top: 8%; left: 1%;\">\n";
@@ -194,6 +195,10 @@ $pagecontent .= "<td width='33%'>\n";
     $pagecontent .= "</div>\n";
 $pagecontent .= "</td>\n";
 $pagecontent .= "<td width='33%'></td>\n";
+if ($_SESSION['DEBUG'] == "1") {
+    $end_time = microtime(true);
+    $pagecontent .= "Page generated in " . round(($end_time - $start_time),5) . " seconds\n";
+}
 $pagecontent .= "</tbody>\n";
 $pagecontent .= "</table>\n";
 }

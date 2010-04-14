@@ -180,7 +180,8 @@ if (!$daemon) {
 
 # Set vars and pattern match outside the loop to speed up regex processing
 my ($host, $facility, $priority, $tag, $date, $time, $prg, $msg, $mne); 
-my $re_pipe = qr/(.+?)[\t](.*)[\t](.*)[\t](.*)[\t](.*)[\t](.*)[\t](.*)[\t](.*)/;
+#my $re_pipe = qr/(.+?)[\t](.*)[\t](.*)[\t](.*)[\t](.*)[\t](.*)[\t](.*)[\t](.*)/;
+my $re_pipe = qr/(\S+)\t(\S+)\t(\S+)\t(\S+)\t(\S+)\t(\S+)\t(\S+)\t(\S+.*)/;
 
 my $ref=tie *FH,"File::Tail",(name=>$tailfile,debug=>$debug,
     interval=>1,maxinterval=>2,
@@ -240,8 +241,9 @@ my $now;
 
 open (DUMP, ">$dumpfile") or die "can't open $dumpfile: $!\n";
 close (DUMP);
-$db_load->{TraceLevel} = 4 if (($debug > 2) and ($verbose));
+$db_load->{TraceLevel} = 4 if (($debug > 4) and ($verbose));
 while (<FH>){
+#while (<>){
     $mps++;
     if (($#dumparr < $q_limit) && ($start_time <= $time_limit)) {
         #print STDOUT "Pushing\n";
@@ -251,7 +253,7 @@ while (<FH>){
         #print STDOUT "Time limit = ". $time_limit ."\n";
         push(@dumparr, do_msg($_));
         #push (@dumparr, "host\tfacility\tpriority\ttag\tprg\tmsg\tmne\t$datetime_now\t$datetime_now\t\n");
-        $start_time++;
+        $start_time = time;
     } else { 
         if ($#dumparr > 0 ) {
             if ($start_time >= $time_limit) {
@@ -308,7 +310,6 @@ while (<FH>){
         print STDOUT "\n#######\nCurrent MPS = $mps\n#######\n" if ($debug > 2);
         print LOG "\n#######\nCurrent MPS = $mps\n#######\n" if ($debug > 2);
         $mpm += $mps;
-        $mph += $mpm;
         push(@mps, "chart_mps_$sec,$mps,$now");
         if ($#mps == 60) {
             my $now = strftime("%Y-%m-%d %H:%M:%S", localtime);
@@ -317,6 +318,7 @@ while (<FH>){
             $db_insert_mpX->execute("chart_mpm_$min", "$mpm", "$now");
             print STDOUT "Messages Per Minute = $mpm\n" if ($debug > 1);
             print LOG "Messages Per Minute = $mpm\n" if ($debug > 1);
+            $mph += $mpm;
             $mpm = 0;
             @mps = ();
         }
@@ -330,6 +332,7 @@ while (<FH>){
             $db_insert_mpX->execute("chart_mph_$hr", "$mph", "$now");
             print STDOUT "Messages Per Hour = $mph\n" if ($debug > 1);
             print LOG "Messages Per Hour = $mph\n" if ($debug > 1);
+            $mpd += $mph;
             $mph = 0;
             @mpm = ();
         }
@@ -338,7 +341,7 @@ while (<FH>){
             $db_insert_mpX->execute("chart_mpd_$day", "$mpd", "$now");
             print STDOUT "Messages Per Day = $mpd\n" if ($debug > 1);
             print LOG "Messages Per Day = $mpd\n" if ($debug > 1);
-            my $mpd = 0;
+            $mpd = 0;
             @mph = ();
         }
         $mps = 0;
@@ -382,12 +385,16 @@ sub do_msg {
         $msg = $8;
         $msg =~ s/\\//; # Some messages come in with a trailing slash
         $msg =~ s/'//; # remove any ''s
-        if ($msg =~ /%(.*?):/) {
+        $msg =~ s/\t/ /g; # remove any TABs
+        if ($msg =~ /%(\w+-\d-\w+):/) {
             $mne = $1;
+        } else {
+            $mne = "None";
         }
         $msg =~ s/[\x00-\x1F\x80-\xFF]//; # Remove any non-printable characters
         $prg =~ s/%ACE.*\d+/Cisco ACE/; # Added because ACE modules don't send their program field properly
         $prg =~ s/%ASA.*\d+/Cisco ASA/; # Added because ASA's don't send their program field properly
+        $prg =~ s/%FWSM.*\d+/Cisco FWSM/; # Added because FWSM's don't send their program field properly
         $prg =~ s/date=\d+-\d+-\d+/Fortigate Firewall/; # Added because Fortigate's don't follow IETF standards
         $msg =~ s/time=\d+:\d+:\d+\s//; # Added because Fortigate's don't s follow IETF standards
         @msgs = split(/:/, $msg);
@@ -445,7 +452,7 @@ sub do_msg {
     if($dedup eq 1) {
         $insert = 1;
         # Debug: set trace level to 4 to get query string executed
-        $db_select->{TraceLevel} = 4 if (($debug > 2) and ($verbose));
+        $db_select->{TraceLevel} = 4 if (($debug > 4) and ($verbose));
         # Select any records between now and $dedup_window seconds ago that match this host, facility, etc.
         $db_select->execute($host, $facility, $priority, $tag, $datetime_past, $datetime_now);
         if ($db_select->errstr()) {

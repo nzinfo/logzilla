@@ -34,7 +34,7 @@ sub p {
 }
 
 my $version = "3.0";
-my $subversion = "RC1";
+my $subversion = ".8";
 
 # Grab the base path
 my $lzbase = getcwd;
@@ -461,6 +461,6 @@ if ($paths_updated >0) {
 }
 print("\n\033[1m\tLogZilla installation complete...\n\033[0m");
 print("\033[1m\tNote: you may need to enable the MySQL Event Scheduler in your /etc/my.cnf file.\n\033[0m");
-print("\033[1m\tPlease visit http://logzilla.info/index.php/topic,71.0.html for more information.\n\033[0m");
+print("\033[1m\tPlease visit http://forum.logzilla.info/index.php/topic,71.0.html for more information.\n\033[0m");
 print("\n\033[1m\tTo Start LogZilla (you'll need to restart syslog-ng also), type:\n\033[0m");
 print("\033[1m\t/etc/init.d/syslog-ng restart && /etc/init.d/logzilla start\n\033[0m");

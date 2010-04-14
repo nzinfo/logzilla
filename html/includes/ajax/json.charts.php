@@ -447,6 +447,53 @@ switch ($chartId) {
 	echo $chart->toPrettyString();
     break;
 
+    case "chart_mpd_old":
+        $title = new title( "Last Week" );
+    $bar = new bar_rounded_glass();
+    $bar2 = new line();
+    $array = array();
+    $avg = array();
+    $hms = array();
+    $sql = "SELECT name,value,updatetime, (SELECT ROUND(SUM(value)/7) FROM cache WHERE name LIKE 'chart_mpd_%') AS avg, DATE_FORMAT(updatetime, '%a, the %D') as Day FROM cache WHERE name LIKE 'chart_mpd_%' AND updatetime BETWEEN NOW() - INTERVAL 6 DAY and NOW() - INTERVAL 0 DAY ORDER BY updatetime ASC";
+    $queryresult = perform_query($sql, $dbLink, $_SERVER['PHP_SELF']);
+    while ($line = fetch_array($queryresult)) {
+        $hms[] = $line['Day'];
+        $count = intval($line['value']);
+        if (!is_int($count)) {
+            $count = 0;
+        }
+        $array[] = $count;
+        $v = intval($line['avg']);
+        if (is_int($v)){
+            $avg[] = $v;
+        }
+    }
+    if (empty($array)) $array[] = 0;
+    $bar->set_values( $array );
+    $bar->set_tooltip("#val#<br>Average = ".commify($avg[0]));
+    $bar2->set_values( ($avg) );
+    $bar2->set_colour( "#40FF40" );
+    $bar2->set_tooltip("#val#<br>Average [#x_label#]");
+    $chart = new open_flash_chart();
+    $chart->set_title( $title );
+    $chart->add_element( $bar );
+    $chart->add_element( $bar2 );
+    //
+    // create a Y Axis object
+    //
+    $y = new y_axis();
+    // grid steps:
+    $y->set_range( 0, max($array), round(max($array)/10));
+    $chart->set_y_axis( $y );
+    $x_labels = new x_axis_labels();
+    $x_labels->set_vertical();
+    $x_labels->set_labels( $hms );
+    $x = new x_axis();
+    $x->set_labels( $x_labels );
+    $chart->set_x_axis( $x );
+    echo $chart->toPrettyString();
+    break;
+
     case "chart_mpd":
         $title = new title( date("D M d Y") );
     $bar = new bar_rounded_glass();
@@ -455,31 +502,39 @@ switch ($chartId) {
    	// -------------------------
    	$array = array();
     // Below will update today every time the page is refreshed, otherwise we get stale data
-    $sql = "REPLACE INTO cache (name,value,updatetime)  SELECT CONCAT('chart_mpd_',DATE_FORMAT(NOW(), '%Y-%m-%d_%a')), SUM(counter), NOW() from ".$_SESSION['TBL_MAIN']." where lo BETWEEN CONCAT(CURDATE(), ' 00:00:00') AND CONCAT(CURDATE(), ' 23:59:59');";
+    $sql = "REPLACE INTO cache (updatetime,name, value) SELECT NOW(), CONCAT('chart_mpd_',DATE_FORMAT(NOW(), '%Y-%m-%d_%a')), SUM(value) FROM cache WHERE name LIKE 'chart_mph_%'";
     $result = perform_query($sql, $dbLink, $_SERVER['PHP_SELF']);
    	for($i = 0; $i<=$_SESSION['CHART_MPD_DAYS'] ; $i++) {
 		// Check cache first
-		$sql = "SELECT name, value, updatetime FROM cache WHERE name=CONCAT('chart_mpd_',DATE_FORMAT(NOW() - INTERVAL $i DAY, '%Y-%m-%d_%a'))";
+		$sql = "SELECT name, value, updatetime, (SELECT ROUND(SUM(value)/".$_SESSION['CHART_MPD_DAYS'].") as avg FROM cache WHERE name LIKE 'chart_mpd_%') AS avg FROM cache WHERE name=CONCAT('chart_mpd_',DATE_FORMAT(NOW() - INTERVAL $i DAY, '%Y-%m-%d_%a'))";
 	   	$result = perform_query($sql, $dbLink, $_SERVER['PHP_SELF']);
 	   	if(num_rows($result) > 0) {
 		   	while ($line = fetch_array($result)) {
 			   	$pieces = explode("_", $line['name']);
 				$date = explode("-", $pieces[2]);
 			   	$days[] = $pieces[3].", ".$date[2];
-			   	$array[] = intval($line['value']);
-		   	}
+                $array[] = intval($line['value']);
+                $v = intval($line['avg']);
+                if (is_int($v)){
+                    $avg[] = $v;
+                }
+            }
 	   	} else {
 		   	// Insert into cache if it doesn't exist, then select the data from cache
 		   	$sql = "INSERT INTO cache (name,value,updatetime)  SELECT CONCAT('chart_mpd_',DATE_FORMAT(NOW() - INTERVAL $i DAY, '%Y-%m-%d_%a')), SUM(counter) as count, NOW() from ".$_SESSION['TBL_MAIN']." where lo BETWEEN CONCAT(CURDATE(), ' 00:00:00') - INTERVAL $i DAY and CONCAT(CURDATE(), ' 23:59:59') - INTERVAL $i DAY ON duplicate KEY UPDATE updatetime=NOW()";
 		   	$result = perform_query($sql, $dbLink, $_SERVER['PHP_SELF']);
-		$sql = "SELECT name, value, updatetime FROM cache WHERE name=CONCAT('chart_mpd_',DATE_FORMAT(NOW() - INTERVAL $i DAY, '%Y-%m-%d_%a'))";
+		$sql = "SELECT name, value, updatetime, (SELECT ROUND(SUM(value)/".$_SESSION['CHART_MPD_DAYS'].") as avg FROM cache WHERE name LIKE 'chart_mpd_%') AS avg FROM cache WHERE name=CONCAT('chart_mpd_',DATE_FORMAT(NOW() - INTERVAL $i DAY, '%Y-%m-%d_%a'))";
 		   	$result = perform_query($sql, $dbLink, $_SERVER['PHP_SELF']);
 		   	while ($line = fetch_array($result)) {
 			   	$pieces = explode("_", $line['name']);
 				$date = explode("-", $pieces[2]);
 			   	$days[] = $pieces[3].", ".$date[2];
 			   	$array[] = intval($line['value']);
-		   	}
+                $v = intval($line['avg']);
+                if (is_int($v)){
+                    $avg[] = $v;
+                }
+            }
 	   	}
 	}
 	// Delete any old entries
@@ -487,6 +542,7 @@ switch ($chartId) {
    	$result = perform_query($sql, $dbLink, $_SERVER['PHP_SELF']);
 	// Set bar values
    	$bar->set_values( array_reverse($array) );
+    $bar->set_tooltip("#val#<br>Average = ".commify($avg[0]));
    	$chart = new open_flash_chart();
    	$chart->set_title( $title );
    	$chart->add_element( $bar );
@@ -615,10 +671,9 @@ switch ($chartId) {
     }
     if (empty($array)) $array[] = 0;
     $bar->set_values( $array );
-    // $bar->set_tooltip("#val#<br>Average MPS = ".commify($avg[0]));
-    $bar2->set_values( ($avg) );
-    $bar2->set_colour( "#40FF40" );
-    $bar2->set_tooltip("#val#<br>Average [#x_label#]");
+    $bar->set_tooltip("#val#<br>Average = ".commify($avg[0]));
+    // $bar2->set_values( ($avg) );
+    // $bar2->set_colour( "#40FF40" );
     $chart = new open_flash_chart();
     $chart->set_title( $title );
     $chart->add_element( $bar );

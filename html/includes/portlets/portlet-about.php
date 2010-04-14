@@ -1,7 +1,7 @@
 <img style='float: left; border: 0 none; padding-right: 1.5em; padding-left: 1.5em; width: 250px; height: 250px;' src='images/LogZilla_Logo_smoothfont_300x300_transparent.png' alt='Go Go LogZilla!'/>
 <table class="header">
 <tr><td>
-	<h2 class="logo"><?php echo $_SESSION['PROGNAME'] ." v".$_SESSION['VERSION']." ".$_SESSION['VERSION_SUB']." by Clayton Dukes (cdukes@cdukes.com)";?></h2>
+	<h2 class="logo"><?php echo $_SESSION['PROGNAME'] ." v".$_SESSION['VERSION']."".$_SESSION['VERSION_SUB']." by Clayton Dukes (cdukes@cdukes.com)";?></h2>
 </td><td class="headerright">
 </td></tr></table>
 <table class="headerbottom"><tr><td>

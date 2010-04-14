@@ -18,6 +18,7 @@ $basePath = dirname( __FILE__ );
 require_once ($basePath . "/../common_funcs.php");
 if ((has_portlet_access($_SESSION['username'], 'Search Results') == TRUE) || ($_SESSION['AUTHTYPE'] == "none")) {
 $dbLink = db_connect_syslog(DBADMIN, DBADMINPW);
+$start_time = microtime(true);
 //---------------------------------------------------
 // The get_input statements below are used to get
 // POST, GET, COOKIE or SESSION variables.
@@ -121,31 +122,71 @@ $msg_mask = html_entity_decode($msg_mask);
 $msg_mask = preg_replace ('/^Search through .*\sMessages/m', '', $msg_mask);
 $msg_mask_oper = get_input('msg_mask_oper');
 $qstring .= "&msg_mask=$msg_mask&msg_mask_oper=$msg_mask_oper";
+
 if($msg_mask) {
-    switch ($msg_mask_oper) {
-        case "=":
-            $where.= " AND msg='$msg_mask'";  
-        break;
+    if ($_SESSION['SPX_ENABLE'] == "1") {
+        //---------------BEGIN SPHINX
+        require_once ($basePath . "/../SPHINX.class.php");
+        // Get the search variable from URL
+        // $var = @$_GET['msg_mask'] ;
+        // $trimmed = trim($$msg_mask); //trim whitespace from the stored variable
 
-        case "!=":
-            $where.= " AND msg='$msg_mask'";  
-        break;
+        // $q = $trimmed;
+#$q = "SELECT id ,group_id,title FROM documents where title = 'test one'";
+#$q = " SELECT id, group_id, UNIX_TIMESTAMP(date_added) AS date_added, title, content FROM documents";
+        $index = "idx_logs";
 
-        case "LIKE":
-            $where.= " AND msg LIKE '%$msg_mask%'";  
-        break;
+        $cl = new SphinxClient ();
+        $hostip = $_SESSION['SPX_SRV'];
+        $port = intval($_SESSION['SPX_PORT']);
+        $cl->SetServer ( $hostip, $port );
+        $res = $cl->Query ( $msg_mask, $index);
+        if ( !$res )
+        {
+            die ( "ERROR: " . $cl->GetLastError() . ".\n" );
+        } else
+        {
+            if ($res['total_found'] > 0) {
+                $where .= " AND id IN (";
+                foreach ( $res["matches"] as $doc => $docinfo ) {
+                    $where .= "'$doc',";
+                    // echo "$doc<br>\n";
+                }
+                $where = rtrim($where, ",");
+                $where .= ")";
+            } else {
+                // Negate search since sphinx returned 0 hits
+                $where = "WHERE 1<1";
+                //  die(print_r($res));
+            }
+        }
+        //---------------END SPHINX
+    } else {
+        switch ($msg_mask_oper) {
+            case "=":
+                $where.= " AND msg='$msg_mask'";  
+            break;
 
-        case "! LIKE":
-            $where.= " AND msg NOT LIKE '%$msg_mask%'";  
-        break;
+            case "!=":
+                $where.= " AND msg='$msg_mask'";  
+            break;
 
-        case "RLIKE":
-            $where.= " AND msg RLIKE '$msg_mask'";  
-        break;
+            case "LIKE":
+                $where.= " AND msg LIKE '%$msg_mask%'";  
+            break;
 
-        case "! RLIKE":
-            $where.= " AND msg NOT LIKE '$msg_mask'";  
-        break;
+            case "! LIKE":
+                $where.= " AND msg NOT LIKE '%$msg_mask%'";  
+            break;
+
+            case "RLIKE":
+                $where.= " AND msg RLIKE '$msg_mask'";  
+            break;
+
+            case "! RLIKE":
+                $where.= " AND msg NOT LIKE '$msg_mask'";  
+            break;
+        }
     }
 }
 $notes_mask = get_input('notes_mask');
@@ -258,33 +299,33 @@ $limit = get_input('limit');
 $limit = (!empty($limit)) ? $limit : "10";
     $qstring .= "&limit=$limit";
 $dupop = get_input('dupop');
-    $qstring .= "&dupop=$dupop";
-    $dupop_orig = $dupop;
+$qstring .= "&dupop=$dupop";
+$dupop_orig = $dupop;
 $dupcount = get_input('dupcount');
-    $qstring .= "&dupcount=$dupcount";
-if ($dupop) {
-switch ($dupop) {
-    case "gt":
-        $dupop = ">";
-    break;
+$qstring .= "&dupcount=$dupcount";
+if (($dupop) && ($dupop != 'undefined')) {
+    switch ($dupop) {
+        case "gt":
+            $dupop = ">";
+        break;
 
-    case "lt":
-        $dupop = "<";
-    break;
+        case "lt":
+            $dupop = "<";
+        break;
 
-    case "eq":
-        $dupop = "=";
-    break;
+        case "eq":
+            $dupop = "=";
+        break;
 
-    case "gte":
-        $dupop = ">=";
-    break;
+        case "gte":
+            $dupop = ">=";
+        break;
 
-    case "lte":
-        $dupop = "<=";
-    break;
-}
-        $where.= " AND counter $dupop '$dupcount'"; 
+        case "lte":
+            $dupop = "<=";
+        break;
+    }
+    $where.= " AND counter $dupop '$dupcount'"; 
 }
 $orderby = get_input('orderby');
     $qstring .= "&orderby=$orderby";
@@ -352,11 +393,12 @@ $graphtype = get_input('graphtype');
   <tbody>
   <?php
   $total = get_total_rows($_SESSION['TBL_MAIN'], $dbLink, "$where");
+
   $sql = "SELECT * FROM ".$_SESSION['TBL_MAIN'] ." $where LIMIT $limit";
   $result = perform_query($sql, $dbLink, $_SERVER['PHP_SELF']); 
   $count = mysql_num_rows($result);
   if ($total > 0) {
-      $info = "<center>Showing $count of $total Possible Results</center>";
+      $info = "<center>Showing $count of ".commify($total)." Possible Results</center>";
       ?>
           <script type="text/javascript">
           $("#portlet-header_Search_Results").html('<?php echo "$info"?>');
@@ -412,8 +454,8 @@ $graphtype = get_input('graphtype');
         echo "<td class=\"s_td $sev\"><a href=$_SESSION[SITE_URL]$qstring&priorities[]=$row[priority]>$row[priority]</a></td>\n";
         echo "<td class=\"s_td\"><a href=$_SESSION[SITE_URL]$qstring&programs[]=$row[program]>$row[program]</a></td>\n";
         if ($_SESSION['CISCO_MNE_PARSE'] == "1" ) {
-            $msg = preg_replace('/\s:/', ':', $msg);
-            $msg = preg_replace('/.*(%.*?:.*)/', '$1', $msg);
+            // $msg = preg_replace('/\s:/', ':', $msg);
+            $msg = preg_replace('/.*%(\w+-\d-\w+):/', '$1', $msg);
         }
         if($_SESSION['MSG_EXPLODE'] == "1") {
             $explode_url = "";
@@ -455,7 +497,9 @@ $sql = str_replace("OR", "<br>OR", $sql);
 echo "$sql\n"; 
 echo "<br><br><u><b>Post Variables:</u></b><br>\n";
 $str = str_replace("&", "<br>&", $postvars);
-echo "$str\n";
+echo "$str<br>\n";
+$end_time = microtime(true);
+echo "Page generated in " . round(($end_time - $start_time),5) . " seconds\n";
 }
 ?>
   <input type="hidden" name="tail" id="tail" value="<?php echo $tail?>">

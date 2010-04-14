@@ -7,3 +7,67 @@
 [Mon Apr  5 00:56:59.571 2010] [12037] rotating finished
 [Mon Apr  5 20:25:46.588 2010] [12037] caught SIGTERM, shutting down
 [Mon Apr  5 20:25:46.722 2010] [12037] shutdown complete
+[Mon Apr 12 14:45:29.978 2010] [30503] accepting connections
+[Mon Apr 12 14:45:37.507 2010] [30503] rotating indices (seamless=1)
+[Mon Apr 12 14:45:37.509 2010] [30503] rotating index 'idx_logs': success
+[Mon Apr 12 14:45:37.509 2010] [30503] rotating finished
+[Mon Apr 12 17:32:10.991 2010] [30503] rotating indices (seamless=1)
+[Mon Apr 12 17:32:10.993 2010] [30503] rotating index 'idx_logs': success
+[Mon Apr 12 17:32:10.993 2010] [30503] rotating finished
+[Mon Apr 12 18:41:53.865 2010] [30503] rotating indices (seamless=1)
+[Mon Apr 12 18:41:54.868 2010] [30503] rotating index 'idx_logs': success
+[Mon Apr 12 18:41:54.869 2010] [30503] rotating finished
+[Mon Apr 12 18:46:07.304 2010] [30503] rotating indices (seamless=1)
+[Mon Apr 12 18:46:07.308 2010] [30503] rotating index 'idx_logs': success
+[Mon Apr 12 18:46:07.308 2010] [30503] rotating finished
+[Mon Apr 12 21:42:23.841 2010] [30503] rotating indices (seamless=1)
+[Mon Apr 12 21:42:24.177 2010] [30503] rotating index 'idx_logs': success
+[Mon Apr 12 21:42:24.187 2010] [30503] rotating finished
+[Mon Apr 12 22:36:54.919 2010] [30503] rotating indices (seamless=1)
+[Mon Apr 12 22:36:54.978 2010] [30503] rotating index 'idx_delta_logs': success
+[Mon Apr 12 22:36:54.978 2010] [30503] rotating finished
+[Mon Apr 12 22:37:39.032 2010] [30503] rotating indices (seamless=1)
+[Mon Apr 12 22:37:39.463 2010] [30503] rotating index 'idx_logs': success
+[Mon Apr 12 22:37:39.464 2010] [30503] rotating finished
+[Mon Apr 12 22:56:04.377 2010] [30503] rotating indices (seamless=1)
+[Mon Apr 12 22:56:04.412 2010] [30503] rotating index 'idx_delta_logs': success
+[Mon Apr 12 22:56:04.412 2010] [30503] rotating finished
+[Mon Apr 12 22:56:16.400 2010] [30503] rotating indices (seamless=1)
+[Mon Apr 12 22:56:16.970 2010] [30503] rotating index 'idx_logs': success
+[Mon Apr 12 22:56:17.046 2010] [30503] rotating finished
+[Mon Apr 12 22:57:05.911 2010] [30503] rotating indices (seamless=1)
+[Mon Apr 12 22:57:05.947 2010] [30503] rotating index 'idx_logs': success
+[Mon Apr 12 22:57:05.948 2010] [30503] rotating finished
+[Mon Apr 12 23:00:23.486 2010] [30503] rotating indices (seamless=1)
+[Mon Apr 12 23:00:23.527 2010] [30503] WARNING: rotating index 'idx_delta_logs': cur to old rename failed: rename /path_to_logzilla/sphinx/data/idx_delta_logs.spl to /path_to_logzilla/sphinx/data/idx_delta_logs.old.spl failed: No such file or directory
+[Mon Apr 12 23:00:23.527 2010] [30503] rotating finished
+[Mon Apr 12 23:00:34.269 2010] [30503] rotating indices (seamless=1)
+[Mon Apr 12 23:00:34.283 2010] [30503] rotating index 'idx_delta_logs': success
+[Mon Apr 12 23:00:34.316 2010] [30503] rotating index 'idx_logs': success
+[Mon Apr 12 23:00:34.339 2010] [30503] rotating finished
+[Mon Apr 12 23:01:11.947 2010] [30503] caught SIGTERM, shutting down
+[Mon Apr 12 23:01:11.948 2010] [30503] shutdown complete
+[Mon Apr 12 23:01:22.834 2010] [ 4381] accepting connections
+[Mon Apr 12 23:01:31.488 2010] [ 4381] rotating indices (seamless=1)
+[Mon Apr 12 23:01:31.490 2010] [ 4381] rotating index 'idx_delta_logs': success
+[Mon Apr 12 23:01:31.490 2010] [ 4381] rotating finished
+[Mon Apr 12 23:01:37.169 2010] [ 4381] rotating indices (seamless=1)
+[Mon Apr 12 23:01:37.213 2010] [ 4381] rotating index 'idx_logs': success
+[Mon Apr 12 23:01:37.214 2010] [ 4381] rotating finished
+[Mon Apr 12 23:26:15.157 2010] [ 4381] rotating indices (seamless=1)
+[Mon Apr 12 23:26:15.425 2010] [ 4381] rotating index 'idx_logs': success
+[Mon Apr 12 23:26:15.426 2010] [ 4381] rotating finished
+[Mon Apr 12 23:35:57.317 2010] [ 4381] rotating indices (seamless=1)
+[Mon Apr 12 23:35:57.338 2010] [ 4381] rotating index 'idx_delta_logs': success
+[Mon Apr 12 23:35:57.338 2010] [ 4381] rotating finished
+[Mon Apr 12 23:36:33.371 2010] [ 4381] rotating indices (seamless=1)
+[Mon Apr 12 23:36:37.381 2010] [ 4381] rotating index 'idx_logs': success
+[Mon Apr 12 23:36:37.429 2010] [ 4381] rotating finished
+[Tue Apr 13 00:07:06.364 2010] [ 4381] rotating indices (seamless=1)
+[Tue Apr 13 00:07:06.734 2010] [ 4381] rotating index 'idx_logs': success
+[Tue Apr 13 00:07:06.745 2010] [ 4381] rotating finished
+[Tue Apr 13 09:40:19.125 2010] [ 4381] rotating indices (seamless=1)
+[Tue Apr 13 09:40:27.502 2010] [ 4381] rotating index 'idx_logs': success
+[Tue Apr 13 09:40:27.548 2010] [ 4381] rotating finished
+[Wed Apr 14 10:08:16.905 2010] [ 4381] caught SIGTERM, shutting down
+[Wed Apr 14 10:08:17.176 2010] [ 4381] shutdown complete

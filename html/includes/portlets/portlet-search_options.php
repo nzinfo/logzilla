@@ -19,23 +19,26 @@ $dbLink = db_connect_syslog(DBADMIN, DBADMINPW);
 // -------------------------
 // Get Message count and duplicate calculation
 // -------------------------
-$sql = "SELECT SUM(counter) as count_all, count(*) as count from ".$_SESSION["TBL_MAIN"]."";
-$result = perform_query($sql, $dbLink, $_REQUEST['pageId']);
-$line = fetch_array($result);
-$messagecount = humanReadable($line['count_all']);
-$sumcnt = $line['count_all'];
-$count = $line['count'];
-// simple test for new (or empty) databases so we don't divide by zero on new installs
-if (empty($sumcnt)) {
-   	$sumcnt = 1;
+if ($_SESSION['SHOWCOUNTS'] == "1") {
+    $sql = "SELECT SUM(counter) as count_all, count(*) as count from ".$_SESSION["TBL_MAIN"]."";
+    $result = perform_query($sql, $dbLink, $_REQUEST['pageId']);
+    $line = fetch_array($result);
+    $messagecount = humanReadable($line['count_all']);
+    $sumcnt = $line['count_all'];
+    $count = $line['count'];
+    // simple test for new (or empty) databases so we don't divide by zero on new installs
+    if (empty($sumcnt)) {
+        $sumcnt = 1;
+    }
+    if (empty($count)) {
+        $count = 1;
+    }
+    $mph = ($sumcnt/$count);
+    // subtract 100 from the total below to get the opposite effect (savings = 90% rather than 10%)
+    // Calculation is to get the percentage of messages to messages_per_host (convert a ratio to percentage)
+    $dedup_tot = (100 - (round(100/($mph * 100),4)) * 100);
+    $dedup_pct = "($dedup_tot%)";
 }
-if (empty($count)) {
-   	$count = 1;
-}
-$mph = ($sumcnt/$count);
-// subtract 100 from the total below to get the opposite effect (savings = 90% rather than 10%)
-// Calculation is to get the percentage of messages to messages_per_host (convert a ratio to percentage)
-$dedup_tot = (100 - (round(100/($mph * 100),4)) * 100);
 ?>
 
 <!-- BEGIN HTML for search options -->
@@ -68,7 +71,7 @@ $dedup_tot = (100 - (round(100/($mph * 100),4)) * 100);
 
     <?php  if ( $_SESSION["DEDUP"] == "1" ) { ?>
     <tr>
-        <td>Duplicates (<?php echo $dedup_tot?> %)</td>
+        <td>Duplicates <?php echo $dedup_pct?></td>
         <td>
         <select name="dupop" id="dupop">
         <option selected value=""></option>

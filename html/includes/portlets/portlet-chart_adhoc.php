@@ -416,7 +416,11 @@ $qstring .= "&show_suppressed=$show_suppressed";
         $ctype = new pie();
         if(num_rows($result) >= 1) {
             while ($line = fetch_array($result)) {
-                $pievalues[] = new pie_value(intval($line['count']),  $line[$dbcolumn]);
+                if ($line[$dbcolumn] == "") {
+                    $pievalues[] = new pie_value(intval($line['count']),  "No Matching Mnemonic");
+                } else {
+                    $pievalues[] = new pie_value(intval($line['count']),  $line[$dbcolumn]);
+                }
                 $ids[] = $line['id'];
             }
         }

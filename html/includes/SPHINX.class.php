@@ -12,6 +12,7 @@
 // did not, you can find it at http://www.gnu.org/
 //
 
+session_start();
 
 /////////////////////////////////////////////////////////////////////////////
 // PHP version of Sphinx searchd client (PHP API)
@@ -202,7 +203,8 @@ class SphinxClient
 
                 // per-query settings
                 $this->_offset          = 0;
-                $this->_limit           = 50;
+                // $this->_limit           = 50;
+                $this->_limit           = $_SESSION['SPX_MAX_MATCHES'];
                 $this->_mode            = SPH_MATCH_ALL;
                 $this->_weights         = array ();
                 $this->_sort            = SPH_SORT_RELEVANCE;
@@ -214,7 +216,8 @@ class SphinxClient
                 $this->_groupfunc       = SPH_GROUPBY_DAY;
                 $this->_groupsort       = "@group desc";
                 $this->_groupdistinct= "";
-                $this->_maxmatches      = $spx_max_matches;
+                $this->_maxmatches      = $_SESSION['SPX_MAX_MATCHES'];
+                // $this->_maxmatches      = 100;
                 $this->_cutoff          = 0;
                 $this->_retrycount      = 0;
                 $this->_retrydelay      = 0;
