@@ -460,7 +460,9 @@ if ($paths_updated >0) {
 	print "Since you chose not to update paths, you will need to manually merge contrib/system_configs/syslog-ng.conf with your syslog-ng.conf.\n";
 }
 print("\n\033[1m\tLogZilla installation complete...\n\033[0m");
-print("\033[1m\tNote: you may need to enable the MySQL Event Scheduler in your /etc/my.cnf file.\n\033[0m");
-print("\033[1m\tPlease visit http://forum.logzilla.info/index.php/topic,71.0.html for more information.\n\033[0m");
+print("\033[1mNote: you may need to enable the MySQL Event Scheduler in your /etc/my.cnf file.\n\033[0m");
+print("\033[1mPlease visit http://forum.logzilla.info/index.php/topic,71.0.html for more information.\n\033[0m");
+print("\033[1m\nAlso, please visit http://nms.gdd.net/index.php/Install_Guide_for_LogZilla_v3.0#UDP_Buffers to learn how to increase your UDP buffer size (otherwise you may drop messages).\n\033[0m");
 #print("\n\033[1m\tTo Start LogZilla (you'll need to restart syslog-ng also), type:\n\033[0m");
 #print("\033[1m\t/etc/init.d/syslog-ng restart && /etc/init.d/logzilla start\n\033[0m");
+print("\033[1m\nPlease run /etc/init.d/syslog-ng restart\n\033[0m");
