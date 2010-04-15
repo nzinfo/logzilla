@@ -17,8 +17,9 @@
 # 2010-02-23 - Added str2hex conversion - all messages are now stored into the db as HEX.
 # 2010-03-01 - Removed str2hex, unfortunately, while db queries were faster, searching would 
 #              only allow for case-sensitive searches and no regex.
-# 2010-04-04 - Removed forking and added load data infile (now able to process spikes up to ~16kmps)
+# 2010-04-04 - Removed forking and added load data infile (now able to process spikes up to ~12kmps)
 # 2010-04-12 - Fixed issue with 1s granularity
+# 2010-04-14 - REMOVED Tail::File and daemonize. Calling db_insert.pl directly from syslog-ng provided much better insert rates (now at 20kmps)
 #
 
 
@@ -29,7 +30,6 @@ use DBI;
 use Text::LevenshteinXS qw(distance);
 use File::Spec;
 use File::Basename;
-use File::Tail;
 
 
 $| = 1;
@@ -40,7 +40,7 @@ $| = 1;
 use vars qw/ %opt /;
 
 # Set command line vars
-my ($debug, $config, $logfile, $verbose, $dbh, $tailfile, $daemon, $pidfile);
+my ($debug, $config, $logfile, $verbose, $dbh, $selftest, $qsize);
 
 #
 # Command line options processing
@@ -48,15 +48,14 @@ my ($debug, $config, $logfile, $verbose, $dbh, $tailfile, $daemon, $pidfile);
 sub init()
 {
     use Getopt::Std;
-    my $opt_string = 'hd:c:l:vt:bp:';
+    my $opt_string = 'hd:c:l:svq:';
     getopts( "$opt_string", \%opt ) or usage();
     usage() if $opt{h};
-    $tailfile = defined($opt{'t'}) ? $opt{'t'} : '/path_to_logs/syslog.log';
     $debug = defined($opt{'d'}) ? $opt{'d'} : '0';
-    $pidfile = defined($opt{'p'}) ? $opt{'p'} : '/var/run/logzilla.pid';
     $logfile = $opt{'l'} if $opt{'l'};
     $verbose = $opt{'v'} if $opt{'v'};
-    $daemon = $opt{'b'} if $opt{'b'};
+    $qsize = $opt{'q'} if $opt{'q'};
+    $selftest = $opt{'s'} if $opt{'s'};
     $config = defined($opt{'c'}) ? $opt{'c'} : "/path_to_logzilla/html/config/config.php";
 }
 
@@ -69,21 +68,18 @@ sub usage()
 {
     print STDERR << "EOF";
 This program is used to process incoming syslog messages from a file.
-    usage: $0 [-hbdvltcsp] 
+    usage: $0 [-hdvlcs] 
     -h        : this (help) message
-    -b        : run in background (daemonize)
     -d        : debug level (0-5) (0 = disabled [default])
     -v        : Also print results to STDOUT
     -l        : log file (default used from config.php if not set here)
-    -t        : Tailfile - file to watch (Default: /path_to_logs/syslog.log)
-    -p        : PID file location (Default: /var/run/logzilla.pid)
     -c        : config file (overrides the default config.php file location set in the '\$config' variable in this script)
     example: $0 -l /var/log/foo.log -d 5 -c /path_to_logzilla/html/config/config.php -v -t /var/log/syslog
 
-    -s        : **DEPRECATED**: 
+    -s        : **Special Option**: 
             This option may be used to run a self test
-            You can run a self test by typing:
-            $0 -t /var/log/syslog -s -c /path_to_logzilla/html/config/config.php (replace with the path to your config)
+            You can run a self  test by typing:
+            $0 -s -c /path_to_logzilla/html/config/config.php (replace with the path to your config)
 EOF
     exit;
 }
@@ -95,7 +91,7 @@ open( CONFIG, $config );
 my @config = <CONFIG>; 
 close( CONFIG );
 
-my($dbtable,$dbuser,$dbpass,$db,$dbhost,$dbport,$DEBUG,$dedup,$dedup_window,$dedup_dist,$log_path,$bulk_ins,$insert_string,@msgs, @bmdata, $bmstart, $bmend, $q_time, $q_limit);
+my($dbtable,$dbuser,$dbpass,$db,$dbhost,$dbport,$DEBUG,$dedup,$dedup_window,$dedup_dist,$log_path,$bulk_ins,$insert_string,@msgs, $q_time, $q_limit);
 foreach my $var (@config) {
     next unless $var =~ /^DEFINE/; # read only def's
     $dbuser = $1 if ($var =~ /'DBADMIN', '(\w+)'/);
@@ -115,7 +111,6 @@ if (!$dbh) {
     exit;
 }
 my $sth = $dbh->prepare("SELECT name,value FROM settings");
-#$sth->{TraceLevel} = 4;
 $sth->execute();
 if ($sth->errstr()) {
     print LOG "FATAL: Unable to execute SQL statement: ", $sth->errstr(), "\n";
@@ -163,53 +158,22 @@ print LOG "Using Database: $db\n";
 print STDOUT "\n$datetime\nStarting $logfile for $file_path at pid $$\n" if (($debug > 0) and ($verbose));
 print STDOUT "Using Database: $db\n" if (($debug > 0) and ($verbose));
 
-if (!$daemon) {
-    if (($debug > 0) or ($verbose)) { 
-        print STDOUT "Debug level: $debug\n";
-        print STDOUT "Table: $dbtable\n";
-        print STDOUT "Adminuser: $dbuser\n";
-        print STDOUT "PW: $dbpass\n";
-        print STDOUT "DB: $db\n";
-        print STDOUT "DB Host: $dbhost\n";
-        print STDOUT "DB Port: $dbport\n";
-        print STDOUT "Deduplication Feature = $dedup\n";
-        print STDOUT "Logging results to $logfile\n";
-        print STDOUT "Printing results to screen (STDOUT)\n" if (($debug > 0) and ($verbose));
-    }
+if (($debug > 0) or ($verbose)) { 
+    print STDOUT "Debug level: $debug\n";
+    print STDOUT "Table: $dbtable\n";
+    print STDOUT "Adminuser: $dbuser\n";
+    print STDOUT "PW: $dbpass\n";
+    print STDOUT "DB: $db\n";
+    print STDOUT "DB Host: $dbhost\n";
+    print STDOUT "DB Port: $dbport\n";
+    print STDOUT "Deduplication Feature = $dedup\n";
+    print STDOUT "Logging results to $logfile\n";
+    print STDOUT "Printing results to screen (STDOUT)\n" if (($debug > 0) and ($verbose));
 }
 
-# Set vars and pattern match outside the loop to speed up regex processing
 my ($host, $facility, $priority, $tag, $date, $time, $prg, $msg, $mne); 
-#my $re_pipe = qr/(.+?)[\t](.*)[\t](.*)[\t](.*)[\t](.*)[\t](.*)[\t](.*)[\t](.*)/;
 my $re_pipe = qr/(\S+)\t(\S+)\t(\S+)\t(\S+)\t(\S+)\t(\S+)\t(\S+)\t(\S+.*)/;
 
-my $ref=tie *FH,"File::Tail",(name=>$tailfile,debug=>$debug,
-    interval=>1,maxinterval=>2,
-    tail=>0,
-    maxbuf=>65535,
-    adjustafter=>1,errmode=>"return");
-
-# Daemonize.
-if ($daemon) # parent: save PID
-{
-    my $pid = $$;
-    chdir '/'               or die "Can't chdir to /: $!";
-    open STDIN, '/dev/null' or die "Can't read /dev/null: $!";
-    open STDOUT, '>/dev/null'
-        or die "Can't write to /dev/null: $!";
-    defined(my $pid = fork) or die "Can't fork: $!";
-    exit if $pid;
-    setsid                  or die "Can't start a new session: $!";
-    open STDERR, '>&STDOUT' or die "Can't dup stdout: $!";
-}
-
-my $pid = $$;
-open (PIDFILE, ">$pidfile") or die "can't open $pidfile: $!\n";
-print PIDFILE $pid;
-close (PIDFILE);
-my $mne = "";
-
-# Reconnect in case we daemonized
 $dbh->disconnect();
 $dbh = DBI->connect( "DBI:mysql:$db:$dbhost", $dbuser, $dbpass );
 if (!$dbh) {
@@ -242,15 +206,43 @@ my $now;
 open (DUMP, ">$dumpfile") or die "can't open $dumpfile: $!\n";
 close (DUMP);
 $db_load->{TraceLevel} = 4 if (($debug > 4) and ($verbose));
-while (<FH>){
-#while (<>){
+if ($selftest) {
+    my $sth = $dbh->prepare("
+        DELETE from $dbtable where tag='dbins_tag';
+        ") or die "Could not delete old test results: $DBI::errstr";
+    $sth->execute;
+    my $cmd = "$0";
+    $cmd .= " -d 3"; # Force debug on so test results are shown 
+    $cmd .= " -c " . $opt{'c'} if $opt{'c'};
+    $cmd .= " -l " . $opt{'l'} if $opt{'l'};
+    $cmd .= " -v "; # Force verbose mode so results are printed to screen
+    print STDOUT "\nPERFORMING SELF TEST USING COMMAND: $cmd\n\n";
+    my $res = `printf "\n" | $cmd -q 1`;
+    print STDOUT "Database Lookup (resulting message should be from Fred):\n";
+    my $sth = $dbh->prepare("
+        SELECT max(id), msg FROM $dbtable;
+        ") or die "Could not fetch last row: $DBI::errstr";
+    $sth->execute;
+    if (my $res = $sth->fetchrow_array() ) {
+        print STDOUT "$res\n";
+        print STDOUT "SELF TEST COMPLETE!\n";
+    } else {
+        print STDOUT "Test Failed\n";
+    }
+    exit;
+}
+if ($qsize) {
+    $q_limit = $qsize;
+}
+while (<>){
+    if ($qsize) {
+        for (my $i=0; $i <= 5; $i++) {
+            push (@dumparr, "fakehost\tlocal7\temerg\tdbins_tag\tdb_insert.pl\tdb_insert.pl[$$]: %SYS-5-CONFIG_I: Configured from 172.16.0.123 by Fred Flinstone <fred\@flinstone.com>\tSYS-5-CONFIG_I\t\t\t\n");
+        }
+    }
+    chomp $_;
     $mps++;
     if (($#dumparr < $q_limit) && ($start_time <= $time_limit)) {
-        #print STDOUT "Pushing\n";
-        #print STDOUT "Dumparr count = ". $#dumparr ."\n";
-        #print STDOUT "Q_limit = ". $q_limit ."\n";
-        #print STDOUT "Start time = ". $start_time ."\n";
-        #print STDOUT "Time limit = ". $time_limit ."\n";
         push(@dumparr, do_msg($_));
         #push (@dumparr, "host\tfacility\tpriority\ttag\tprg\tmsg\tmne\t$datetime_now\t$datetime_now\t\n");
         $start_time = time;
@@ -360,12 +352,12 @@ sub round {
 
 sub do_msg {
     $msg = $_[0];
-    # start benchmark timer 
-    #$bmstart = new Benchmark;
     #if (($pid = fork) == 0) {
     # Prepare database statements for later use
-    print LOG "\n\nINCOMING MESSAGE:\n$msg\n" if ($debug > 0);
-    print STDOUT "\n\nINCOMING MESSAGE:\n$msg\n" if (($debug > 2) and ($verbose));
+    if (!$qsize) {
+        print LOG "\n\nINCOMING MESSAGE:\n$msg\n" if ($debug > 0);
+        print STDOUT "\n\nINCOMING MESSAGE:\n$msg\n" if (($debug > 2) and ($verbose));
+    }
 
     # Get current date and time
     $datetime_now = strftime("%Y-%m-%d %H:%M:%S", localtime);
@@ -386,7 +378,7 @@ sub do_msg {
         $msg =~ s/\\//; # Some messages come in with a trailing slash
         $msg =~ s/'//; # remove any ''s
         $msg =~ s/\t/ /g; # remove any TABs
-        if ($msg =~ /%(\w+-\d-\w+):/) {
+        if ($msg =~ /%(\w+-.*\d-\w+):/) {
             $mne = $1;
         } else {
             $mne = "None";
@@ -445,8 +437,10 @@ sub do_msg {
     } else {
         # If something gets inserted wrong from the PIPE we'll set host = blank so we can error out later
         $host = "";
-        print LOG "INVALID MESSAGE FORMAT:\n$msg\n" if ($debug > 0);
-        print STDOUT "INVALID MESSAGE FORMAT:\n$msg\n" if (($debug > 0) and ($verbose));
+        if (!$qsize) {
+            print LOG "INVALID MESSAGE FORMAT:\n$msg\n" if ($debug > 0);
+            print STDOUT "INVALID MESSAGE FORMAT:\n$msg\n" if (($debug > 0) and ($verbose));
+        }
     }
     # If the SQZ feature is enabled, continue, if not we'll just insert the record afterward
     if($dedup eq 1) {
@@ -535,8 +529,10 @@ sub do_msg {
             #}
             # $dbh->{TraceLevel} = 4;
         } else {
-            print LOG "Error inserting record $msg\n" if ($debug > 3); 
-            print STDOUT "Error inserting record $msg\n" if (($debug > 3) and ($verbose)); 
+            if (!$qsize) {
+                print LOG "Error inserting record $msg\n" if ($debug > 3); 
+                print STDOUT "Error inserting record $msg\n" if (($debug > 3) and ($verbose)); 
+            }
         }
     } else {
         print LOG "insert = $insert, Skipping insert of this message since it was a duplicate\n" if ($debug > 3);

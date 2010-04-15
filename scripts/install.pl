@@ -34,7 +34,7 @@ sub p {
 }
 
 my $version = "3.0";
-my $subversion = ".8";
+my $subversion = ".9";
 
 # Grab the base path
 my $lzbase = getcwd;
@@ -373,24 +373,24 @@ if ($paths_updated >0) {
 	print("\n\033[1m\n\n========================================\033[0m\n");
 	print("\n\033[1m\tSystem files\n\033[0m");
 	print("\n\033[1m========================================\n\n\033[0m\n\n");
-	if ( -d "/etc/init.d") {
-        print "Adding LogZilla init file to /etc/init.d\n";
-        my $ok  = &p("Ok to continue?", "y");
-        my $test = `uname -a | awk '{print \$4}'`;
-        if ($test =~ /Ubuntu/) {
-            if ($ok =~ /[Yy]/) {
-                system("cp contrib/system_configs/logzilla.initd /etc/init.d/logzilla");
-                chmod 0755, '/etc/init.d/logzilla';
-            } else {
-                print "Skipped init.d file, you will need to manually copy:\n";
-                print "cp contrib/system_configs/logzilla.initd /etc/init.d/logzilla\n";
-            }
-        } else {
-            print("\n\033[1m\tWARNING!\n\033[0m");
-            print "Non-Ubuntu system found, you'll need to manually copy the\n";
-            print "appropriate init.d file from the contrib/system_confgs directory.\n";
-        }
-    }
+    #if ( -d "/etc/init.d") {
+    #print "Adding LogZilla init file to /etc/init.d\n";
+    #my $ok  = &p("Ok to continue?", "y");
+    #my $test = `uname -a | awk '{print \$4}'`;
+    #if ($test =~ /Ubuntu/) {
+    #if ($ok =~ /[Yy]/) {
+    #system("cp contrib/system_configs/logzilla.initd /etc/init.d/logzilla");
+    #chmod 0755, '/etc/init.d/logzilla';
+    #} else {
+    #print "Skipped init.d file, you will need to manually copy:\n";
+    #print "cp contrib/system_configs/logzilla.initd /etc/init.d/logzilla\n";
+    #}
+    #} else {
+    #print("\n\033[1m\tWARNING!\n\033[0m");
+    #print "Non-Ubuntu system found, you'll need to manually copy the\n";
+    #print "appropriate init.d file from the contrib/system_confgs directory.\n";
+    #}
+    #}
     if ( -d "/etc/logrotate.d") {
         print "Adding LogZilla logrotate.d file to /etc/logrotate.d\n";
         my $ok  = &p("Ok to continue?", "y");
@@ -462,5 +462,5 @@ if ($paths_updated >0) {
 print("\n\033[1m\tLogZilla installation complete...\n\033[0m");
 print("\033[1m\tNote: you may need to enable the MySQL Event Scheduler in your /etc/my.cnf file.\n\033[0m");
 print("\033[1m\tPlease visit http://forum.logzilla.info/index.php/topic,71.0.html for more information.\n\033[0m");
-print("\n\033[1m\tTo Start LogZilla (you'll need to restart syslog-ng also), type:\n\033[0m");
-print("\033[1m\t/etc/init.d/syslog-ng restart && /etc/init.d/logzilla start\n\033[0m");
+#print("\n\033[1m\tTo Start LogZilla (you'll need to restart syslog-ng also), type:\n\033[0m");
+#print("\033[1m\t/etc/init.d/syslog-ng restart && /etc/init.d/logzilla start\n\033[0m");
