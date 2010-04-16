@@ -21,14 +21,19 @@ $dbLink = db_connect_syslog(DBADMIN, DBADMINPW);
 // Note that PLURAL words below are arrays.
 //---------------------------------------------------
 
+$today = date("Y-m-d");
 //construct where clause 
 $where = "WHERE 1=1";
 
+$qstring = '';
+$page = get_input('page');
+$qstring .= "?page=$page";
+
 $show_suppressed = get_input('show_suppressed');
-$qstring .= "?show_suppressed=$show_suppressed";
+$qstring .= "&show_suppressed=$show_suppressed";
     switch ($show_suppressed) {
         case "suppressed":
-        $where.= " AND suppress>NOW()";  
+        $where.= " AND suppress > NOW()";  
         $where .= " OR host IN (SELECT name from suppress where col='host' AND expire>NOW())";
         $where .= " OR facility IN (SELECT name from suppress where col='facility' AND expire>NOW())";
         $where .= " OR priority IN (SELECT name from suppress where col='priority' AND expire>NOW())";
@@ -38,7 +43,7 @@ $qstring .= "?show_suppressed=$show_suppressed";
         $where .= " OR notes IN (SELECT name from suppress where col='notes' AND expire>NOW())";
             break;
         case "unsuppressed":
-        $where.= " AND suppress<NOW()";  
+        $where.= " AND suppress < NOW()";  
         $where .= " AND host NOT IN (SELECT name from suppress where col='host' AND expire>NOW())";
         $where .= " AND facility NOT IN (SELECT name from suppress where col='facility' AND expire>NOW())";
         $where .= " AND priority NOT IN (SELECT name from suppress where col='priority' AND expire>NOW())";
@@ -49,11 +54,70 @@ $qstring .= "?show_suppressed=$show_suppressed";
         break;
 }
 
+//------------------------------------------------------------
+// START date/time
+//------------------------------------------------------------
+// portlet-datepicker 
+$fo_checkbox = get_input('fo_checkbox');
+    $qstring .= "&fo_checkbox=$fo_checkbox";
+$fo_date = get_input('fo_date');
+    $qstring .= "&fo_date=$fo_date";
+$fo_time_start = get_input('fo_time_start');
+    $qstring .= "&fo_time_start=$fo_time_start";
+$fo_time_end = get_input('fo_time_end');
+    $qstring .= "&fo_time_end=$fo_time_end";
+$date_andor = get_input('date_andor');
+    $qstring .= "&date_andor=$date_andor";
+$lo_checkbox = get_input('lo_checkbox');
+    $qstring .= "&lo_checkbox=$lo_checkbox";
+$lo_date = get_input('lo_date');
+    $qstring .= "&lo_date=$lo_date";
+$lo_time_start = get_input('lo_time_start');
+    $qstring .= "&lo_time_start=$lo_time_start";
+$lo_time_end = get_input('lo_time_end');
+    $qstring .= "&lo_time_end=$lo_time_end";
+// FO
+if ($fo_checkbox == "on") {
+    if($fo_date!='') {
+        list($start,$end) = explode(' to ', $fo_date);
+        if($end=='') $end = "$start" ; 
+        if($fo_time_start!=$fo_time_end) {
+            $start .= " $fo_time_start"; 
+            $end .= " $fo_time_end"; 
+        }
+            $where.= " AND fo BETWEEN '$start' AND '$end'";
+    }
+}
+// LO
+$start = "";
+$end = "";
+if ($lo_checkbox == "on") {
+    if($lo_date!='') {
+        list($start,$end) = explode(' to ', $lo_date);
+        if($end=='') $end = "$start" ; 
+        if($lo_time_start!=$lo_time_end) {
+            $start .= " $lo_time_start"; 
+            $end .= " $lo_time_end"; 
+        }
+        if (($start !== "$today 00:00:00") && ($end !== "$today 23:59:59")) {
+            $where.= " ".strtoupper($date_andor)." lo BETWEEN '$start' AND '$end'";
+        }
+    }
+}
+//------------------------------------------------------------
+// END date/time
+//------------------------------------------------------------
 
-$hosts = get_input('hosts');
+
 // see if we are tailing
 $tail = get_input('tail');
+if (!$tail) { $tail = "off"; }
+$qstring .= "&tail=$tail";
 
+// Special - this gets posted via javascript since it comes from the hosts grid
+// Form code is somewhere near line 843 of js_footer.php
+$hosts = get_input('hosts');
+$qstring .= "&hosts=$hosts";
 if ($hosts) {
     $pieces = explode(",", $hosts);
     $where .= " AND host IN (";
@@ -69,6 +133,7 @@ if ($programs) {
     $where .= " AND program IN (";
     foreach ($programs as $mask) {
         $where.= "'$mask',";  
+        $qstring .= "&programs[]=$mask";
     }
     $where = rtrim($where, ",");
     $where .= ")";
@@ -80,6 +145,7 @@ if ($priorities) {
     $where .= " AND priority IN (";
     foreach ($priorities as $mask) {
         $where.= "'$mask',";  
+        $qstring .= "&priorities[]=$mask";
     }
     $where = rtrim($where, ",");
     $where .= ")";
@@ -91,17 +157,65 @@ if ($facilities) {
     $where .= " AND facility IN (";
     foreach ($facilities as $mask) {
         $where.= "'$mask',";  
+        $qstring .= "&facilities[]=$mask";
     }
     $where = rtrim($where, ",");
     $where .= ")";
 }
 
+$mne = get_input('mne');
+$qstring .= "&mne=$mne";
+if ($mne) $where .= " AND mne='$mne'";
+
+
 // portlet-sphinxquery
 $msg_mask = get_input('msg_mask');
+$msg_mask = html_entity_decode($msg_mask);
+$msg_mask = preg_replace ('/^Search through .*\sMessages/m', '', $msg_mask);
+$msg_mask_oper = get_input('msg_mask_oper');
+$qstring .= "&msg_mask=$msg_mask&msg_mask_oper=$msg_mask_oper";
+
 if($msg_mask) {
-    if (!preg_match ('/^Search through .*\sMessages/m', $msg_mask)) {
-        $op = get_input('msg_mask_oper');
-        switch ($op) {
+    if ($_SESSION['SPX_ENABLE'] == "1") {
+        //---------------BEGIN SPHINX
+        require_once ($basePath . "/../SPHINX.class.php");
+        // Get the search variable from URL
+        // $var = @$_GET['msg_mask'] ;
+        // $trimmed = trim($$msg_mask); //trim whitespace from the stored variable
+
+        // $q = $trimmed;
+#$q = "SELECT id ,group_id,title FROM documents where title = 'test one'";
+#$q = " SELECT id, group_id, UNIX_TIMESTAMP(date_added) AS date_added, title, content FROM documents";
+        $index = "idx_logs";
+
+        $cl = new SphinxClient ();
+        $hostip = $_SESSION['SPX_SRV'];
+        $port = intval($_SESSION['SPX_PORT']);
+        $cl->SetServer ( $hostip, $port );
+        $cl->SetMatchMode ( SPH_MATCH_EXTENDED2 );
+        $res = $cl->Query ( $msg_mask, $index);
+        if ( !$res )
+        {
+            die ( "ERROR: " . $cl->GetLastError() . ".\n" );
+        } else
+        {
+            if ($res['total_found'] > 0) {
+                $where .= " AND id IN (";
+                foreach ( $res["matches"] as $doc => $docinfo ) {
+                    $where .= "'$doc',";
+                    // echo "$doc<br>\n";
+                }
+                $where = rtrim($where, ",");
+                $where .= ")";
+            } else {
+                // Negate search since sphinx returned 0 hits
+                $where = "WHERE 1<1";
+                //  die(print_r($res));
+            }
+        }
+        //---------------END SPHINX
+    } else {
+        switch ($msg_mask_oper) {
             case "=":
                 $where.= " AND msg='$msg_mask'";  
             break;
@@ -129,113 +243,105 @@ if($msg_mask) {
     }
 }
 $notes_mask = get_input('notes_mask');
+$notes_mask = preg_replace ('/^Search through .*\sNotes/m', '', $notes_mask);
+$notes_mask_oper = get_input('notes_mask_oper');
+$notes_andor = get_input('notes_andor');
+$qstring .= "&notes_mask=$notes_mask&notes_mask_oper=$notes_mask_oper&notes_andor=$notes_andor";
 if($notes_mask) {
-    $notes_mask = get_input('notes_mask');
-    if (!preg_match ('/^Search through .*\sNotes/m', $notes_mask)) {
-        $op = get_input('notes_mask_oper');
-        $notes_andor = get_input('notes_andor');
-        switch ($op) {
-            case "=":
-                $where.= " AND notes='$notes_mask'";  
+    switch ($notes_mask_oper) {
+        case "=":
+            $where.= " AND notes='$notes_mask'";  
+        break;
+
+        case "!=":
+            $where.= " AND notes='$notes_mask'";  
+        break;
+
+        case "LIKE":
+            $where.= " AND notes LIKE '%$notes_mask%'";  
+        break;
+
+        case "! LIKE":
+            $where.= " AND notes NOT LIKE '%$notes_mask%'";  
+        break;
+
+        case "RLIKE":
+            $where.= " AND notes RLIKE '$notes_mask'";  
+        break;
+
+        case "! RLIKE":
+            $where.= " AND notes NOT LIKE '$notes_mask'";  
+        break;
+
+        case "EMPTY":
+            $where.= " AND notes = ''";  
+        break;
+
+        case "! EMPTY":
+            $where.= " AND notes != ''";  
+        break;
+    }
+} else {
+    if($notes_mask_oper) {
+        switch ($notes_mask_oper) {
+            case "EMPTY":
+                $where.= " AND notes = ''";  
             break;
 
-            case "!=":
-                $where.= " AND notes='$notes_mask'";  
-            break;
-
-            case "LIKE":
-                $where.= " AND notes LIKE '%$notes_mask%'";  
-            break;
-
-            case "! LIKE":
-                $where.= " AND notes NOT LIKE '%$notes_mask%'";  
-            break;
-
-            case "RLIKE":
-                $where.= " AND notes RLIKE '$notes_mask'";  
-            break;
-
-            case "! RLIKE":
-                $where.= " AND notes NOT LIKE '$notes_mask'";  
+            case "! EMPTY":
+                $where.= " AND notes != ''";  
             break;
         }
     }
 }
-
-$fo_checkbox = get_input('fo_checkbox');
-$fo_date = get_input('fo_date');
-$fo_time_start = get_input('fo_time_start');
-$fo_time_end = get_input('fo_time_end');
-$date_andor = get_input('date_andor');
-$lo_checkbox = get_input('lo_checkbox');
-$lo_date = get_input('lo_date');
-$lo_time_start = get_input('lo_time_start');
-$lo_time_end = get_input('lo_time_end');
-//------------------------------------------------------------
-// START date/time
-//------------------------------------------------------------
-// FO
-if ($fo_checkbox == "on") {
-    if($fo_date!='') {
-        list($start,$end) = explode(' to ', $fo_date);
-        if($end=='') $end = "$start" ; 
-        if($fo_time_start!=$fo_time_end) {
-            $start .= " $fo_time_start"; 
-            $end .= " $fo_time_end"; 
-        }
-            $where.= " AND fo BETWEEN '$start' AND '$end'";
-    }
-}
-// LO
-$start = "";
-$end = "";
-if ($lo_checkbox == "on") {
-    if($lo_date!='') {
-        list($start,$end) = explode(' to ', $lo_date);
-        if($end=='') $end = "$start" ; 
-        if($lo_time_start!=$lo_time_end) {
-            $start .= " $lo_time_start"; 
-            $end .= " $lo_time_end"; 
-        }
-            $where.= " ".strtoupper($date_andor)." lo BETWEEN '$start' AND '$end'";
-    }
-}
-//------------------------------------------------------------
-// END date/time
-//------------------------------------------------------------
 
 // portlet-search_options
 $limit = get_input('limit');
 $limit = (!empty($limit)) ? $limit : "10";
+    $qstring .= "&limit=$limit";
 $dupop = get_input('dupop');
+$qstring .= "&dupop=$dupop";
+$dupop_orig = $dupop;
 $dupcount = get_input('dupcount');
-if ($dupop) {
-switch ($dupop) {
-    case "gt":
-        $dupop = ">";
-    break;
+$qstring .= "&dupcount=$dupcount";
+if (($dupop) && ($dupop != 'undefined')) {
+    switch ($dupop) {
+        case "gt":
+            $dupop = ">";
+        break;
 
-    case "lt":
-        $dupop = "<";
-    break;
+        case "lt":
+            $dupop = "<";
+        break;
 
-    case "eq":
-        $dupop = "=";
-    break;
+        case "eq":
+            $dupop = "=";
+        break;
 
-    case "gte":
-        $dupop = ">=";
-    break;
+        case "gte":
+            $dupop = ">=";
+        break;
 
-    case "lte":
-        $dupop = "<=";
-    break;
+        case "lte":
+            $dupop = "<=";
+        break;
+    }
+    $where.= " AND counter $dupop '$dupcount'"; 
 }
-        $where.= " AND counter $dupop '$dupcount'"; 
-}
+// Not implemented yet (for graph generation)
+$topx = get_input('topx');
+    $qstring .= "&topx=$topx";
+$graphtype = get_input('graphtype');
+    $qstring .= "&graphtype=$graphtype";
+
 $orderby = get_input('orderby');
+    $qstring .= "&orderby=$orderby";
 $order = get_input('order');
-if ($orderby) {
+    $qstring .= "&order=$order";
+    if ($orderby) {
+        if ($orderby == 'lo') {
+            $orderby = 'id';
+        }
     $where.= " ORDER BY $orderby";  
 }
 if ($order) {
@@ -272,18 +378,10 @@ $('.XLButtons').remove();
 
   <tbody>
   <?php
-  $total = get_total_rows($_SESSION['TBL_MAIN'], $dbLink, "$where");
   $sql = "SELECT * FROM ".$_SESSION['TBL_MAIN'] ." $where LIMIT $limit";
   $result = perform_query($sql, $dbLink, $_SERVER['PHP_SELF']); 
   $count = mysql_num_rows($result);
-  if ($total > 0) {
-      $info = "<center>Showing $count of $total Possible Results</center>";
-      ?>
-          <script type="text/javascript">
-          $("#portlet-header_Search_Results").html('<?php echo "$info"?>');
-      </script>
-          <?php
-  } else {
+  if ($count < 1) {
       $info = "<font color=\"red\">No results match your search criteria</font>";
       ?>
           <script type="text/javascript">

@@ -166,7 +166,7 @@ if ($ok =~ /[Yy]/) {
 	$sth->execute;
 
 # Create sphinx table
-    my $res = `mysql -u$dbroot -p$dbrootpass $dbname < sql/sphinx.sql`;
+    my $res = `mysql -u$dbroot -p$dbrootpass $dbname < sql/sph_counter.sql`;
     print $res;
 
 # Create cache table

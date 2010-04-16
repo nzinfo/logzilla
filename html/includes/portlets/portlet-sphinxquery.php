@@ -19,12 +19,15 @@ if ((has_portlet_access($_SESSION['username'], 'Messages') == TRUE) || ($_SESSIO
 <table border="0" width="100%">
 <thead>
 </thead>
+<?php if ($_SESSION['SPX_ENABLE'] !== "1") {?>
 <tr>
 <th>Operators</th>
 <th></th>
 <tr>
+<?php } ?>
 
 <tr>
+<?php if ($_SESSION['SPX_ENABLE'] !== "1") {?>
     <td width="5%">
         <select name="msg_mask_oper" id="msg_mask_oper">
         <option>=
@@ -35,11 +38,17 @@ if ((has_portlet_access($_SESSION['username'], 'Messages') == TRUE) || ($_SESSIO
         <option>! RLIKE
         </select>
     </td>
+<?php } ?>
     <td width="95%">
-        <input type="text" style="width: 80%;" class="rounded_textbox watermark ui-widget ui-corner-all" name="msg_mask" id="msg_mask" size=30>
+<?php if ($_SESSION['SHOWCOUNTS'] > 0) {?>
+        <input autocomplete="off" type="text" style="width: 95%; text-align: left; position: relative; left: 3%;" class="rounded_textbox watermark ui-widget ui-corner-all" name="msg_mask" id="msg_mask" size=30>
+<?php } else { ?>
+        <input autocomplete="off" type="text" style="width: 95%; text-align: left; position: relative; left: 3%;" class="rounded_textbox ui-widget ui-corner-all" name="msg_mask" id="msg_mask" size=30>
+<?php } ?>
     </td>
 </tr>
 
+<?php if ($_SESSION['SPX_ENABLE'] !== "1") {?>
 <tr>
     <td width="5%">
         <select name="notes_andor" id="notes_andor">
@@ -50,8 +59,10 @@ if ((has_portlet_access($_SESSION['username'], 'Messages') == TRUE) || ($_SESSIO
     <td width="95%">
     </td>
 </tr>
+<?php } ?>
 
 <tr>
+<?php if ($_SESSION['SPX_ENABLE'] !== "1") {?>
     <td width="5%">
         <select name="notes_mask_oper" id="notes_mask_oper">
         <option>=
@@ -65,8 +76,13 @@ if ((has_portlet_access($_SESSION['username'], 'Messages') == TRUE) || ($_SESSIO
         </select>
     </td>
     <td>
-        <input type="text" style="width: 80%;" class="rounded_textbox watermark ui-widget ui-corner-all" name="notes_mask" id="notes_mask" size=30>
+<?php if ($_SESSION['SHOWCOUNTS'] > 0) {?>
+        <input autocomplete="off" type="text" style="width: 95%; text-align: left; position: relative; left: 3%;" class="rounded_textbox watermark ui-widget ui-corner-all" name="notes_mask" id="notes_mask" size=30>
+<?php } else { ?>
+        <input autocomplete="off" type="text" style="width: 95%; text-align: left; position: relative; left: 3%;" class="rounded_textbox ui-widget ui-corner-all" name="notes_mask" id="notes_mask" size=30>
+<?php } ?>
     </td>
+<?php } ?>
 </tr>
 
 </table>

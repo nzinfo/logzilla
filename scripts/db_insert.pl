@@ -129,7 +129,9 @@ while (my @settings = $sth->fetchrow_array()) {
 }
 
 # If debug is set in the settings table, then increment debug to at least 1
-$debug++ if $DEBUG eq "1";
+if ($DEBUG > "0") {
+    $debug = $debug + $DEBUG;
+}
 
 
 # Initialize some vars for later use
@@ -197,7 +199,7 @@ my $start_time = (time);
 my $end_time;
 my $time_limit = ($start_time + $q_time);
 my $mps_timer_start = $start_time;
-my ($mps, $tmp_mps, @mps, $sec);
+my ($do_msg_mps, $mps, $tmp_mps, @mps, $sec);
 my ($mpm, @mpm, $min);
 my ($mph, @mph, $hr);
 my ($mpd, @mpd, $day);
@@ -220,7 +222,7 @@ if ($selftest) {
     my $res = `printf "\n" | $cmd -q 1`;
     print STDOUT "Database Lookup (resulting message should be from Fred):\n";
     my $sth = $dbh->prepare("
-        SELECT max(id), msg FROM $dbtable;
+        SELECT msg FROM $dbtable ORDER BY id DESC LIMIT 1;
         ") or die "Could not fetch last row: $DBI::errstr";
     $sth->execute;
     if (my $res = $sth->fetchrow_array() ) {
@@ -235,9 +237,11 @@ if ($qsize) {
     $q_limit = $qsize;
 }
 while (<>){
+    #$dbh->{InactiveDestroy} = 1;
+    #fork and exit;
     if ($qsize) {
         for (my $i=0; $i <= 5; $i++) {
-            push (@dumparr, "fakehost\tlocal7\temerg\tdbins_tag\tdb_insert.pl\tdb_insert.pl[$$]: %SYS-5-CONFIG_I: Configured from 172.16.0.123 by Fred Flinstone <fred\@flinstone.com>\tSYS-5-CONFIG_I\t\t\t\n");
+            push (@dumparr, "fakehost\tlocal7\temerg\tdbins_tag\tdb_insert.pl\tdb_insert.pl[$$]: %SYS-5-CONFIG_I: Configured from 172.16.0.123 by Fred Flinstone <fred\@flinstone.com>\tSYS-5-CONFIG_I\t$datetime\t$datetime\t\n");
         }
     }
     chomp $_;
@@ -288,6 +292,7 @@ while (<>){
     my $mps_timer_end = (time);
     my $secs = ($mps_timer_end - $mps_timer_start);
     if ($secs > 0) {
+        $mps = $mps + $do_msg_mps;
         $mps = ($mps/$secs);
         if ($mps < 1) {
             $mps = ($mps * $secs);
@@ -299,8 +304,8 @@ while (<>){
         $sec = strftime("%S", localtime);
         #print STDOUT "min = $min\n";
         $mps = round($mps);
-        print STDOUT "\n#######\nCurrent MPS = $mps\n#######\n" if ($debug > 2);
-        print LOG "\n#######\nCurrent MPS = $mps\n#######\n" if ($debug > 2);
+        print STDOUT "\n#######\nCurrent MPS = $mps ($do_msg_mps deduplicated)\n#######\n" if ($debug > 2);
+        print LOG "\n#######\nCurrent MPS = $mps ($do_msg_mps deduplicated)\n#######\n" if ($debug > 2);
         $mpm += $mps;
         push(@mps, "chart_mps_$sec,$mps,$now");
         if ($#mps == 60) {
@@ -337,12 +342,14 @@ while (<>){
             @mph = ();
         }
         $mps = 0;
+        $do_msg_mps = 0;
         $mps_timer_start = (time);
     }
     $end_time = (time);
 }
-$dbh->disconnect();
-close(LOG);
+#$dbh->disconnect();
+#close(LOG);
+#exit;
 
 # Subs
 sub round {
@@ -351,9 +358,23 @@ sub round {
 }
 
 sub do_msg {
-    $msg = $_[0];
-    #if (($pid = fork) == 0) {
-    # Prepare database statements for later use
+    $msg = shift;
+    #my $pid = fork();
+    #if ( ! defined $pid ) {
+    #die "Can't fork: $!\n";
+    #}
+    #if ( $pid ) { # parent
+    ## Prepare database statements for later use
+    #if (!$dbh) {
+    #$dbh = DBI->connect( "DBI:mysql:$db:$dbhost", $dbuser, $dbpass );
+    #}
+    #print LOG "Waiting for child on PID $pid to exit...\n" if ($debug > 0);
+    #print STDOUT "Waiting for child on PID $pid to exit...\n" if (($debug > 0) and ($verbose));
+    #wait;
+    #} else { # child
+    #my $child_dbh = $dbh->clone();
+    #$dbh->{InactiveDestroy} = 1;
+    #undef $dbh;
     if (!$qsize) {
         print LOG "\n\nINCOMING MESSAGE:\n$msg\n" if ($debug > 0);
         print STDOUT "\n\nINCOMING MESSAGE:\n$msg\n" if (($debug > 2) and ($verbose));
@@ -452,7 +473,7 @@ sub do_msg {
         if ($db_select->errstr()) {
             print LOG "FATAL: Unable to execute SQL statement: ", $db_select->errstr(), "\n" if ($debug > 0);
             print STDOUT "FATAL: Unable to execute SQL statement: ", $db_select->errstr(), "\n";
-            exit;
+            #exit;
         }
 
         # For each of the rows obtained above, calculate the likeness of messages using a distance measurement
@@ -535,22 +556,17 @@ sub do_msg {
             }
         }
     } else {
+        $do_msg_mps++;
         print LOG "insert = $insert, Skipping insert of this message since it was a duplicate\n" if ($debug > 3);
         print STDOUT "insert = $insert, Skipping insert of this message since it was a duplicate\n" if (($debug > 3) and ($verbose));
     }
+    #$dbh->disconnect();
+    return $queue;
     #exit(0);
-    #} elsif ($pid > 0) {
-    #print LOG "Waiting for child on PID $pid to exit...\n" if ($debug > 0);
-    #print STDOUT "Waiting for child on PID $pid to exit...\n" if (($debug > 0) and ($verbose));
-    #wait;
-    #} else {
-    #print LOG "Could not fork: errno is $!\n" if ($debug > 0);
-    #print STDOUT "Could not fork: errno is $!\n" if (($debug > 0) and ($verbose));
     #}
     # end benchmark timer 
     #$bmend = new Benchmark;
     #my $bmdiff = timediff($bmend, $bmstart);
-    #print LOG "Total processing time was", timestr($bmdiff, 'all'), " seconds\n" if ($debug > 0);
+    #print LOG "Total processing time was", timestr($bmdiff, 'all'), " seconds\n" if ($debug > 0);#
     #print STDOUT "Total processing time was", timestr($bmdiff, 'all'), " seconds\n" if (($debug > 2) and ($verbose));
-    return $queue;
 }

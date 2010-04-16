@@ -924,6 +924,7 @@ watermark("#hostsFilter","Host Filter");
 <script type="text/javascript">
 $(document).ready(function() {
         var enabled = <?php print $_SESSION['SHOWCOUNTS']; ?>;
+        var SPX = <?php print $_SESSION['SPX_ENABLE']; ?>;
         if (enabled == "1") {
         $.get("includes/ajax/counts.php?data=msgs", function(data){
             if (data) {
@@ -934,11 +935,13 @@ $(document).ready(function() {
             $("#msg_mask").val("Search through "+comma+" Messages");
             watermark("#msg_mask","Search through "+comma+" Messages");
             });
+        if (SPX == "0") {
         $.get("includes/ajax/counts.php?data=notes", function(data){
             var comma = commify(data);
             $("#notes_mask").val("Search through "+comma+" Notes");
             watermark("#notes_mask","Search through "+comma+" Notes");
             });
+        };
         $.get("includes/ajax/counts.php?data=prgs", function(data){
             var comma = commify(data);
             $("#portlet-header_Programs").prepend(comma+" ");

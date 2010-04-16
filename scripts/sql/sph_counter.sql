@@ -16,13 +16,13 @@
 /*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */;
 
 --
--- Table structure for table `sphinx`
+-- Table structure for table `sph_counter`
 --
 
-DROP TABLE IF EXISTS `sphinx`;
+DROP TABLE IF EXISTS `sph_counter`;
 SET @saved_cs_client     = @@character_set_client;
 SET character_set_client = utf8;
-CREATE TABLE `sphinx` (
+CREATE TABLE `sph_counter` (
   `counter_id` int(11) NOT NULL,
   `max_id` bigint(20) unsigned NOT NULL,
   `index_name` varchar(32) NOT NULL DEFAULT '',
@@ -33,12 +33,12 @@ CREATE TABLE `sphinx` (
 SET character_set_client = @saved_cs_client;
 
 --
--- Dumping data for table `sphinx`
+-- Dumping data for table `sph_counter`
 --
 
-LOCK TABLES `sphinx` WRITE;
-/*!40000 ALTER TABLE `sphinx` DISABLE KEYS */;
-/*!40000 ALTER TABLE `sphinx` ENABLE KEYS */;
+LOCK TABLES `sph_counter` WRITE;
+/*!40000 ALTER TABLE `sph_counter` DISABLE KEYS */;
+/*!40000 ALTER TABLE `sph_counter` ENABLE KEYS */;
 UNLOCK TABLES;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
 
@@ -50,4 +50,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2010-04-05  4:09:44
+-- Dump completed on 2010-04-14 18:14:20

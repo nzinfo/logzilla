@@ -89,30 +89,69 @@ $msg_mask = preg_replace ('/^Search through .*\sMessages/m', '', $msg_mask);
 $msg_mask_oper = get_input('msg_mask_oper');
 $qstring .= "&msg_mask=$msg_mask&msg_mask_oper=$msg_mask_oper";
 if($msg_mask) {
-    switch ($msg_mask_oper) {
-        case "=":
-            $where.= " AND msg='$msg_mask'";  
-        break;
+    if ($_SESSION['SPX_ENABLE'] == "1") {
+        //---------------BEGIN SPHINX
+        require_once ($basePath . "/../SPHINX.class.php");
+        // Get the search variable from URL
+        // $var = @$_GET['msg_mask'] ;
+        // $trimmed = trim($$msg_mask); //trim whitespace from the stored variable
 
-        case "!=":
-            $where.= " AND msg='$msg_mask'";  
-        break;
+        // $q = $trimmed;
+#$q = "SELECT id ,group_id,title FROM documents where title = 'test one'";
+#$q = " SELECT id, group_id, UNIX_TIMESTAMP(date_added) AS date_added, title, content FROM documents";
+        $index = "idx_logs";
 
-        case "LIKE":
-            $where.= " AND msg LIKE '%$msg_mask%'";  
-        break;
+        $cl = new SphinxClient ();
+        $hostip = $_SESSION['SPX_SRV'];
+        $port = intval($_SESSION['SPX_PORT']);
+        $cl->SetServer ( $hostip, $port );
+        $res = $cl->Query ( $msg_mask, $index);
+        if ( !$res )
+        {
+            die ( "ERROR: " . $cl->GetLastError() . ".\n" );
+        } else
+        {
+            if ($res['total_found'] > 0) {
+                $where .= " AND id IN (";
+                foreach ( $res["matches"] as $doc => $docinfo ) {
+                    $where .= "'$doc',";
+                    // echo "$doc<br>\n";
+                }
+                $where = rtrim($where, ",");
+                $where .= ")";
+            } else {
+                // Negate search since sphinx returned 0 hits
+                $where = "WHERE 1<1";
+                //  die(print_r($res));
+            }
+        }
+        //---------------END SPHINX
+    } else {
+        switch ($msg_mask_oper) {
+            case "=":
+                $where.= " AND msg='$msg_mask'";  
+            break;
 
-        case "! LIKE":
-            $where.= " AND msg NOT LIKE '%$msg_mask%'";  
-        break;
+            case "!=":
+                $where.= " AND msg='$msg_mask'";  
+            break;
 
-        case "RLIKE":
-            $where.= " AND msg RLIKE '$msg_mask'";  
-        break;
+            case "LIKE":
+                $where.= " AND msg LIKE '%$msg_mask%'";  
+            break;
 
-        case "! RLIKE":
-            $where.= " AND msg NOT LIKE '$msg_mask'";  
-        break;
+            case "! LIKE":
+                $where.= " AND msg NOT LIKE '%$msg_mask%'";  
+            break;
+
+            case "RLIKE":
+                $where.= " AND msg RLIKE '$msg_mask'";  
+            break;
+
+            case "! RLIKE":
+                $where.= " AND msg NOT LIKE '$msg_mask'";  
+            break;
+        }
     }
 }
 $notes_mask = get_input('notes_mask');

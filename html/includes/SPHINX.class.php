@@ -296,7 +296,7 @@ class SphinxClient
                 if ( !$fp )
                 {
                         $errstr = trim ( $errstr );
-                        $this->_error = "connection to {$this->_host}:{$this->_port} failed.<br>Did you forget to start the daemon?<br>(errno=$errno, msg=$errstr)";
+                        $this->_error = "connection to {$this->_host}:{$this->_port} failed.<br>Did you forget to start the Sphinx daemon?<br>(errno=$errno, msg=$errstr)";
                         return false;
                 }
 

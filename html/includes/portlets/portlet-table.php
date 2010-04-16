@@ -25,6 +25,7 @@ $start_time = microtime(true);
 // Note that PLURAL words below are arrays.
 //---------------------------------------------------
 
+$today = date("Y-m-d");
 //construct where clause 
 $where = "WHERE 1=1";
 
@@ -56,6 +57,61 @@ $qstring .= "&show_suppressed=$show_suppressed";
         $where .= " AND notes NOT IN (SELECT name from suppress where col='notes' AND expire>NOW())";
         break;
 }
+
+//------------------------------------------------------------
+// START date/time
+//------------------------------------------------------------
+// portlet-datepicker 
+$fo_checkbox = get_input('fo_checkbox');
+    $qstring .= "&fo_checkbox=$fo_checkbox";
+$fo_date = get_input('fo_date');
+    $qstring .= "&fo_date=$fo_date";
+$fo_time_start = get_input('fo_time_start');
+    $qstring .= "&fo_time_start=$fo_time_start";
+$fo_time_end = get_input('fo_time_end');
+    $qstring .= "&fo_time_end=$fo_time_end";
+$date_andor = get_input('date_andor');
+    $qstring .= "&date_andor=$date_andor";
+$lo_checkbox = get_input('lo_checkbox');
+    $qstring .= "&lo_checkbox=$lo_checkbox";
+$lo_date = get_input('lo_date');
+    $qstring .= "&lo_date=$lo_date";
+$lo_time_start = get_input('lo_time_start');
+    $qstring .= "&lo_time_start=$lo_time_start";
+$lo_time_end = get_input('lo_time_end');
+    $qstring .= "&lo_time_end=$lo_time_end";
+// FO
+if ($fo_checkbox == "on") {
+    if($fo_date!='') {
+        list($start,$end) = explode(' to ', $fo_date);
+        if($end=='') $end = "$start" ; 
+        if($fo_time_start!=$fo_time_end) {
+            $start .= " $fo_time_start"; 
+            $end .= " $fo_time_end"; 
+        }
+            $where.= " AND fo BETWEEN '$start' AND '$end'";
+    }
+}
+// LO
+$start = "";
+$end = "";
+if ($lo_checkbox == "on") {
+    if($lo_date!='') {
+        list($start,$end) = explode(' to ', $lo_date);
+        if($end=='') $end = "$start" ; 
+        if($lo_time_start!=$lo_time_end) {
+            $start .= " $lo_time_start"; 
+            $end .= " $lo_time_end"; 
+        }
+        if (($start !== "$today 00:00:00") && ($end !== "$today 23:59:59")) {
+            $where.= " ".strtoupper($date_andor)." lo BETWEEN '$start' AND '$end'";
+        }
+    }
+}
+//------------------------------------------------------------
+// END date/time
+//------------------------------------------------------------
+
 
 // see if we are tailing
 $tail = get_input('tail');
@@ -140,6 +196,7 @@ if($msg_mask) {
         $hostip = $_SESSION['SPX_SRV'];
         $port = intval($_SESSION['SPX_PORT']);
         $cl->SetServer ( $hostip, $port );
+        $cl->SetMatchMode ( SPH_MATCH_EXTENDED2 );
         $res = $cl->Query ( $msg_mask, $index);
         if ( !$res )
         {
@@ -242,58 +299,6 @@ if($notes_mask) {
     }
 }
 
-// portlet-datepicker 
-$fo_checkbox = get_input('fo_checkbox');
-    $qstring .= "&fo_checkbox=$fo_checkbox";
-$fo_date = get_input('fo_date');
-    $qstring .= "&fo_date=$fo_date";
-$fo_time_start = get_input('fo_time_start');
-    $qstring .= "&fo_time_start=$fo_time_start";
-$fo_time_end = get_input('fo_time_end');
-    $qstring .= "&fo_time_end=$fo_time_end";
-$date_andor = get_input('date_andor');
-    $qstring .= "&date_andor=$date_andor";
-$lo_checkbox = get_input('lo_checkbox');
-    $qstring .= "&lo_checkbox=$lo_checkbox";
-$lo_date = get_input('lo_date');
-    $qstring .= "&lo_date=$lo_date";
-$lo_time_start = get_input('lo_time_start');
-    $qstring .= "&lo_time_start=$lo_time_start";
-$lo_time_end = get_input('lo_time_end');
-    $qstring .= "&lo_time_end=$lo_time_end";
-//------------------------------------------------------------
-// START date/time
-//------------------------------------------------------------
-// FO
-if ($fo_checkbox == "on") {
-    if($fo_date!='') {
-        list($start,$end) = explode(' to ', $fo_date);
-        if($end=='') $end = "$start" ; 
-        if($fo_time_start!=$fo_time_end) {
-            $start .= " $fo_time_start"; 
-            $end .= " $fo_time_end"; 
-        }
-            $where.= " AND fo BETWEEN '$start' AND '$end'";
-    }
-}
-// LO
-$start = "";
-$end = "";
-if ($lo_checkbox == "on") {
-    if($lo_date!='') {
-        list($start,$end) = explode(' to ', $lo_date);
-        if($end=='') $end = "$start" ; 
-        if($lo_time_start!=$lo_time_end) {
-            $start .= " $lo_time_start"; 
-            $end .= " $lo_time_end"; 
-        }
-            $where.= " ".strtoupper($date_andor)." lo BETWEEN '$start' AND '$end'";
-    }
-}
-//------------------------------------------------------------
-// END date/time
-//------------------------------------------------------------
-
 // portlet-search_options
 $limit = get_input('limit');
 $limit = (!empty($limit)) ? $limit : "10";
@@ -327,22 +332,25 @@ if (($dupop) && ($dupop != 'undefined')) {
     }
     $where.= " AND counter $dupop '$dupcount'"; 
 }
-$orderby = get_input('orderby');
-    $qstring .= "&orderby=$orderby";
-$order = get_input('order');
-    $qstring .= "&order=$order";
-if ($orderby) {
-    $where.= " ORDER BY $orderby";  
-}
-if ($order) {
-    $where.= " $order";  
-}
-
 // Not implemented yet (for graph generation)
 $topx = get_input('topx');
     $qstring .= "&topx=$topx";
 $graphtype = get_input('graphtype');
     $qstring .= "&graphtype=$graphtype";
+
+$orderby = get_input('orderby');
+    $qstring .= "&orderby=$orderby";
+$order = get_input('order');
+    $qstring .= "&order=$order";
+    if ($orderby) {
+        if ($orderby == 'lo') {
+            $orderby = 'id';
+        }
+    $where.= " ORDER BY $orderby";  
+}
+if ($order) {
+    $where.= " $order";  
+}
 
 ?>
 
@@ -392,13 +400,13 @@ $graphtype = get_input('graphtype');
 
   <tbody>
   <?php
-  $total = get_total_rows($_SESSION['TBL_MAIN'], $dbLink, "$where");
+  $total = get_total_rows($_SESSION['TBL_MAIN'], $dbLink);
 
   $sql = "SELECT * FROM ".$_SESSION['TBL_MAIN'] ." $where LIMIT $limit";
   $result = perform_query($sql, $dbLink, $_SERVER['PHP_SELF']); 
   $count = mysql_num_rows($result);
-  if ($total > 0) {
-      $info = "<center>Showing $count of ".commify($total)." Possible Results</center>";
+  if ($count > 0) {
+      $info = "<center>Showing $count of ".commify($total)." entries</center>";
       ?>
           <script type="text/javascript">
           $("#portlet-header_Search_Results").html('<?php echo "$info"?>');
