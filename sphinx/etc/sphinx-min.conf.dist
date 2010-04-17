@@ -26,7 +26,7 @@ source src1
 index test1
 {
 	source					= src1
-	path					= /path_to_logzilla/sphinx/var/data/test1
+	path					= /www/logzilla/sphinx/var/data/test1
 	docinfo					= extern
 	charset_type			= sbcs
 }
@@ -41,11 +41,11 @@ indexer
 searchd
 {
 	port					= 9312
-	log						= /path_to_logzilla/sphinx/var/log/searchd.log
-	query_log				= /path_to_logzilla/sphinx/var/log/query.log
+	log						= /www/logzilla/sphinx/var/log/searchd.log
+	query_log				= /www/logzilla/sphinx/var/log/query.log
 	read_timeout			= 5
 	max_children			= 30
-	pid_file				= /path_to_logzilla/sphinx/var/log/searchd.pid
+	pid_file				= /www/logzilla/sphinx/var/log/searchd.pid
 	max_matches				= 1000
 	seamless_rotate			= 1
 	preopen_indexes			= 0

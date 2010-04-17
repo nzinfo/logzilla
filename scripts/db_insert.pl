@@ -30,6 +30,7 @@ use DBI;
 use Text::LevenshteinXS qw(distance);
 use File::Spec;
 use File::Basename;
+use IO::Select;
 
 
 $| = 1;
@@ -236,116 +237,115 @@ if ($selftest) {
 if ($qsize) {
     $q_limit = $qsize;
 }
-while (<>){
+while (my $msg = <STDIN>) {
     #$dbh->{InactiveDestroy} = 1;
     #fork and exit;
-    if ($qsize) {
-        for (my $i=0; $i <= 5; $i++) {
-            push (@dumparr, "fakehost\tlocal7\temerg\tdbins_tag\tdb_insert.pl\tdb_insert.pl[$$]: %SYS-5-CONFIG_I: Configured from 172.16.0.123 by Fred Flinstone <fred\@flinstone.com>\tSYS-5-CONFIG_I\t$datetime\t$datetime\t\n");
+        if ($qsize) {
+            for (my $i=0; $i <= 5; $i++) {
+                push (@dumparr, "fakehost\tlocal7\temerg\tdbins_tag\tdb_insert.pl\tdb_insert.pl[$$]: %SYS-5-CONFIG_I: Configured from 172.16.0.123 by Fred Flinstone <fred\@flinstone.com>\tSYS-5-CONFIG_I\t$datetime\t$datetime\t\n");
+            }
         }
-    }
-    chomp $_;
-    $mps++;
-    if (($#dumparr < $q_limit) && ($start_time <= $time_limit)) {
-        push(@dumparr, do_msg($_));
-        #push (@dumparr, "host\tfacility\tpriority\ttag\tprg\tmsg\tmne\t$datetime_now\t$datetime_now\t\n");
-        $start_time = time;
-    } else { 
-        if ($#dumparr > 0 ) {
-            if ($start_time >= $time_limit) {
-                print STDOUT "\n\nQueue time limit reached ($q_time seconds)\n" if ($debug > 0) ;
-                print LOG "\n\nQueue time limit reached ($q_time seconds)\n" if ($debug > 0);
-            } else {
-                my $t = ($end_time - $start_time);
-                if ($t > 0) {
-                    $tmp_mps = round($q_limit / $t);
+        $mps++;
+        if (($#dumparr < $q_limit) && ($start_time <= $time_limit)) {
+            push(@dumparr, do_msg($msg));
+            #push (@dumparr, "host\tfacility\tpriority\ttag\tprg\tmsg\tmne\t$datetime_now\t$datetime_now\t\n");
+            $start_time = time;
+        } else { 
+            if ($#dumparr > 0 ) {
+                if ($start_time >= $time_limit) {
+                    print STDOUT "\n\nQueue time limit reached ($q_time seconds)\n" if ($debug > 0) ;
+                    print LOG "\n\nQueue time limit reached ($q_time seconds)\n" if ($debug > 0);
                 } else {
-                    $tmp_mps = round($q_limit / 1);
+                    my $t = ($end_time - $start_time);
+                    if ($t > 0) {
+                        $tmp_mps = round($q_limit / $t);
+                    } else {
+                        $tmp_mps = round($q_limit / 1);
+                    }
+                    print LOG "\n\nQueue Limit Reached: $q_limit messages in $t seconds ($tmp_mps MPS)\n" if ($debug > 0);
+                    print STDOUT "\n\nQueue Limit Reached: $q_limit messages in $t seconds ($tmp_mps MPS)\n" if ($debug > 0);
                 }
-                print LOG "\n\nQueue Limit Reached: $q_limit messages in $t seconds ($tmp_mps MPS)\n" if ($debug > 0);
-                print STDOUT "\n\nQueue Limit Reached: $q_limit messages in $t seconds ($tmp_mps MPS)\n" if ($debug > 0);
-            }
-            foreach my $var (@mps) {
-                if ($var =~ m/(.*),(.*),(.*)/) {
-                    $db_insert_mpX->execute("$1", "$2", "$3");
-                    print STDOUT "Inserting MPS string: $1, $2, $3\n" if ($debug > 1);
+                foreach my $var (@mps) {
+                    if ($var =~ m/(.*),(.*),(.*)/) {
+                        $db_insert_mpX->execute("$1", "$2", "$3");
+                        print STDOUT "Inserting MPS string: $1, $2, $3\n" if ($debug > 1);
+                    }
                 }
+                open (DUMP, ">$dumpfile") or die "can't open $dumpfile: $!\n";
+                print LOG "Starting insert: " . strftime("%H:%M:%S", localtime) ."\n" if ($debug > 0);
+                print STDOUT "Starting insert: " . strftime("%H:%M:%S", localtime) ."\n" if (($debug > 0) and ($verbose));
+                print STDOUT "Importing $#dumparr messages into the database\n" if ($debug > 0);
+                print LOG "Importing $#dumparr messages into the database\n" if ($debug > 0);
+                print DUMP @dumparr;
+                close (DUMP);
+                $db_load->execute();
+                if ($db_load->errstr()) {
+                    print STDOUT "FATAL: Unable to execute SQL statement: ", $db_load->errstr(), "\n" if ($debug > 0);
+                }
+                print LOG "Ending insert: " . strftime("%H:%M:%S", localtime) ."\n" if ($debug > 0);
+                print STDOUT "Ending insert: " . strftime("%H:%M:%S", localtime) ."\n" if (($debug > 0) and ($verbose));
+                @dumparr = ();
+                $start_time = (time);
+                $time_limit = ($start_time + $q_time);
             }
-            open (DUMP, ">$dumpfile") or die "can't open $dumpfile: $!\n";
-            print LOG "Starting insert: " . strftime("%H:%M:%S", localtime) ."\n" if ($debug > 0);
-            print STDOUT "Starting insert: " . strftime("%H:%M:%S", localtime) ."\n" if (($debug > 0) and ($verbose));
-            print STDOUT "Importing $#dumparr messages into the database\n" if ($debug > 0);
-            print LOG "Importing $#dumparr messages into the database\n" if ($debug > 0);
-            print DUMP @dumparr;
-            close (DUMP);
-            $db_load->execute();
-            if ($db_load->errstr()) {
-                print STDOUT "FATAL: Unable to execute SQL statement: ", $db_load->errstr(), "\n" if ($debug > 0);
+        }
+        my $mps_timer_end = (time);
+        my $secs = ($mps_timer_end - $mps_timer_start);
+        if ($secs > 0) {
+            $mps = $mps + $do_msg_mps;
+            $mps = ($mps/$secs);
+            if ($mps < 1) {
+                $mps = ($mps * $secs);
             }
-            print LOG "Ending insert: " . strftime("%H:%M:%S", localtime) ."\n" if ($debug > 0);
-            print STDOUT "Ending insert: " . strftime("%H:%M:%S", localtime) ."\n" if (($debug > 0) and ($verbose));
-            @dumparr = ();
-            $start_time = (time);
-            $time_limit = ($start_time + $q_time);
+            $now = strftime("%Y-%m-%d %H:%M:%S", localtime);
+            $day = strftime("%d", localtime);
+            $hr = strftime("%H", localtime);
+            $min = strftime("%M", localtime);
+            $sec = strftime("%S", localtime);
+            #print STDOUT "min = $min\n";
+            $mps = round($mps);
+            print STDOUT "\n#######\nCurrent MPS = $mps ($do_msg_mps deduplicated)\n#######\n" if ($debug > 2);
+            print LOG "\n#######\nCurrent MPS = $mps ($do_msg_mps deduplicated)\n#######\n" if ($debug > 2);
+            $mpm += $mps;
+            push(@mps, "chart_mps_$sec,$mps,$now");
+            if ($#mps == 60) {
+                my $now = strftime("%Y-%m-%d %H:%M:%S", localtime);
+                push(@mpm, "chart_mpm_$min,$mpm,$now");
+                $db_insert_mpX->{TraceLevel} = 4 if (($debug > 4) and ($verbose));
+                $db_insert_mpX->execute("chart_mpm_$min", "$mpm", "$now");
+                print STDOUT "Messages Per Minute = $mpm\n" if ($debug > 1);
+                print LOG "Messages Per Minute = $mpm\n" if ($debug > 1);
+                $mph += $mpm;
+                $mpm = 0;
+                @mps = ();
+            }
+            # Temp: exit after 5 minutes for testing
+            if ($#mpm == 5) {
+                #print STDOUT "Test Exit\n";
+                #exit;
+            }
+            if ($#mpm == 60) {
+                push(@mph, "chart_mph_$hr,$mph,$now");
+                $db_insert_mpX->execute("chart_mph_$hr", "$mph", "$now");
+                print STDOUT "Messages Per Hour = $mph\n" if ($debug > 1);
+                print LOG "Messages Per Hour = $mph\n" if ($debug > 1);
+                $mpd += $mph;
+                $mph = 0;
+                @mpm = ();
+            }
+            if ($#mph == 24) {
+                push(@mpd, "chart_mpd_$day,$mpd,$now");
+                $db_insert_mpX->execute("chart_mpd_$day", "$mpd", "$now");
+                print STDOUT "Messages Per Day = $mpd\n" if ($debug > 1);
+                print LOG "Messages Per Day = $mpd\n" if ($debug > 1);
+                $mpd = 0;
+                @mph = ();
+            }
+            $mps = 0;
+            $do_msg_mps = 0;
+            $mps_timer_start = (time);
         }
-    }
-    my $mps_timer_end = (time);
-    my $secs = ($mps_timer_end - $mps_timer_start);
-    if ($secs > 0) {
-        $mps = $mps + $do_msg_mps;
-        $mps = ($mps/$secs);
-        if ($mps < 1) {
-            $mps = ($mps * $secs);
-        }
-        $now = strftime("%Y-%m-%d %H:%M:%S", localtime);
-        $day = strftime("%d", localtime);
-        $hr = strftime("%H", localtime);
-        $min = strftime("%M", localtime);
-        $sec = strftime("%S", localtime);
-        #print STDOUT "min = $min\n";
-        $mps = round($mps);
-        print STDOUT "\n#######\nCurrent MPS = $mps ($do_msg_mps deduplicated)\n#######\n" if ($debug > 2);
-        print LOG "\n#######\nCurrent MPS = $mps ($do_msg_mps deduplicated)\n#######\n" if ($debug > 2);
-        $mpm += $mps;
-        push(@mps, "chart_mps_$sec,$mps,$now");
-        if ($#mps == 60) {
-            my $now = strftime("%Y-%m-%d %H:%M:%S", localtime);
-            push(@mpm, "chart_mpm_$min,$mpm,$now");
-            $db_insert_mpX->{TraceLevel} = 4 if (($debug > 4) and ($verbose));
-            $db_insert_mpX->execute("chart_mpm_$min", "$mpm", "$now");
-            print STDOUT "Messages Per Minute = $mpm\n" if ($debug > 1);
-            print LOG "Messages Per Minute = $mpm\n" if ($debug > 1);
-            $mph += $mpm;
-            $mpm = 0;
-            @mps = ();
-        }
-        # Temp: exit after 5 minutes for testing
-        if ($#mpm == 5) {
-            #print STDOUT "Test Exit\n";
-            #exit;
-        }
-        if ($#mpm == 60) {
-            push(@mph, "chart_mph_$hr,$mph,$now");
-            $db_insert_mpX->execute("chart_mph_$hr", "$mph", "$now");
-            print STDOUT "Messages Per Hour = $mph\n" if ($debug > 1);
-            print LOG "Messages Per Hour = $mph\n" if ($debug > 1);
-            $mpd += $mph;
-            $mph = 0;
-            @mpm = ();
-        }
-        if ($#mph == 24) {
-            push(@mpd, "chart_mpd_$day,$mpd,$now");
-            $db_insert_mpX->execute("chart_mpd_$day", "$mpd", "$now");
-            print STDOUT "Messages Per Day = $mpd\n" if ($debug > 1);
-            print LOG "Messages Per Day = $mpd\n" if ($debug > 1);
-            $mpd = 0;
-            @mph = ();
-        }
-        $mps = 0;
-        $do_msg_mps = 0;
-        $mps_timer_start = (time);
-    }
-    $end_time = (time);
+        $end_time = (time);
 }
 #$dbh->disconnect();
 #close(LOG);

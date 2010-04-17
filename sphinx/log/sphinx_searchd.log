@@ -8252,3 +8252,496 @@
 [Fri Apr 16 17:12:02.501 2010] [ 7725] rotating indices (seamless=1)
 [Fri Apr 16 17:12:02.506 2010] [ 7725] WARNING: rotating index 'idx_delta_logs': cur to old rename failed: rename /path_to_logzilla/sphinx/data/idx_delta_logs.spl to /path_to_logzilla/sphinx/data/idx_delta_logs.old.spl failed: No such file or directory
 [Fri Apr 16 17:12:02.506 2010] [ 7725] rotating finished
+[Fri Apr 16 19:52:07.784 2010] [18379] accepting connections
+[Fri Apr 16 19:59:32.585 2010] [18379] rotating indices (seamless=1)
+[Fri Apr 16 19:59:33.206 2010] [18379] rotating index 'idx_delta_logs': success
+[Fri Apr 16 19:59:33.206 2010] [18379] rotating finished
+[Fri Apr 16 20:00:03.981 2010] [18379] rotating indices (seamless=1)
+[Fri Apr 16 20:00:03.993 2010] [18379] rotating index 'idx_delta_logs': success
+[Fri Apr 16 20:00:03.994 2010] [18379] rotating finished
+[Fri Apr 16 20:03:34.831 2010] [18379] rotating indices (seamless=1)
+[Fri Apr 16 20:03:34.837 2010] [18379] rotating index 'idx_delta_logs': success
+[Fri Apr 16 20:03:34.838 2010] [18379] rotating finished
+[Fri Apr 16 20:04:21.397 2010] [18379] rotating indices (seamless=1)
+[Fri Apr 16 20:04:22.232 2010] [18379] rotating index 'idx_logs': success
+[Fri Apr 16 20:04:22.232 2010] [18379] rotating finished
+[Fri Apr 16 20:05:02.163 2010] [18379] rotating indices (seamless=1)
+[Fri Apr 16 20:05:02.165 2010] [18379] rotating index 'idx_delta_logs': success
+[Fri Apr 16 20:05:02.165 2010] [18379] rotating finished
+[Fri Apr 16 20:12:59.748 2010] [18379] rotating indices (seamless=1)
+[Fri Apr 16 20:13:00.115 2010] [18379] rotating index 'idx_delta_logs': success
+[Fri Apr 16 20:13:00.115 2010] [18379] rotating finished
+[Fri Apr 16 20:14:17.577 2010] [18379] rotating indices (seamless=1)
+[Fri Apr 16 20:14:19.182 2010] [18379] rotating index 'idx_logs': success
+[Fri Apr 16 20:14:19.200 2010] [18379] rotating finished
+[Fri Apr 16 20:15:02.564 2010] [18379] rotating indices (seamless=1)
+[Fri Apr 16 20:15:02.925 2010] [18379] rotating index 'idx_delta_logs': success
+[Fri Apr 16 20:15:02.951 2010] [18379] rotating finished
+[Fri Apr 16 20:20:03.537 2010] [18379] rotating indices (seamless=1)
+[Fri Apr 16 20:20:03.546 2010] [18379] rotating index 'idx_delta_logs': success
+[Fri Apr 16 20:20:03.546 2010] [18379] rotating finished
+[Fri Apr 16 20:25:04.670 2010] [18379] rotating indices (seamless=1)
+[Fri Apr 16 20:25:04.683 2010] [18379] rotating index 'idx_delta_logs': success
+[Fri Apr 16 20:25:04.683 2010] [18379] rotating finished
+[Fri Apr 16 20:30:05.791 2010] [18379] rotating indices (seamless=1)
+[Fri Apr 16 20:30:05.811 2010] [18379] rotating index 'idx_delta_logs': success
+[Fri Apr 16 20:30:05.811 2010] [18379] rotating finished
+[Fri Apr 16 20:35:06.885 2010] [18379] rotating indices (seamless=1)
+[Fri Apr 16 20:35:06.910 2010] [18379] rotating index 'idx_delta_logs': success
+[Fri Apr 16 20:35:06.911 2010] [18379] rotating finished
+[Fri Apr 16 20:40:08.427 2010] [18379] rotating indices (seamless=1)
+[Fri Apr 16 20:40:08.456 2010] [18379] rotating index 'idx_delta_logs': success
+[Fri Apr 16 20:40:08.457 2010] [18379] rotating finished
+[Fri Apr 16 20:45:08.758 2010] [18379] rotating indices (seamless=1)
+[Fri Apr 16 20:45:08.793 2010] [18379] rotating index 'idx_delta_logs': success
+[Fri Apr 16 20:45:08.794 2010] [18379] rotating finished
+[Fri Apr 16 20:50:10.431 2010] [18379] rotating indices (seamless=1)
+[Fri Apr 16 20:50:10.474 2010] [18379] rotating index 'idx_delta_logs': success
+[Fri Apr 16 20:50:10.476 2010] [18379] rotating finished
+[Fri Apr 16 20:55:11.169 2010] [18379] rotating indices (seamless=1)
+[Fri Apr 16 20:55:11.216 2010] [18379] rotating index 'idx_delta_logs': success
+[Fri Apr 16 20:55:11.218 2010] [18379] rotating finished
+[Fri Apr 16 21:00:12.230 2010] [18379] rotating indices (seamless=1)
+[Fri Apr 16 21:00:12.285 2010] [18379] rotating index 'idx_delta_logs': success
+[Fri Apr 16 21:00:12.287 2010] [18379] rotating finished
+[Fri Apr 16 21:05:14.221 2010] [18379] rotating indices (seamless=1)
+[Fri Apr 16 21:05:14.279 2010] [18379] rotating index 'idx_delta_logs': success
+[Fri Apr 16 21:05:14.281 2010] [18379] rotating finished
+[Fri Apr 16 21:10:12.935 2010] [18379] rotating indices (seamless=1)
+[Fri Apr 16 21:10:12.999 2010] [18379] rotating index 'idx_delta_logs': success
+[Fri Apr 16 21:10:13.001 2010] [18379] rotating finished
+[Fri Apr 16 21:15:13.689 2010] [18379] rotating indices (seamless=1)
+[Fri Apr 16 21:15:13.754 2010] [18379] rotating index 'idx_delta_logs': success
+[Fri Apr 16 21:15:13.755 2010] [18379] rotating finished
+[Fri Apr 16 21:20:14.910 2010] [18379] rotating indices (seamless=1)
+[Fri Apr 16 21:20:14.976 2010] [18379] rotating index 'idx_delta_logs': success
+[Fri Apr 16 21:20:14.978 2010] [18379] rotating finished
+[Fri Apr 16 21:25:14.450 2010] [18379] rotating indices (seamless=1)
+[Fri Apr 16 21:25:14.517 2010] [18379] rotating index 'idx_delta_logs': success
+[Fri Apr 16 21:25:14.519 2010] [18379] rotating finished
+[Fri Apr 16 21:30:14.033 2010] [18379] rotating indices (seamless=1)
+[Fri Apr 16 21:30:14.100 2010] [18379] rotating index 'idx_delta_logs': success
+[Fri Apr 16 21:30:14.102 2010] [18379] rotating finished
+[Fri Apr 16 21:35:13.500 2010] [18379] rotating indices (seamless=1)
+[Fri Apr 16 21:35:13.568 2010] [18379] rotating index 'idx_delta_logs': success
+[Fri Apr 16 21:35:13.570 2010] [18379] rotating finished
+[Fri Apr 16 21:40:14.008 2010] [18379] rotating indices (seamless=1)
+[Fri Apr 16 21:40:14.077 2010] [18379] rotating index 'idx_delta_logs': success
+[Fri Apr 16 21:40:14.079 2010] [18379] rotating finished
+[Fri Apr 16 21:45:13.692 2010] [18379] rotating indices (seamless=1)
+[Fri Apr 16 21:45:13.760 2010] [18379] rotating index 'idx_delta_logs': success
+[Fri Apr 16 21:45:13.762 2010] [18379] rotating finished
+[Fri Apr 16 21:50:14.421 2010] [18379] rotating indices (seamless=1)
+[Fri Apr 16 21:50:14.487 2010] [18379] rotating index 'idx_delta_logs': success
+[Fri Apr 16 21:50:14.489 2010] [18379] rotating finished
+[Fri Apr 16 21:55:14.026 2010] [18379] rotating indices (seamless=1)
+[Fri Apr 16 21:55:14.094 2010] [18379] rotating index 'idx_delta_logs': success
+[Fri Apr 16 21:55:14.096 2010] [18379] rotating finished
+[Fri Apr 16 22:00:13.818 2010] [18379] rotating indices (seamless=1)
+[Fri Apr 16 22:00:13.885 2010] [18379] rotating index 'idx_delta_logs': success
+[Fri Apr 16 22:00:13.888 2010] [18379] rotating finished
+[Fri Apr 16 22:05:15.407 2010] [18379] rotating indices (seamless=1)
+[Fri Apr 16 22:05:15.475 2010] [18379] rotating index 'idx_delta_logs': success
+[Fri Apr 16 22:05:15.477 2010] [18379] rotating finished
+[Fri Apr 16 22:10:15.176 2010] [18379] rotating indices (seamless=1)
+[Fri Apr 16 22:10:15.247 2010] [18379] rotating index 'idx_delta_logs': success
+[Fri Apr 16 22:10:15.249 2010] [18379] rotating finished
+[Fri Apr 16 22:15:15.432 2010] [18379] rotating indices (seamless=1)
+[Fri Apr 16 22:15:15.504 2010] [18379] rotating index 'idx_delta_logs': success
+[Fri Apr 16 22:15:15.506 2010] [18379] rotating finished
+[Fri Apr 16 22:20:16.723 2010] [18379] rotating indices (seamless=1)
+[Fri Apr 16 22:20:16.799 2010] [18379] rotating index 'idx_delta_logs': success
+[Fri Apr 16 22:20:16.801 2010] [18379] rotating finished
+[Fri Apr 16 22:25:16.743 2010] [18379] rotating indices (seamless=1)
+[Fri Apr 16 22:25:16.820 2010] [18379] rotating index 'idx_delta_logs': success
+[Fri Apr 16 22:25:16.822 2010] [18379] rotating finished
+[Fri Apr 16 22:30:16.866 2010] [18379] rotating indices (seamless=1)
+[Fri Apr 16 22:30:16.946 2010] [18379] rotating index 'idx_delta_logs': success
+[Fri Apr 16 22:30:18.540 2010] [18379] rotating finished
+[Fri Apr 16 22:35:16.864 2010] [18379] rotating indices (seamless=1)
+[Fri Apr 16 22:35:16.946 2010] [18379] rotating index 'idx_delta_logs': success
+[Fri Apr 16 22:35:16.948 2010] [18379] rotating finished
+[Fri Apr 16 22:40:18.110 2010] [18379] rotating indices (seamless=1)
+[Fri Apr 16 22:40:18.187 2010] [18379] rotating index 'idx_delta_logs': success
+[Fri Apr 16 22:40:18.190 2010] [18379] rotating finished
+[Fri Apr 16 22:45:16.069 2010] [18379] rotating indices (seamless=1)
+[Fri Apr 16 22:45:16.149 2010] [18379] rotating index 'idx_delta_logs': success
+[Fri Apr 16 22:45:16.151 2010] [18379] rotating finished
+[Fri Apr 16 22:50:16.533 2010] [18379] rotating indices (seamless=1)
+[Fri Apr 16 22:50:16.611 2010] [18379] rotating index 'idx_delta_logs': success
+[Fri Apr 16 22:50:16.613 2010] [18379] rotating finished
+[Fri Apr 16 22:55:16.542 2010] [18379] rotating indices (seamless=1)
+[Fri Apr 16 22:55:16.619 2010] [18379] rotating index 'idx_delta_logs': success
+[Fri Apr 16 22:55:16.623 2010] [18379] rotating finished
+[Fri Apr 16 23:00:17.673 2010] [18379] rotating indices (seamless=1)
+[Fri Apr 16 23:00:17.750 2010] [18379] rotating index 'idx_delta_logs': success
+[Fri Apr 16 23:00:17.753 2010] [18379] rotating finished
+[Fri Apr 16 23:05:16.626 2010] [18379] rotating indices (seamless=1)
+[Fri Apr 16 23:05:16.705 2010] [18379] rotating index 'idx_delta_logs': success
+[Fri Apr 16 23:05:16.707 2010] [18379] rotating finished
+[Fri Apr 16 23:10:16.768 2010] [18379] rotating indices (seamless=1)
+[Fri Apr 16 23:10:16.845 2010] [18379] rotating index 'idx_delta_logs': success
+[Fri Apr 16 23:10:16.848 2010] [18379] rotating finished
+[Fri Apr 16 23:15:16.769 2010] [18379] rotating indices (seamless=1)
+[Fri Apr 16 23:15:16.849 2010] [18379] rotating index 'idx_delta_logs': success
+[Fri Apr 16 23:15:16.852 2010] [18379] rotating finished
+[Fri Apr 16 23:20:17.097 2010] [18379] rotating indices (seamless=1)
+[Fri Apr 16 23:20:17.175 2010] [18379] rotating index 'idx_delta_logs': success
+[Fri Apr 16 23:20:17.177 2010] [18379] rotating finished
+[Fri Apr 16 23:25:16.159 2010] [18379] rotating indices (seamless=1)
+[Fri Apr 16 23:25:16.238 2010] [18379] rotating index 'idx_delta_logs': success
+[Fri Apr 16 23:25:16.241 2010] [18379] rotating finished
+[Fri Apr 16 23:30:16.184 2010] [18379] rotating indices (seamless=1)
+[Fri Apr 16 23:30:16.262 2010] [18379] rotating index 'idx_delta_logs': success
+[Fri Apr 16 23:30:16.265 2010] [18379] rotating finished
+[Fri Apr 16 23:35:17.072 2010] [18379] rotating indices (seamless=1)
+[Fri Apr 16 23:35:17.151 2010] [18379] rotating index 'idx_delta_logs': success
+[Fri Apr 16 23:35:17.153 2010] [18379] rotating finished
+[Fri Apr 16 23:40:17.287 2010] [18379] rotating indices (seamless=1)
+[Fri Apr 16 23:40:17.364 2010] [18379] rotating index 'idx_delta_logs': success
+[Fri Apr 16 23:40:17.366 2010] [18379] rotating finished
+[Fri Apr 16 23:45:17.579 2010] [18379] rotating indices (seamless=1)
+[Fri Apr 16 23:45:17.658 2010] [18379] rotating index 'idx_delta_logs': success
+[Fri Apr 16 23:45:17.660 2010] [18379] rotating finished
+[Fri Apr 16 23:50:17.876 2010] [18379] rotating indices (seamless=1)
+[Fri Apr 16 23:50:17.954 2010] [18379] rotating index 'idx_delta_logs': success
+[Fri Apr 16 23:50:17.956 2010] [18379] rotating finished
+[Fri Apr 16 23:55:17.591 2010] [18379] rotating indices (seamless=1)
+[Fri Apr 16 23:55:17.669 2010] [18379] rotating index 'idx_delta_logs': success
+[Fri Apr 16 23:55:17.671 2010] [18379] rotating finished
+[Sat Apr 17 00:00:23.640 2010] [18379] rotating indices (seamless=1)
+[Sat Apr 17 00:00:23.686 2010] [18379] rotating index 'idx_delta_logs': success
+[Sat Apr 17 00:00:23.688 2010] [18379] rotating finished
+[Sat Apr 17 00:00:47.713 2010] [18379] rotating indices (seamless=1)
+[Sat Apr 17 00:00:48.567 2010] [18379] rotating index 'idx_logs': success
+[Sat Apr 17 00:00:48.592 2010] [18379] rotating finished
+[Sat Apr 17 00:05:01.772 2010] [18379] rotating indices (seamless=1)
+[Sat Apr 17 00:05:01.810 2010] [18379] rotating index 'idx_delta_logs': success
+[Sat Apr 17 00:05:01.812 2010] [18379] rotating finished
+[Sat Apr 17 00:10:01.866 2010] [18379] rotating indices (seamless=1)
+[Sat Apr 17 00:10:01.868 2010] [18379] rotating index 'idx_delta_logs': success
+[Sat Apr 17 00:10:01.868 2010] [18379] rotating finished
+[Sat Apr 17 00:15:01.090 2010] [18379] rotating indices (seamless=1)
+[Sat Apr 17 00:15:01.091 2010] [18379] rotating index 'idx_delta_logs': success
+[Sat Apr 17 00:15:01.091 2010] [18379] rotating finished
+[Sat Apr 17 00:20:01.197 2010] [18379] rotating indices (seamless=1)
+[Sat Apr 17 00:20:01.199 2010] [18379] rotating index 'idx_delta_logs': success
+[Sat Apr 17 00:20:01.199 2010] [18379] rotating finished
+[Sat Apr 17 00:25:01.434 2010] [18379] rotating indices (seamless=1)
+[Sat Apr 17 00:25:01.436 2010] [18379] rotating index 'idx_delta_logs': success
+[Sat Apr 17 00:25:01.436 2010] [18379] rotating finished
+[Sat Apr 17 00:30:01.584 2010] [18379] rotating indices (seamless=1)
+[Sat Apr 17 00:30:01.590 2010] [18379] rotating index 'idx_delta_logs': success
+[Sat Apr 17 00:30:01.590 2010] [18379] rotating finished
+[Sat Apr 17 00:35:01.789 2010] [18379] rotating indices (seamless=1)
+[Sat Apr 17 00:35:01.791 2010] [18379] rotating index 'idx_delta_logs': success
+[Sat Apr 17 00:35:01.791 2010] [18379] rotating finished
+[Sat Apr 17 00:40:01.979 2010] [18379] rotating indices (seamless=1)
+[Sat Apr 17 00:40:01.981 2010] [18379] rotating index 'idx_delta_logs': success
+[Sat Apr 17 00:40:01.981 2010] [18379] rotating finished
+[Sat Apr 17 00:45:01.206 2010] [18379] rotating indices (seamless=1)
+[Sat Apr 17 00:45:01.208 2010] [18379] rotating index 'idx_delta_logs': success
+[Sat Apr 17 00:45:01.208 2010] [18379] rotating finished
+[Sat Apr 17 00:50:01.314 2010] [18379] rotating indices (seamless=1)
+[Sat Apr 17 00:50:01.315 2010] [18379] rotating index 'idx_delta_logs': success
+[Sat Apr 17 00:50:01.315 2010] [18379] rotating finished
+[Sat Apr 17 00:55:01.851 2010] [18379] rotating indices (seamless=1)
+[Sat Apr 17 00:55:01.853 2010] [18379] rotating index 'idx_delta_logs': success
+[Sat Apr 17 00:55:01.853 2010] [18379] rotating finished
+[Sat Apr 17 00:59:56.585 2010] [18379] rotating indices (seamless=1)
+[Sat Apr 17 00:59:56.590 2010] [18379] rotating index 'idx_delta_logs': success
+[Sat Apr 17 00:59:56.590 2010] [18379] rotating finished
+[Sat Apr 17 01:00:03.078 2010] [18379] rotating indices (seamless=1)
+[Sat Apr 17 01:00:03.086 2010] [18379] rotating index 'idx_delta_logs': success
+[Sat Apr 17 01:00:03.087 2010] [18379] rotating finished
+[Sat Apr 17 01:05:02.996 2010] [18379] rotating indices (seamless=1)
+[Sat Apr 17 01:05:03.006 2010] [18379] rotating index 'idx_delta_logs': success
+[Sat Apr 17 01:05:03.006 2010] [18379] rotating finished
+[Sat Apr 17 01:10:04.242 2010] [18379] rotating indices (seamless=1)
+[Sat Apr 17 01:10:04.255 2010] [18379] rotating index 'idx_delta_logs': success
+[Sat Apr 17 01:10:04.256 2010] [18379] rotating finished
+[Sat Apr 17 01:15:04.943 2010] [18379] rotating indices (seamless=1)
+[Sat Apr 17 01:15:04.962 2010] [18379] rotating index 'idx_delta_logs': success
+[Sat Apr 17 01:15:04.963 2010] [18379] rotating finished
+[Sat Apr 17 01:18:52.542 2010] [18379] rotating indices (seamless=1)
+[Sat Apr 17 01:18:52.586 2010] [18379] rotating index 'idx_delta_logs': success
+[Sat Apr 17 01:18:52.586 2010] [18379] rotating finished
+[Sat Apr 17 01:20:21.919 2010] [18379] rotating indices (seamless=1)
+[Sat Apr 17 01:20:21.987 2010] [18379] rotating index 'idx_delta_logs': success
+[Sat Apr 17 01:20:21.988 2010] [18379] rotating finished
+[Sat Apr 17 01:25:24.666 2010] [18379] rotating indices (seamless=1)
+[Sat Apr 17 01:25:24.737 2010] [18379] rotating index 'idx_delta_logs': success
+[Sat Apr 17 01:25:24.737 2010] [18379] rotating finished
+[Sat Apr 17 01:30:28.617 2010] [18379] rotating indices (seamless=1)
+[Sat Apr 17 01:30:28.703 2010] [18379] rotating index 'idx_delta_logs': success
+[Sat Apr 17 01:30:28.704 2010] [18379] rotating finished
+[Sat Apr 17 01:35:32.589 2010] [18379] rotating indices (seamless=1)
+[Sat Apr 17 01:35:32.685 2010] [18379] rotating index 'idx_delta_logs': success
+[Sat Apr 17 01:35:32.686 2010] [18379] rotating finished
+[Sat Apr 17 01:40:36.178 2010] [18379] rotating indices (seamless=1)
+[Sat Apr 17 01:40:36.289 2010] [18379] rotating index 'idx_delta_logs': success
+[Sat Apr 17 01:40:36.290 2010] [18379] rotating finished
+[Sat Apr 17 01:45:39.406 2010] [18379] rotating indices (seamless=1)
+[Sat Apr 17 01:45:39.526 2010] [18379] rotating index 'idx_delta_logs': success
+[Sat Apr 17 01:45:39.527 2010] [18379] rotating finished
+[Sat Apr 17 01:50:45.111 2010] [18379] rotating indices (seamless=1)
+[Sat Apr 17 01:50:45.245 2010] [18379] rotating index 'idx_delta_logs': success
+[Sat Apr 17 01:50:45.248 2010] [18379] rotating finished
+[Sat Apr 17 01:55:48.052 2010] [18379] rotating indices (seamless=1)
+[Sat Apr 17 01:55:48.201 2010] [18379] rotating index 'idx_delta_logs': success
+[Sat Apr 17 01:55:48.205 2010] [18379] rotating finished
+[Sat Apr 17 02:00:50.134 2010] [18379] rotating indices (seamless=1)
+[Sat Apr 17 02:00:50.294 2010] [18379] rotating index 'idx_delta_logs': success
+[Sat Apr 17 02:00:50.296 2010] [18379] rotating finished
+[Sat Apr 17 02:05:55.536 2010] [18379] rotating indices (seamless=1)
+[Sat Apr 17 02:05:55.704 2010] [18379] rotating index 'idx_delta_logs': success
+[Sat Apr 17 02:05:55.707 2010] [18379] rotating finished
+[Sat Apr 17 02:10:59.926 2010] [18379] rotating indices (seamless=1)
+[Sat Apr 17 02:11:00.107 2010] [18379] rotating index 'idx_delta_logs': success
+[Sat Apr 17 02:11:00.110 2010] [18379] rotating finished
+[Sat Apr 17 02:16:02.027 2010] [18379] rotating indices (seamless=1)
+[Sat Apr 17 02:16:02.214 2010] [18379] rotating index 'idx_delta_logs': success
+[Sat Apr 17 02:16:02.216 2010] [18379] rotating finished
+[Sat Apr 17 02:21:05.839 2010] [18379] rotating indices (seamless=1)
+[Sat Apr 17 02:21:06.040 2010] [18379] rotating index 'idx_delta_logs': success
+[Sat Apr 17 02:21:06.043 2010] [18379] rotating finished
+[Sat Apr 17 02:26:09.177 2010] [18379] rotating indices (seamless=1)
+[Sat Apr 17 02:26:09.392 2010] [18379] rotating index 'idx_delta_logs': success
+[Sat Apr 17 02:26:09.395 2010] [18379] rotating finished
+[Sat Apr 17 02:31:14.502 2010] [18379] rotating indices (seamless=1)
+[Sat Apr 17 02:31:14.735 2010] [18379] rotating index 'idx_delta_logs': success
+[Sat Apr 17 02:31:14.738 2010] [18379] rotating finished
+[Sat Apr 17 02:36:15.953 2010] [18379] rotating indices (seamless=1)
+[Sat Apr 17 02:36:16.195 2010] [18379] rotating index 'idx_delta_logs': success
+[Sat Apr 17 02:36:16.198 2010] [18379] rotating finished
+[Sat Apr 17 02:41:19.337 2010] [18379] rotating indices (seamless=1)
+[Sat Apr 17 02:41:19.592 2010] [18379] rotating index 'idx_delta_logs': success
+[Sat Apr 17 02:41:19.595 2010] [18379] rotating finished
+[Sat Apr 17 02:46:25.053 2010] [18379] rotating indices (seamless=1)
+[Sat Apr 17 02:46:25.433 2010] [18379] rotating index 'idx_delta_logs': success
+[Sat Apr 17 02:46:25.435 2010] [18379] rotating finished
+[Sat Apr 17 02:51:29.580 2010] [18379] rotating indices (seamless=1)
+[Sat Apr 17 02:51:29.866 2010] [18379] rotating index 'idx_delta_logs': success
+[Sat Apr 17 02:51:29.869 2010] [18379] rotating finished
+[Sat Apr 17 02:56:31.774 2010] [18379] rotating indices (seamless=1)
+[Sat Apr 17 02:56:32.062 2010] [18379] rotating index 'idx_delta_logs': success
+[Sat Apr 17 02:56:32.064 2010] [18379] rotating finished
+[Sat Apr 17 03:01:36.483 2010] [18379] rotating indices (seamless=1)
+[Sat Apr 17 03:01:36.789 2010] [18379] rotating index 'idx_delta_logs': success
+[Sat Apr 17 03:01:36.793 2010] [18379] rotating finished
+[Sat Apr 17 03:06:45.244 2010] [18379] rotating indices (seamless=1)
+[Sat Apr 17 03:06:45.561 2010] [18379] rotating index 'idx_delta_logs': success
+[Sat Apr 17 03:06:45.564 2010] [18379] rotating finished
+[Sat Apr 17 03:11:43.326 2010] [18379] rotating indices (seamless=1)
+[Sat Apr 17 03:11:43.663 2010] [18379] rotating index 'idx_delta_logs': success
+[Sat Apr 17 03:11:43.666 2010] [18379] rotating finished
+[Sat Apr 17 03:16:48.461 2010] [18379] rotating indices (seamless=1)
+[Sat Apr 17 03:16:48.808 2010] [18379] rotating index 'idx_delta_logs': success
+[Sat Apr 17 03:16:48.812 2010] [18379] rotating finished
+[Sat Apr 17 03:21:50.571 2010] [18379] rotating indices (seamless=1)
+[Sat Apr 17 03:21:50.924 2010] [18379] rotating index 'idx_delta_logs': success
+[Sat Apr 17 03:21:50.928 2010] [18379] rotating finished
+[Sat Apr 17 03:26:55.759 2010] [18379] rotating indices (seamless=1)
+[Sat Apr 17 03:26:56.139 2010] [18379] rotating index 'idx_delta_logs': success
+[Sat Apr 17 03:26:56.143 2010] [18379] rotating finished
+[Sat Apr 17 03:32:00.656 2010] [18379] rotating indices (seamless=1)
+[Sat Apr 17 03:32:01.032 2010] [18379] rotating index 'idx_delta_logs': success
+[Sat Apr 17 03:32:01.036 2010] [18379] rotating finished
+[Sat Apr 17 03:37:03.995 2010] [18379] rotating indices (seamless=1)
+[Sat Apr 17 03:37:04.399 2010] [18379] rotating index 'idx_delta_logs': success
+[Sat Apr 17 03:37:04.404 2010] [18379] rotating finished
+[Sat Apr 17 03:42:07.516 2010] [18379] rotating indices (seamless=1)
+[Sat Apr 17 03:42:07.917 2010] [18379] rotating index 'idx_delta_logs': success
+[Sat Apr 17 03:42:07.922 2010] [18379] rotating finished
+[Sat Apr 17 03:47:10.621 2010] [18379] rotating indices (seamless=1)
+[Sat Apr 17 03:47:11.037 2010] [18379] rotating index 'idx_delta_logs': success
+[Sat Apr 17 03:47:11.041 2010] [18379] rotating finished
+[Sat Apr 17 03:52:15.934 2010] [18379] rotating indices (seamless=1)
+[Sat Apr 17 03:52:16.366 2010] [18379] rotating index 'idx_delta_logs': success
+[Sat Apr 17 03:52:16.371 2010] [18379] rotating finished
+[Sat Apr 17 03:57:19.342 2010] [18379] rotating indices (seamless=1)
+[Sat Apr 17 03:57:19.788 2010] [18379] rotating index 'idx_delta_logs': success
+[Sat Apr 17 03:57:19.793 2010] [18379] rotating finished
+[Sat Apr 17 04:02:22.243 2010] [18379] rotating indices (seamless=1)
+[Sat Apr 17 04:02:22.722 2010] [18379] rotating index 'idx_delta_logs': success
+[Sat Apr 17 04:02:23.530 2010] [18379] rotating finished
+[Sat Apr 17 04:07:23.393 2010] [18379] rotating indices (seamless=1)
+[Sat Apr 17 04:07:23.883 2010] [18379] rotating index 'idx_delta_logs': success
+[Sat Apr 17 04:07:23.888 2010] [18379] rotating finished
+[Sat Apr 17 04:12:33.530 2010] [18379] rotating indices (seamless=1)
+[Sat Apr 17 04:12:34.018 2010] [18379] rotating index 'idx_delta_logs': success
+[Sat Apr 17 04:12:34.024 2010] [18379] rotating finished
+[Sat Apr 17 04:17:37.119 2010] [18379] rotating indices (seamless=1)
+[Sat Apr 17 04:17:37.620 2010] [18379] rotating index 'idx_delta_logs': success
+[Sat Apr 17 04:17:38.564 2010] [18379] rotating finished
+[Sat Apr 17 04:22:36.916 2010] [18379] rotating indices (seamless=1)
+[Sat Apr 17 04:22:37.423 2010] [18379] rotating index 'idx_delta_logs': success
+[Sat Apr 17 04:22:37.429 2010] [18379] rotating finished
+[Sat Apr 17 04:27:44.459 2010] [18379] rotating indices (seamless=1)
+[Sat Apr 17 04:27:44.990 2010] [18379] rotating index 'idx_delta_logs': success
+[Sat Apr 17 04:27:44.996 2010] [18379] rotating finished
+[Sat Apr 17 04:32:46.760 2010] [18379] rotating indices (seamless=1)
+[Sat Apr 17 04:32:47.302 2010] [18379] rotating index 'idx_delta_logs': success
+[Sat Apr 17 04:32:47.308 2010] [18379] rotating finished
+[Sat Apr 17 04:37:53.639 2010] [18379] rotating indices (seamless=1)
+[Sat Apr 17 04:37:54.202 2010] [18379] rotating index 'idx_delta_logs': success
+[Sat Apr 17 04:37:54.208 2010] [18379] rotating finished
+[Sat Apr 17 04:42:54.639 2010] [18379] rotating indices (seamless=1)
+[Sat Apr 17 04:42:55.217 2010] [18379] rotating index 'idx_delta_logs': success
+[Sat Apr 17 04:42:55.223 2010] [18379] rotating finished
+[Sat Apr 17 04:48:01.374 2010] [18379] rotating indices (seamless=1)
+[Sat Apr 17 04:48:01.969 2010] [18379] rotating index 'idx_delta_logs': success
+[Sat Apr 17 04:48:01.975 2010] [18379] rotating finished
+[Sat Apr 17 04:53:05.475 2010] [18379] rotating indices (seamless=1)
+[Sat Apr 17 04:53:06.075 2010] [18379] rotating index 'idx_delta_logs': success
+[Sat Apr 17 04:53:06.083 2010] [18379] rotating finished
+[Sat Apr 17 04:58:08.672 2010] [18379] rotating indices (seamless=1)
+[Sat Apr 17 04:58:09.299 2010] [18379] rotating index 'idx_delta_logs': success
+[Sat Apr 17 04:58:09.305 2010] [18379] rotating finished
+[Sat Apr 17 05:03:15.428 2010] [18379] rotating indices (seamless=1)
+[Sat Apr 17 05:03:16.046 2010] [18379] rotating index 'idx_delta_logs': success
+[Sat Apr 17 05:03:16.053 2010] [18379] rotating finished
+[Sat Apr 17 05:08:18.591 2010] [18379] rotating indices (seamless=1)
+[Sat Apr 17 05:08:19.226 2010] [18379] rotating index 'idx_delta_logs': success
+[Sat Apr 17 05:08:19.235 2010] [18379] rotating finished
+[Sat Apr 17 05:13:23.264 2010] [18379] rotating indices (seamless=1)
+[Sat Apr 17 05:13:23.912 2010] [18379] rotating index 'idx_delta_logs': success
+[Sat Apr 17 05:13:23.920 2010] [18379] rotating finished
+[Sat Apr 17 05:18:26.553 2010] [18379] rotating indices (seamless=1)
+[Sat Apr 17 05:18:27.230 2010] [18379] rotating index 'idx_delta_logs': success
+[Sat Apr 17 05:18:27.238 2010] [18379] rotating finished
+[Sat Apr 17 05:23:32.523 2010] [18379] rotating indices (seamless=1)
+[Sat Apr 17 05:23:33.198 2010] [18379] rotating index 'idx_delta_logs': success
+[Sat Apr 17 05:23:33.205 2010] [18379] rotating finished
+[Sat Apr 17 05:28:32.533 2010] [18379] rotating indices (seamless=1)
+[Sat Apr 17 05:28:33.228 2010] [18379] rotating index 'idx_delta_logs': success
+[Sat Apr 17 05:28:33.235 2010] [18379] rotating finished
+[Sat Apr 17 05:33:37.331 2010] [18379] rotating indices (seamless=1)
+[Sat Apr 17 05:33:38.052 2010] [18379] rotating index 'idx_delta_logs': success
+[Sat Apr 17 05:33:38.059 2010] [18379] rotating finished
+[Sat Apr 17 05:38:42.080 2010] [18379] rotating indices (seamless=1)
+[Sat Apr 17 05:38:42.786 2010] [18379] rotating index 'idx_delta_logs': success
+[Sat Apr 17 05:38:42.794 2010] [18379] rotating finished
+[Sat Apr 17 05:43:47.010 2010] [18379] rotating indices (seamless=1)
+[Sat Apr 17 05:43:47.739 2010] [18379] rotating index 'idx_delta_logs': success
+[Sat Apr 17 05:43:47.747 2010] [18379] rotating finished
+[Sat Apr 17 05:48:52.314 2010] [18379] rotating indices (seamless=1)
+[Sat Apr 17 05:48:53.053 2010] [18379] rotating index 'idx_delta_logs': success
+[Sat Apr 17 05:48:53.061 2010] [18379] rotating finished
+[Sat Apr 17 05:53:58.274 2010] [18379] rotating indices (seamless=1)
+[Sat Apr 17 05:53:59.021 2010] [18379] rotating index 'idx_delta_logs': success
+[Sat Apr 17 05:53:59.029 2010] [18379] rotating finished
+[Sat Apr 17 05:58:59.377 2010] [18379] rotating indices (seamless=1)
+[Sat Apr 17 05:59:00.137 2010] [18379] rotating index 'idx_delta_logs': success
+[Sat Apr 17 05:59:00.146 2010] [18379] rotating finished
+[Sat Apr 17 06:04:04.995 2010] [18379] rotating indices (seamless=1)
+[Sat Apr 17 06:04:05.806 2010] [18379] rotating index 'idx_delta_logs': success
+[Sat Apr 17 06:04:05.815 2010] [18379] rotating finished
+[Sat Apr 17 06:09:09.025 2010] [18379] rotating indices (seamless=1)
+[Sat Apr 17 06:09:09.821 2010] [18379] rotating index 'idx_delta_logs': success
+[Sat Apr 17 06:09:09.830 2010] [18379] rotating finished
+[Sat Apr 17 06:14:15.189 2010] [18379] rotating indices (seamless=1)
+[Sat Apr 17 06:14:15.994 2010] [18379] rotating index 'idx_delta_logs': success
+[Sat Apr 17 06:14:16.003 2010] [18379] rotating finished
+[Sat Apr 17 06:19:18.375 2010] [18379] rotating indices (seamless=1)
+[Sat Apr 17 06:19:19.197 2010] [18379] rotating index 'idx_delta_logs': success
+[Sat Apr 17 06:19:19.206 2010] [18379] rotating finished
+[Sat Apr 17 06:24:23.742 2010] [18379] rotating indices (seamless=1)
+[Sat Apr 17 06:24:24.595 2010] [18379] rotating index 'idx_delta_logs': success
+[Sat Apr 17 06:24:24.604 2010] [18379] rotating finished
+[Sat Apr 17 06:29:24.525 2010] [18379] rotating indices (seamless=1)
+[Sat Apr 17 06:29:25.368 2010] [18379] rotating index 'idx_delta_logs': success
+[Sat Apr 17 06:29:25.378 2010] [18379] rotating finished
+[Sat Apr 17 06:34:27.804 2010] [18379] rotating indices (seamless=1)
+[Sat Apr 17 06:34:28.660 2010] [18379] rotating index 'idx_delta_logs': success
+[Sat Apr 17 06:34:28.670 2010] [18379] rotating finished
+[Sat Apr 17 06:39:46.579 2010] [18379] rotating indices (seamless=1)
+[Sat Apr 17 06:39:47.703 2010] [18379] rotating index 'idx_delta_logs': success
+[Sat Apr 17 06:39:47.713 2010] [18379] rotating finished
+[Sat Apr 17 06:44:48.036 2010] [18379] rotating indices (seamless=1)
+[Sat Apr 17 06:44:48.974 2010] [18379] rotating index 'idx_delta_logs': success
+[Sat Apr 17 06:44:48.984 2010] [18379] rotating finished
+[Sat Apr 17 06:49:47.649 2010] [18379] rotating indices (seamless=1)
+[Sat Apr 17 06:49:48.581 2010] [18379] rotating index 'idx_delta_logs': success
+[Sat Apr 17 06:49:48.591 2010] [18379] rotating finished
+[Sat Apr 17 06:54:43.131 2010] [18379] rotating indices (seamless=1)
+[Sat Apr 17 06:54:44.049 2010] [18379] rotating index 'idx_delta_logs': success
+[Sat Apr 17 06:54:44.059 2010] [18379] rotating finished
+[Sat Apr 17 06:59:51.634 2010] [18379] rotating indices (seamless=1)
+[Sat Apr 17 06:59:52.575 2010] [18379] rotating index 'idx_delta_logs': success
+[Sat Apr 17 06:59:52.586 2010] [18379] rotating finished
+[Sat Apr 17 07:04:56.176 2010] [18379] rotating indices (seamless=1)
+[Sat Apr 17 07:04:57.134 2010] [18379] rotating index 'idx_delta_logs': success
+[Sat Apr 17 07:04:57.144 2010] [18379] rotating finished
+[Sat Apr 17 07:09:58.584 2010] [18379] rotating indices (seamless=1)
+[Sat Apr 17 07:09:59.553 2010] [18379] rotating index 'idx_delta_logs': success
+[Sat Apr 17 07:09:59.563 2010] [18379] rotating finished
+[Sat Apr 17 07:15:07.982 2010] [18379] rotating indices (seamless=1)
+[Sat Apr 17 07:15:08.960 2010] [18379] rotating index 'idx_delta_logs': success
+[Sat Apr 17 07:15:08.971 2010] [18379] rotating finished
+[Sat Apr 17 07:25:18.014 2010] [18379] rotating indices (seamless=1)
+[Sat Apr 17 07:25:19.155 2010] [18379] rotating index 'idx_delta_logs': success
+[Sat Apr 17 07:25:19.166 2010] [18379] rotating finished
+[Sat Apr 17 07:35:18.794 2010] [18379] rotating indices (seamless=1)
+[Sat Apr 17 07:35:19.805 2010] [18379] rotating index 'idx_delta_logs': success
+[Sat Apr 17 07:35:19.816 2010] [18379] rotating finished
+[Sat Apr 17 07:45:58.667 2010] [18379] rotating indices (seamless=1)
+[Sat Apr 17 07:45:59.713 2010] [18379] rotating index 'idx_delta_logs': success
+[Sat Apr 17 07:45:59.724 2010] [18379] rotating finished
+[Sat Apr 17 07:55:40.076 2010] [18379] rotating indices (seamless=1)
+[Sat Apr 17 07:55:41.136 2010] [18379] rotating index 'idx_delta_logs': success
+[Sat Apr 17 07:55:41.148 2010] [18379] rotating finished
+[Sat Apr 17 08:05:48.509 2010] [18379] rotating indices (seamless=1)
+[Sat Apr 17 08:05:49.739 2010] [18379] rotating index 'idx_delta_logs': success
+[Sat Apr 17 08:05:49.783 2010] [18379] rotating finished
+[Sat Apr 17 08:15:58.686 2010] [18379] rotating indices (seamless=1)
+[Sat Apr 17 08:15:59.787 2010] [18379] rotating index 'idx_delta_logs': success
+[Sat Apr 17 08:15:59.799 2010] [18379] rotating finished
+[Sat Apr 17 08:26:06.057 2010] [18379] rotating indices (seamless=1)
+[Sat Apr 17 08:26:07.246 2010] [18379] rotating index 'idx_delta_logs': success
+[Sat Apr 17 08:26:07.259 2010] [18379] rotating finished
+[Sat Apr 17 08:36:13.289 2010] [18379] rotating indices (seamless=1)
+[Sat Apr 17 08:36:14.426 2010] [18379] rotating index 'idx_delta_logs': success
+[Sat Apr 17 08:36:14.440 2010] [18379] rotating finished
+[Sat Apr 17 08:46:23.527 2010] [18379] rotating indices (seamless=1)
+[Sat Apr 17 08:46:24.901 2010] [18379] rotating index 'idx_delta_logs': success
+[Sat Apr 17 08:46:24.914 2010] [18379] rotating finished
+[Sat Apr 17 08:56:31.345 2010] [18379] rotating indices (seamless=1)
+[Sat Apr 17 08:56:32.794 2010] [18379] rotating index 'idx_delta_logs': success
+[Sat Apr 17 08:56:32.808 2010] [18379] rotating finished
+[Sat Apr 17 09:06:44.671 2010] [18379] rotating indices (seamless=1)
+[Sat Apr 17 09:06:45.767 2010] [18379] rotating index 'idx_delta_logs': success
+[Sat Apr 17 09:06:45.783 2010] [18379] rotating finished
+[Sat Apr 17 09:16:59.347 2010] [18379] rotating indices (seamless=1)
+[Sat Apr 17 09:17:00.410 2010] [18379] rotating index 'idx_delta_logs': success
+[Sat Apr 17 09:17:00.425 2010] [18379] rotating finished
+[Sat Apr 17 09:34:32.235 2010] [18379] rotating indices (seamless=1)
+[Sat Apr 17 09:34:33.334 2010] [18379] rotating index 'idx_delta_logs': success
+[Sat Apr 17 09:34:33.348 2010] [18379] rotating finished
+[Sat Apr 17 09:34:52.704 2010] [18379] rotating indices (seamless=1)
+[Sat Apr 17 09:34:52.705 2010] [18379] rotating index 'idx_delta_logs': success
+[Sat Apr 17 09:34:52.706 2010] [18379] rotating finished
+[Sat Apr 17 09:37:17.167 2010] [18379] rotating indices (seamless=1)
+[Sat Apr 17 09:37:18.251 2010] [18379] rotating index 'idx_logs': success
+[Sat Apr 17 09:37:18.273 2010] [18379] rotating finished
+[Sat Apr 17 09:45:07.797 2010] [18379] rotating indices (seamless=1)
+[Sat Apr 17 09:45:07.803 2010] [18379] rotating index 'idx_delta_logs': success
+[Sat Apr 17 09:45:07.803 2010] [18379] rotating finished
+[Sat Apr 17 10:00:20.439 2010] [18379] rotating indices (seamless=1)
+[Sat Apr 17 10:00:20.468 2010] [18379] rotating index 'idx_delta_logs': success
+[Sat Apr 17 10:00:20.469 2010] [18379] rotating finished
+[Sat Apr 17 10:15:24.532 2010] [18379] rotating indices (seamless=1)
+[Sat Apr 17 10:15:24.599 2010] [18379] rotating index 'idx_delta_logs': success
+[Sat Apr 17 10:15:24.599 2010] [18379] rotating finished
+[Sat Apr 17 10:30:24.558 2010] [18379] rotating indices (seamless=1)
+[Sat Apr 17 10:30:24.637 2010] [18379] rotating index 'idx_delta_logs': success
+[Sat Apr 17 10:30:24.638 2010] [18379] rotating finished
+[Sat Apr 17 10:45:24.965 2010] [18379] rotating indices (seamless=1)
+[Sat Apr 17 10:45:25.050 2010] [18379] rotating index 'idx_delta_logs': success
+[Sat Apr 17 10:45:25.051 2010] [18379] rotating finished
+[Sat Apr 17 11:00:26.222 2010] [18379] rotating indices (seamless=1)
+[Sat Apr 17 11:00:26.301 2010] [18379] rotating index 'idx_delta_logs': success
+[Sat Apr 17 11:00:26.302 2010] [18379] rotating finished
+[Sat Apr 17 11:15:24.479 2010] [18379] rotating indices (seamless=1)
+[Sat Apr 17 11:15:24.566 2010] [18379] rotating index 'idx_delta_logs': success
+[Sat Apr 17 11:15:24.567 2010] [18379] rotating finished

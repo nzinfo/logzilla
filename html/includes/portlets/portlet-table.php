@@ -190,7 +190,7 @@ if($msg_mask) {
         // $q = $trimmed;
 #$q = "SELECT id ,group_id,title FROM documents where title = 'test one'";
 #$q = " SELECT id, group_id, UNIX_TIMESTAMP(date_added) AS date_added, title, content FROM documents";
-        $index = "idx_logs";
+        $index = "idx_logs idx_delta_logs";
 
         $cl = new SphinxClient ();
         $hostip = $_SESSION['SPX_SRV'];

@@ -23,13 +23,13 @@ DROP TABLE IF EXISTS `sph_counter`;
 SET @saved_cs_client     = @@character_set_client;
 SET character_set_client = utf8;
 CREATE TABLE `sph_counter` (
-  `counter_id` int(11) NOT NULL,
+  `counter_id` int(11) unsigned NOT NULL AUTO_INCREMENT,
   `max_id` bigint(20) unsigned NOT NULL,
   `index_name` varchar(32) NOT NULL DEFAULT '',
   `last_updated` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`counter_id`),
   KEY `index_name` (`index_name`)
-) ENGINE=MyISAM DEFAULT CHARSET=latin1;
+) ENGINE=MyISAM AUTO_INCREMENT=3 DEFAULT CHARSET=latin1;
 SET character_set_client = @saved_cs_client;
 
 --
@@ -38,6 +38,7 @@ SET character_set_client = @saved_cs_client;
 
 LOCK TABLES `sph_counter` WRITE;
 /*!40000 ALTER TABLE `sph_counter` DISABLE KEYS */;
+INSERT INTO `sph_counter` VALUES (1,0,'idx_logs','2010-04-17 00:07:35'),(2,0,'idx_delta_logs','2010-04-17 00:08:06');
 /*!40000 ALTER TABLE `sph_counter` ENABLE KEYS */;
 UNLOCK TABLES;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
@@ -50,4 +51,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2010-04-14 18:14:20
+-- Dump completed on 2010-04-17  0:08:29

@@ -23,7 +23,8 @@ use DBI;
 use Date::Calc;
 use Term::ReadLine;
 use File::Copy;
-use File::Tail;
+use Text::LevenshteinXS qw(distance); # not needed here, but might as well warn the user to install it now
+
 system("stty erase ^H");
 sub p {
 	my($prompt, $default) = @_;

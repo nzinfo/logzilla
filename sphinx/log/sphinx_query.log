@@ -163,3 +163,24 @@
 [Fri Apr 16 17:00:42.589 2010] 0.001 sec [ext2/0/rel 0 (0,1000)] [idx_logs] @notes test
 [Fri Apr 16 17:03:40.359 2010] 0.001 sec [ext2/0/rel 0 (0,1000)] [idx_logs] @notes test
 [Fri Apr 16 17:10:06.375 2010] 0.021 sec [ext2/0/rel 0 (0,1000)] [idx_logs] @notes test
+[Fri Apr 16 20:14:35.288 2010] 0.028 sec [ext2/0/rel 0 (0,1000)] [idx_logs] int
+[Fri Apr 16 20:14:42.553 2010] 0.604 sec [ext2/0/rel 6961372 (0,1000)] [idx_logs] interface
+[Fri Apr 16 20:19:43.058 2010] 0.607 sec [ext2/0/rel 6961372 (0,1000)] [idx_logs] interface
+[Sat Apr 17 00:59:22.477 2010] 0.000 sec [ext2/0/rel 1 (0,1000)] [idx_logs] radius
+[Sat Apr 17 01:00:03.369 2010] 0.000 sec [ext2/0/rel 1 (0,1000)] [idx_logs] radius
+[Sat Apr 17 01:00:32.367 2010] 0.000 sec [ext2/0/rel 1 (0,1000)] [idx_logs] radius
+[Sat Apr 17 01:05:18.370 2010] 0.000 sec [ext2/0/rel 1 (0,1000)] [idx_logs] radius
+[Sat Apr 17 01:06:32.585 2010] 0.000 sec [ext2/0/rel 2 (0,1000)] [idx_logs idx_delta_logs] radius
+[Sat Apr 17 01:06:48.444 2010] 0.000 sec [ext2/0/rel 2 (0,1000)] [idx_logs idx_delta_logs] radius
+[Sat Apr 17 01:12:00.600 2010] 0.000 sec [ext2/0/rel 0 (0,1000)] [idx_logs idx_delta_logs] rad
+[Sat Apr 17 01:19:04.154 2010] 0.002 sec [ext2/0/rel 1360 (0,1000)] [idx_logs idx_delta_logs] rad*
+[Sat Apr 17 01:19:32.476 2010] 0.003 sec [ext2/0/rel 10071 (0,1000)] [idx_logs idx_delta_logs] sys-5*
+[Sat Apr 17 01:20:23.288 2010] 0.000 sec [ext2/0/rel 0 (0,1000)] [idx_logs idx_delta_logs] @notes tes*
+[Sat Apr 17 01:21:05.779 2010] 0.002 sec [ext2/0/rel 1 (0,1000)] [idx_logs idx_delta_logs] @notes test*
+[Sat Apr 17 01:21:21.107 2010] 0.002 sec [ext2/0/rel 1 (0,1000)] [idx_logs idx_delta_logs] @notes test*
+[Sat Apr 17 01:21:34.592 2010] 0.002 sec [ext2/0/rel 1 (0,1000)] [idx_logs idx_delta_logs] @notes test*
+[Sat Apr 17 01:22:36.568 2010] 0.002 sec [ext2/0/rel 1 (0,1000)] [idx_logs idx_delta_logs] @notes test*
+[Sat Apr 17 01:24:05.736 2010] 0.009 sec [ext2/0/rel 54869 (0,1000)] [idx_logs idx_delta_logs] test*
+[Sat Apr 17 01:24:23.929 2010] 0.008 sec [ext2/0/rel 54869 (0,1000)] [idx_logs idx_delta_logs] test*
+[Sat Apr 17 09:39:23.499 2010] 0.222 sec [ext2/0/rel 3818 (0,1000)] [idx_logs idx_delta_logs] inter
+[Sat Apr 17 09:42:45.209 2010] 0.003 sec [ext2/0/rel 6636 (0,1000)] [idx_logs idx_delta_logs] inter*
