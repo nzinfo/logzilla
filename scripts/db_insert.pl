@@ -57,7 +57,7 @@ sub init()
     $verbose = $opt{'v'} if $opt{'v'};
     $qsize = $opt{'q'} if $opt{'q'};
     $selftest = $opt{'s'} if $opt{'s'};
-    $config = defined($opt{'c'}) ? $opt{'c'} : "/var/www/svn/logzilla/html/config/config.php";
+    $config = defined($opt{'c'}) ? $opt{'c'} : "/path_to_logzilla/html/config/config.php";
 }
 
 init();
@@ -75,12 +75,12 @@ This program is used to process incoming syslog messages from a file.
     -v        : Also print results to STDOUT
     -l        : log file (default used from config.php if not set here)
     -c        : config file (overrides the default config.php file location set in the '\$config' variable in this script)
-    example: $0 -l /var/log/foo.log -d 5 -c /var/www/svn/logzilla/html/config/config.php -v -t /var/log/syslog
+    example: $0 -l /var/log/foo.log -d 5 -c /path_to_logzilla/html/config/config.php -v -t /var/log/syslog
 
     -s        : **Special Option**: 
             This option may be used to run a self test
             You can run a self  test by typing:
-            $0 -s -c /var/www/svn/logzilla/html/config/config.php (replace with the path to your config)
+            $0 -s -c /path_to_logzilla/html/config/config.php (replace with the path to your config)
 EOF
     exit;
 }
@@ -240,11 +240,11 @@ if ($qsize) {
 while (my $msg = <STDIN>) {
     my $now = strftime("%Y-%m-%d %H:%M:%S", localtime);
     print LOG "\n\n-=-=-=-=-=-=-=\nLOOP START: $now\n" if ($debug > 10);
-    $dbh->{InactiveDestroy} = 1;
-    my $pid = $$;
-    fork and exit;
-    my $p = $$;
-    print LOG "DEBUG: Forked\nDEBUG: Old pid = $pid\nDEBUG: New PID = $p\n" if ($debug > 10);
+    #$dbh->{InactiveDestroy} = 1;
+    #my $pid = $$;
+    #fork and exit;
+    #my $p = $$;
+    #print LOG "DEBUG: Forked\nDEBUG: Old pid = $pid\nDEBUG: New PID = $p\n" if ($debug > 10);
     if ($qsize) {
         for (my $i=0; $i <= 5; $i++) {
             push (@dumparr, "fakehost\tlocal7\temerg\tdbins_tag\tdb_insert.pl\tdb_insert.pl[$$]: %SYS-5-CONFIG_I: Configured from 172.16.0.123 by Fred Flinstone <fred\@flinstone.com>\tSYS-5-CONFIG_I\t$datetime\t$datetime\t\n");
@@ -262,7 +262,7 @@ while (my $msg = <STDIN>) {
         $start_time = time;
         print LOG "DEBUG: *NEW* Start Time is ".$start_time."\n" if ($debug > 10);
     } else { 
-        print LOG "DEBUG: NOT Pushing message into the array\n" if ($debug > 10);
+        print LOG "DEBUG: Limit reached, processing queue\n" if ($debug > 10);
         if ($#dumparr >= 0 ) {
             if ($start_time >= $time_limit) {
                 print STDOUT "\n\nQueue time limit reached ($q_time seconds)\n" if ($debug > 0) ;
