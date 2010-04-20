@@ -72,10 +72,13 @@ if [ $# -lt 1 ]; then
         echo "If any other argument is passed, such as \"full\", then a full index will be done"
         exit 1
 fi
+echo
+echo
 echo "Starting Sphinx Indexer: $DATE $TIME"
 if [ $1 = "delta" ]; then
         if [ $spid ]; then
                 echo "Spawning DELTA indexer for delta idx_delta_logs"
+                echo "Running Command: $indexer --config $spconf --rotate idx_delta_logs"
                 $indexer --config $spconf --rotate idx_delta_logs
         else
                 echo "Unable to update deltas, make sure searchd is running first!"
@@ -85,6 +88,7 @@ else
         if [ $1 = "merge" ]; then
                 if [ $spid ]; then
                         echo "Spawning MERGE indexer for idx_logs and idx_delta_logs"
+                        echo "Running command: $indexer --config $spconf --merge idx_logs idx_delta_logs --rotate"
                         $indexer --config $spconf --merge idx_logs idx_delta_logs --rotate
                         `echo "UPDATE sph_counter SET max_id= (SELECT MAX(id) FROM $logtable) WHERE \
                         index_name = 'idx_logs'" | mysql -u$dbuser -p$dbpass $db`
@@ -95,10 +99,11 @@ else
                 if [ $CHKFILES -eq 0 ]; then
                         echo "No previous index files found"
                         echo "Creating NEW indexes, this may take a while, so be patient..."
+                        echo "Running command: $indexer --config $spconf idx_logs idx_delta_logs"
                         $indexer --config $spconf idx_logs idx_delta_logs
                 else
                         if [ $spid ]; then
-                                echo "UPDATing indexes for idx_logs"
+                                echo "UPDATing indexes for idx_logs with command: $indexer --config $spconf idx_logs --rotate"
                                 $indexer --config $spconf idx_logs --rotate
                         else
                                 echo "Unable to update indexes, make sure searchd is running first!"
@@ -106,5 +111,6 @@ else
                 fi
         fi
 fi
+DATE=`date +%F`
+TIME=`date +%T`
 echo "Finished Sphinx Indexer: $DATE $TIME"
-echo

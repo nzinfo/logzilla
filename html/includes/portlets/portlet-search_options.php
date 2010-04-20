@@ -21,7 +21,7 @@ $dbLink = db_connect_syslog(DBADMIN, DBADMINPW);
 // -------------------------
 if ($_SESSION['SHOWCOUNTS'] == "1") {
     if ($_SESSION['DEDUP'] == "1") {
-        $sql = "SELECT SUM(counter) as count_all, count(*) as count from ".$_SESSION["TBL_MAIN"]."";
+        $sql = "SELECT (SELECT value FROM cache WHERE name='msg_sum') as count_all, COUNT(*) as count FROM ".$_SESSION["TBL_MAIN"]."";
         $result = perform_query($sql, $dbLink, $_REQUEST['pageId']);
         $line = fetch_array($result);
         $messagecount = humanReadable($line['count_all']);

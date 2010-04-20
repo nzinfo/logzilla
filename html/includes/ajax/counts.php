@@ -21,11 +21,7 @@ $data = get_input('data');
 
 switch ($data) {
     case "msgs":
-        if ($_SESSION['DEDUP'] == 0) {
-        $sql = "SELECT count(*) FROM $_SESSION[TBL_MAIN]";
-        } else {
-        $sql = "SELECT SUM(counter) FROM $_SESSION[TBL_MAIN]";
-        }
+        $sql = "SELECT value FROM cache where name='msg_sum'";
     break;
 
     case "notes":

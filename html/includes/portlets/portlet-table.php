@@ -172,6 +172,10 @@ $qstring .= "&mne=$mne";
 if ($mne) $where .= " AND mne='$mne'";
 
 
+$limit = get_input('limit');
+$limit = (!empty($limit)) ? $limit : "10";
+$qstring .= "&limit=$limit";
+
 // portlet-sphinxquery
 $msg_mask = get_input('msg_mask');
 $msg_mask = html_entity_decode($msg_mask);
@@ -197,6 +201,8 @@ if($msg_mask) {
         $port = intval($_SESSION['SPX_PORT']);
         $cl->SetServer ( $hostip, $port );
         $cl->SetMatchMode ( SPH_MATCH_EXTENDED2 );
+        $cl->SetSortMode(SPH_SORT_ATTR_DESC, 'lo');
+        $cl->SetLimits(0, intval($limit));
         $res = $cl->Query ( $msg_mask, $index);
         if ( !$res )
         {
@@ -205,12 +211,16 @@ if($msg_mask) {
         {
             if ($res['total_found'] > 0) {
                 $where .= " AND id IN (";
+                $orby .= " ORDER BY FIELD(id,";
                 foreach ( $res["matches"] as $doc => $docinfo ) {
                     $where .= "'$doc',";
+                    $orby .= "'$doc',";
                     // echo "$doc<br>\n";
                 }
                 $where = rtrim($where, ",");
+                $orby = rtrim($orby, ",");
                 $where .= ")";
+                $orby .= ")";
             } else {
                 // Negate search since sphinx returned 0 hits
                 $where = "WHERE 1<1";
@@ -300,9 +310,6 @@ if($notes_mask) {
 }
 
 // portlet-search_options
-$limit = get_input('limit');
-$limit = (!empty($limit)) ? $limit : "10";
-    $qstring .= "&limit=$limit";
 $dupop = get_input('dupop');
 $qstring .= "&dupop=$dupop";
 $dupop_orig = $dupop;
@@ -343,13 +350,19 @@ $orderby = get_input('orderby');
 $order = get_input('order');
     $qstring .= "&order=$order";
     if ($orderby) {
-        if ($orderby == 'lo') {
-            $orderby = 'id';
-        }
+        // if ($orderby == 'lo') {
+            // $orderby = 'id';
+        // }
+    if ($_SESSION['SPX_ENABLE'] == "0") {
     $where.= " ORDER BY $orderby";  
+    // } else {
+    // $where.= " $orby";  
+    }
 }
 if ($order) {
+    if ($_SESSION['SPX_ENABLE'] == "0") {
     $where.= " $order";  
+    }
 }
 
 ?>

@@ -192,6 +192,7 @@ my $db_insert = $dbh->prepare("INSERT INTO $dbtable (host,facility,priority,tag,
 my $dumpfile = "/dev/shm/infile.txt";
 my $sql = qq{LOAD DATA LOCAL INFILE '$dumpfile' INTO TABLE logs FIELDS TERMINATED BY "\\t" LINES TERMINATED BY "\\n" (host,facility,priority,tag,program,msg,mne,fo,lo)};
 my $db_insert_mpX = $dbh->prepare("REPLACE INTO cache (name,value,updatetime) VALUES (?,?,?)");
+my $db_insert_sum = $dbh->prepare("INSERT INTO cache (name,value,updatetime) VALUES ('msg_sum',?,?) ON DUPLICATE KEY UPDATE value=value + ?");
 my $db_load = $dbh->prepare("$sql");
 my $queue;
 my @dumparr;
@@ -204,6 +205,7 @@ my ($do_msg_mps, $mps, $tmp_mps, @mps, $sec);
 my ($mpm, @mpm, $min);
 my ($mph, @mph, $hr);
 my ($mpd, @mpd, $day);
+my $sumcount;
 my $now;
 
 open (DUMP, ">$dumpfile") or die "can't open $dumpfile: $!\n";
@@ -238,6 +240,7 @@ if ($qsize) {
     $q_limit = $qsize;
 }
 while (my $msg = <STDIN>) {
+    chomp($msg);
     my $now = strftime("%Y-%m-%d %H:%M:%S", localtime);
     print LOG "\n\n-=-=-=-=-=-=-=\nLOOP START: $now\n" if ($debug > 10);
     #$dbh->{InactiveDestroy} = 1;
@@ -324,6 +327,8 @@ while (my $msg = <STDIN>) {
         print LOG "\n#######\nCurrent MPS = $mps ($do_msg_mps deduplicated)\n#######\n" if ($debug > 2);
         $mpm += $mps;
         push(@mps, "chart_mps_$sec,$mps,$now");
+        $db_insert_sum->{TraceLevel} = 4 if ($debug > 4);
+        $db_insert_sum->execute($mps, $now, $mps);
         if ($#mps == 60) {
             my $now = strftime("%Y-%m-%d %H:%M:%S", localtime);
             push(@mpm, "chart_mpm_$min,$mpm,$now");
@@ -483,6 +488,11 @@ sub do_msg {
     }
     # If the SQZ feature is enabled, continue, if not we'll just insert the record afterward
     if($dedup eq 1) {
+        #$dbh->{InactiveDestroy} = 1;
+        #my $pid = $$;
+        #fork and exit;
+        #my $p = $$;
+        #print LOG "DEBUG: Forked\nDEBUG: Old pid = $pid\nDEBUG: New PID = $p\n" if ($debug > 10);
         $insert = 1;
         # Debug: set trace level to 4 to get query string executed
         $db_select->{TraceLevel} = 4 if (($debug > 4) and ($verbose));
@@ -547,6 +557,7 @@ sub do_msg {
                 # Else, if the row returned is the FIRST record, we need to update it with new counter, fo and lo
                 print LOG "UPDATING DB Record: $update_id with new counter and timestamps\n" if ($debug > 3);
                 print STDOUT "UPDATING DB Record: $update_id with new counter and timestamps\n" if (($debug > 3) and ($verbose));
+                $do_msg_mps++;
                 $db_update->execute($counter,$fo,$datetime_now,$update_id);
             }
             # Since we've already done an update of the first record, we don't need to insert anything after this
@@ -569,12 +580,12 @@ sub do_msg {
             # $dbh->{TraceLevel} = 4;
         } else {
             if (!$qsize) {
+                $do_msg_mps++;
                 print LOG "Error inserting record $msg\n" if ($debug > 3); 
                 print STDOUT "Error inserting record $msg\n" if (($debug > 3) and ($verbose)); 
             }
         }
     } else {
-        $do_msg_mps++;
         print LOG "insert = $insert, Skipping insert of this message since it was a duplicate\n" if ($debug > 3);
         print STDOUT "insert = $insert, Skipping insert of this message since it was a duplicate\n" if (($debug > 3) and ($verbose));
     }

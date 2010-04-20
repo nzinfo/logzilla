@@ -131,7 +131,7 @@ if( !mps_done ) {
 }
 var mmo_done;
 if( !mmo_done ) {
-    $('#portlet-header_Top_Hosts').append('&nbsp;&nbsp;&nbsp;<a href="javascript:reload_chart(\'chart_mmo\',\'includes/ajax/json.charts.php?chartId=chart_mmo\')">[Refresh]</a>');
+    $('#portlet-header_Messages_Per_Month').append('&nbsp;&nbsp;&nbsp;<a href="javascript:reload_chart(\'chart_mmo\',\'includes/ajax/json.charts.php?chartId=chart_mmo\')">[Refresh]</a>');
     mmo_done = true;
 }
 var tm_done;

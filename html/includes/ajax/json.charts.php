@@ -429,7 +429,7 @@ switch ($chartId) {
    	// -------------------------
    	$array = array();
     // Below will update today every time the page is refreshed, otherwise we get stale data
-    $sql = "REPLACE INTO cache (name,value,updatetime)  SELECT CONCAT('chart_mmo_',DATE_FORMAT(NOW(), '%Y-%m_%b')), SUM(counter), NOW() from ".$_SESSION['TBL_MAIN']." where lo BETWEEN CONCAT(CURDATE(), ' 00:00:00') - INTERVAL 1 MONTH AND CONCAT(CURDATE(), ' 23:59:59');";
+    $sql = "REPLACE INTO cache (name,value,updatetime)  SELECT CONCAT('chart_mmo_',DATE_FORMAT(NOW(), '%Y-%m_%b')), (SELECT value from cache where name='msg_sum') as counter, NOW() from ".$_SESSION['TBL_MAIN']." where lo BETWEEN CONCAT(CURDATE(), ' 00:00:00') - INTERVAL 1 MONTH AND CONCAT(CURDATE(), ' 23:59:59') LIMIT 1";
     $result = perform_query($sql, $dbLink, $_SERVER['PHP_SELF']);
    	for($i = 0; $i<=12 ; $i++) {
 		// Check cache first
@@ -622,7 +622,7 @@ switch ($chartId) {
         $SoW = 2;
     }
     // Below will update this week every time the page is refreshed, otherwise we get stale data
-    $sql = "REPLACE INTO cache (name,value,updatetime) SELECT CONCAT('chart_mpw_',(DATE_ADD(CURDATE(),INTERVAL($SoW-DAYOFWEEK(CURDATE()))DAY))), SUM(counter), NOW() from $_SESSION[TBL_MAIN] where lo>=(DATE_ADD(CURDATE(),INTERVAL($SoW-DAYOFWEEK(CURDATE()))DAY))";
+    $sql = "REPLACE INTO cache (name,value,updatetime) SELECT CONCAT('chart_mpw_',(DATE_ADD(CURDATE(),INTERVAL($SoW-DAYOFWEEK(CURDATE()))DAY))), (SELECT value from cache where name='msg_sum') as count, NOW() from $_SESSION[TBL_MAIN] where lo>=(DATE_ADD(CURDATE(),INTERVAL($SoW-DAYOFWEEK(CURDATE()))DAY)) LIMIT 1";
     $result = perform_query($sql, $dbLink, $_SERVER['PHP_SELF']);
 
     // Now process the rest
@@ -751,7 +751,7 @@ switch ($chartId) {
 	   	}
    	} else {
 	   	// Insert into cache if it doesn't exist, then select the data from cache
-	   	$sql = "INSERT INTO cache (name,value,updatetime) SELECT CONCAT('chart_tophosts_',host), SUM(counter) as count, NOW() from ".$_SESSION['TBL_MAIN']." GROUP BY host ORDER BY count DESC LIMIT 10 ON duplicate KEY UPDATE updatetime=NOW()";
+	   	$sql = "INSERT INTO cache (name,value,updatetime) SELECT CONCAT('chart_tophosts_',host), (SELECT value from cache where name='msg_sum') as count, NOW() from ".$_SESSION['TBL_MAIN']." GROUP BY host ORDER BY count DESC LIMIT 10 ON duplicate KEY UPDATE updatetime=NOW()";
 	   	$result = perform_query($sql, $dbLink, $_SERVER['PHP_SELF']);
 	   	$sql = "SELECT name, value, updatetime FROM cache WHERE name like 'chart_tophosts%' AND updatetime> NOW() - INTERVAL ".$_SESSION['CACHE_CHART_TOPHOSTS']." MINUTE";
 	   	$result = perform_query($sql, $dbLink, $_SERVER['PHP_SELF']);
@@ -803,7 +803,7 @@ switch ($chartId) {
 	   	}
    	} else {
 	   	// Insert into cache if it doesn't exist, then select the data from cache
-   	$sql = "INSERT INTO cache (name,value,updatetime) SELECT CONCAT('chart_topmsgs_',msg), SUM(counter) AS count, NOW() FROM ".$_SESSION['TBL_MAIN']." GROUP BY msg ORDER BY count DESC LIMIT 10 ON duplicate KEY UPDATE updatetime=NOW()";
+   	$sql = "INSERT INTO cache (name,value,updatetime) SELECT CONCAT('chart_topmsgs_',msg), (SELECT value from cache where name='msg_sum') AS count, NOW() FROM ".$_SESSION['TBL_MAIN']." GROUP BY msg ORDER BY count DESC LIMIT 10 ON duplicate KEY UPDATE updatetime=NOW()";
 	   	$result = perform_query($sql, $dbLink, $_SERVER['PHP_SELF']);
 	   	$sql = "SELECT name, value, updatetime FROM cache WHERE name like 'chart_topmsgs%' AND updatetime> NOW() - INTERVAL ".$_SESSION['CACHE_CHART_TOPMSGS']." MINUTE";
 	   	$result = perform_query($sql, $dbLink, $_SERVER['PHP_SELF']);
@@ -841,7 +841,7 @@ switch ($chartId) {
     default:
     $chartType = get_input('chartType');
     $chartType = (!empty($chartType)) ? $chartType : "pie";
-    $sql = "SELECT id, host, facility, priority, tag, program, msg, counter, fo, lo, notes, SUM(counter) as count FROM ".$_SESSION['TBL_MAIN']." $where GROUP BY $groupby ORDER BY count LIMIT $limit";
+    $sql = "SELECT id, host, facility, priority, tag, program, msg, counter, fo, lo, notes, (SELECT value from cache where name='msg_sum') as count FROM ".$_SESSION['TBL_MAIN']." $where GROUP BY $groupby ORDER BY count LIMIT $limit";
     $title = new title( date("D M d Y") );
     $ctype = new pie();
     $result = perform_query($sql, $dbLink, $_SERVER['PHP_SELF']);
