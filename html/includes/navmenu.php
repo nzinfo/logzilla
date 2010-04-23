@@ -50,14 +50,9 @@ session_start();
     </li>
     <!-- END Top Level with 2nd Level -->
 
-    <!-- BEGIN Top Level with 2nd Level -->
-    <li><a href="#">Charts</a>
-        <ul>
-            <li><a href="<?php echo $_SESSION['SITE_URL']?>?page=Charts">MPx</a></li>
-            <li><a href="<?php echo $_SESSION['SITE_URL']?>?page=Top_Messages">Top Messages</a></li>
-        </ul>
-    </li>
-    <!-- END Top Level with 2nd Level -->
+    <!-- BEGIN Top Level Menu -->
+            <li><a href="<?php echo $_SESSION['SITE_URL']?>?page=Charts">MPx Charts</a></li>
+    <!-- END Top Level Menu -->
 
     <!-- BEGIN Top Level with 2nd Level -->
      <li><a href="#">Help</a>

@@ -23,7 +23,10 @@ use DBI;
 use Date::Calc;
 use Term::ReadLine;
 use File::Copy;
-use Text::LevenshteinXS qw(distance); # not needed here, but might as well warn the user to install it now
+
+# not needed here, but might as well warn the user to install it now since db_insert will need them
+use Text::LevenshteinXS qw(distance); 
+use String::CRC32
 
 system("stty erase ^H");
 sub p {
@@ -375,6 +378,7 @@ DEFINE('DBNAME', '$dbname');
 DEFINE('DBHOST', '$dbhost');
 DEFINE('DBPORT', '$dbport');
 DEFINE('LOG_QUERIES', 'FALSE');
+DEFINE('LOG_PATH', '$logpath');
 DEFINE('MYSQL_QUERY_LOG', '$logpath/mysql_query.log');
 };
 my $file="$lzbase/html/config/config.php";
@@ -392,6 +396,23 @@ print CNF "?>\n";
 } else {
 	print "Skipped config generation\n";
 }
+
+#Create log files for later use by the server
+my $logfile = "$logpath/logzilla.log";
+open(LOG,">>$logfile");
+if (! -f $logfile) {
+    print STDOUT "Unable to open log file \"$logfile\" for writing...$!\n";
+    exit;
+}
+close(LOG);
+my $logfile = "$logpath/mysql_query.log";
+open(LOG,">>$logfile");
+if (! -f $logfile) {
+    print STDOUT "Unable to open log file \"$logfile\" for writing...$!\n";
+    exit;
+}
+close(LOG);
+
 if ($paths_updated >0) {
 	print("\n\033[1m\n\n========================================\033[0m\n");
 	print("\n\033[1m\tSystem files\n\033[0m");

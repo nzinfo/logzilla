@@ -45,8 +45,8 @@ CHANGELOG
  - Fix: Changed default log path in db_insert to the one specified by user.
  - Fix: Tip #'s were incorrectly numbered
  - Removed old user's guide (.doc)
- - Add: Option to scroll through all tips or disable permanetly
- - Fix: auto graph height not caclulated when entering the graphs url directly.
+ - Add: Option to scroll through all tips or disable permanently
+ - Fix: auto graph height not calculated when entering the graphs url directly.
  - Added: Disclaimer at login that IE is not supported by LogZilla.
  - Add: Event suppression (click on "edit" next to an event to use it)
  - Changed db_insert to extract the syslog mnemonics (for cisco-based messages)
@@ -54,7 +54,7 @@ CHANGELOG
  - Changed server settings to re-populate session variables so that changes take effect immediately (instead of logging out).
  - added number of results return as well as the total matching rows to the results page
  - Added MPS ticker to header along with average MPS
- - db_insert now uses mysql's LOAD DATA INFILE so that larger systems won't bottleneck at 1kmps (a Mysql limit on number of inerts per second). The load data command allows for around 20kmps.
+ - db_insert now uses mysql's LOAD DATA INFILE so that larger systems won't bottleneck at 1kmps (a Mysql limit on number of inserts per second). The load data command allows for around 20kmps.
  - Modified CISCO_TAG_PARSE and re_pipe (in db_insert) to handle windows event logs. Apparently someone at MS decided it would be a good idea to include TABs in the messages...ugh!
 - Added Cisco Mnemonics to both the search page and the charts - to get Top Mnemonics, set Sort Order to "count" and Group By to "Mnemonic"
 
@@ -96,7 +96,7 @@ CHANGELOG
     - The Top messages chart gets dreadfully slow on larger systems - with 20m events, I got tired of waiting after about 3 minutes and killed the process. This is fairly understandable considering what it's trying to do (but I will continue to work on making it better).
 - Added Server Date and Time display on the main page (Datetime portlet). This will help you determine if your incoming logs match the server's time.
 - MODIFIED db_insert to use File::Tail instead of piping messages in.
-    This will allow syslog-ng to buffer all messages to disk so we don't drop anything on systems with high inert rates.
+    This will allow syslog-ng to buffer all messages to disk so we don't drop anything on systems with high insert rates.
     Also added a -b (background) option to the script to daemonize it - this will allow you to call it from /etc/init.d
     To run db_insert - call it with these parameters:
     -t /var/log/logzilla/syslog.log -b (-t specifies the file to tail, -b will daemonize it)

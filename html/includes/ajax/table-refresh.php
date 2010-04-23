@@ -383,6 +383,7 @@ $('.XLButtons').remove();
     <th class="s_th">Facility</th>
     <th class="s_th">Priority</th>
     <th class="s_th">Program</th>
+    <th class="s_th">Mnemonic</th>
     <th class="s_th">Message</th>
     <?php if ($_SESSION['DEDUP'] == 1) { 
         echo '<th class="s_th sortable-sortEnglishDateTime">FO</th>'; 
@@ -449,9 +450,10 @@ $('.XLButtons').remove();
         }
         echo "<tr id=\"$sev\">\n";
         echo "<td class=\"s_td\"><a href=$_SESSION[SITE_URL]$qstring&hosts=$row[host]>$row[host]</a></td>\n";
-        echo "<td class=\"s_td\"><a href=$_SESSION[SITE_URL]$qstring&facilities[]=$row[facility]>$row[facility]</a></td>\n";
+        echo "<td class=\"s_td\"><a href=$_SESSION[SITE_URL]$qstring&facilities[]=$row[facility]>".int2fac($row['facility'])."</a></td>\n";
         echo "<td class=\"s_td $sev\"><a href=$_SESSION[SITE_URL]$qstring&severities[]=$row[severity]>$sev_text</a></td>\n";
-        echo "<td class=\"s_td\"><a href=$_SESSION[SITE_URL]$qstring&programs[]=$row[program]>$row[program]</a></td>\n";
+        echo "<td class=\"s_td\"><a href=$_SESSION[SITE_URL]$qstring&programs[]=$row[program]>".crc2prg($row['program'])."</a></td>\n";
+        echo "<td class=\"s_td\"><a href=$_SESSION[SITE_URL]$qstring&mnemonics[]=$row[mne]>".crc2mne($row['mne'])."</a></td>\n";
         if ($_SESSION['CISCO_MNE_PARSE'] == "1" ) {
             $msg = preg_replace('/\s:/', ':', $msg);
             $msg = preg_replace('/.*%(\w+-\d-\w+):/', '$1', $msg);

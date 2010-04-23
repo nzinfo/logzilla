@@ -403,7 +403,7 @@ if ($order) {
 <input type="hidden" name="table" value="<?php echo $_SESSION['TBL_MAIN']?>">
 </div>
 
-<table style="float: center; margin-top: 1%;" id="theTable" cellpadding="0" cellspacing="0" class="no-arrow paginate-<?php echo $_SESSION['PAGINATE']?> max-pages-7 paginationcallback-callbackTest-calculateTotalRating paginationcallback-callbackTest-displayTextInfo sortcompletecallback-callbackTest-calculateTotalRating s_table">
+<table style="float: center; margin-top: 1%; width: 98%;" id="theTable" cellpadding="0" cellspacing="0" class="no-arrow paginate-<?php echo $_SESSION['PAGINATE']?> max-pages-7 paginationcallback-callbackTest-calculateTotalRating paginationcallback-callbackTest-displayTextInfo sortcompletecallback-callbackTest-calculateTotalRating s_table">
 <thead class="ui-widget-header">
   <tr class='HeaderRow'>
     <th class="s_th">Edit</th>
@@ -428,7 +428,12 @@ if ($order) {
 
   <tbody>
   <?php
-  $total = get_total_rows($_SESSION['TBL_MAIN'], $dbLink);
+  // $total = get_total_rows($_SESSION['TBL_MAIN'], $dbLink);
+
+  $sql = "SELECT value from cache where name='msg_sum'";
+  $result = perform_query($sql, $dbLink, $_SERVER['PHP_SELF']); 
+  $row = fetch_array($result);        
+  $total = $row['value'];
 
   $sql = "SELECT * FROM ".$_SESSION['TBL_MAIN'] ." $where LIMIT $limit";
   $result = perform_query($sql, $dbLink, $_SERVER['PHP_SELF']); 
