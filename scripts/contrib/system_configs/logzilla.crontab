@@ -3,7 +3,7 @@
 # in order to create a new index for today.
 # 
 #####################################################
-30 0 1 * * /path_to_logzilla/sphinx/indexer.sh full >> /path_to_logs/sphinx_indexer.log 2>&1
+30 0 1 * * /path_to_logzilla/sphinx/indexer.sh full >> /path_to_logs/logzilla3/sphinx_indexer.log 2>&1
 
 #####################################################
 # Run Sphinx "delta" scans every 5 minutes throughout 
@@ -11,11 +11,11 @@
 # Delta indexing should be very fast but you may need
 # to adjust these times on very large systems.
 #####################################################
-*/5 * * * * /path_to_logzilla/sphinx/indexer.sh delta >> /path_to_logs/sphinx_indexer.log 2>&1
+*/5 * * * * /path_to_logzilla/sphinx/indexer.sh delta >> /path_to_logs/logzilla3/sphinx_indexer.log 2>&1
 
 #####################################################
 # Run Sphinx "merge" scans every day at midnight
 # Merging is much faster than a full scan.
 # You may need to adjust these times on very large systems.
 #####################################################
-0 0 * * * /path_to_logzilla/sphinx/indexer.sh merge >> /path_to_logs/sphinx_indexer.log 2>&1
+0 0 * * * /path_to_logzilla/sphinx/indexer.sh merge >> /path_to_logs/logzilla3/sphinx_indexer.log 2>&1

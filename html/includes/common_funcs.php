@@ -147,15 +147,13 @@ function perform_query($query, $link, $filename='') {
 // This function allows logging debug messages to file
 //------------------------------------------------------------------------
 function logmsg ($msg) {
-    if (LOG_QUERIES == 'TRUE') {
-        list($usec, $sec) = explode(" ", microtime());
-        $ms = ltrim(round($usec, 4), "0.");
-        $myFile = LOG_PATH . "/logzilla.log";
-        $fh = fopen($myFile, 'a') or die("can't open file $myFile");
-        fwrite($fh, date("h:i:s") .".$ms: $msg \n");
-    }   
-    fclose($fh);
-}  
+   	list($usec, $sec) = explode(" ", microtime());
+   	$ms = ltrim(round($usec, 4), "0.");
+   	$myFile = LOG_PATH . "/logzilla.log";
+   	$fh = fopen($myFile, 'a') or die("can't open file $myFile");
+   	fwrite($fh, date("h:i:s") .".$ms: $msg \n");
+   	fclose($fh);
+} 
 
 //------------------------------------------------------------------------
 // This functions returns a result row as an array.

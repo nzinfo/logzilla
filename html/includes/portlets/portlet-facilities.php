@@ -23,7 +23,7 @@ $dbLink = db_connect_syslog(DBADMIN, DBADMINPW);
         <TD width="70%">
             <select style="width:99%" name="facilities[]" id="facilities" multiple size=5>
             <?php
-            $sql = "SELECT * FROM facilities WHERE code IN (SELECT facility FROM ".$_SESSION['TBL_MAIN'] .") ORDER BY code";
+            $sql = "SELECT * FROM facilities WHERE code IN (SELECT facility FROM ".$_SESSION['TBL_MAIN'] .") ORDER BY code DESC";
             $queryresult = perform_query($sql, $dbLink, $_REQUEST['pageId']);
             while ($line = fetch_array($queryresult)) {
    	            $facility = $line['name'];

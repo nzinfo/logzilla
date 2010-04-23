@@ -25,7 +25,7 @@ $dbLink = db_connect_syslog(DBADMIN, DBADMINPW);
         <TD width="70%">
             <select style="width:99%" name="programs[]" id="programs" multiple size=3>
             <?php
-            $sql = "select DISTINCT(name), crc FROM programs";
+            $sql = "select DISTINCT(name), crc FROM programs ORDER BY name ASC";
             $queryresult = perform_query($sql, $dbLink, $_REQUEST['pageId']);
             while ($line = fetch_array($queryresult)) {
    	            $program = $line['name'];

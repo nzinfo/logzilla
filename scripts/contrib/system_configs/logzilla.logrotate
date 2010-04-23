@@ -2,7 +2,7 @@
 # LogZilla logrotate snippet for Ubuntu Linux
 # contributed by Clayton Dukes
 #
-/path_to_logs/*.log {
+/path_to_logs/logzilla3/*.log {
   missingok
   compress
   rotate 5

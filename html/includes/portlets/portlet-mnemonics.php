@@ -25,7 +25,7 @@ $dbLink = db_connect_syslog(DBADMIN, DBADMINPW);
         <TD width="70%">
             <select style="width:99%" name="mnemonics[]" id="mnemonics" multiple size=3>
             <?php
-            $sql = "select DISTINCT(name), crc FROM mne";
+            $sql = "select DISTINCT(name), crc FROM mne ORDER BY name ASC";
             $queryresult = perform_query($sql, $dbLink, $_REQUEST['pageId']);
             while ($line = fetch_array($queryresult)) {
    	            $mnemonic = $line['name'];

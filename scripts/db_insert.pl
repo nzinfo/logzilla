@@ -453,7 +453,8 @@ sub do_msg {
         $msg =~ s/\\//; # Some messages come in with a trailing slash
         $msg =~ s/'//; # remove any ''s
         $msg =~ s/\t/ /g; # remove any TABs
-        if ($msg =~ /%(\w+-.*\d-\w+):/) {
+		# if ($msg =~ /%(\w+-.*\d-\w+):/) { # modified to below to catch some IOS-XR messages (which have a space before the colon)
+        if ($msg =~ /%(\w+-.*\d-\w+)\s?:/) {
             $mne = $1;
         } else {
             $mne = "None";

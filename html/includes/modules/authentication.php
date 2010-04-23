@@ -15,9 +15,6 @@ $basePath = dirname( __FILE__ );
 require_once ($basePath . "/../common_funcs.php");
 $dbLink = db_connect_syslog(DBADMIN, DBADMINPW);
 
-if (file_exists($basePath . "/ldap.php")) {
-    require_once ($basePath . "/ldap.php");
-}
 
 //------------------------------------------------------------------------
 // This functions verifies a username/password combination. If the
@@ -180,8 +177,106 @@ function auth ($postvars) {
         }
         break;
 
-        case "ldap":
-            $error .= "LDAP not implemented yet";
+		case "ldap":
+		   	$dbLink = db_connect_syslog(DBADMIN, DBADMINPW);
+	   	$sql = "SELECT name,value FROM settings WHERE name like 'LDAP%'";
+	   	$result = perform_query($sql, $dbLink, "authentication.php - LDAP Auth");
+	   	while($row = fetch_array($result)) {
+				if ($row['name'] == 'LDAP_BASE_DN') { $basedn = $row['value']; }
+				if ($row['name'] == 'LDAP_CN') { $cn = $row['value']; }
+				if ($row['name'] == 'LDAP_DOMAIN') { $domain = $row['value']; }
+				if ($row['name'] == 'LDAP_MS') { $ms = $row['value']; }
+				if ($row['name'] == 'LDAP_PRIV') { $priv = $row['value']; }
+				if ($row['name'] == 'LDAP_RO_FILTERS') { $ro_filter = $row['value']; }
+				if ($row['name'] == 'LDAP_RO_GRP') { $ro_grp = $row['value']; }
+				if ($row['name'] == 'LDAP_RW_GRP') { $rw_grp = $row['value']; }
+				if ($row['name'] == 'LDAP_SRV') { $srv = $row['value']; }
+				if ($row['name'] == 'LDAP_DNU_GRP') { $nuser_grp = $row['value']; }
+	   	}
+	   	//define an appropriate ldap search filter to find your users, and filter out accounts such as administrator(administrator should be renamed anyway!).
+	  	$filter="(&(|(!(displayname=Administrator*))(!(displayname=Admin*)))(" .$cn. "=$username))";
+	   	$dn = $cn . "=$username, ";
+	   	if (!($connect = @ldap_connect($srv))) {
+		   	$error .= "Could not connect to LDAP server:" . $srv;
+	   	}
+
+		switch ($ms) {
+
+			case "1":
+
+				ldap_set_option($connect, LDAP_OPT_PROTOCOL_VERSION,3);
+		   	ldap_set_option($connect, LDAP_OPT_REFERRALS,0);
+
+			if (!($bind = @ldap_bind($connect, "$username@" . $domain, $password))) {
+			   	$error .= " Unable to bind to LDAP Server: <b>" . $srv . "</b><br> <li>DN: $dn<br> <li>BaseDN: " . $basedn . "<br>";
+		   	}
+
+			break;
+
+			default:
+
+			if (!($bind = @ldap_bind($connect, "$dn" . $basedn, $password))) {
+			   	$error .= " Unable to bind to LDAP Server: <b>" . $srv . "</b><br> <li>DN: $dn<br> <li>BaseDN: " . $basedn . "<br>";
+		   	}
+
+		}
+
+		if (!($sr = @ldap_search($connect, $basedn, $filter))) { #search for user
+		   	$error .= " Unable to search: <b>" . $srv . "</b><br> <li>DN: $dn<br> <li>BaseDN: " . $basedn . "<br>";
+	   	}
+
+		$info = @ldap_get_entries($connect, $sr);
+	   	// print  "Number of entries returned is " .ldap_count_entries($connect, $sr)."<p>";
+
+		if ($priv == "1") {
+		   	if (in_array($rw_grp, $info[0]["groupmembership"])) {
+			   	$_SESSION["userpriv"] = "rw";
+		   	} elseif (in_array($ro_grp, $info[0]["groupmembership"])) {
+			   	$_SESSION["userpriv"] = "ro";
+		   	} else {
+			   	$_SESSION["userpriv"] = "disabled";
+			   	// echo "User privileges are " . $_SESSION["userpriv"] . "<br>";
+		   	} 
+		}
+	   	if ( trim($error) != "" ) {
+		   	return $_SESSION["error"] = $error;
+	   	} else {
+
+			$fullname=$info[0]["cn"][0];
+		   	$fqdn=$info[0]["dn"];
+
+			$_SESSION["username"] = $username;
+		   	$_SESSION["groups"] = $info[0]["groupmembership"];
+		   	$_SESSION["token"] = $password;
+		   	$_SESSION["fullname"] = $fullname;
+		   	$_SESSION["fqdn"] = $fqdn;
+		   	$flname = explode(" ", $fullname);
+		   	$_SESSION["firstname"] = $flname[0];
+		   	$_SESSION["lastname"] = $flname[1];
+		   	$_SESSION["pageId"] = "searchform" ;
+		   	// die(phpinfo());
+		   	// die(print_r($info[0]));
+		   	// die(print_r($_SESSION));
+
+			// Create user locally
+		   	// Add user (if they don't exist)
+		   	$sql = "SELECT username from users where username='$username'";
+		   	$result = perform_query($sql, $dbLink, "authentication.php - LDAP");
+		   	$row = fetch_array($result);
+		   	if ($row['username'] !== "$username") {
+			   	$sql = "INSERT IGNORE INTO ".$_SESSION['TBL_AUTH']." (username,pwhash) VALUES ('$username',MD5('$password'))";
+			   	$result = perform_query($sql, $dbLink, "authentication.php - LDAP");
+			   	if(mysql_affected_rows() !== 1) {
+				   	$error .= "Unable to add $username to local system";
+			   	} else {
+				   	$sql = "REPLACE INTO groups (userid, groupname) SELECT (SELECT id FROM users WHERE username='$username'),'$nuser_grp'";
+				   	perform_query($sql, $dbLink, "authentication.php - LDAP");
+				   	$sql = "REPLACE INTO ui_layout (userid, pagename, col, rowindex, header, content, group_access) SELECT (SELECT id FROM users WHERE username='$username'),pagename,col,rowindex,header,content, group_access FROM ui_layout WHERE userid=0";
+				   	perform_query($sql, $dbLink, "authentication.php - LDAP");
+			   	}
+		   	}
+	   	}
+		/* from here, do your sql query to query the database to search for existing record with correct username and password */
         if (trim($error)!="") {
             return $_SESSION["error"] = $error;
         } else {

@@ -30,7 +30,7 @@ fi
 
 PIDFILE="/var/run/logzilla.pid"
 LOGZILLA="/path_to_logzilla/scripts/db_insert.pl"
-LOGZILLASYSLOG="-t /path_to_logs/syslog.log"
+LOGZILLASYSLOG="-t /path_to_logs/logzilla3/syslog.log"
 LOGZILLACONF="-c /path_to_logzilla/html/config/config.php"
 LOGZILLAOPTIONS="-b"
 NAME="LogZilla"
