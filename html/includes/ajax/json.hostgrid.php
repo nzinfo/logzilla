@@ -20,7 +20,7 @@ if ($_SESSION['OPTION_HGRID_SEARCH'] == "RLIKE") {
     if($host_mask!='') $where.= " AND host LIKE '%$host_mask%'"; 
 }
 // $sql = "SELECT COUNT(DISTINCT host) FROM ".$_SESSION['TBL_MAIN'] ." $where";  
-$sql = "SELECT COUNT(*) FROM (SELECT DISTINCT host FROM ".$_SESSION['TBL_MAIN'] ." GROUP BY host) AS result" ." $where";
+$sql = "SELECT COUNT(*) FROM (SELECT host FROM hosts) AS result" ." $where";
 $result = perform_query($sql, $dbLink, $_REQUEST['pageId']);
 $total = mysql_fetch_row($result);
 $count = $total[0];
@@ -32,7 +32,7 @@ if( $count >0 ) {
     $response->total = $total_pages; 
     $response->records = $count; 
     // $sql = "SELECT DISTINCT(host) FROM ".$_SESSION['TBL_MAIN'] ." $where ORDER BY $sidx $sord LIMIT $start , $limit";  
-    $sql = "SELECT * FROM (SELECT DISTINCT host FROM ".$_SESSION['TBL_MAIN'] ." GROUP BY host) AS result $where ORDER BY $sidx $sord LIMIT $start , $limit"; 
+    $sql = "SELECT * FROM (SELECT host FROM hosts) AS result $where ORDER BY $sidx $sord LIMIT $start , $limit"; 
     $result = perform_query($sql, $dbLink, $_REQUEST['pageId']); 
     $i=0; 
     while($row = fetch_array($result)) { 

@@ -37,7 +37,7 @@ $qstring .= "&show_suppressed=$show_suppressed";
         $where.= " AND suppress > NOW()";  
         $where .= " OR host IN (SELECT name from suppress where col='host' AND expire>NOW())";
         $where .= " OR facility IN (SELECT name from suppress where col='facility' AND expire>NOW())";
-        $where .= " OR priority IN (SELECT name from suppress where col='priority' AND expire>NOW())";
+        $where .= " OR severity IN (SELECT name from suppress where col='severity' AND expire>NOW())";
         $where .= " OR program IN (SELECT name from suppress where col='program' AND expire>NOW())";
         $where .= " OR msg IN (SELECT name from suppress where col='msg' AND expire>NOW())";
         $where .= " OR counter IN (SELECT name from suppress where col='counter' AND expire>NOW())";
@@ -47,7 +47,7 @@ $qstring .= "&show_suppressed=$show_suppressed";
         $where.= " AND suppress < NOW()";  
         $where .= " AND host NOT IN (SELECT name from suppress where col='host' AND expire>NOW())";
         $where .= " AND facility NOT IN (SELECT name from suppress where col='facility' AND expire>NOW())";
-        $where .= " AND priority NOT IN (SELECT name from suppress where col='priority' AND expire>NOW())";
+        $where .= " AND severity NOT IN (SELECT name from suppress where col='severity' AND expire>NOW())";
         $where .= " AND program NOT IN (SELECT name from suppress where col='program' AND expire>NOW())";
         $where .= " AND msg NOT IN (SELECT name from suppress where col='msg' AND expire>NOW())";
         $where .= " AND counter NOT IN (SELECT name from suppress where col='counter' AND expire>NOW())";
@@ -67,42 +67,66 @@ $qstring .= "&show_suppressed=$show_suppressed";
         $where = rtrim($where, ",");
         $where .= ")";
     } 
-    // portlet-programs
-    $programs = get_input('programs');
-    if ($programs) {
-        $where .= " AND program IN (";
-        foreach ($programs as $mask) {
-            $where.= "'$mask',";  
-            $qstring .= "&programs[]=$mask";
-        }
-        $where = rtrim($where, ",");
-        $where .= ")";
-    }
 
-    // portlet-priorities
-    $priorities = get_input('priorities');
-    if ($priorities) {
-        $where .= " AND priority IN (";
-        foreach ($priorities as $mask) {
-            $where.= "'$mask',";  
-            $qstring .= "&priorities[]=$mask";
+// portlet-programs
+$programs = get_input('programs');
+if ($programs) {
+    $where .= " AND program IN (";
+    foreach ($programs as $program) {
+        if (!preg_match("/^\d+/m", $program)) {
+            $program = prg2crc($program);
         }
-        $where = rtrim($where, ",");
-        $where .= ")";
+            $where.= "'$program',";
+        $qstring .= "&programs[]=$program";
     }
+    $where = rtrim($where, ",");
+    $where .= ")";
+}
 
-    // portlet-facilities
-    $facilities = get_input('facilities');
-    if ($facilities) {
-        $where .= " AND facility IN (";
-        foreach ($facilities as $mask) {
-            $where.= "'$mask',";  
-            $qstring .= "&facilities[]=$mask";
+// portlet-severities
+$severities = get_input('severities');
+if ($severities) {
+    $where .= " AND severity IN (";
+    foreach ($severities as $severity) {
+        if (!preg_match("/^\d+/m", $severity)) {
+            $severity = sev2int($severity);
         }
-        $where = rtrim($where, ",");
-        $where .= ")";
+            $where.= "'$severity',";
+        $qstring .= "&severities[]=$severity";
     }
+    $where = rtrim($where, ",");
+    $where .= ")";
+}
 
+
+// portlet-facilities
+$facilities = get_input('facilities');
+if ($facilities) {
+    $where .= " AND facility IN (";
+    foreach ($facilities as $facility) {
+        if (!preg_match("/^\d+/m", $facility)) {
+            $facility = fac2int($facility);
+        }
+            $where.= "'$facility',";
+        $qstring .= "&facilities[]=$facility";
+    }
+    $where = rtrim($where, ",");
+    $where .= ")";
+}
+$mnemonics = get_input('mnemonics');
+if ($mnemonics) {
+    $where .= " AND mne IN (";
+    foreach ($mnemonics as $mnemonic) {
+        if (!preg_match("/^\d+/m", $mnemonic)) {
+            $mnemonic = mne2crc($mnemonic);
+        }
+        $where.= "'$mnemonic',";
+        $qstring .= "&mnemonics[]=$mnemonic";
+    }
+    $where = rtrim($where, ",");
+    $where .= ")";
+}
+// portlet-sphinxquery
     // portlet-sphinxquery
     $msg_mask = get_input('msg_mask');
     $msg_mask = preg_replace ('/^Search through .*\sMessages/m', '', $msg_mask);
@@ -322,8 +346,8 @@ $qstring .= "&show_suppressed=$show_suppressed";
         case "facility":
             $propername = "Facilities";
         break;
-        case "priority":
-            $propername = "Priorities";
+        case "severity":
+            $propername = "Severities";
         break;
         case "mne":
             $propername = "Mnemonics";
@@ -331,8 +355,8 @@ $qstring .= "&show_suppressed=$show_suppressed";
     }
     $ucTopx = ucfirst($topx);
 
-    $sql = "SELECT *, SUM(counter) as count FROM ".$_SESSION['TBL_MAIN']." $where $groupby $orderby $order LIMIT $limit";
-    $result = perform_query($sql, $dbLink, $_SERVER['PHP_SELF']);
+    $sql = "SELECT id, host, facility, severity, program, msg, mne, fo, lo, SUM(counter) as count FROM ".$_SESSION['TBL_MAIN']." $where $groupby $orderby $order LIMIT $limit";
+    $result = perform_query($sql, $dbLink, "portlet-chart_adhoc");
 
 
     switch ($chart_type) {
@@ -349,7 +373,22 @@ $qstring .= "&show_suppressed=$show_suppressed";
                 $dotValues[] = intval($line['count']);
                 $d = new dot(intval($line['count']));
                 $dotLabels[] = $d->tooltip($line['host']."<br>#val#");
-                $x_horiz_labels[] = $line['lo']; // not sure what to put here...
+                switch ($dbcolumn) {
+                    case 'mne':
+                        $x_horiz_labels[] = crc2mne($line[$dbcolumn]);
+                        break;
+                    case 'program':
+                        $x_horiz_labels[] = c2prg($line[$dbcolumn]);
+                        break;
+                    case 'facility':
+                        $x_horiz_labels[] = int2fac($line[$dbcolumn]);
+                        break;
+                    case 'severity':
+                        $x_horiz_labels[] = int2sev($line[$dbcolumn]);
+                        break;
+                    default:
+                        $x_horiz_labels[] = $line[$dbcolumn];
+                }
             }
         }
         $line_dot->set_values( $dotLabels );
@@ -382,7 +421,22 @@ $qstring .= "&show_suppressed=$show_suppressed";
                 $dotValues[] = intval($line['count']);
                 $d = new dot(intval($line['count']));
                 $dotLabels[] = $d->tooltip($line['host']."<br>#val#");
-                $x_horiz_labels[] = $line[$dbcolumn]; // not sure what to put here...
+                switch ($dbcolumn) {
+                    case 'mne':
+                        $x_horiz_labels[] = crc2mne($line[$dbcolumn]);
+                        break;
+                    case 'program':
+                        $x_horiz_labels[] = c2prg($line[$dbcolumn]);
+                        break;
+                    case 'facility':
+                        $x_horiz_labels[] = int2fac($line[$dbcolumn]);
+                        break;
+                    case 'severity':
+                        $x_horiz_labels[] = int2sev($line[$dbcolumn]);
+                        break;
+                    default:
+                        $x_horiz_labels[] = $line[$dbcolumn];
+                }
             }
         }
         // Set bar values
@@ -406,8 +460,9 @@ $qstring .= "&show_suppressed=$show_suppressed";
         $chart->set_x_axis( $x );
         break;
 
-        // Default is Top 10 Hosts
+        // Default is Pie
         default:
+        $pievalues = array();
         if ($start) {
             $title = new title( "$ucTopx $limit $propername Report\nGenerated on " .date("D M d Y")."\n<br>(Date Range: $start - $end)" );
         } else {
@@ -416,10 +471,21 @@ $qstring .= "&show_suppressed=$show_suppressed";
         $ctype = new pie();
         if(num_rows($result) >= 1) {
             while ($line = fetch_array($result)) {
-                if ($line[$dbcolumn] == "") {
-                    $pievalues[] = new pie_value(intval($line['count']),  "No Matching Mnemonic");
-                } else {
-                    $pievalues[] = new pie_value(intval($line['count']),  $line[$dbcolumn]);
+                switch ($dbcolumn) {
+                    case 'mne':
+                        $pievalues[] = new pie_value(intval($line['count']),  crc2mne($line[$dbcolumn]));
+                        break;
+                    case 'program':
+                        $pievalues[] = new pie_value(intval($line['count']),  crc2prg($line[$dbcolumn]));
+                        break;
+                    case 'facility':
+                        $pievalues[] = new pie_value(intval($line['count']),  int2fac($line[$dbcolumn]));
+                        break;
+                    case 'severity':
+                        $pievalues[] = new pie_value(intval($line['count']),  int2sev($line[$dbcolumn]));
+                        break;
+                    default:
+                        $pievalues[] = new pie_value(intval($line['count']),  $line[$dbcolumn]);
                 }
                 $ids[] = $line['id'];
             }
@@ -451,8 +517,8 @@ $qstring .= "&show_suppressed=$show_suppressed";
             case "Facilities":
                 $ctype->on_click('pclick_fac');
             break;
-            case "Priorities":
-                $ctype->on_click('pclick_pri');
+            case "Severities":
+                $ctype->on_click('pclick_sev');
             break;
             case "Mnemonics":
                 $ctype->on_click('pclick_mne');
@@ -537,13 +603,13 @@ function pclick_fac(index)
     url = url.replace(/Graph/g, "Results");
     self.location=url;
 }
-function pclick_pri(index)
+function pclick_sev(index)
 {
     var value = JSON.stringify(data['elements'][0]['values'][index]['label']);
     value = value.replace(/"/g, "");
     var postvars = $("#postvars").val();
-    postvars = postvars.replace(/&priorities[]=/g, "");
-    var url = (postvars + "&priorities[]=" + value);
+    postvars = postvars.replace(/&severities[]=/g, "");
+    var url = (postvars + "&severities[]=" + value);
     url = url.replace(/Graph/g, "Results");
     self.location=url;
 }
@@ -552,8 +618,8 @@ function pclick_mne(index)
     var value = JSON.stringify(data['elements'][0]['values'][index]['label']);
     value = value.replace(/"/g, "");
     var postvars = $("#postvars").val();
-    postvars = postvars.replace(/&mne=/g, "");
-    var url = (postvars + "&mne=" + value);
+    postvars = postvars.replace(/&mnemonics[]=/g, "");
+    var url = (postvars + "&mnemonics[]=" + value);
     url = url.replace(/Graph/g, "Results");
     self.location=url;
 }
@@ -800,7 +866,7 @@ $(".XLButtons").appendTo("#portlet-header_Graph_Results");
                     <option <?php if ($orderby_orig == 'host') echo "selected"; ?> value="host">Host</option>
                     <option <?php if ($orderby_orig == 'program') echo "selected"; ?> value="program">Program</option>
                     <option <?php if ($orderby_orig == 'facility') echo "selected"; ?> value="facility">Facility</option>
-                    <option <?php if ($orderby_orig == 'priority') echo "selected"; ?> value="priority">Priority</option>
+                    <option <?php if ($orderby_orig == 'severity') echo "selected"; ?> value="severity">Severity</option>
                     <option <?php if ($orderby_orig == 'msg') echo "selected"; ?> value="msg">Message</option>
                     <option <?php if ($orderby_orig == 'fo') echo "selected"; ?> value="fo">First Occurrence</option>
                     <option <?php if ($orderby_orig == 'lo') echo "selected"; ?> value="lo">Last Occurrence</option>

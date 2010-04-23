@@ -25,11 +25,11 @@ $dbLink = db_connect_syslog(DBADMIN, DBADMINPW);
         <TD width="70%">
             <select style="width:99%" name="programs[]" id="programs" multiple size=3>
             <?php
-            $sql = "select DISTINCT(program) FROM ".$_SESSION["TBL_MAIN"];
+            $sql = "select DISTINCT(name), crc FROM programs";
             $queryresult = perform_query($sql, $dbLink, $_REQUEST['pageId']);
             while ($line = fetch_array($queryresult)) {
-   	            $program = $line['program'];
-   	            echo "<option>".htmlentities($program)."</option>\n";
+   	            $program = $line['name'];
+   	            echo "<option value=".$line['crc'].">".htmlentities($program)."</option>\n";
             }
             ?>
             </select>

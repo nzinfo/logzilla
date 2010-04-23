@@ -140,28 +140,26 @@ if ($ok =~ /[Yy]/) {
 	}
 
 # Create main table
-	my $sth = $dbh->prepare("
-		CREATE TABLE $dbtable (
+    my $sth = $dbh->prepare("
+        CREATE TABLE $dbtable (
         id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
         host varchar(128) NOT NULL,
-        facility varchar(10) NOT NULL,
-        priority enum('debug','info','notice','warning','err','crit','alert','emerg') NOT NULL,
-        tag varchar(10) NOT NULL,
-        program varchar(15) NOT NULL,
+        facility enum('0','1','2','3','4','5','6','7','8','9','10','11','12','13','14','15','16','17','18','19','20','21','22','23') NOT NULL,
+        severity enum('0','1','2','3','4','5','6','7') NOT NULL,
+        program int(10) unsigned NOT NULL,
         msg varchar(2048) NOT NULL,
-        mne varchar(128) NOT NULL,
+        mne int(10) unsigned NOT NULL,
         suppress datetime NOT NULL DEFAULT '2010-03-01 00:00:00',
         counter int(11) NOT NULL DEFAULT '1',
         fo datetime NOT NULL,
         lo datetime NOT NULL,
         notes varchar(255) NOT NULL,
         PRIMARY KEY (id,lo),
-        KEY fo (fo),
-        KEY lo (lo),
-        KEY priority (priority),
         KEY facility (facility),
+        KEY severity (severity),
+        KEY mne (mne),
         KEY program (program),
-        KEY host (host)
+        KEY suppress (suppress)
         ) ENGINE=MyISAM
 		") or die "Could not create $dbtable table: $DBI::errstr";
 	$sth->execute;
@@ -172,6 +170,30 @@ if ($ok =~ /[Yy]/) {
 
 # Create cache table
     my $res = `mysql -u$dbroot -p$dbrootpass $dbname < sql/cache.sql`;
+    print $res;
+
+# Create hosts table
+    my $res = `mysql -u$dbroot -p$dbrootpass $dbname < sql/hosts.sql`;
+    print $res;
+
+# Create mnemonics table
+    my $res = `mysql -u$dbroot -p$dbrootpass $dbname < sql/mne.sql`;
+    print $res;
+
+# Create programs table
+    my $res = `mysql -u$dbroot -p$dbrootpass $dbname < sql/programs.sql`;
+    print $res;
+
+# Create suppress table
+    my $res = `mysql -u$dbroot -p$dbrootpass $dbname < sql/suppress.sql`;
+    print $res;
+
+# Create facilities table
+    my $res = `mysql -u$dbroot -p$dbrootpass $dbname < sql/facilities.sql`;
+    print $res;
+
+# Create severities table
+    my $res = `mysql -u$dbroot -p$dbrootpass $dbname < sql/severities.sql`;
     print $res;
 
 # Insert settings data

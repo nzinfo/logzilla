@@ -200,7 +200,7 @@ function table_exists($tableName, $link) {
 function get_tables($link) {
 	$tableList = array();
 	$query = "SHOW TABLES";
-	$result = perform_query($query, $link, $_SERVER['PHP_SELF']);
+	$result = perform_query($query, $link, "common_funcs.php");
 	while($row = fetch_array($result)) {
 		array_push($tableList, $row[0]);
 	}
@@ -215,7 +215,7 @@ function get_tables($link) {
 function get_logtables($link) {
 	// Create an array of the column names in the default table
 	$query = "DESCRIBE ".$_SESSION["TBL_MAIN"];
-	$result = perform_query($query, $link, $_SERVER['PHP_SELF']);
+	$result = perform_query($query, $link, "common_funcs.php");
 	$defaultFieldArray = array();
 	while($row = mysql_fetch_array($result)) {
 		array_push($defaultFieldArray, $row['Field']);
@@ -228,7 +228,7 @@ function get_logtables($link) {
 	foreach($allTablesArray as $value) {
 		// Create an array of the column names in the current table
 		$query = "DESCRIBE ".$value;
-		$result = perform_query($query, $link, $_SERVER['PHP_SELF']);
+		$result = perform_query($query, $link, "common_funcs.php");
 		// Get the names of columns in current table
 		$fieldArray = array();
 		while ($row = mysql_fetch_array($result)) {
@@ -395,8 +395,8 @@ function get_weekdates($year, $month, $day){
 // Use this instead of count(*), it's faster
 // CDUKES: 12-10-09 - Added an optional WHERE parameter to limit found rows using a where clause
 function get_total_rows ($table,$dbLink,$where='') {
-   	$temp = perform_query("SELECT SQL_CALC_FOUND_ROWS * FROM $table $where LIMIT 1", $dbLink, $_SERVER['PHP_SELF']);
-   	$result = perform_query("SELECT FOUND_ROWS()", $dbLink, $_SERVER['PHP_SELF']);
+   	$temp = perform_query("SELECT SQL_CALC_FOUND_ROWS * FROM $table $where LIMIT 1", $dbLink, "common_funcs.php");
+   	$result = perform_query("SELECT FOUND_ROWS()", $dbLink, "common_funcs.php");
 	$total = mysql_fetch_row($result);
 	return $total[0];
 }
@@ -447,7 +447,7 @@ function getsettings() {
    	if (!isset($_SESSION["TBL_MAIN"])) {
 	   	$dbLink = db_connect_syslog(DBADMIN, DBADMINPW);
 	   	$sql = "SELECT name,value, type FROM settings";
-	   	$result = perform_query($sql, $dbLink, $_SERVER['PHP_SELF']);
+	   	$result = perform_query($sql, $dbLink, "common_funcs.php");
 	   	while($row = fetch_array($result)) {
             if ($row['type'] == "int") {
 		   	$_SESSION[$row["name"]] = intval($row["value"]);
@@ -485,7 +485,7 @@ function include_contents($filename) {
 function gethelp($name) {
     $dbLink = db_connect_syslog(DBADMIN, DBADMINPW);
 	$sql = "SELECT description FROM help where name='$name' LIMIT 1";
-	$result = perform_query($sql, $dbLink, $_SERVER['PHP_SELF']);
+	$result = perform_query($sql, $dbLink, "common_funcs.php");
 	while($row = fetch_array($result)) {
         return $row['description'];
     }
@@ -542,7 +542,7 @@ function random_hex_color(){
 function getgroup($username) {
     $dbLink = db_connect_syslog(DBADMIN, DBADMINPW);
     $sql = "SELECT * FROM groups WHERE userid=(SELECT id FROM users WHERE username='$username')";
-    $result = perform_query($sql, $dbLink, $_SERVER['PHP_SELF']);
+    $result = perform_query($sql, $dbLink, "common_funcs.php");
     while($row = fetch_array($result)) {
         $group = $row['groupname'];
         return $group;
@@ -554,7 +554,7 @@ function getgroup($username) {
 function has_portlet_access($username, $header) {
     $dbLink = db_connect_syslog(DBADMIN, DBADMINPW);
     $sql = "SELECT group_access FROM ui_layout WHERE userid=(SELECT id FROM users WHERE username='$username') AND header='$header'";
-    $result = perform_query($sql, $dbLink, $_SERVER['PHP_SELF']);
+    $result = perform_query($sql, $dbLink, "common_funcs.php");
     while($row = fetch_array($result)) {
         $group = $row['group_access'];
         if ($group == getgroup($username)) {
@@ -568,12 +568,131 @@ function has_portlet_access($username, $header) {
 function reset_layout($username) {
     $dbLink = db_connect_syslog(DBADMIN, DBADMINPW);
     $sql = "DELETE FROM ui_layout WHERE userid=(SELECT id FROM users WHERE username='$username')";
-    perform_query($sql, $dbLink, $_SERVER['PHP_SELF']);
+    perform_query($sql, $dbLink, "common_funcs.php");
     if (getgroup($username) == 'admins') {
         $sql = "INSERT INTO ui_layout (userid, pagename, col, rowindex, header, content, group_access) SELECT (SELECT id FROM users WHERE username='$username'),pagename,col,rowindex,header,content, 'admins' FROM ui_layout WHERE userid=0";
     } else {
         $sql = "INSERT INTO ui_layout (userid, pagename, col, rowindex, header, content, group_access) SELECT (SELECT id FROM users WHERE username='$username'),pagename,col,rowindex,header,content, group_access FROM ui_layout WHERE userid=0";
     }
-    perform_query($sql, $dbLink, $_SERVER['PHP_SELF']);
+    perform_query($sql, $dbLink, "common_funcs.php");
 }
+
+// ----------------------------------------------------------------------
+// Used to display friendly names for program crc's
+// ----------------------------------------------------------------------
+function crc2prg ($crc) {
+    $dbLink = db_connect_syslog(DBADMIN, DBADMINPW);
+    $sql = "SELECT name FROM programs WHERE crc='$crc'";
+    $result = perform_query($sql, $dbLink, "common_funcs.php");
+    $row = fetch_array($result);
+    return $row['name'];
+}
+function prg2crc ($prog) {
+    $dbLink = db_connect_syslog(DBADMIN, DBADMINPW);
+    $sql = "SELECT crc FROM programs WHERE name='$prog'";
+    $result = perform_query($sql, $dbLink, "common_funcs.php");
+    $row = fetch_array($result);
+    return $row['crc'];
+}
+// ----------------------------------------------------------------------
+// Used to display friendly names for facility codes
+// ----------------------------------------------------------------------
+function int2fac ($i) {
+    $dbLink = db_connect_syslog(DBADMIN, DBADMINPW);
+    $sql = "SELECT name FROM facilities WHERE code='$i'";
+    $result = perform_query($sql, $dbLink, "common_funcs.php");
+    $row = fetch_array($result);
+    return $row['name'];
+}
+function fac2int ($fac) {
+    $dbLink = db_connect_syslog(DBADMIN, DBADMINPW);
+    $sql = "SELECT code FROM facilities WHERE name='$fac'";
+    $result = perform_query($sql, $dbLink, "common_funcs.php");
+    $row = fetch_array($result);
+    return $row['code'];
+}
+// ----------------------------------------------------------------------
+// Used to display friendly names for severity codes
+// ----------------------------------------------------------------------
+function int2sev ($i) {
+    $dbLink = db_connect_syslog(DBADMIN, DBADMINPW);
+    $sql = "SELECT name FROM severities WHERE code='$i'";
+    $result = perform_query($sql, $dbLink, "common_funcs.php");
+    $row = fetch_array($result);
+    return $row['name'];
+}
+function sev2int ($sev) {
+    $dbLink = db_connect_syslog(DBADMIN, DBADMINPW);
+    $sql = "SELECT code FROM severities WHERE name='$sev'";
+    $result = perform_query($sql, $dbLink, "common_funcs.php");
+    $row = fetch_array($result);
+    return $row['code'];
+}
+// ----------------------------------------------------------------------
+// Used to display friendly names for mnemonic crc's
+// ----------------------------------------------------------------------
+function crc2mne ($crc) {
+    $dbLink = db_connect_syslog(DBADMIN, DBADMINPW);
+    $sql = "SELECT name FROM mne WHERE crc='$crc'";
+    $result = perform_query($sql, $dbLink, "common_funcs.php");
+    $row = fetch_array($result);
+    return $row['name'];
+}
+function mne2crc ($mne) {
+    $dbLink = db_connect_syslog(DBADMIN, DBADMINPW);
+    $sql = "SELECT crc FROM mne WHERE name='$mne'";
+    $result = perform_query($sql, $dbLink, "common_funcs.php");
+    $row = fetch_array($result);
+    return $row['crc'];
+}
+
+
+// ----------------------------------------------------------------------
+// Returns type of variable
+// Usage: echo is_type(''); 
+// ----------------------------------------------------------------------
+function is_type($var) {
+    # Setup commonly used types (PHP.net warns against using gettype())
+    switch ($var) {
+        case is_string($var):
+            $type='string';
+            break;
+
+        case is_array($var):
+            $type='array';
+            break;
+
+        case is_null($var):
+            $type='NULL';
+            break;
+
+        case is_bool($var):
+            $type='boolean';
+            break;
+
+        case is_int($var):
+            $type='integer';
+            break;
+
+        case is_float($var):
+            // $type='float';
+            $type='double';
+            break;
+
+        case is_object($var):
+            $type='object';
+            break;
+
+        case is_resource($var):
+            $type='resource';
+            break;
+
+        default:
+            $type='unknown type';
+            break;
+    }
+    return $type;
+}
+
+
 ?>

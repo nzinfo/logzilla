@@ -97,7 +97,7 @@ if ($_SESSION['SHOWCOUNTS'] == "1") {
         <option value="host">Host</option>
         <option value="program">Program</option>
         <option value="facility">Facility</option>
-        <option value="priority">Priority</option>
+        <option value="severity">Severity</option>
         <option value="msg">Message</option>
         <option value="fo">First Occurrence</option>
         <option value="lo" selected>Last Occurrence</option>
@@ -138,7 +138,7 @@ if ($_SESSION['SHOWCOUNTS'] == "1") {
         <option value="msg">Message</option>
         <option value="program">Program</option>
         <option value="facility">Facility</option>
-        <option value="priority">Priority</option>
+        <option value="severity">Severity</option>
         <option value="mne">Mnemonic</option>
         </select>
         </td>
@@ -191,9 +191,9 @@ if ($_SESSION['SHOWCOUNTS'] == "1") {
         <select name="graphtype" id="graphtype">
         <option value="tophosts" selected>Hosts</option>
         <option value="topmsgs">Messages</option>
-        <option value="pri">Priorities</option>
-        <option value="fac">Facilities</option>
-        <option value="prog">Programs</option>
+        <option value="severity">Severity</option>
+        <option value="facility">Facilities</option>
+        <option value="program">Programs</option>
         </select>
         <?php } ?>
         </td>

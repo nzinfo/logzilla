@@ -184,7 +184,7 @@ $pagecontent .= "</tr>\n";
 $pagecontent .= "</thead>\n";
 $pagecontent .= "<tbody>\n";
 $pagecontent .= "<td width='33%'>\n";
-// $pagecontent .= "<span id='span_search_params'>The options currently selected will return <span id='span_limit'>the last 10</span> results <span id'span_date>for today</span> for</span> <span id='span_prog'>all programs</span>, <span id='span_pri'>all priorities</span>, <span id='span_fac'>all facilities</span>, <span id='span_host'>all hosts</span>, <span id='span_msg'>and all messages</span>\n";
+// $pagecontent .= "<span id='span_search_params'>The options currently selected will return <span id='span_limit'>the last 10</span> results <span id'span_date>for today</span> for</span> <span id='span_prog'>all programs</span>, <span id='span_pri'>all severities</span>, <span id='span_fac'>all facilities</span>, <span id='span_host'>all hosts</span>, <span id='span_msg'>and all messages</span>\n";
 $pagecontent .= "</td>\n";
 $pagecontent .= "<td width='33%'>\n";
     $pagecontent .= "<div class='submitButtons'>";

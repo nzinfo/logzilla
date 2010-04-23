@@ -26,8 +26,8 @@ $today = date("Y-m-d");
 $where = "WHERE 1=1";
 
 $qstring = '';
-$page = get_input('page');
-$qstring .= "?page=$page";
+// $page = get_input('page');
+$qstring .= "?page=Results";
 
 $show_suppressed = get_input('show_suppressed');
 $qstring .= "&show_suppressed=$show_suppressed";
@@ -36,7 +36,7 @@ $qstring .= "&show_suppressed=$show_suppressed";
         $where.= " AND suppress > NOW()";  
         $where .= " OR host IN (SELECT name from suppress where col='host' AND expire>NOW())";
         $where .= " OR facility IN (SELECT name from suppress where col='facility' AND expire>NOW())";
-        $where .= " OR priority IN (SELECT name from suppress where col='priority' AND expire>NOW())";
+        $where .= " OR severity IN (SELECT name from suppress where col='severity' AND expire>NOW())";
         $where .= " OR program IN (SELECT name from suppress where col='program' AND expire>NOW())";
         $where .= " OR msg IN (SELECT name from suppress where col='msg' AND expire>NOW())";
         $where .= " OR counter IN (SELECT name from suppress where col='counter' AND expire>NOW())";
@@ -46,7 +46,7 @@ $qstring .= "&show_suppressed=$show_suppressed";
         $where.= " AND suppress < NOW()";  
         $where .= " AND host NOT IN (SELECT name from suppress where col='host' AND expire>NOW())";
         $where .= " AND facility NOT IN (SELECT name from suppress where col='facility' AND expire>NOW())";
-        $where .= " AND priority NOT IN (SELECT name from suppress where col='priority' AND expire>NOW())";
+        $where .= " AND severity NOT IN (SELECT name from suppress where col='severity' AND expire>NOW())";
         $where .= " AND program NOT IN (SELECT name from suppress where col='program' AND expire>NOW())";
         $where .= " AND msg NOT IN (SELECT name from suppress where col='msg' AND expire>NOW())";
         $where .= " AND counter NOT IN (SELECT name from suppress where col='counter' AND expire>NOW())";
@@ -127,46 +127,65 @@ if ($hosts) {
     $where = rtrim($where, ",");
     $where .= ")";
 }
+
 // portlet-programs
 $programs = get_input('programs');
 if ($programs) {
     $where .= " AND program IN (";
-    foreach ($programs as $mask) {
-        $where.= "'$mask',";  
-        $qstring .= "&programs[]=$mask";
+    foreach ($programs as $program) {
+        if (!preg_match("/^\d+/m", $program)) {
+            $program = prg2crc($program);
+        }
+            $where.= "'$program',";
+        $qstring .= "&programs[]=$program";
     }
     $where = rtrim($where, ",");
     $where .= ")";
 }
 
-// portlet-priorities
-$priorities = get_input('priorities');
-if ($priorities) {
-    $where .= " AND priority IN (";
-    foreach ($priorities as $mask) {
-        $where.= "'$mask',";  
-        $qstring .= "&priorities[]=$mask";
+// portlet-severities
+$severities = get_input('severities');
+if ($severities) {
+    $where .= " AND severity IN (";
+    foreach ($severities as $severity) {
+        if (!preg_match("/^\d+/m", $severity)) {
+            $severity = sev2int($severity);
+        }
+            $where.= "'$severity',";
+        $qstring .= "&severities[]=$severity";
     }
     $where = rtrim($where, ",");
     $where .= ")";
 }
+
 
 // portlet-facilities
 $facilities = get_input('facilities');
 if ($facilities) {
     $where .= " AND facility IN (";
-    foreach ($facilities as $mask) {
-        $where.= "'$mask',";  
-        $qstring .= "&facilities[]=$mask";
+    foreach ($facilities as $facility) {
+        if (!preg_match("/^\d+/m", $facility)) {
+            $facility = fac2int($facility);
+        }
+            $where.= "'$facility',";
+        $qstring .= "&facilities[]=$facility";
     }
     $where = rtrim($where, ",");
     $where .= ")";
 }
-
-$mne = get_input('mne');
-$qstring .= "&mne=$mne";
-if ($mne) $where .= " AND mne='$mne'";
-
+$mnemonics = get_input('mnemonics');
+if ($mnemonics) {
+    $where .= " AND mne IN (";
+    foreach ($mnemonics as $mnemonic) {
+        if (!preg_match("/^\d+/m", $mnemonic)) {
+            $mnemonic = mne2crc($mnemonic);
+        }
+        $where.= "'$mnemonic',";
+        $qstring .= "&mnemonics[]=$mnemonic";
+    }
+    $where = rtrim($where, ",");
+    $where .= ")";
+}
 
 // portlet-sphinxquery
 $msg_mask = get_input('msg_mask');
@@ -393,40 +412,49 @@ $('.XLButtons').remove();
 <?php
   while($row = fetch_array($result)) { 
       $msg = htmlentities($row['msg']);
-        switch ($row['priority']) {
-            case 'debug':
+        switch ($row['severity']) {
+            case '7':
                 $sev = 'sev7';
+                $sev_text = "DEBUG";
                 break;
-            case 'info':
+            case '6':
                 $sev = 'sev6';
+                $sev_text = "INFO";
                 break;
-            case 'notice':
+            case '5':
                 $sev = 'sev5';
+                $sev_text = "NOTICE";
                 break;
-            case 'warning':
+            case '4':
                 $sev = 'sev4';
+                $sev_text = "WARNING";
                 break;
-            case 'err':
+            case '3':
                 $sev = 'sev3';
+                $sev_text = "ERROR";
                 break;
-            case 'crit':
+            case '2':
                 $sev = 'sev2';
+                $sev_text = "CRIT";
                 break;
-            case 'alert':
+            case '1':
                 $sev = 'sev1';
+                $sev_text = "ALERT";
                 break;
-            case 'emerg':
+            case '0':
                 $sev = 'sev0';
+                $sev_text = "EMERG";
                 break;
+            default:
         }
         echo "<tr id=\"$sev\">\n";
         echo "<td class=\"s_td\"><a href=$_SESSION[SITE_URL]$qstring&hosts=$row[host]>$row[host]</a></td>\n";
         echo "<td class=\"s_td\"><a href=$_SESSION[SITE_URL]$qstring&facilities[]=$row[facility]>$row[facility]</a></td>\n";
-        echo "<td class=\"s_td $sev\"><a href=$_SESSION[SITE_URL]$qstring&priorities[]=$row[priority]>$row[priority]</a></td>\n";
+        echo "<td class=\"s_td $sev\"><a href=$_SESSION[SITE_URL]$qstring&severities[]=$row[severity]>$sev_text</a></td>\n";
         echo "<td class=\"s_td\"><a href=$_SESSION[SITE_URL]$qstring&programs[]=$row[program]>$row[program]</a></td>\n";
         if ($_SESSION['CISCO_MNE_PARSE'] == "1" ) {
             $msg = preg_replace('/\s:/', ':', $msg);
-            $msg = preg_replace('/.*(%.*?:.*)/', '$1', $msg);
+            $msg = preg_replace('/.*%(\w+-\d-\w+):/', '$1', $msg);
         }
         if($_SESSION['MSG_EXPLODE'] == "1") {
             $explode_url = "";

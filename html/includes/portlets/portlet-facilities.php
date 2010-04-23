@@ -18,17 +18,16 @@ if ((has_portlet_access($_SESSION['username'], 'Facilities') == TRUE) || ($_SESS
 $dbLink = db_connect_syslog(DBADMIN, DBADMINPW);
 
 ?>
-</select>
 <TABLE BORDER="0" WIDTH="100%">
     <TR>
         <TD width="70%">
             <select style="width:99%" name="facilities[]" id="facilities" multiple size=5>
             <?php
-            $sql = "select DISTINCT(facility) FROM ".$_SESSION["TBL_MAIN"];
+            $sql = "SELECT * FROM facilities WHERE code IN (SELECT facility FROM ".$_SESSION['TBL_MAIN'] .") ORDER BY code";
             $queryresult = perform_query($sql, $dbLink, $_REQUEST['pageId']);
             while ($line = fetch_array($queryresult)) {
-   	            $facility = $line['facility'];
-   	            echo "<option>".htmlentities($facility)."</option>\n";
+   	            $facility = $line['name'];
+   	            echo "<option value=".$line['code'].">".htmlentities($facility)."</option>\n";
             }
             ?>
             </select>

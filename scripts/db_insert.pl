@@ -20,17 +20,17 @@
 # 2010-04-04 - Removed forking and added load data infile (now able to process spikes up to ~12kmps)
 # 2010-04-12 - Fixed issue with 1s granularity
 # 2010-04-14 - REMOVED Tail::File and daemonize. Calling db_insert.pl directly from syslog-ng provided much better insert rates (now at 20kmps)
+# 2010-04-20 - Replaced re_pipe with better fields from syslog-ng (only need host, pri, ts, prg and msg)
 #
 
 
 use strict;
 use POSIX qw/strftime/;
-use POSIX 'setsid';
 use DBI;
 use Text::LevenshteinXS qw(distance);
 use File::Spec;
 use File::Basename;
-use IO::Select;
+use String::CRC32;
 
 
 $| = 1;
@@ -174,8 +174,10 @@ if (($debug > 0) or ($verbose)) {
     print STDOUT "Printing results to screen (STDOUT)\n" if (($debug > 0) and ($verbose));
 }
 
-my ($host, $facility, $priority, $tag, $date, $time, $prg, $msg, $mne); 
-my $re_pipe = qr/(\S+)\t(\S+)\t(\S+)\t(\S+)\t(\S+)\t(\S+)\t(\S+)\t(\S+.*)/;
+my ($host, %host_cache, $facility, $pri, $prg, %program_cache, $prg32, $msg, $mne, %mne_cache, $mne32, $severity); 
+my $re_pipe = qr/(\S+)\t(\d+)\t(\S+)\t(.*)/;
+# v3.0 Fields are: Host, PRI, Program,  and MSG
+# the $severity and $facility fields are split from the $pri coming in so that they can be stored as integers into 2 separate db columns
 
 $dbh->disconnect();
 $dbh = DBI->connect( "DBI:mysql:$db:$dbhost", $dbuser, $dbpass );
@@ -184,13 +186,16 @@ if (!$dbh) {
     print STDOUT "Can't connect to $db database: ", $DBI::errstr, "\n";
     exit;
 }
-my $db_select = $dbh->prepare("SELECT id,msg FROM $dbtable WHERE host=? AND facility=? AND priority=? AND tag=? AND fo BETWEEN ? AND ?");
+my $db_select = $dbh->prepare("SELECT id,msg FROM $dbtable WHERE host=? AND facility=? AND severity=? AND program=? AND fo BETWEEN ? AND ?");
 my $db_select_id = $dbh->prepare("SELECT counter,fo,lo FROM $dbtable WHERE id=?");
 my $db_update = $dbh->prepare("UPDATE $dbtable SET counter=?, fo=?, lo=? WHERE id=?");
 my $db_del = $dbh->prepare("DELETE FROM $dbtable WHERE id=?");
-my $db_insert = $dbh->prepare("INSERT INTO $dbtable (host,facility,priority,tag,program,msg,mne,fo,lo) VALUES (?,?,?,?,?,?,?,?,?)");
+my $db_insert = $dbh->prepare("INSERT INTO $dbtable (host,facility,severity,program,msg,mne,fo,lo) VALUES (?,?,?,?,?,?,?,?)");
+my $db_insert_prg = $dbh->prepare("INSERT IGNORE INTO programs (name,crc) VALUES (?,?) ");
+my $db_insert_mne = $dbh->prepare("INSERT IGNORE INTO mne (name,crc) VALUES (?,?) ");
+my $db_insert_host = $dbh->prepare("INSERT IGNORE INTO hosts (host) VALUES (?) ");
 my $dumpfile = "/dev/shm/infile.txt";
-my $sql = qq{LOAD DATA LOCAL INFILE '$dumpfile' INTO TABLE logs FIELDS TERMINATED BY "\\t" LINES TERMINATED BY "\\n" (host,facility,priority,tag,program,msg,mne,fo,lo)};
+my $sql = qq{LOAD DATA LOCAL INFILE '$dumpfile' INTO TABLE logs FIELDS TERMINATED BY "\\t" LINES TERMINATED BY "\\n" (host,facility,severity,program,msg,mne,fo,lo)};
 my $db_insert_mpX = $dbh->prepare("REPLACE INTO cache (name,value,updatetime) VALUES (?,?,?)");
 my $db_insert_sum = $dbh->prepare("INSERT INTO cache (name,value,updatetime) VALUES ('msg_sum',?,?) ON DUPLICATE KEY UPDATE value=value + ?");
 my $db_load = $dbh->prepare("$sql");
@@ -239,6 +244,22 @@ if ($selftest) {
 if ($qsize) {
     $q_limit = $qsize;
 }
+# Pre-populate cache's with db values
+my $prg_select = $dbh->prepare("SELECT * FROM programs");
+$prg_select->execute();
+while (my $ref = $prg_select->fetchrow_hashref()) {
+    $program_cache{$ref->{'name'}} = $ref->{'crc'};
+}
+my $host_select = $dbh->prepare("SELECT * FROM hosts");
+$host_select->execute();
+while (my $ref = $host_select->fetchrow_hashref()) {
+    $host_cache{$ref->{'host'}} = $ref->{'host'};
+}
+my $mne_select = $dbh->prepare("SELECT * FROM mne");
+$mne_select->execute();
+while (my $ref = $mne_select->fetchrow_hashref()) {
+    $mne_cache{$ref->{'name'}} = $ref->{'crc'};
+}
 while (my $msg = <STDIN>) {
     chomp($msg);
     my $now = strftime("%Y-%m-%d %H:%M:%S", localtime);
@@ -261,7 +282,7 @@ while (my $msg = <STDIN>) {
         print LOG "DEBUG: Q Limit set to ".$q_limit."\n" if ($debug > 10);
         print LOG "DEBUG: Start Time was ".$start_time."\n" if ($debug > 10);
         print LOG "DEBUG: Time Limit set to ".$time_limit."\n" if ($debug > 10);
-        #push (@dumparr, "host\tfacility\tpriority\ttag\tprg\tmsg\tmne\t$datetime_now\t$datetime_now\t\n");
+        #push (@dumparr, "host\tfacility\tseverity\ttag\tprg\tmsg\tmne\t$datetime_now\t$datetime_now\t\n");
         $start_time = time;
         print LOG "DEBUG: *NEW* Start Time is ".$start_time."\n" if ($debug > 10);
     } else { 
@@ -339,6 +360,21 @@ while (my $msg = <STDIN>) {
             $mph += $mpm;
             $mpm = 0;
             @mps = ();
+            my @hosts = keys %host_cache;
+            foreach my $h (@hosts) {
+                $db_insert_host->execute($h);
+            }
+            my @prgs = keys %program_cache;
+            foreach my $p (@prgs) {
+                $db_insert_prg->execute($p, $program_cache{$p});
+            }
+            my @mnes = keys %mne_cache;
+            foreach my $m (@mnes) {
+                $db_insert_mne->execute($m, $mne_cache{$m});
+            }
+            %host_cache = ();
+            %program_cache = ();
+            %mne_cache = ();
         }
         # Temp: exit after 5 minutes for testing
         if ($#mpm == 5) {
@@ -379,25 +415,21 @@ sub round {
     my($number) = shift;
     return int($number + .5);
 }
-
+# Usage: print "54 = " . dec2bin(54) . "\n";
+# returns: 54 = 110110
+sub dec2bin {
+    my $str = unpack("B32", pack("N", shift));
+    #$str =~ s/^0+(?=\d)//;   # otherwise you'll get leading zeros
+    $str = substr($str, -8); # used substr instead to pad to 8bit
+    return $str;
+}
+# usage: print "0110110 = " . bin2dec('0110110') . "\n";
+# returns: 0110110 = 54
+sub bin2dec {
+    return unpack("N", pack("B32", substr("0" x 32 . shift, -32)));
+}
 sub do_msg {
     $msg = shift;
-    #my $pid = fork();
-    #if ( ! defined $pid ) {
-    #die "Can't fork: $!\n";
-    #}
-    #if ( $pid ) { # parent
-    ## Prepare database statements for later use
-    #if (!$dbh) {
-    #$dbh = DBI->connect( "DBI:mysql:$db:$dbhost", $dbuser, $dbpass );
-    #}
-    #print LOG "Waiting for child on PID $pid to exit...\n" if ($debug > 0);
-    #print STDOUT "Waiting for child on PID $pid to exit...\n" if (($debug > 0) and ($verbose));
-    #wait;
-    #} else { # child
-    #my $child_dbh = $dbh->clone();
-    #$dbh->{InactiveDestroy} = 1;
-    #undef $dbh;
     if (!$qsize) {
         print LOG "\n\nINCOMING MESSAGE:\n$msg\n" if ($debug > 0);
         print STDOUT "\n\nINCOMING MESSAGE:\n$msg\n" if (($debug > 2) and ($verbose));
@@ -411,14 +443,13 @@ sub do_msg {
 
     # Get incoming variables from PIPE
     if ($msg =~ m/$re_pipe/) {
+        # v3.0 Fields are: Host, PRI, Unix TS, Program,  and MSG
         $host = $1;
-        $facility = $2;
-        $priority = $3;
-        $tag = $4;
-        $date = strftime("%Y-%m-%d", localtime); # Changed to use machine's local date and time in case sending device is off
-        $time = strftime("%H:%M:%S", localtime);
-        $prg = $7;
-        $msg = $8;
+        $pri = $2;
+        $facility = int($pri/8);
+        $severity =  $pri - ($facility * 8 );
+        $prg = $3;
+        $msg = $4;
         $msg =~ s/\\//; # Some messages come in with a trailing slash
         $msg =~ s/'//; # remove any ''s
         $msg =~ s/\t/ /g; # remove any TABs
@@ -456,24 +487,31 @@ sub do_msg {
         #if ($seq !~ /\d/) {
         #	$seq = 0;
         #}
+        $prg32 = crc32("$prg");
+        $mne32 = crc32("$mne");
+        unless ($host_cache{$host}){
+            $host_cache{$host} = ($host);
+        }
+        unless ($mne_cache{$mne}){
+            $mne_cache{$mne} = ($mne32);
+        }
+        unless ($program_cache{$prg}){
+            $program_cache{$prg} = ($prg32);
+        }
         if ($debug > 0) { 
             print LOG "HOST: $host\n";
+            print LOG "PRI: $pri\n";
             print LOG "FAC: $facility\n";
-            print LOG "PRI: $priority\n";
-            print LOG "TAG: $tag\n";
-            print LOG "DAT: $date\n";
-            print LOG "TME: $time\n";
+            print LOG "SEV: $severity\n";
             print LOG "PRG: $prg\n";
             print LOG "MSG: $msg\n\n";
             print LOG "MNE: $mne\n\n";
         }
         if (($debug > 2) and ($verbose)) { 
             print STDOUT "HOST: $host\n";
+            print STDOUT "PRI: $pri\n";
             print STDOUT "FAC: $facility\n";
-            print STDOUT "PRI: $priority\n";
-            print STDOUT "TAG: $tag\n";
-            print STDOUT "DAT: $date\n";
-            print STDOUT "TME: $time\n";
+            print STDOUT "SEV: $severity\n";
             print STDOUT "PRG: $prg\n";
             print STDOUT "MSG: $msg\n\n";
             print STDOUT "MNE: $mne\n\n";
@@ -488,16 +526,10 @@ sub do_msg {
     }
     # If the SQZ feature is enabled, continue, if not we'll just insert the record afterward
     if($dedup eq 1) {
-        #$dbh->{InactiveDestroy} = 1;
-        #my $pid = $$;
-        #fork and exit;
-        #my $p = $$;
-        #print LOG "DEBUG: Forked\nDEBUG: Old pid = $pid\nDEBUG: New PID = $p\n" if ($debug > 10);
         $insert = 1;
-        # Debug: set trace level to 4 to get query string executed
         $db_select->{TraceLevel} = 4 if (($debug > 4) and ($verbose));
         # Select any records between now and $dedup_window seconds ago that match this host, facility, etc.
-        $db_select->execute($host, $facility, $priority, $tag, $datetime_past, $datetime_now);
+        $db_select->execute($host, $facility, $severity, $prg32, $datetime_past, $datetime_now);
         if ($db_select->errstr()) {
             print LOG "FATAL: Unable to execute SQL statement: ", $db_select->errstr(), "\n" if ($debug > 0);
             print STDOUT "FATAL: Unable to execute SQL statement: ", $db_select->errstr(), "\n";
@@ -571,13 +603,7 @@ sub do_msg {
     # Now that the distance test is over we need to insert any new records that either didn't previously exist or because we had the dedup feature disabled
     if ($insert != 0) {
         if ($host ne "")  {
-            $queue = "$host\t$facility\t$priority\t$tag\t$prg\t$msg\t$mne\t$datetime_now\t$datetime_now\t\n";
-            #$db_insert->execute($host, $facility, $priority, $tag, $prg, $msg, $mne, $datetime_now, $datetime_now);
-            #if ($db_insert->errstr()) {
-            #print LOG "FATAL: Can't execute SQL insert statement (", $dbh->errstr(), ")\n" if ($debug > 3);
-            #print STDOUT "FATAL: Can't execute SQL insert statement (", $dbh->errstr(), ")\n";
-            #}
-            # $dbh->{TraceLevel} = 4;
+            $queue = "$host\t$facility\t$severity\t$prg32\t$msg\t$mne32\t$datetime_now\t$datetime_now\t\n";
         } else {
             if (!$qsize) {
                 $do_msg_mps++;
@@ -589,13 +615,5 @@ sub do_msg {
         print LOG "insert = $insert, Skipping insert of this message since it was a duplicate\n" if ($debug > 3);
         print STDOUT "insert = $insert, Skipping insert of this message since it was a duplicate\n" if (($debug > 3) and ($verbose));
     }
-    #$dbh->disconnect();
     return $queue;
-    #exit(0);
-    #}
-    # end benchmark timer 
-    #$bmend = new Benchmark;
-    #my $bmdiff = timediff($bmend, $bmstart);
-    #print LOG "Total processing time was", timestr($bmdiff, 'all'), " seconds\n" if ($debug > 0);#
-    #print STDOUT "Total processing time was", timestr($bmdiff, 'all'), " seconds\n" if (($debug > 2) and ($verbose));
 }

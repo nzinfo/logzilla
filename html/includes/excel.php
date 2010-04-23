@@ -140,7 +140,7 @@ if ($_POST['dbid']){
             // $objPHPExcel->getActiveSheet()->SetCellValue("B{$r}", $row['seq']);
             $objPHPExcel->getActiveSheet()->SetCellValue("B{$r}", $row['host']);
             $objPHPExcel->getActiveSheet()->SetCellValue("C{$r}", $row['facility']);
-            $objPHPExcel->getActiveSheet()->SetCellValue("D{$r}", $row['priority']);
+            $objPHPExcel->getActiveSheet()->SetCellValue("D{$r}", $row['severity']);
             $objPHPExcel->getActiveSheet()->SetCellValue("E{$r}", $row['program']);
             $objPHPExcel->getActiveSheet()->SetCellValue("F{$r}", $row['fo']);
             $objPHPExcel->getActiveSheet()->SetCellValue("G{$r}", $row['lo']);

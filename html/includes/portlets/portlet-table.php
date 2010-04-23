@@ -40,8 +40,9 @@ $qstring .= "&show_suppressed=$show_suppressed";
         $where.= " AND suppress > NOW()";  
         $where .= " OR host IN (SELECT name from suppress where col='host' AND expire>NOW())";
         $where .= " OR facility IN (SELECT name from suppress where col='facility' AND expire>NOW())";
-        $where .= " OR priority IN (SELECT name from suppress where col='priority' AND expire>NOW())";
+        $where .= " OR severity IN (SELECT name from suppress where col='severity' AND expire>NOW())";
         $where .= " OR program IN (SELECT name from suppress where col='program' AND expire>NOW())";
+        $where .= " OR mne IN (SELECT name from suppress where col='mnemonic' AND expire>NOW())";
         $where .= " OR msg IN (SELECT name from suppress where col='msg' AND expire>NOW())";
         $where .= " OR counter IN (SELECT name from suppress where col='counter' AND expire>NOW())";
         $where .= " OR notes IN (SELECT name from suppress where col='notes' AND expire>NOW())";
@@ -50,8 +51,9 @@ $qstring .= "&show_suppressed=$show_suppressed";
         $where.= " AND suppress < NOW()";  
         $where .= " AND host NOT IN (SELECT name from suppress where col='host' AND expire>NOW())";
         $where .= " AND facility NOT IN (SELECT name from suppress where col='facility' AND expire>NOW())";
-        $where .= " AND priority NOT IN (SELECT name from suppress where col='priority' AND expire>NOW())";
+        $where .= " AND severity NOT IN (SELECT name from suppress where col='severity' AND expire>NOW())";
         $where .= " AND program NOT IN (SELECT name from suppress where col='program' AND expire>NOW())";
+        $where .= " AND mne NOT IN (SELECT name from suppress where col='mnemonic' AND expire>NOW())";
         $where .= " AND msg NOT IN (SELECT name from suppress where col='msg' AND expire>NOW())";
         $where .= " AND counter NOT IN (SELECT name from suppress where col='counter' AND expire>NOW())";
         $where .= " AND notes NOT IN (SELECT name from suppress where col='notes' AND expire>NOW())";
@@ -135,42 +137,60 @@ if ($hosts) {
 $programs = get_input('programs');
 if ($programs) {
     $where .= " AND program IN (";
-    foreach ($programs as $mask) {
-        $where.= "'$mask',";  
-        $qstring .= "&programs[]=$mask";
+    foreach ($programs as $program) {
+        if (!preg_match("/^\d+/m", $program)) {
+            $program = prg2crc($program);
+        }
+            $where.= "'$program',";
+        $qstring .= "&programs[]=$program";
     }
     $where = rtrim($where, ",");
     $where .= ")";
 }
 
-// portlet-priorities
-$priorities = get_input('priorities');
-if ($priorities) {
-    $where .= " AND priority IN (";
-    foreach ($priorities as $mask) {
-        $where.= "'$mask',";  
-        $qstring .= "&priorities[]=$mask";
+// portlet-severities
+$severities = get_input('severities');
+if ($severities) {
+    $where .= " AND severity IN (";
+    foreach ($severities as $severity) {
+        if (!preg_match("/^\d+/m", $severity)) {
+            $severity = sev2int($severity);
+        }
+            $where.= "'$severity',";
+        $qstring .= "&severities[]=$severity";
     }
     $where = rtrim($where, ",");
     $where .= ")";
 }
+
 
 // portlet-facilities
 $facilities = get_input('facilities');
 if ($facilities) {
     $where .= " AND facility IN (";
-    foreach ($facilities as $mask) {
-        $where.= "'$mask',";  
-        $qstring .= "&facilities[]=$mask";
+    foreach ($facilities as $facility) {
+        if (!preg_match("/^\d+/m", $facility)) {
+            $facility = fac2int($facility);
+        }
+            $where.= "'$facility',";
+        $qstring .= "&facilities[]=$facility";
     }
     $where = rtrim($where, ",");
     $where .= ")";
 }
-
-$mne = get_input('mne');
-$qstring .= "&mne=$mne";
-if ($mne) $where .= " AND mne='$mne'";
-
+$mnemonics = get_input('mnemonics');
+if ($mnemonics) {
+    $where .= " AND mne IN (";
+    foreach ($mnemonics as $mnemonic) {
+        if (!preg_match("/^\d+/m", $mnemonic)) {
+            $mnemonic = mne2crc($mnemonic);
+        }
+        $where.= "'$mnemonic',";
+        $qstring .= "&mnemonics[]=$mnemonic";
+    }
+    $where = rtrim($where, ",");
+    $where .= ")";
+}
 
 $limit = get_input('limit');
 $limit = (!empty($limit)) ? $limit : "10";
@@ -183,25 +203,21 @@ $msg_mask = preg_replace ('/^Search through .*\sMessages/m', '', $msg_mask);
 $msg_mask_oper = get_input('msg_mask_oper');
 $qstring .= "&msg_mask=$msg_mask&msg_mask_oper=$msg_mask_oper";
 
+$orderby = get_input('orderby');
+$qstring .= "&orderby=$orderby";
+
 if($msg_mask) {
     if ($_SESSION['SPX_ENABLE'] == "1") {
         //---------------BEGIN SPHINX
         require_once ($basePath . "/../SPHINX.class.php");
-        // Get the search variable from URL
-        // $var = @$_GET['msg_mask'] ;
-        // $trimmed = trim($$msg_mask); //trim whitespace from the stored variable
-
-        // $q = $trimmed;
-#$q = "SELECT id ,group_id,title FROM documents where title = 'test one'";
-#$q = " SELECT id, group_id, UNIX_TIMESTAMP(date_added) AS date_added, title, content FROM documents";
         $index = "idx_logs idx_delta_logs";
-
         $cl = new SphinxClient ();
         $hostip = $_SESSION['SPX_SRV'];
         $port = intval($_SESSION['SPX_PORT']);
         $cl->SetServer ( $hostip, $port );
         $cl->SetMatchMode ( SPH_MATCH_EXTENDED2 );
-        $cl->SetSortMode(SPH_SORT_ATTR_DESC, 'lo');
+        // $cl->SetSortMode(SPH_SORT_ATTR_DESC, "id");
+        $cl->SetSortMode(SPH_SORT_EXTENDED, "@id DESC");
         $cl->SetLimits(0, intval($limit));
         $res = $cl->Query ( $msg_mask, $index);
         if ( !$res )
@@ -345,8 +361,6 @@ $topx = get_input('topx');
 $graphtype = get_input('graphtype');
     $qstring .= "&graphtype=$graphtype";
 
-$orderby = get_input('orderby');
-    $qstring .= "&orderby=$orderby";
 $order = get_input('order');
     $qstring .= "&order=$order";
     if ($orderby) {
@@ -396,8 +410,9 @@ if ($order) {
     <th class="s_th"><input type="checkbox" onclick="toggleCheck(this.checked);"/></th>
     <th class="s_th sortable-sortIPAddress">Host</th>
     <th class="s_th sortable-text">Facility</th>
-    <th class="s_th sortable-text">Priority</th>
+    <th class="s_th sortable-text">Severity</th>
     <th class="s_th sortable-text">Program</th>
+    <th class="s_th sortable-text">Mnemonic</th>
     <th class="s_th sortable-text">Message</th>
     <?php if ($_SESSION['DEDUP'] == 1) { 
         echo '<th class="s_th sortable-sortEnglishDateTime">FO</th>'; 
@@ -437,31 +452,40 @@ if ($order) {
 <?php
   while($row = fetch_array($result)) { 
       $msg = htmlentities($row['msg']);
-        switch ($row['priority']) {
-            case 'debug':
+        switch ($row['severity']) {
+            case '7':
                 $sev = 'sev7';
+                $sev_text = "DEBUG";
                 break;
-            case 'info':
+            case '6':
                 $sev = 'sev6';
+                $sev_text = "INFO";
                 break;
-            case 'notice':
+            case '5':
                 $sev = 'sev5';
+                $sev_text = "NOTICE";
                 break;
-            case 'warning':
+            case '4':
                 $sev = 'sev4';
+                $sev_text = "WARNING";
                 break;
-            case 'err':
+            case '3':
                 $sev = 'sev3';
+                $sev_text = "ERROR";
                 break;
-            case 'crit':
+            case '2':
                 $sev = 'sev2';
+                $sev_text = "CRIT";
                 break;
-            case 'alert':
+            case '1':
                 $sev = 'sev1';
+                $sev_text = "ALERT";
                 break;
-            case 'emerg':
+            case '0':
                 $sev = 'sev0';
+                $sev_text = "EMERG";
                 break;
+            default:
         }
         echo "<tr id=\"$sev\">\n";
         // Icon downloaded from http://icons.mysitemyway.com
@@ -471,9 +495,10 @@ if ($order) {
         echo "<td class=\"s_td\"><input class=\"checkbox\" type='checkbox' name='dbid[]' value='$row[id]'></td>";
         //$qstring = preg_replace ('/&hosts=(.*)&/', "$1", $qstring);
         echo "<td class=\"s_td\"><a href=$_SESSION[SITE_URL]$qstring&hosts=$row[host]>$row[host]</a></td>\n";
-        echo "<td class=\"s_td\"><a href=$_SESSION[SITE_URL]$qstring&facilities[]=$row[facility]>$row[facility]</a></td>\n";
-        echo "<td class=\"s_td $sev\"><a href=$_SESSION[SITE_URL]$qstring&priorities[]=$row[priority]>$row[priority]</a></td>\n";
-        echo "<td class=\"s_td\"><a href=$_SESSION[SITE_URL]$qstring&programs[]=$row[program]>$row[program]</a></td>\n";
+        echo "<td class=\"s_td\"><a href=$_SESSION[SITE_URL]$qstring&facilities[]=$row[facility]>".int2fac($row['facility'])."</a></td>\n";
+        echo "<td class=\"s_td $sev\"><a href=$_SESSION[SITE_URL]$qstring&severities[]=$row[severity]>$sev_text</a></td>\n";
+        echo "<td class=\"s_td\"><a href=$_SESSION[SITE_URL]$qstring&programs[]=$row[program]>".crc2prg($row['program'])."</a></td>\n";
+        echo "<td class=\"s_td\"><a href=$_SESSION[SITE_URL]$qstring&mnemonics[]=$row[mne]>".crc2mne($row['mne'])."</a></td>\n";
         if ($_SESSION['CISCO_MNE_PARSE'] == "1" ) {
             // $msg = preg_replace('/\s:/', ':', $msg);
             $msg = preg_replace('/.*%(\w+-\d-\w+):/', '$1', $msg);
@@ -720,8 +745,9 @@ function lzecs(msg){
                     <?php  } ?>
                     <option <?php if ($orderby == 'host') echo "selected"; ?> value="host">Host</option>
                     <option <?php if ($orderby == 'program') echo "selected"; ?> value="program">Program</option>
+                    <option <?php if ($orderby == 'mnemonic') echo "selected"; ?> value="mnemonic">Mnemonic</option>
                     <option <?php if ($orderby == 'facility') echo "selected"; ?> value="facility">Facility</option>
-                    <option <?php if ($orderby == 'priority') echo "selected"; ?> value="priority">Priority</option>
+                    <option <?php if ($orderby == 'severity') echo "selected"; ?> value="severity">Severity</option>
                     <option <?php if ($orderby == 'msg') echo "selected"; ?> value="msg">Message</option>
                     <option <?php if ($orderby == 'fo') echo "selected"; ?> value="fo">First Occurrence</option>
                     <option <?php if ($orderby == 'lo') echo "selected"; ?> value="lo">Last Occurrence</option>
@@ -819,8 +845,9 @@ function lzecs(msg){
             <option value="this single event">This Event Only</option>
             <option value="host">All Matching Hosts</option>
             <option value="facility">All Matching Facilities</option>
-            <option value="priority">All Matching Priorities</option>
+            <option value="severity">All Matching Severities</option>
             <option value="program">All Matching Programs</option>
+            <option value="mne">All Matching Mnemonics</option>
             <option value="notes">All Matching Notes</option>
             </select>
             </td>
@@ -846,6 +873,24 @@ function lzecs(msg){
                     $name = $row['name'];
                     $col = $row['col'];
                     $expire = $row['expire'];
+                    switch ($col) {
+                        case 'mne':
+                            $name = crc2mne($name);
+                            $col = "Mnemonic";
+                            break;
+                        case 'facility':
+                            $name = int2fac($name);
+                            $col = "Facility";
+                            break;
+                        case 'severity':
+                            $name = int2sev($name);
+                            $col = "Severity";
+                            break;
+                        case 'program':
+                            $name = crc2prg($name);
+                            $col = "Program";
+                            break;
+                    }
                     echo "<tr>\n";
                     echo "<td>$col</td>\n";
                     echo "<td>$name</td>\n";

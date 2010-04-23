@@ -29,11 +29,15 @@ switch ($data) {
     break;
 
     case "prgs":
-        $sql = "SELECT COUNT(*) FROM (SELECT DISTINCT program FROM ".$_SESSION['TBL_MAIN'] .") AS result";
+        $sql = "SELECT COUNT(*) FROM (SELECT DISTINCT name FROM programs) AS result";
     break;
 
-    case "pris":
-        $sql = "SELECT COUNT(*) FROM (SELECT DISTINCT priority FROM ".$_SESSION['TBL_MAIN'] .") AS result";
+    case "mnes":
+        $sql = "SELECT COUNT(*) FROM (SELECT DISTINCT name FROM mne) AS result";
+    break;
+
+    case "sevs":
+        $sql = "SELECT COUNT(*) FROM (SELECT DISTINCT severity FROM ".$_SESSION['TBL_MAIN'] .") AS result";
     break;
 
     case "facs":

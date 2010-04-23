@@ -51,33 +51,34 @@ if ($hosts) {
 $programs = get_input('programs');
 if ($programs) {
     $where .= " AND program IN (";
-    foreach ($programs as $mask) {
-        $where.= "'$mask',";  
-        $qstring .= "&programs[]=$mask";
+    foreach ($programs as $program) {
+            $where.= "'$program',";
+        $qstring .= "&programs[]=$program";
     }
     $where = rtrim($where, ",");
     $where .= ")";
 }
 
-// portlet-priorities
-$priorities = get_input('priorities');
-if ($priorities) {
-    $where .= " AND priority IN (";
-    foreach ($priorities as $mask) {
-        $where.= "'$mask',";  
-        $qstring .= "&priorities[]=$mask";
+// portlet-severities
+$severities = get_input('severities');
+if ($severities) {
+    $where .= " AND severity IN (";
+    foreach ($severities as $severity) {
+            $where.= "'$severity',";
+        $qstring .= "&severities[]=$severity";
     }
     $where = rtrim($where, ",");
     $where .= ")";
 }
+
 
 // portlet-facilities
 $facilities = get_input('facilities');
 if ($facilities) {
     $where .= " AND facility IN (";
-    foreach ($facilities as $mask) {
-        $where.= "'$mask',";  
-        $qstring .= "&facilities[]=$mask";
+    foreach ($facilities as $facility) {
+            $where.= "'$facility',";
+        $qstring .= "&facilities[]=$facility";
     }
     $where = rtrim($where, ",");
     $where .= ")";

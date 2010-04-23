@@ -942,19 +942,29 @@ $(document).ready(function() {
             watermark("#notes_mask","Search through "+comma+" Notes");
             });
         };
+        /*
         $.get("includes/ajax/counts.php?data=prgs", function(data){
             var comma = commify(data);
             $("#portlet-header_Programs").prepend(comma+" ");
             });
-        // $.get("includes/ajax/counts.php?data=pris", function(data){
-            // var comma = commify(data);
-        // Note: Ajax not necessary, just list all pri's since it's an enum column
-            $("#portlet-header_Priorities").prepend("8 ");
-            // });
+         $.get("includes/ajax/counts.php?data=sevs", function(data){
+             var comma = commify(data);
+             $("#portlet-header_Severities").prepend(comma+" ");
+             });
         $.get("includes/ajax/counts.php?data=facs", function(data){
                 var comma = commify(data);
                 $("#portlet-header_Facilities").prepend(comma+" ");
                 });
+                */
+        // At some point, it occurred to me that I can simply count the <select> element options and use that number rather than querying the DB, duh!
+        var count = $("#mnemonics option").size()
+            $("#portlet-header_Mnemonics").prepend(commify(count)+" ");
+        var count = $("#programs option").size()
+            $("#portlet-header_Programs").prepend(commify(count)+" ");
+        var count = $("#facilities option").size()
+            $("#portlet-header_Facilities").prepend(commify(count)+" ");
+        var count = $("#severities option").size()
+            $("#portlet-header_Severities").prepend(commify(count)+" ");
         }
             watermark("#dupcount","0");
 });

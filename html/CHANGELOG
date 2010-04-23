@@ -56,6 +56,7 @@ CHANGELOG
  - Added MPS ticker to header along with average MPS
  - db_insert now uses mysql's LOAD DATA INFILE so that larger systems won't bottleneck at 1kmps (a Mysql limit on number of inerts per second). The load data command allows for around 20kmps.
  - Modified CISCO_TAG_PARSE and re_pipe (in db_insert) to handle windows event logs. Apparently someone at MS decided it would be a good idea to include TABs in the messages...ugh!
+- Added Cisco Mnemonics to both the search page and the charts - to get Top Mnemonics, set Sort Order to "count" and Group By to "Mnemonic"
 
 
 3.0Beta16

@@ -32,6 +32,20 @@ if ($sup_field) {
         $where = "WHERE $sup_field='$column'";
         $sql = "REPLACE INTO suppress (name,col,expire) VALUES ('$column','$sup_field','$sup_date $sup_time')";
         $result = perform_query($sql, $dbLink, $_SERVER['PHP_SELF']);
+        switch ($sup_field) {
+            case 'mne':
+                $column = crc2mne($column);
+                break;
+            case 'facility':
+                $column = int2fac($column);
+                break;
+            case 'severity':
+                $column = int2sev($column);
+                break;
+            case 'program':
+                $column = crc2prg($column);
+                break;
+        }
         $success .= "Set event suppression for $sup_field ($column) ";
     }
 } else {
