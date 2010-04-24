@@ -8,6 +8,29 @@
 # Copyright (c) 2009 LogZilla, LLC
 # All rights reserved.
 #
+# This script is used to parse incoming syslog-ng messages. 
+# There is no disadvantage to using this script unless you need to insert 
+# more than 20,000 messages per second into the database (the current bottleneck for this script)
+# There are, however MANY advantages.
+
+# When using this script, it will:
+# 1. Read settings from both a file (to get DB user and pass) and the DB itself for other settings
+# 2. Provide enhanced logging options through a config file so that debug can be enabled without a restart (not implemented yet)
+# 3. Accept tokenized strings from syslog-ng PIPE call (not a file)
+# 4. Parse the string to calculate the facility and severity codes from the incoming PRI code.
+# 5. Parse the Mnemonic field from the message
+# 6. Convert the PRG and MNE to a CRC32 integer field (this allows much better storage into the DB)
+# 7. Create a loop for incoming messages to:
+#   a: Compare the incoming message to all current messages in the database using a Levenshtein algorithim.
+#   a2: Incoming matches should be from the same host, with the same PRI and PRG and must match within a configurable window of time and a configurable match of likeness (distance in Levenshtein terminology).
+#   b. If a match is found, update the current row in the database with a new counter (counter + 1) and last occurrence and throw away the incoming PIPE message that was matched.
+#   c. if no match was found, insert a new record.
+# 8. While all this is being done, maintain a cache of the PRG's and MNE's so that no unnecessary inserts are avoided (if a duplicate exists, don't insert a new record for that table).
+# 9. While all this is done, also keep track of the number of messages per second, per hour, per week, etc. and update the appropriate cache tables in the database with those numbers.
+# 10. Allow for regex pattern match cleanups for incoming messages (an example is around lines 440-445 of the current script)
+# That's a summary off the top of my head, there may be more :-)
+
+
 # Changelog:
 # 2009-05-28 - created
 # 2009-09-11 - added a fork to child process to stop I/O blocking which was causing high CPU when dedup was enabled
@@ -371,9 +394,9 @@ while (my $msg = <STDIN>) {
         }
         # Temp: exit after 5 minutes for testing
         #if ($#mpm == 5) {
-            #print STDOUT "Test Exit\n";
-            #exit;
-            #}
+        #print STDOUT "Test Exit\n";
+        #exit;
+        #}
         if ($#mpm == 60) {
             push(@mph, "chart_mph_$hr,$mph,$now");
             $db_insert_mpX->execute("chart_mph_$hr", "$mph", "$now");
@@ -430,7 +453,7 @@ sub do_msg {
         $msg =~ s/\\//; # Some messages come in with a trailing slash
         $msg =~ s/'//; # remove any ''s
         $msg =~ s/\t/ /g; # remove any TABs
-		# if ($msg =~ /%(\w+-.*\d-\w+):/) { # modified to below to catch some IOS-XR messages (which have a space before the colon)
+        # if ($msg =~ /%(\w+-.*\d-\w+):/) { # modified to below to catch some IOS-XR messages (which have a space before the colon)
         if ($msg =~ /%(\w+-.*\d-\w+)\s?:/) {
             $mne = $1;
         } else {
