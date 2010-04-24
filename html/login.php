@@ -116,13 +116,15 @@ if ($_POST) {
         </td>
 	   	<td align="center" valign="middle">
 	   	<SELECT NAME="authtype" STYLE="width: 120px;">  
-		<OPTION VALUE="local">Local
-        <OPTION VALUE="ldap">LDAP 
-        <OPTION VALUE="webbasic">Web Basic 
+        <OPTION VALUE="local">Local
+        <?php if($_SESSION['LDAP_ENABLE'] == "1") { ?>
+            <OPTION VALUE="ldap">LDAP 
+        <?php } ?>
+        <!--<OPTION VALUE="webbasic">Web Basic 
         <OPTION VALUE="msad">MS AD 
         <OPTION VALUE="cert">SSL Certificate
         <OPTION VALUE="tacacs">TACACS+
-        <OPTION VALUE="radius">Radius
+        <OPTION VALUE="radius">Radius-->
 	   	</SELECT>    
 	   	</td>
 	   	</tr>
