@@ -2,17 +2,15 @@
 
 #
 # logreplay.pl
+# Last updated on 2010-04-23
 #
 # Developed by Clayton Dukes <cdukes@cdukes.com>
-# Copyright (c) 2009 GDD.net
-# Licensed under terms of GNU General Public License.
+# Copyright (c) 2010 LogZilla, LLC
 # All rights reserved.
 #
 # Changelog:
 # 2009-06-26 - created
 #
-
-# $Platon$
 
 use strict;
 

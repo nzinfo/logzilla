@@ -2,9 +2,10 @@
 
 #
 # db_insert.pl
+# Last updated on 2010-04-23
 #
 # Developed by Clayton Dukes <cdukes@cdukes.com>
-# Copyright (c) 2009 gdd.net
+# Copyright (c) 2009 LogZilla, LLC
 # All rights reserved.
 #
 # Changelog:
@@ -218,7 +219,7 @@ close (DUMP);
 $db_load->{TraceLevel} = 4 if (($debug > 4) and ($verbose));
 if ($selftest) {
     my $sth = $dbh->prepare("
-        DELETE from $dbtable where tag='dbins_tag';
+        DELETE from $dbtable where host='dbins_testhost';
         ") or die "Could not delete old test results: $DBI::errstr";
     $sth->execute;
     my $cmd = "$0";
@@ -264,14 +265,9 @@ while (my $msg = <STDIN>) {
     chomp($msg);
     my $now = strftime("%Y-%m-%d %H:%M:%S", localtime);
     print LOG "\n\n-=-=-=-=-=-=-=\nLOOP START: $now\n" if ($debug > 10);
-    #$dbh->{InactiveDestroy} = 1;
-    #my $pid = $$;
-    #fork and exit;
-    #my $p = $$;
-    #print LOG "DEBUG: Forked\nDEBUG: Old pid = $pid\nDEBUG: New PID = $p\n" if ($debug > 10);
     if ($qsize) {
         for (my $i=0; $i <= 5; $i++) {
-            push (@dumparr, "fakehost\tlocal7\temerg\tdbins_tag\tdb_insert.pl\tdb_insert.pl[$$]: %SYS-5-CONFIG_I: Configured from 172.16.0.123 by Fred Flinstone <fred\@flinstone.com>\tSYS-5-CONFIG_I\t$datetime\t$datetime\t\n");
+            push (@dumparr, "dbins_testhost\t86\tdb_insert.pl\tdb_insert.pl[$$]: %SYS-5-CONFIG_I: Configured from 172.16.0.123 by Fred Flinstone <fred\@flinstone.com>\tSYS-5-CONFIG_I\t$datetime\t$datetime\t\n");
         }
     }
     $mps++;
@@ -282,7 +278,6 @@ while (my $msg = <STDIN>) {
         print LOG "DEBUG: Q Limit set to ".$q_limit."\n" if ($debug > 10);
         print LOG "DEBUG: Start Time was ".$start_time."\n" if ($debug > 10);
         print LOG "DEBUG: Time Limit set to ".$time_limit."\n" if ($debug > 10);
-        #push (@dumparr, "host\tfacility\tseverity\ttag\tprg\tmsg\tmne\t$datetime_now\t$datetime_now\t\n");
         $start_time = time;
         print LOG "DEBUG: *NEW* Start Time is ".$start_time."\n" if ($debug > 10);
     } else { 
@@ -321,7 +316,6 @@ while (my $msg = <STDIN>) {
             print LOG "Ending insert: " . strftime("%H:%M:%S", localtime) ."\n" if ($debug > 0);
             print STDOUT "Ending insert: " . strftime("%H:%M:%S", localtime) ."\n" if (($debug > 0) and ($verbose));
             @dumparr = ();
-            #$start_time = (time);
             $time_limit = ($start_time + $q_time);
         } else {
             push(@dumparr, do_msg($msg));
@@ -342,7 +336,6 @@ while (my $msg = <STDIN>) {
         $hr = strftime("%H", localtime);
         $min = strftime("%M", localtime);
         $sec = strftime("%S", localtime);
-        #print STDOUT "min = $min\n";
         $mps = round($mps);
         print STDOUT "\n#######\nCurrent MPS = $mps ($do_msg_mps deduplicated)\n#######\n" if ($debug > 2);
         print LOG "\n#######\nCurrent MPS = $mps ($do_msg_mps deduplicated)\n#######\n" if ($debug > 2);
@@ -377,10 +370,10 @@ while (my $msg = <STDIN>) {
             %mne_cache = ();
         }
         # Temp: exit after 5 minutes for testing
-        if ($#mpm == 5) {
+        #if ($#mpm == 5) {
             #print STDOUT "Test Exit\n";
             #exit;
-        }
+            #}
         if ($#mpm == 60) {
             push(@mph, "chart_mph_$hr,$mph,$now");
             $db_insert_mpX->execute("chart_mph_$hr", "$mph", "$now");
@@ -406,27 +399,11 @@ while (my $msg = <STDIN>) {
     my $now = strftime("%Y-%m-%d %H:%M:%S", localtime);
     print LOG "LOOP END: $now\n-=-=-=-=-=-=-=-=-=\n" if ($debug > 10);
 }
-#$dbh->disconnect();
-#close(LOG);
-#exit;
 
 # Subs
 sub round {
     my($number) = shift;
     return int($number + .5);
-}
-# Usage: print "54 = " . dec2bin(54) . "\n";
-# returns: 54 = 110110
-sub dec2bin {
-    my $str = unpack("B32", pack("N", shift));
-    #$str =~ s/^0+(?=\d)//;   # otherwise you'll get leading zeros
-    $str = substr($str, -8); # used substr instead to pad to 8bit
-    return $str;
-}
-# usage: print "0110110 = " . bin2dec('0110110') . "\n";
-# returns: 0110110 = 54
-sub bin2dec {
-    return unpack("N", pack("B32", substr("0" x 32 . shift, -32)));
 }
 sub do_msg {
     $msg = shift;
@@ -443,7 +420,7 @@ sub do_msg {
 
     # Get incoming variables from PIPE
     if ($msg =~ m/$re_pipe/) {
-        # v3.0 Fields are: Host, PRI, Unix TS, Program,  and MSG
+        # v3.0 Fields are: Host, PRI, Program,  and MSG
         $host = $1;
         $pri = $2;
         $facility = int($pri/8);

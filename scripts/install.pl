@@ -2,10 +2,10 @@
 
 #
 # install.pl
+# Last updated on 2010-04-23
 #
 # Developed by Clayton Dukes <cdukes@cdukes.com>
-# Copyright (c) 2009 gdd.net
-# Licensed under terms of GNU General Public License.
+# Copyright (c) 2010 LogZilla, LLC
 # All rights reserved.
 #
 # Changelog:
@@ -38,7 +38,7 @@ sub p {
 }
 
 my $version = "3.0";
-my $subversion = ".19";
+my $subversion = ".27";
 
 # Grab the base path
 my $lzbase = getcwd;
