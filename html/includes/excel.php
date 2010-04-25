@@ -97,10 +97,11 @@ if ($_POST['dbid']){
    	$objPHPExcel->getActiveSheet()->SetCellValue('C1', 'Facility');
    	$objPHPExcel->getActiveSheet()->SetCellValue('D1', 'Priority');
    	$objPHPExcel->getActiveSheet()->SetCellValue('E1', 'Program');
-   	$objPHPExcel->getActiveSheet()->SetCellValue('F1', 'First Occurence');
-   	$objPHPExcel->getActiveSheet()->SetCellValue('G1', 'Last Occurence');
-   	$objPHPExcel->getActiveSheet()->SetCellValue('H1', 'Count');
-    $objPHPExcel->getActiveSheet()->SetCellValue('I1', 'Message');
+   	$objPHPExcel->getActiveSheet()->SetCellValue('F1', 'Mnemonic');
+   	$objPHPExcel->getActiveSheet()->SetCellValue('G1', 'First Occurence');
+   	$objPHPExcel->getActiveSheet()->SetCellValue('H1', 'Last Occurence');
+   	$objPHPExcel->getActiveSheet()->SetCellValue('I1', 'Count');
+    $objPHPExcel->getActiveSheet()->SetCellValue('J1', 'Message');
 
 	$objPHPExcel->getActiveSheet()->duplicateStyleArray(
 		   	array(
@@ -125,7 +126,7 @@ if ($_POST['dbid']){
 						),
 					),
 					),
-			   	'A1:I1'
+			   	'A1:J1'
 					);
 
 	for($i=0; $i < count($result_array); $i++) {
@@ -139,19 +140,20 @@ if ($_POST['dbid']){
             $objPHPExcel->getActiveSheet()->getStyle("A{$r}")->getNumberFormat()->setFormatCode('0');
             // $objPHPExcel->getActiveSheet()->SetCellValue("B{$r}", $row['seq']);
             $objPHPExcel->getActiveSheet()->SetCellValue("B{$r}", $row['host']);
-            $objPHPExcel->getActiveSheet()->SetCellValue("C{$r}", $row['facility']);
-            $objPHPExcel->getActiveSheet()->SetCellValue("D{$r}", $row['severity']);
-            $objPHPExcel->getActiveSheet()->SetCellValue("E{$r}", $row['program']);
-            $objPHPExcel->getActiveSheet()->SetCellValue("F{$r}", $row['fo']);
-            $objPHPExcel->getActiveSheet()->SetCellValue("G{$r}", $row['lo']);
-            $objPHPExcel->getActiveSheet()->SetCellValue("H{$r}", $row['counter']);
-            $objPHPExcel->getActiveSheet()->getStyle("H{$r}")->getAlignment()->setHorizontal(PHPExcel_Style_Alignment::HORIZONTAL_LEFT);
+            $objPHPExcel->getActiveSheet()->SetCellValue("C{$r}", int2fac($row['facility']));
+            $objPHPExcel->getActiveSheet()->SetCellValue("D{$r}", int2sev($row['severity']));
+            $objPHPExcel->getActiveSheet()->SetCellValue("E{$r}", crc2prg($row['program']));
+            $objPHPExcel->getActiveSheet()->SetCellValue("F{$r}", crc2mne($row['mne']));
+            $objPHPExcel->getActiveSheet()->SetCellValue("G{$r}", $row['fo']);
+            $objPHPExcel->getActiveSheet()->SetCellValue("H{$r}", $row['lo']);
+            $objPHPExcel->getActiveSheet()->SetCellValue("I{$r}", $row['counter']);
+            $objPHPExcel->getActiveSheet()->getStyle("J{$r}")->getAlignment()->setHorizontal(PHPExcel_Style_Alignment::HORIZONTAL_LEFT);
         if ($_POST['rpt_type'] !== "pdf") {
-            $objPHPExcel->getActiveSheet()->SetCellValue("I{$r}", $row['msg']);
+            $objPHPExcel->getActiveSheet()->SetCellValue("J{$r}", $row['msg']);
         } else {
             // Wrap long messages so that it fits in a pdf page.
             $msg = wordwrap($row['msg'], 40, "\n");
-            $objPHPExcel->getActiveSheet()->SetCellValue("I{$r}", $msg);
+            $objPHPExcel->getActiveSheet()->SetCellValue("J{$r}", $msg);
         }
 	   	if ( $r&1 ) {
 		   	$objPHPExcel->getActiveSheet()->duplicateStyleArray(
@@ -163,7 +165,7 @@ if ($_POST['dbid']){
 								),
 							),
 						),
-				   	"A${r}:I${r}"
+				   	"A${r}:J${r}"
 					);
 	   	} else {
 		   	$objPHPExcel->getActiveSheet()->duplicateStyleArray(
@@ -175,7 +177,7 @@ if ($_POST['dbid']){
 								),
 							),
 						),
-				   	"A${r}:I${r}"
+				   	"A${r}:J${r}"
 					);
 	   	}
    	}
@@ -185,7 +187,7 @@ if ($_POST['dbid']){
    	$objPHPExcel->getActiveSheet()->setTitle("$datetime");
    	// Autosize Columns
 	// This doesn't seem to work and I don't know why - I searched the documentation and forums for PHPExcel but still couldn't get it to work
-   	foreach(range('A', 'I') as $columnID) {
+   	foreach(range('A', 'J') as $columnID) {
         $objPHPExcel->getActiveSheet()->getColumnDimension("$columnID")->setAutoSize(true);
    	}
 
