@@ -2,7 +2,7 @@
 
 #
 # install.pl
-# Last updated on 2010-04-23
+# Last updated on 2010-04-26
 #
 # Developed by Clayton Dukes <cdukes@cdukes.com>
 # Copyright (c) 2010 LogZilla, LLC

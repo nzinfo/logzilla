@@ -153,13 +153,13 @@ function secure () {
 }
 function auth ($postvars) {
     $error = "";
-    $username = $postvars["username"];
-    $password = $postvars["password"];
-
-    switch ($postvars['authtype']) {
+    $username = stripslashes($postvars["username"]);
+    $password = stripslashes($postvars["password"]);
+    if (validate_input($username, 'username') && (validate_input($password, 'password'))) {
+        switch ($postvars['authtype']) {
 
         case "local":
-            if ($_POST["username"] && $_POST["username"] !== "local_noauth") {
+            if ($username && $username !== "local_noauth") {
                 $dbLink = db_connect_syslog(DBADMIN, DBADMINPW);
                 if ($username && $password && verify_login($username, $password, $dbLink)) {
                     $error ="";
@@ -328,5 +328,8 @@ function auth ($postvars) {
             return $_SESSION["username"] = $username;
         }
         break;
+    }
+    } else {
+        return $_SESSION["error"] = "Invalid Username or Password";
     }
 }

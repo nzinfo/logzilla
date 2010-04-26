@@ -1,6 +1,6 @@
 <?php
 // Copyright (c) 2010 LogZilla, LLC, cdukes@cdukes.com
-// Last updated on 2010-04-23
+// Last updated on 2010-04-26
 
 //----------------------------------------------------------------------------------------
 // This is a simple menu layout for the top menu on the search page
