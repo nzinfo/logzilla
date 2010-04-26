@@ -4,7 +4,6 @@
 $basePath = dirname( __FILE__ );
 require_once ($basePath ."/../config/config.php");
 require_once ($basePath ."/modules/authentication.php");
-require_once ($basePath ."/../input.class.php");
 
 error_reporting(E_ALL & ~E_NOTICE);
 
