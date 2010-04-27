@@ -199,6 +199,10 @@ if ($ok =~ /[Yy]/) {
     my $res = `mysql -u$dbroot -p$dbrootpass $dbname < sql/severities.sql`;
     print $res;
 
+# Create ban table
+    my $res = `mysql -u$dbroot -p$dbrootpass $dbname < sql/banned_ips.sql`;
+    print $res;
+
 # Insert settings data
     my $res = `mysql -u$dbroot -p$dbrootpass $dbname < sql/settings.sql`;
     print $res;

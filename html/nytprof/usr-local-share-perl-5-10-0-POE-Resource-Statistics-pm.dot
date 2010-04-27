@@ -1,9 +1,0 @@
-digraph {
-graph [overlap=false]
-subgraph cluster_POE_Kernel {
-	label="POE::Kernel";
-	"POE::Kernel::_data_ev_dispatch_due";
-	"POE::Kernel::_data_stat_add";
-}
-"POE::Kernel::_data_ev_dispatch_due" -> "POE::Kernel::_data_stat_add";
-}
