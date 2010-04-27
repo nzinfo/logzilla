@@ -89,7 +89,7 @@ $().ready(function(){
         });
 </script>
 <!-- END 404 -->
-    <?
+    <?php
     exit;
 }
 
