@@ -149,8 +149,8 @@ if ($_POST) {
 	   	<td align="center" valign="middle">
 	   	<SELECT NAME="authtype" STYLE="width: 120px;">  
         <OPTION VALUE="local">Local
-        <?php if($_SESSION['LDAP_ENABLE'] == "1") { ?>
-            <OPTION VALUE="ldap">LDAP 
+        <?php if($_SESSION['AUTHTYPE'] == "ldap") { ?>
+            <OPTION SELECTED VALUE="ldap">LDAP 
         <?php } ?>
         <!--<OPTION VALUE="webbasic">Web Basic 
         <OPTION VALUE="msad">MS AD 
