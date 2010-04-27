@@ -152,6 +152,28 @@ function secure () {
     }
 }
 function auth ($postvars) {
+	//Start security update v0.1 
+	global $appConfig;
+	if($appConfig['ban_ip'] == "on" && $appConfig['max_login_tries']<=$_SESSION['num_login_tries']) {
+		//insert ip into banned table
+		$expdate = time()+$appConfig['ban_time']*60;
+		mysql_query("INSERT INTO banned_ips(bannedIp,expirationDate) VALUES('{$_SERVER['REMOTE_ADDR']}','".date("Y-m-d h:m:s",$expdate)."')");
+	}
+	
+	if($appConfig['captcha']=='on' && $appConfig['num_login_tries']<=$_SESSION['num_login_tries']) {
+		require_once('includes/modules/recaptchalib.php');
+		$resp = recaptcha_check_answer ($appConfig['captcha_private_key'],
+                                $_SERVER["REMOTE_ADDR"],
+                                $_POST["recaptcha_challenge_field"],
+                                $_POST["recaptcha_response_field"]);
+		
+		if (!$resp->is_valid) {
+			return $_SESSION["error"] = "The CAPTCHA wasn't entered correctly. Go back and try it again." .
+			"(CAPTCHA said: " . $resp->error . ")";
+		}
+	}
+	//End security update v0.1
+	
     $error = "";
     $username = stripslashes($postvars["username"]);
     $password = stripslashes($postvars["password"]);
@@ -171,6 +193,9 @@ function auth ($postvars) {
                 if (trim($password) == "") $error .= "Your password is empty.";
             }
         if (trim($error)!="") {
+			//Start security update v0.1
+			$_SESSION['num_login_tries']+=1;
+			//End security update v0.1
             return $_SESSION["error"] = $error;
         } else {
             return $_SESSION["username"] = $username;
@@ -239,6 +264,9 @@ function auth ($postvars) {
 		   	} 
 		}
 	   	if ( trim($error) != "" ) {
+			//Start security update v0.1
+			$_SESSION['num_login_tries']+=1;
+			//End security update v0.1
 		   	return $_SESSION["error"] = $error;
 	   	} else {
 
@@ -278,6 +306,9 @@ function auth ($postvars) {
 	   	}
 		/* from here, do your sql query to query the database to search for existing record with correct username and password */
         if (trim($error)!="") {
+			//Start security update v0.1
+			$_SESSION['num_login_tries']+=1;
+			//End security update v0.1
             return $_SESSION["error"] = $error;
         } else {
             return $_SESSION["username"] = $username;
@@ -287,6 +318,9 @@ function auth ($postvars) {
         case "webbasic":
             $error .= "Web Basic not implemented yet";
         if (trim($error)!="") {
+			//Start security update v0.1
+			$_SESSION['num_login_tries']+=1;
+			//End security update v0.1
             return $_SESSION["error"] = $error;
         } else {
             return $_SESSION["username"] = $username;
@@ -296,6 +330,9 @@ function auth ($postvars) {
         case "msad":
             $error .= "Microsoft Authentication not implemented yet";
         if (trim($error)!="") {
+			//Start security update v0.1
+			$_SESSION['num_login_tries']+=1;
+			//End security update v0.1
             return $_SESSION["error"] = $error;
         } else {
             return $_SESSION["username"] = $username;
@@ -305,6 +342,9 @@ function auth ($postvars) {
         case "cert":
             $error .= "SSL Certificate Authentication not implemented yet";
         if (trim($error)!="") {
+			//Start security update v0.1
+			$_SESSION['num_login_tries']+=1;
+			//End security update v0.1
             return $_SESSION["error"] = $error;
         } else {
             return $_SESSION["username"] = $username;
@@ -314,6 +354,9 @@ function auth ($postvars) {
         case "tacacs":
             $error .= "Tacacs Authentication not implemented yet";
         if (trim($error)!="") {
+			//Start security update v0.1
+			$_SESSION['num_login_tries']+=1;
+			//End security update v0.1
             return $_SESSION["error"] = $error;
         } else {
             return $_SESSION["username"] = $username;
@@ -323,6 +366,9 @@ function auth ($postvars) {
         case "radius":
             $error .= "Radius Authentication not implemented yet";
         if (trim($error)!="") {
+			//Start security update v0.1
+			$_SESSION['num_login_tries']+=1;
+			//End security update v0.1
             return $_SESSION["error"] = $error;
         } else {
             return $_SESSION["username"] = $username;
@@ -330,6 +376,9 @@ function auth ($postvars) {
         break;
     }
     } else {
+		//Start security update v0.1
+		$_SESSION['num_login_tries']+=1;
+		//End security update v0.1
         return $_SESSION["error"] = "Invalid Username or Password";
     }
 }

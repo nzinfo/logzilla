@@ -1,0 +1,21 @@
+digraph {
+graph [overlap=false]
+subgraph cluster_Symbol {
+	label="Symbol";
+	"Symbol::gensym";
+}
+subgraph cluster_POE_Kernel {
+	label="POE::Kernel";
+	"POE::Kernel::_data_sig_pipe_build";
+}
+subgraph cluster_POE_Pipe_OneWay {
+	label="POE::Pipe::OneWay";
+	"POE::Pipe::OneWay::CORE:select";
+	"POE::Pipe::OneWay::new";
+	"POE::Pipe::OneWay::_try_type";
+}
+"POE::Pipe::OneWay::_try_type" -> "POE::Pipe::OneWay::CORE:select";
+"POE::Pipe::OneWay::new" -> "POE::Pipe::OneWay::_try_type";
+"POE::Kernel::_data_sig_pipe_build" -> "POE::Pipe::OneWay::new";
+"POE::Pipe::OneWay::new" -> "Symbol::gensym";
+}

@@ -1,0 +1,11 @@
+digraph {
+graph [overlap=false]
+subgraph cluster_POE_Kernel {
+	label="POE::Kernel";
+	"POE::Kernel::_data_sig_cease_polling";
+	"POE::Kernel::loop_ignore_signal";
+	"POE::Kernel::_data_sig_initialize";
+}
+"POE::Kernel::_data_sig_initialize" -> "POE::Kernel::loop_ignore_signal";
+"POE::Kernel::loop_ignore_signal" -> "POE::Kernel::_data_sig_cease_polling";
+}

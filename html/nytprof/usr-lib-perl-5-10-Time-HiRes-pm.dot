@@ -1,0 +1,50 @@
+digraph {
+graph [overlap=false]
+subgraph cluster_DynaLoader {
+	label="DynaLoader";
+	"DynaLoader::bootstrap";
+}
+subgraph cluster_POE_Kernel {
+	label="POE::Kernel";
+	"POE::Kernel::_data_ev_dispatch_due";
+	"POE::Kernel::loop_do_timeslice";
+	"POE::Kernel::ID";
+	"POE::Kernel::_load_loop";
+	"POE::Kernel::delay";
+	"POE::Kernel::session_alloc";
+}
+subgraph cluster_Log_Log4perl_Util_TimeTracker {
+	label="Log::Log4perl::Util::TimeTracker";
+	"Log::Log4perl::Util::TimeTracker::_gettimeofday";
+}
+subgraph cluster_POE {
+	label="POE";
+	"POE::import";
+}
+subgraph cluster_Exporter_Heavy {
+	label="Exporter::Heavy";
+	"Exporter::Heavy::heavy_export_to_level";
+}
+subgraph cluster_Time_HiRes {
+	label="Time::HiRes";
+	"Time::HiRes::gettimeofday";
+	"Time::HiRes::import";
+	"Time::HiRes::time";
+	"Time::HiRes::bootstrap";
+}
+subgraph cluster_Exporter {
+	label="Exporter";
+	"Exporter::export_to_level";
+}
+"DynaLoader::bootstrap" -> "Time::HiRes::bootstrap";
+"Time::HiRes::import" -> "Exporter::export_to_level";
+"Time::HiRes::import" -> "Exporter::Heavy::heavy_export_to_level";
+"Log::Log4perl::Util::TimeTracker::_gettimeofday" -> "Time::HiRes::gettimeofday";
+"POE::Kernel::_data_ev_dispatch_due" -> "Time::HiRes::time";
+"POE::Kernel::loop_do_timeslice" -> "Time::HiRes::time";
+"POE::Kernel::_load_loop" -> "Time::HiRes::time";
+"POE::Kernel::ID" -> "Time::HiRes::time";
+"POE::Kernel::delay" -> "Time::HiRes::time";
+"POE::Kernel::session_alloc" -> "Time::HiRes::time";
+"POE::import" -> "Time::HiRes::import";
+}

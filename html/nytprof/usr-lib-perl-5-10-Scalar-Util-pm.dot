@@ -1,0 +1,23 @@
+digraph {
+graph [overlap=false]
+subgraph cluster_vars {
+	label="vars";
+	"vars::import";
+}
+subgraph cluster_main {
+	label="main";
+	"main::BEGIN";
+}
+subgraph cluster_strict {
+	label="strict";
+	"strict::import";
+}
+subgraph cluster_Scalar_Util {
+	label="Scalar::Util";
+	"Scalar::Util::BEGIN";
+	"Scalar::Util::weaken";
+}
+"main::BEGIN" -> "Scalar::Util::weaken";
+"Scalar::Util::BEGIN" -> "vars::import";
+"Scalar::Util::BEGIN" -> "strict::import";
+}

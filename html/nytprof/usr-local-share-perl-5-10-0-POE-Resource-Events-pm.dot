@@ -1,0 +1,56 @@
+digraph {
+graph [overlap=false]
+subgraph cluster_POE_Queue_Array {
+	label="POE::Queue::Array";
+	"POE::Queue::Array::get_next_priority";
+	"POE::Queue::Array::get_item_count";
+	"POE::Queue::Array::enqueue";
+	"POE::Queue::Array::dequeue_next";
+	"POE::Queue::Array::remove_items";
+}
+subgraph cluster_POE_Kernel {
+	label="POE::Kernel";
+	"POE::Kernel::alarm";
+	"POE::Kernel::loop_resume_time_watcher";
+	"POE::Kernel::loop_do_timeslice";
+	"POE::Kernel::_data_ses_gc_sweep";
+	"POE::Kernel::_data_ses_refcount_dec";
+	"POE::Kernel::_data_stat_add";
+	"POE::Kernel::new";
+	"POE::Kernel::_data_ses_refcount_inc";
+	"POE::Kernel::_data_ev_dispatch_due";
+	"POE::Kernel::session_alloc";
+	"POE::Kernel::_data_ev_initialize";
+	"POE::Kernel::_data_ev_enqueue";
+	"POE::Kernel::loop_reset_time_watcher";
+	"POE::Kernel::_data_ev_clear_alarm_by_name";
+	"POE::Kernel::_data_ev_refcount_dec";
+	"POE::Kernel::__ANON__[POE/Resource/Events.pm:143]";
+	"POE::Kernel::_dispatch_event";
+}
+subgraph cluster_Time_HiRes {
+	label="Time::HiRes";
+	"Time::HiRes::time";
+}
+"POE::Kernel::_data_ev_enqueue" -> "POE::Kernel::loop_resume_time_watcher";
+"POE::Kernel::_data_ev_dispatch_due" -> "POE::Kernel::_data_ses_gc_sweep";
+"POE::Kernel::_data_ev_dispatch_due" -> "POE::Kernel::_data_stat_add";
+"POE::Kernel::_data_ev_refcount_dec" -> "POE::Kernel::_data_ses_refcount_dec";
+"POE::Kernel::_data_ev_enqueue" -> "POE::Kernel::_data_ses_refcount_inc";
+"POE::Kernel::loop_do_timeslice" -> "POE::Kernel::_data_ev_dispatch_due";
+"POE::Kernel::_data_ev_enqueue" -> "POE::Queue::Array::enqueue";
+"POE::Kernel::_data_ev_clear_alarm_by_name" -> "POE::Queue::Array::remove_items";
+"POE::Kernel::new" -> "POE::Kernel::_data_ev_initialize";
+"POE::Kernel::alarm" -> "POE::Kernel::_data_ev_enqueue";
+"POE::Kernel::session_alloc" -> "POE::Kernel::_data_ev_enqueue";
+"POE::Kernel::_data_ev_dispatch_due" -> "POE::Kernel::loop_reset_time_watcher";
+"POE::Kernel::alarm" -> "POE::Kernel::_data_ev_clear_alarm_by_name";
+"POE::Kernel::_data_ev_dispatch_due" -> "POE::Kernel::_dispatch_event";
+"POE::Kernel::_data_ev_dispatch_due" -> "Time::HiRes::time";
+"POE::Kernel::_data_ev_dispatch_due" -> "POE::Queue::Array::dequeue_next";
+"POE::Kernel::_data_ev_dispatch_due" -> "POE::Queue::Array::get_next_priority";
+"POE::Kernel::_data_ev_enqueue" -> "POE::Queue::Array::get_next_priority";
+"POE::Kernel::_data_ev_dispatch_due" -> "POE::Kernel::_data_ev_refcount_dec";
+"POE::Queue::Array::remove_items" -> "POE::Kernel::__ANON__[POE/Resource/Events.pm:143]";
+"POE::Kernel::_data_ev_enqueue" -> "POE::Queue::Array::get_item_count";
+}

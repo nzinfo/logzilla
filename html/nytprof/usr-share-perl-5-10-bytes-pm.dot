@@ -1,0 +1,12 @@
+digraph {
+graph [overlap=false]
+subgraph cluster_POE {
+	label="POE";
+	"POE::import";
+}
+subgraph cluster_bytes {
+	label="bytes";
+	"bytes::import";
+}
+"POE::import" -> "bytes::import";
+}

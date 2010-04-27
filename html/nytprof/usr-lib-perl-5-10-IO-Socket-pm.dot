@@ -1,0 +1,26 @@
+digraph {
+graph [overlap=false]
+subgraph cluster_IO_Socket {
+	label="IO::Socket";
+	"IO::Socket::CORE:pack";
+	"IO::Socket::import";
+	"IO::Socket::register_domain";
+}
+subgraph cluster_POE_Resources {
+	label="POE::Resources";
+	"POE::Resources::load";
+}
+subgraph cluster_Exporter_Heavy {
+	label="Exporter::Heavy";
+	"Exporter::Heavy::heavy_export";
+}
+subgraph cluster_Exporter {
+	label="Exporter";
+	"Exporter::export";
+}
+"POE::Resources::load" -> "IO::Socket::register_domain";
+"POE::Resources::load" -> "IO::Socket::CORE:pack";
+"IO::Socket::import" -> "Exporter::export";
+"POE::Resources::load" -> "IO::Socket::import";
+"IO::Socket::import" -> "Exporter::Heavy::heavy_export";
+}

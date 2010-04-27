@@ -1,0 +1,27 @@
+digraph {
+graph [overlap=false]
+subgraph cluster_POE_Wheel_FollowTail {
+	label="POE::Wheel::FollowTail";
+	"POE::Wheel::FollowTail::__ANON__[POE/Wheel/FollowTail.pm:579]";
+	"POE::Wheel::FollowTail::new";
+}
+subgraph cluster_POE_Filter {
+	label="POE::Filter";
+	"POE::Filter::get";
+}
+subgraph cluster_POE_Filter_Line {
+	label="POE::Filter::Line";
+	"POE::Filter::Line::CORE:regcomp";
+	"POE::Filter::Line::get_one_start";
+	"POE::Filter::Line::get_one";
+	"POE::Filter::Line::new";
+	"POE::Filter::Line::CORE:subst";
+}
+"POE::Wheel::FollowTail::__ANON__[POE/Wheel/FollowTail.pm:579]" -> "POE::Filter::Line::get_one_start";
+"POE::Filter::get" -> "POE::Filter::Line::get_one_start";
+"POE::Filter::Line::get_one" -> "POE::Filter::Line::CORE:subst";
+"POE::Filter::Line::get_one" -> "POE::Filter::Line::CORE:regcomp";
+"POE::Wheel::FollowTail::__ANON__[POE/Wheel/FollowTail.pm:579]" -> "POE::Filter::Line::get_one";
+"POE::Filter::get" -> "POE::Filter::Line::get_one";
+"POE::Wheel::FollowTail::new" -> "POE::Filter::Line::new";
+}

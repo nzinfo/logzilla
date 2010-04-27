@@ -1,0 +1,12 @@
+digraph {
+graph [overlap=false]
+subgraph cluster_POE_Wheel_FollowTail {
+	label="POE::Wheel::FollowTail";
+	"POE::Wheel::FollowTail::new";
+}
+subgraph cluster_POE_Wheel {
+	label="POE::Wheel";
+	"POE::Wheel::allocate_wheel_id";
+}
+"POE::Wheel::FollowTail::new" -> "POE::Wheel::allocate_wheel_id";
+}

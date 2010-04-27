@@ -1,0 +1,99 @@
+digraph {
+graph [overlap=false]
+subgraph cluster_POE_Wheel_FollowTail {
+	label="POE::Wheel::FollowTail";
+	"POE::Wheel::FollowTail::BEGIN";
+}
+subgraph cluster_POE_Queue_Array {
+	label="POE::Queue::Array";
+	"POE::Queue::Array::import";
+}
+subgraph cluster_DynaLoader {
+	label="DynaLoader";
+	"DynaLoader::bootstrap";
+}
+subgraph cluster_POE_Session {
+	label="POE::Session";
+	"POE::Session::_define_assert";
+	"POE::Session::import";
+	"POE::Session::_define_trace";
+}
+subgraph cluster_warnings {
+	label="warnings";
+	"warnings::import";
+}
+subgraph cluster_POE_Kernel {
+	label="POE::Kernel";
+	"POE::Kernel::_define_assert";
+	"POE::Kernel::import";
+	"POE::Kernel::_define_trace";
+	"POE::Kernel::__ANON__";
+	"POE::Kernel::__ANON__[POE/Kernel.pm:89]";
+	"POE::Kernel::CORE:match";
+}
+subgraph cluster_vars {
+	label="vars";
+	"vars::import";
+}
+subgraph cluster_main {
+	label="main";
+	"main::BEGIN";
+}
+subgraph cluster_strict {
+	label="strict";
+	"strict::import";
+	"strict::unimport";
+}
+subgraph cluster_POE {
+	label="POE";
+	"POE::CORE:match";
+	"POE::BEGIN";
+	"POE::import";
+}
+subgraph cluster_XSLoader {
+	label="XSLoader";
+	"XSLoader::load";
+}
+subgraph cluster_bytes {
+	label="bytes";
+	"bytes::import";
+}
+subgraph cluster_POSIX {
+	label="POSIX";
+	"POSIX::import";
+}
+subgraph cluster_Time_HiRes {
+	label="Time::HiRes";
+	"Time::HiRes::import";
+}
+subgraph cluster_Exporter {
+	label="Exporter";
+	"Exporter::import";
+}
+"POE::import" -> "POE::Session::_define_trace";
+"POE::import" -> "POE::Kernel::_define_trace";
+"POE::import" -> "POE::CORE:match";
+"POE::import" -> "POE::Kernel::CORE:match";
+"POE::import" -> "bytes::import";
+"POE::BEGIN" -> "vars::import";
+"POE::import" -> "vars::import";
+"POE::import" -> "POE::Queue::Array::import";
+"POE::import" -> "POSIX::import";
+"POE::import" -> "POE::Kernel::import";
+"POE::BEGIN" -> "Exporter::import";
+"POE::import" -> "Exporter::import";
+"POE::import" -> "POE::Session::import";
+"POE::import" -> "DynaLoader::bootstrap";
+"POE::import" -> "POE::Session::_define_assert";
+"POE::import" -> "strict::unimport";
+"POE::import" -> "POE::Kernel::_define_assert";
+"POE::import" -> "POE::Kernel::__ANON__[POE/Kernel.pm:89]";
+"POE::import" -> "Time::HiRes::import";
+"POE::import" -> "XSLoader::load";
+"POE::import" -> "POE::Kernel::__ANON__";
+"POE::import" -> "warnings::import";
+"POE::Wheel::FollowTail::BEGIN" -> "POE::import";
+"main::BEGIN" -> "POE::import";
+"POE::BEGIN" -> "strict::import";
+"POE::import" -> "strict::import";
+}

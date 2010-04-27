@@ -1,0 +1,33 @@
+digraph {
+graph [overlap=false]
+subgraph cluster_DynaLoader {
+	label="DynaLoader";
+	"DynaLoader::bootstrap";
+}
+subgraph cluster_warnings {
+	label="warnings";
+	"warnings::import";
+}
+subgraph cluster_strict {
+	label="strict";
+	"strict::import";
+}
+subgraph cluster_Exporter {
+	label="Exporter";
+	"Exporter::import";
+}
+subgraph cluster_Text_LevenshteinXS {
+	label="Text::LevenshteinXS";
+	"Text::LevenshteinXS::bootstrap";
+	"Text::LevenshteinXS::BEGIN";
+}
+subgraph cluster_AutoLoader {
+	label="AutoLoader";
+	"AutoLoader::import";
+}
+"Text::LevenshteinXS::BEGIN" -> "Exporter::import";
+"DynaLoader::bootstrap" -> "Text::LevenshteinXS::bootstrap";
+"Text::LevenshteinXS::BEGIN" -> "AutoLoader::import";
+"Text::LevenshteinXS::BEGIN" -> "warnings::import";
+"Text::LevenshteinXS::BEGIN" -> "strict::import";
+}

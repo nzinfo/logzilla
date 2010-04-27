@@ -1,0 +1,117 @@
+digraph {
+graph [overlap=false]
+subgraph cluster_POE_Wheel_FollowTail {
+	label="POE::Wheel::FollowTail";
+	"POE::Wheel::FollowTail::BEGIN";
+	"POE::Wheel::FollowTail::__ANON__[POE/Wheel/FollowTail.pm:579]";
+}
+subgraph cluster_warnings {
+	label="warnings";
+	"warnings::unimport";
+	"warnings::CORE:regcomp";
+	"warnings::CORE:match";
+	"warnings::import";
+}
+subgraph cluster_POE_Kernel {
+	label="POE::Kernel";
+	"POE::Kernel::_data_sig_mask_all";
+	"POE::Kernel::_data_sig_unmask_all";
+	"POE::Kernel::ID";
+	"POE::Kernel::_data_sig_pipe_build";
+}
+subgraph cluster_vars {
+	label="vars";
+	"vars::import";
+}
+subgraph cluster_main {
+	label="main";
+	"main::do_msg";
+	"main::BEGIN";
+	"main::RUNTIME";
+}
+subgraph cluster_strict {
+	label="strict";
+	"strict::import";
+	"strict::unimport";
+}
+subgraph cluster_POE {
+	label="POE";
+	"POE::import";
+}
+subgraph cluster_POSIX_SigAction {
+	label="POSIX::SigAction";
+	"POSIX::SigAction::BEGIN";
+}
+subgraph cluster_POSIX {
+	label="POSIX";
+	"POSIX::BEGIN";
+	"POSIX::croak";
+	"POSIX::int_macro_int";
+	"POSIX::load_imports";
+	"POSIX::uname";
+	"POSIX::CORE:subst";
+	"POSIX::AUTOLOAD";
+	"POSIX::import";
+	"POSIX::constant";
+	"POSIX::strftime";
+	"POSIX::CORE:match";
+	"POSIX::__ANON__[POSIX.pm:55]";
+	"POSIX::sigprocmask";
+}
+subgraph cluster_POE_Resources {
+	label="POE::Resources";
+	"POE::Resources::load";
+}
+subgraph cluster_POSIX_SigRt {
+	label="POSIX::SigRt";
+	"POSIX::SigRt::BEGIN";
+}
+subgraph cluster_Exporter {
+	label="Exporter";
+	"Exporter::import";
+}
+subgraph cluster_Carp {
+	label="Carp";
+	"Carp::croak";
+}
+subgraph cluster_AutoLoader {
+	label="AutoLoader";
+	"AutoLoader::import";
+	"AutoLoader::AUTOLOAD";
+}
+"POSIX::import" -> "POSIX::load_imports";
+"POSIX::AUTOLOAD" -> "POSIX::constant";
+"POSIX::AUTOLOAD" -> "POSIX::CORE:match";
+"POSIX::import" -> "POSIX::CORE:match";
+"POE::Kernel::_data_sig_unmask_all" -> "POSIX::sigprocmask";
+"POE::Kernel::_data_sig_mask_all" -> "POSIX::sigprocmask";
+"POSIX::AUTOLOAD" -> "POSIX::int_macro_int";
+"POSIX::__ANON__[POSIX.pm:55]" -> "POSIX::int_macro_int";
+"POSIX::AUTOLOAD" -> "POSIX::croak";
+"POSIX::SigRt::BEGIN" -> "vars::import";
+"POSIX::AUTOLOAD" -> "POSIX::CORE:subst";
+"POE::Wheel::FollowTail::BEGIN" -> "POSIX::import";
+"main::BEGIN" -> "POSIX::import";
+"POE::Resources::load" -> "POSIX::import";
+"POE::import" -> "POSIX::import";
+"POE::Wheel::FollowTail::__ANON__[POE/Wheel/FollowTail.pm:579]" -> "POSIX::AUTOLOAD";
+"POE::Kernel::_data_sig_pipe_build" -> "POSIX::AUTOLOAD";
+"POSIX::import" -> "POSIX::AUTOLOAD";
+"POSIX::BEGIN" -> "warnings::unimport";
+"POSIX::BEGIN" -> "Exporter::import";
+"POSIX::import" -> "Exporter::import";
+"main::do_msg" -> "POSIX::strftime";
+"main::RUNTIME" -> "POSIX::strftime";
+"POE::Wheel::FollowTail::__ANON__[POE/Wheel/FollowTail.pm:579]" -> "POSIX::__ANON__[POSIX.pm:55]";
+"POSIX::BEGIN" -> "strict::unimport";
+"POSIX::BEGIN" -> "warnings::CORE:match";
+"POSIX::AUTOLOAD" -> "Carp::croak";
+"POSIX::BEGIN" -> "AutoLoader::import";
+"POSIX::SigAction::BEGIN" -> "AutoLoader::import";
+"POSIX::SigRt::BEGIN" -> "AutoLoader::import";
+"POE::Kernel::ID" -> "POSIX::uname";
+"POSIX::BEGIN" -> "warnings::import";
+"POSIX::import" -> "AutoLoader::AUTOLOAD";
+"POSIX::BEGIN" -> "warnings::CORE:regcomp";
+"POSIX::BEGIN" -> "strict::import";
+}

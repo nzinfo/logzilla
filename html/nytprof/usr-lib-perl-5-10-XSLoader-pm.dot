@@ -1,0 +1,27 @@
+digraph {
+graph [overlap=false]
+subgraph cluster_main {
+	label="main";
+	"main::BEGIN";
+}
+subgraph cluster_POE {
+	label="POE";
+	"POE::import";
+}
+subgraph cluster_XSLoader {
+	label="XSLoader";
+	"XSLoader::load";
+}
+subgraph cluster_Fcntl {
+	label="Fcntl";
+	"Fcntl::BEGIN";
+}
+subgraph cluster_POE_Resources {
+	label="POE::Resources";
+	"POE::Resources::load";
+}
+"main::BEGIN" -> "XSLoader::load";
+"Fcntl::BEGIN" -> "XSLoader::load";
+"POE::Resources::load" -> "XSLoader::load";
+"POE::import" -> "XSLoader::load";
+}

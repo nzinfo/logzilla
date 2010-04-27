@@ -1,0 +1,54 @@
+digraph {
+graph [overlap=false]
+subgraph cluster_Log_Log4perl_Layout_PatternLayout {
+	label="Log::Log4perl::Layout::PatternLayout";
+	"Log::Log4perl::Layout::PatternLayout::BEGIN";
+}
+subgraph cluster_POE_Wheel_FollowTail {
+	label="POE::Wheel::FollowTail";
+	"POE::Wheel::FollowTail::BEGIN";
+}
+subgraph cluster_Log_Log4perl_Layout_PatternLayout_Multiline {
+	label="Log::Log4perl::Layout::PatternLayout::Multiline";
+	"Log::Log4perl::Layout::PatternLayout::Multiline::BEGIN";
+}
+subgraph cluster_base {
+	label="base";
+	"base::BEGIN";
+	"base::has_fields";
+	"base::has_version";
+	"base::has_attr";
+	"base::import";
+}
+subgraph cluster_Log_Log4perl_Layout_SimpleLayout {
+	label="Log::Log4perl::Layout::SimpleLayout";
+	"Log::Log4perl::Layout::SimpleLayout::BEGIN";
+}
+subgraph cluster_vars {
+	label="vars";
+	"vars::import";
+}
+subgraph cluster_strict {
+	label="strict";
+	"strict::import";
+}
+subgraph cluster_UNIVERSAL {
+	label="UNIVERSAL";
+	"UNIVERSAL::isa";
+}
+subgraph cluster_Log_Log4perl_Filter_Boolean {
+	label="Log::Log4perl::Filter::Boolean";
+	"Log::Log4perl::Filter::Boolean::BEGIN";
+}
+"base::import" -> "base::has_version";
+"base::BEGIN" -> "vars::import";
+"base::import" -> "base::has_attr";
+"Log::Log4perl::Layout::PatternLayout::Multiline::BEGIN" -> "base::import";
+"POE::Wheel::FollowTail::BEGIN" -> "base::import";
+"Log::Log4perl::Filter::Boolean::BEGIN" -> "base::import";
+"Log::Log4perl::Layout::SimpleLayout::BEGIN" -> "base::import";
+"Log::Log4perl::Layout::PatternLayout::BEGIN" -> "base::import";
+"base::import" -> "UNIVERSAL::isa";
+"base::import" -> "base::has_fields";
+"base::BEGIN" -> "strict::import";
+}

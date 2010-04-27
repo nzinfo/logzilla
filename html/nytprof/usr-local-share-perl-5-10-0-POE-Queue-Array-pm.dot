@@ -1,0 +1,36 @@
+digraph {
+graph [overlap=false]
+subgraph cluster_POE_Queue_Array {
+	label="POE::Queue::Array";
+	"POE::Queue::Array::get_next_priority";
+	"POE::Queue::Array::get_item_count";
+	"POE::Queue::Array::enqueue";
+	"POE::Queue::Array::import";
+	"POE::Queue::Array::new";
+	"POE::Queue::Array::dequeue_next";
+	"POE::Queue::Array::remove_items";
+}
+subgraph cluster_POE_Kernel {
+	label="POE::Kernel";
+	"POE::Kernel::_data_ev_dispatch_due";
+	"POE::Kernel::new";
+	"POE::Kernel::_test_if_kernel_is_idle";
+	"POE::Kernel::_data_ev_enqueue";
+	"POE::Kernel::__ANON__[POE/Resource/Events.pm:143]";
+	"POE::Kernel::_data_ev_clear_alarm_by_name";
+}
+subgraph cluster_POE {
+	label="POE";
+	"POE::import";
+}
+"POE::Kernel::_data_ev_enqueue" -> "POE::Queue::Array::enqueue";
+"POE::Kernel::_data_ev_clear_alarm_by_name" -> "POE::Queue::Array::remove_items";
+"POE::Kernel::new" -> "POE::Queue::Array::new";
+"POE::import" -> "POE::Queue::Array::import";
+"POE::Kernel::_data_ev_dispatch_due" -> "POE::Queue::Array::dequeue_next";
+"POE::Kernel::_data_ev_dispatch_due" -> "POE::Queue::Array::get_next_priority";
+"POE::Kernel::_data_ev_enqueue" -> "POE::Queue::Array::get_next_priority";
+"POE::Queue::Array::remove_items" -> "POE::Kernel::__ANON__[POE/Resource/Events.pm:143]";
+"POE::Kernel::_data_ev_enqueue" -> "POE::Queue::Array::get_item_count";
+"POE::Kernel::_test_if_kernel_is_idle" -> "POE::Queue::Array::get_item_count";
+}

@@ -1,0 +1,118 @@
+digraph {
+graph [overlap=false]
+subgraph cluster_Symbol {
+	label="Symbol";
+	"Symbol::gensym";
+}
+subgraph cluster_POE_Wheel_FollowTail {
+	label="POE::Wheel::FollowTail";
+	"POE::Wheel::FollowTail::__ANON__[POE/Wheel/FollowTail.pm:579]";
+	"POE::Wheel::FollowTail::CORE:stat";
+	"POE::Wheel::FollowTail::_open_file";
+	"POE::Wheel::FollowTail::_define_timer_states";
+	"POE::Wheel::FollowTail::_generate_filename_timer";
+	"POE::Wheel::FollowTail::BEGIN";
+	"POE::Wheel::FollowTail::CORE:ftpipe";
+	"POE::Wheel::FollowTail::new";
+	"POE::Wheel::FollowTail::CORE:open";
+	"POE::Wheel::FollowTail::CORE:sysseek";
+	"POE::Wheel::FollowTail::CORE:ftfile";
+}
+subgraph cluster_POE_Wheel {
+	label="POE::Wheel";
+	"POE::Wheel::allocate_wheel_id";
+}
+subgraph cluster_POE_Session {
+	label="POE::Session";
+	"POE::Session::_invoke_state";
+}
+subgraph cluster_base {
+	label="base";
+	"base::import";
+}
+subgraph cluster_POE_Kernel {
+	label="POE::Kernel";
+	"POE::Kernel::delay";
+	"POE::Kernel::state";
+	"POE::Kernel::call";
+}
+subgraph cluster_POE_Filter {
+	label="POE::Filter";
+	"POE::Filter::get";
+}
+subgraph cluster_POE_Filter_Line {
+	label="POE::Filter::Line";
+	"POE::Filter::Line::get_one_start";
+	"POE::Filter::Line::get_one";
+	"POE::Filter::Line::new";
+}
+subgraph cluster_vars {
+	label="vars";
+	"vars::import";
+}
+subgraph cluster_main {
+	label="main";
+	"main::__ANON__[/www/svn/logzilla/scripts/db_inse.pl:290]";
+}
+subgraph cluster_strict {
+	label="strict";
+	"strict::import";
+}
+subgraph cluster_POE_Driver_SysRW {
+	label="POE::Driver::SysRW";
+	"POE::Driver::SysRW::get";
+	"POE::Driver::SysRW::new";
+}
+subgraph cluster_POE {
+	label="POE";
+	"POE::import";
+}
+subgraph cluster_IO_Handle {
+	label="IO::Handle";
+	"IO::Handle::clearerr";
+}
+subgraph cluster_POSIX {
+	label="POSIX";
+	"POSIX::AUTOLOAD";
+	"POSIX::import";
+	"POSIX::__ANON__[POSIX.pm:55]";
+}
+subgraph cluster_Exporter {
+	label="Exporter";
+	"Exporter::import";
+}
+"POE::Wheel::FollowTail::new" -> "POE::Wheel::allocate_wheel_id";
+"POE::Wheel::FollowTail::new" -> "POE::Driver::SysRW::new";
+"POE::Wheel::FollowTail::__ANON__[POE/Wheel/FollowTail.pm:579]" -> "POE::Kernel::delay";
+"POE::Wheel::FollowTail::_define_timer_states" -> "POE::Kernel::delay";
+"POE::Wheel::FollowTail::__ANON__[POE/Wheel/FollowTail.pm:579]" -> "POE::Filter::Line::get_one_start";
+"POE::Session::_invoke_state" -> "POE::Wheel::FollowTail::__ANON__[POE/Wheel/FollowTail.pm:579]";
+"POE::Wheel::FollowTail::BEGIN" -> "vars::import";
+"POE::Wheel::FollowTail::__ANON__[POE/Wheel/FollowTail.pm:579]" -> "POE::Wheel::FollowTail::CORE:stat";
+"POE::Wheel::FollowTail::new" -> "POE::Wheel::FollowTail::CORE:stat";
+"POE::Wheel::FollowTail::BEGIN" -> "POSIX::import";
+"POE::Wheel::FollowTail::__ANON__[POE/Wheel/FollowTail.pm:579]" -> "POSIX::AUTOLOAD";
+"POE::Wheel::FollowTail::new" -> "POE::Wheel::FollowTail::_open_file";
+"POE::Wheel::FollowTail::__ANON__[POE/Wheel/FollowTail.pm:579]" -> "POE::Kernel::call";
+"POE::Wheel::FollowTail::_define_timer_states" -> "POE::Wheel::FollowTail::_generate_filename_timer";
+"POE::Wheel::FollowTail::BEGIN" -> "Exporter::import";
+"POE::Wheel::FollowTail::__ANON__[POE/Wheel/FollowTail.pm:579]" -> "POE::Driver::SysRW::get";
+"POE::Wheel::FollowTail::new" -> "POE::Driver::SysRW::get";
+"POE::Wheel::FollowTail::_open_file" -> "POE::Wheel::FollowTail::CORE:ftpipe";
+"POE::Wheel::FollowTail::_open_file" -> "POE::Wheel::FollowTail::CORE:open";
+"POE::Wheel::FollowTail::__ANON__[POE/Wheel/FollowTail.pm:579]" -> "POSIX::__ANON__[POSIX.pm:55]";
+"POE::Wheel::FollowTail::_generate_filename_timer" -> "POE::Kernel::state";
+"POE::Wheel::FollowTail::new" -> "POE::Wheel::FollowTail::_define_timer_states";
+"POE::Wheel::FollowTail::BEGIN" -> "base::import";
+"POE::Wheel::FollowTail::__ANON__[POE/Wheel/FollowTail.pm:579]" -> "POE::Wheel::FollowTail::CORE:sysseek";
+"POE::Wheel::FollowTail::new" -> "POE::Wheel::FollowTail::CORE:sysseek";
+"POE::Wheel::FollowTail::new" -> "POE::Filter::get";
+"POE::Wheel::FollowTail::new" -> "POE::Wheel::FollowTail::CORE:ftfile";
+"POE::Wheel::FollowTail::__ANON__[POE/Wheel/FollowTail.pm:579]" -> "POE::Filter::Line::get_one";
+"POE::Wheel::FollowTail::BEGIN" -> "POE::import";
+"POE::Wheel::FollowTail::_open_file" -> "Symbol::gensym";
+"POE::Wheel::FollowTail::BEGIN" -> "strict::import";
+"main::__ANON__[/www/svn/logzilla/scripts/db_inse.pl:290]" -> "POE::Wheel::FollowTail::new";
+"POE::Wheel::FollowTail::new" -> "POE::Filter::Line::new";
+"POE::Wheel::FollowTail::__ANON__[POE/Wheel/FollowTail.pm:579]" -> "IO::Handle::clearerr";
+}

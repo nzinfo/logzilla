@@ -1,0 +1,126 @@
+digraph {
+graph [overlap=false]
+subgraph cluster_Log_Log4perl_Layout_PatternLayout {
+	label="Log::Log4perl::Layout::PatternLayout";
+	"Log::Log4perl::Layout::PatternLayout::BEGIN";
+}
+subgraph cluster_Log_Log4perl_Config_PropertyConfigurator {
+	label="Log::Log4perl::Config::PropertyConfigurator";
+	"Log::Log4perl::Config::PropertyConfigurator::BEGIN";
+}
+subgraph cluster_Log_Log4perl_Config_BaseConfigurator {
+	label="Log::Log4perl::Config::BaseConfigurator";
+	"Log::Log4perl::Config::BaseConfigurator::BEGIN";
+}
+subgraph cluster_Log_Log4perl_Appender {
+	label="Log::Log4perl::Appender";
+	"Log::Log4perl::Appender::new";
+	"Log::Log4perl::Appender::BEGIN";
+}
+subgraph cluster_Log_Log4perl_Level {
+	label="Log::Log4perl::Level";
+	"Log::Log4perl::Level::BEGIN";
+}
+subgraph cluster_Log_Log4perl_DateFormat {
+	label="Log::Log4perl::DateFormat";
+	"Log::Log4perl::DateFormat::BEGIN";
+}
+subgraph cluster_warnings {
+	label="warnings";
+	"warnings::unimport";
+	"warnings::CORE:regcomp";
+	"warnings::CORE:match";
+	"warnings::import";
+}
+subgraph cluster_Log_Log4perl_Layout_SimpleLayout {
+	label="Log::Log4perl::Layout::SimpleLayout";
+	"Log::Log4perl::Layout::SimpleLayout::BEGIN";
+}
+subgraph cluster_re {
+	label="re";
+	"re::BEGIN";
+}
+subgraph cluster_Log_Log4perl_Config {
+	label="Log::Log4perl::Config";
+	"Log::Log4perl::Config::BEGIN";
+}
+subgraph cluster_Log_Log4perl_Filter {
+	label="Log::Log4perl::Filter";
+	"Log::Log4perl::Filter::BEGIN";
+}
+subgraph cluster_Log_Log4perl_Util_TimeTracker {
+	label="Log::Log4perl::Util::TimeTracker";
+	"Log::Log4perl::Util::TimeTracker::BEGIN";
+}
+subgraph cluster_POE {
+	label="POE";
+	"POE::import";
+}
+subgraph cluster_Log_Log4perl {
+	label="Log::Log4perl";
+	"Log::Log4perl::BEGIN";
+}
+subgraph cluster_Log_Log4perl_MDC {
+	label="Log::Log4perl::MDC";
+	"Log::Log4perl::MDC::BEGIN";
+}
+subgraph cluster_Log_Log4perl_NDC {
+	label="Log::Log4perl::NDC";
+	"Log::Log4perl::NDC::BEGIN";
+}
+subgraph cluster_Log_Log4perl_Logger {
+	label="Log::Log4perl::Logger";
+	"Log::Log4perl::Logger::BEGIN";
+}
+subgraph cluster_POSIX {
+	label="POSIX";
+	"POSIX::BEGIN";
+}
+subgraph cluster_Log_Log4perl_Filter_Boolean {
+	label="Log::Log4perl::Filter::Boolean";
+	"Log::Log4perl::Filter::Boolean::BEGIN";
+}
+subgraph cluster_Exporter {
+	label="Exporter";
+	"Exporter::as_heavy";
+}
+subgraph cluster_Carp {
+	label="Carp";
+	"Carp::shortmess_jmp";
+}
+subgraph cluster_Text_LevenshteinXS {
+	label="Text::LevenshteinXS";
+	"Text::LevenshteinXS::BEGIN";
+}
+subgraph cluster_File_Basename {
+	label="File::Basename";
+	"File::Basename::BEGIN";
+}
+"Log::Log4perl::BEGIN" -> "warnings::unimport";
+"POSIX::BEGIN" -> "warnings::unimport";
+"Exporter::as_heavy" -> "warnings::unimport";
+"Carp::shortmess_jmp" -> "warnings::unimport";
+"POSIX::BEGIN" -> "warnings::CORE:match";
+"Log::Log4perl::Config::BEGIN" -> "warnings::import";
+"Log::Log4perl::MDC::BEGIN" -> "warnings::import";
+"Log::Log4perl::DateFormat::BEGIN" -> "warnings::import";
+"Log::Log4perl::Layout::SimpleLayout::BEGIN" -> "warnings::import";
+"Log::Log4perl::Layout::PatternLayout::BEGIN" -> "warnings::import";
+"Log::Log4perl::Appender::BEGIN" -> "warnings::import";
+"Log::Log4perl::Util::TimeTracker::BEGIN" -> "warnings::import";
+"POSIX::BEGIN" -> "warnings::import";
+"re::BEGIN" -> "warnings::import";
+"Log::Log4perl::Filter::Boolean::BEGIN" -> "warnings::import";
+"Log::Log4perl::Logger::BEGIN" -> "warnings::import";
+"Log::Log4perl::Level::BEGIN" -> "warnings::import";
+"Log::Log4perl::NDC::BEGIN" -> "warnings::import";
+"POE::import" -> "warnings::import";
+"Log::Log4perl::BEGIN" -> "warnings::import";
+"Log::Log4perl::Appender::new" -> "warnings::import";
+"Log::Log4perl::Config::PropertyConfigurator::BEGIN" -> "warnings::import";
+"Log::Log4perl::Filter::BEGIN" -> "warnings::import";
+"Log::Log4perl::Config::BaseConfigurator::BEGIN" -> "warnings::import";
+"Text::LevenshteinXS::BEGIN" -> "warnings::import";
+"File::Basename::BEGIN" -> "warnings::import";
+"POSIX::BEGIN" -> "warnings::CORE:regcomp";
+}

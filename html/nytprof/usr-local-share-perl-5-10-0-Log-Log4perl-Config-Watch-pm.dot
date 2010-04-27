@@ -1,0 +1,12 @@
+digraph {
+graph [overlap=false]
+subgraph cluster_Log_Log4perl_Config_Watch {
+	label="Log::Log4perl::Config::Watch";
+	"Log::Log4perl::Config::Watch::BEGIN";
+}
+subgraph cluster_constant {
+	label="constant";
+	"constant::import";
+}
+"Log::Log4perl::Config::Watch::BEGIN" -> "constant::import";
+}

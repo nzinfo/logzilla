@@ -14,7 +14,31 @@ session_start();
 include_once ("config/config.php");
 include_once ("includes/js_header.php");
 include_once ("includes/common_funcs.php");
+include_once ("includes/modules/functions.security.php");
 
+//Start security update v0.1
+if($appConfig['captcha'] == "on") {
+if(!isset($_SESSION['num_login_tries'])) {
+	$_SESSION['num_login_tries'] = 0;
+}
+include_once ("includes/modules/recaptchalib.php");
+}
+
+//sanitize global variables
+$_POST = cleanArray($_POST);
+$_GET = cleanArray($_GET);
+$_COOKIE = cleanArray($_COOKIE);
+
+//check if ip is banned
+if($appConfig['ban_ip']=='on') {
+	$res = mysql_result(mysql_query("SELECT COUNT(*) FROM banned_ips WHERE bannedIp='{$_SERVER['REMOTE_ADDR']}' AND expirationDate>'".date("Y-m-d h:m:s")."'"),0);
+	//echo $res;
+	if($res!=0) {
+	die("Ooops");
+	}
+}
+
+//End security update v0.1
 
 if($_SESSION['AUTHTYPE'] == "none") {
     $username = "local_noauth";
@@ -130,7 +154,14 @@ if ($_POST) {
 	   	</tr>
 
 	   	</table>
-
+	<?
+	//Start security update v0.1
+	//echo $_SESSION['num_login_tries'];
+	if($appConfig['captcha']=='on' && $appConfig['num_login_tries']<=$_SESSION['num_login_tries']) {
+	echo recaptcha_get_html($appConfig['captcha_public_key']);
+	}
+	//End security update v0.1
+ ?>
 	   	<input type=image src="images/GoGo_brn.png" width="50px" height="30px" alt="Login" name="image">
 	   	<br>
 	   	</div>

@@ -1,0 +1,41 @@
+digraph {
+graph [overlap=false]
+subgraph cluster_DBI {
+	label="DBI";
+	"DBI::BEGIN";
+}
+subgraph cluster_IO_Socket {
+	label="IO::Socket";
+	"IO::Socket::import";
+}
+subgraph cluster_Exporter_Heavy {
+	label="Exporter::Heavy";
+	"Exporter::Heavy::_push_tags";
+	"Exporter::Heavy::_rebuild_cache";
+	"Exporter::Heavy::CORE:subst";
+	"Exporter::Heavy::heavy_export_ok_tags";
+	"Exporter::Heavy::heavy_export";
+	"Exporter::Heavy::CORE:match";
+	"Exporter::Heavy::heavy_export_to_level";
+}
+subgraph cluster_Time_HiRes {
+	label="Time::HiRes";
+	"Time::HiRes::import";
+}
+subgraph cluster_Exporter {
+	label="Exporter";
+	"Exporter::import";
+	"Exporter::export";
+}
+"Exporter::Heavy::heavy_export" -> "Exporter::Heavy::CORE:match";
+"Exporter::Heavy::heavy_export" -> "Exporter::Heavy::_rebuild_cache";
+"Time::HiRes::import" -> "Exporter::Heavy::heavy_export_to_level";
+"Exporter::Heavy::_rebuild_cache" -> "Exporter::Heavy::CORE:subst";
+"Exporter::Heavy::heavy_export" -> "Exporter::Heavy::CORE:subst";
+"DBI::BEGIN" -> "Exporter::Heavy::heavy_export_ok_tags";
+"Exporter::Heavy::heavy_export_to_level" -> "Exporter::export";
+"Exporter::import" -> "Exporter::Heavy::heavy_export";
+"IO::Socket::import" -> "Exporter::Heavy::heavy_export";
+"Exporter::Heavy::heavy_export_to_level" -> "Exporter::Heavy::heavy_export";
+"Exporter::Heavy::heavy_export_ok_tags" -> "Exporter::Heavy::_push_tags";
+}

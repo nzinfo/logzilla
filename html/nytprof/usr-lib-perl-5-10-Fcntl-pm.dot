@@ -1,0 +1,19 @@
+digraph {
+graph [overlap=false]
+subgraph cluster_strict {
+	label="strict";
+	"strict::import";
+	"strict::unimport";
+}
+subgraph cluster_XSLoader {
+	label="XSLoader";
+	"XSLoader::load";
+}
+subgraph cluster_Fcntl {
+	label="Fcntl";
+	"Fcntl::BEGIN";
+}
+"Fcntl::BEGIN" -> "strict::unimport";
+"Fcntl::BEGIN" -> "XSLoader::load";
+"Fcntl::BEGIN" -> "strict::import";
+}

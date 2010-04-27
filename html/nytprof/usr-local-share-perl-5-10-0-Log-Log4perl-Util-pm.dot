@@ -1,0 +1,22 @@
+digraph {
+graph [overlap=false]
+subgraph cluster_Log_Log4perl_Layout_PatternLayout {
+	label="Log::Log4perl::Layout::PatternLayout";
+	"Log::Log4perl::Layout::PatternLayout::BEGIN";
+}
+subgraph cluster_File_Spec_Unix {
+	label="File::Spec::Unix";
+	"File::Spec::Unix::catfile";
+}
+subgraph cluster_Log_Log4perl_Util_TimeTracker {
+	label="Log::Log4perl::Util::TimeTracker";
+	"Log::Log4perl::Util::TimeTracker::BEGIN";
+}
+subgraph cluster_Log_Log4perl_Util {
+	label="Log::Log4perl::Util";
+	"Log::Log4perl::Util::module_available";
+}
+"Log::Log4perl::Layout::PatternLayout::BEGIN" -> "Log::Log4perl::Util::module_available";
+"Log::Log4perl::Util::TimeTracker::BEGIN" -> "Log::Log4perl::Util::module_available";
+"Log::Log4perl::Util::module_available" -> "File::Spec::Unix::catfile";
+}

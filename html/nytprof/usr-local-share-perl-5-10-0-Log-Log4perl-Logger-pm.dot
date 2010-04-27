@@ -1,0 +1,133 @@
+digraph {
+graph [overlap=false]
+subgraph cluster_Log_Log4perl_Appender_File {
+	label="Log::Log4perl::Appender::File";
+	"Log::Log4perl::Appender::File::CORE:close";
+	"Log::Log4perl::Appender::File::DESTROY";
+}
+subgraph cluster_Log_Log4perl_Appender {
+	label="Log::Log4perl::Appender";
+	"Log::Log4perl::Appender::log";
+	"Log::Log4perl::Appender::reset";
+	"Log::Log4perl::Appender::DESTROY";
+	"Log::Log4perl::Appender::name";
+}
+subgraph cluster_Log_Log4perl_Level {
+	label="Log::Log4perl::Level";
+	"Log::Log4perl::Level::import";
+	"Log::Log4perl::Level::add_priority";
+	"Log::Log4perl::Level::is_valid";
+	"Log::Log4perl::Level::isGreaterOrEqual";
+}
+subgraph cluster_warnings {
+	label="warnings";
+	"warnings::import";
+}
+subgraph cluster_main {
+	label="main";
+	"main::RUNTIME";
+}
+subgraph cluster_Log_Log4perl_Filter {
+	label="Log::Log4perl::Filter";
+	"Log::Log4perl::Filter::reset";
+}
+subgraph cluster_strict {
+	label="strict";
+	"strict::import";
+	"strict::unimport";
+}
+subgraph cluster_Log_Log4perl {
+	label="Log::Log4perl";
+	"Log::Log4perl::END";
+	"Log::Log4perl::BEGIN";
+	"Log::Log4perl::reset";
+	"Log::Log4perl::get_logger";
+	"Log::Log4perl::easy_init";
+}
+subgraph cluster_UNIVERSAL {
+	label="UNIVERSAL";
+	"UNIVERSAL::can";
+}
+subgraph cluster_Log_Log4perl_Logger {
+	label="Log::Log4perl::Logger";
+	"Log::Log4perl::Logger::parent_logger";
+	"Log::Log4perl::Logger::cleanup";
+	"Log::Log4perl::Logger::generate_is_xxx_coderef";
+	"Log::Log4perl::Logger::_new";
+	"Log::Log4perl::Logger::__ANON__[Log/Log4perl/Logger.pm:786]";
+	"Log::Log4perl::Logger::CORE:sort";
+	"Log::Log4perl::Logger::generate_coderef";
+	"Log::Log4perl::Logger::DESTROY";
+	"Log::Log4perl::Logger::generate_noop_coderef";
+	"Log::Log4perl::Logger::CORE:match";
+	"Log::Log4perl::Logger::level";
+	"Log::Log4perl::Logger::reset_all_output_methods";
+	"Log::Log4perl::Logger::parent_string";
+	"Log::Log4perl::Logger::create_log_level_methods";
+	"Log::Log4perl::Logger::generate_watch_code";
+	"Log::Log4perl::Logger::get_logger";
+	"Log::Log4perl::Logger::add_appender";
+	"Log::Log4perl::Logger::BEGIN";
+	"Log::Log4perl::Logger::__ANON__[Log/Log4perl/Logger.pm:315]";
+	"Log::Log4perl::Logger::set_output_methods";
+	"Log::Log4perl::Logger::reset";
+	"Log::Log4perl::Logger::CORE:subst";
+}
+subgraph cluster_constant {
+	label="constant";
+	"constant::import";
+}
+subgraph cluster_Exporter {
+	label="Exporter";
+	"Exporter::import";
+}
+"Log::Log4perl::Logger::__ANON__[Log/Log4perl/Logger.pm:315]" -> "Log::Log4perl::Appender::log";
+"main::RUNTIME" -> "Log::Log4perl::Logger::__ANON__[Log/Log4perl/Logger.pm:786]";
+"Log::Log4perl::Logger::cleanup" -> "Log::Log4perl::Logger::DESTROY";
+"Log::Log4perl::Logger::set_output_methods" -> "Log::Log4perl::Logger::generate_noop_coderef";
+"Log::Log4perl::Logger::level" -> "Log::Log4perl::Logger::CORE:match";
+"Log::Log4perl::Logger::cleanup" -> "Log::Log4perl::Appender::DESTROY";
+"Log::Log4perl::Logger::add_appender" -> "Log::Log4perl::Appender::name";
+"Log::Log4perl::Logger::parent_logger" -> "Log::Log4perl::Logger::parent_string";
+"Log::Log4perl::BEGIN" -> "Log::Log4perl::Logger::create_log_level_methods";
+"Log::Log4perl::Logger::BEGIN" -> "Log::Log4perl::Level::import";
+"Log::Log4perl::Logger::generate_is_xxx_coderef" -> "Log::Log4perl::Logger::generate_watch_code";
+"Log::Log4perl::Logger::generate_noop_coderef" -> "Log::Log4perl::Logger::generate_watch_code";
+"Log::Log4perl::Logger::generate_coderef" -> "Log::Log4perl::Logger::generate_watch_code";
+"Log::Log4perl::get_logger" -> "Log::Log4perl::Logger::get_logger";
+"Log::Log4perl::easy_init" -> "Log::Log4perl::Logger::add_appender";
+"Log::Log4perl::Logger::cleanup" -> "Log::Log4perl::Appender::File::DESTROY";
+"Log::Log4perl::Logger::__ANON__[Log/Log4perl/Logger.pm:786]" -> "Log::Log4perl::Logger::__ANON__[Log/Log4perl/Logger.pm:315]";
+"Log::Log4perl::Logger::BEGIN" -> "Exporter::import";
+"Log::Log4perl::Logger::cleanup" -> "Log::Log4perl::Appender::File::CORE:close";
+"Log::Log4perl::BEGIN" -> "Log::Log4perl::Logger::reset";
+"Log::Log4perl::reset" -> "Log::Log4perl::Logger::reset";
+"Log::Log4perl::Logger::cleanup" -> "UNIVERSAL::can";
+"Log::Log4perl::Logger::_new" -> "Log::Log4perl::Logger::CORE:subst";
+"Log::Log4perl::Logger::set_output_methods" -> "Log::Log4perl::Logger::parent_logger";
+"Log::Log4perl::Logger::level" -> "Log::Log4perl::Logger::parent_logger";
+"Log::Log4perl::Logger::BEGIN" -> "constant::import";
+"Log::Log4perl::Logger::set_output_methods" -> "Log::Log4perl::Logger::generate_is_xxx_coderef";
+"Log::Log4perl::END" -> "Log::Log4perl::Logger::cleanup";
+"Log::Log4perl::Logger::reset" -> "Log::Log4perl::Logger::_new";
+"Log::Log4perl::Logger::get_logger" -> "Log::Log4perl::Logger::_new";
+"Log::Log4perl::Logger::BEGIN" -> "strict::unimport";
+"Log::Log4perl::Logger::add_appender" -> "Log::Log4perl::Logger::CORE:sort";
+"Log::Log4perl::BEGIN" -> "Log::Log4perl::Logger::generate_coderef";
+"Log::Log4perl::Logger::set_output_methods" -> "Log::Log4perl::Logger::generate_coderef";
+"Log::Log4perl::Logger::add_appender" -> "Log::Log4perl::Logger::reset_all_output_methods";
+"Log::Log4perl::Logger::level" -> "Log::Log4perl::Logger::reset_all_output_methods";
+"Log::Log4perl::Logger::set_output_methods" -> "Log::Log4perl::Logger::level";
+"Log::Log4perl::Logger::_new" -> "Log::Log4perl::Logger::level";
+"Log::Log4perl::Logger::reset" -> "Log::Log4perl::Logger::level";
+"Log::Log4perl::easy_init" -> "Log::Log4perl::Logger::level";
+"Log::Log4perl::Logger::level" -> "Log::Log4perl::Level::is_valid";
+"Log::Log4perl::Logger::reset" -> "Log::Log4perl::Filter::reset";
+"Log::Log4perl::Logger::BEGIN" -> "warnings::import";
+"Log::Log4perl::Logger::_new" -> "Log::Log4perl::Logger::set_output_methods";
+"Log::Log4perl::Logger::reset_all_output_methods" -> "Log::Log4perl::Logger::set_output_methods";
+"Log::Log4perl::Logger::BEGIN" -> "Log::Log4perl::Level::add_priority";
+"Log::Log4perl::Logger::reset" -> "Log::Log4perl::Appender::reset";
+"Log::Log4perl::Logger::BEGIN" -> "strict::import";
+"Log::Log4perl::Logger::set_output_methods" -> "Log::Log4perl::Level::isGreaterOrEqual";
+}

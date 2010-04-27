@@ -1,0 +1,140 @@
+digraph {
+graph [overlap=false]
+subgraph cluster_Log_Log4perl_Layout_PatternLayout {
+	label="Log::Log4perl::Layout::PatternLayout";
+	"Log::Log4perl::Layout::PatternLayout::BEGIN";
+}
+subgraph cluster_POE_Wheel_FollowTail {
+	label="POE::Wheel::FollowTail";
+	"POE::Wheel::FollowTail::BEGIN";
+}
+subgraph cluster_Log_Log4perl_Appender {
+	label="Log::Log4perl::Appender";
+	"Log::Log4perl::Appender::new";
+}
+subgraph cluster_Log_Log4perl_Level {
+	label="Log::Log4perl::Level";
+	"Log::Log4perl::Level::BEGIN";
+}
+subgraph cluster_Log_Log4perl_DateFormat {
+	label="Log::Log4perl::DateFormat";
+	"Log::Log4perl::DateFormat::BEGIN";
+}
+subgraph cluster_DBI {
+	label="DBI";
+	"DBI::install_driver";
+	"DBI::BEGIN";
+}
+subgraph cluster_warnings {
+	label="warnings";
+	"warnings::unimport";
+}
+subgraph cluster_POE_Kernel {
+	label="POE::Kernel";
+	"POE::Kernel::_load_loop";
+}
+subgraph cluster_main {
+	label="main";
+	"main::BEGIN";
+}
+subgraph cluster_Tie_Hash {
+	label="Tie::Hash";
+	"Tie::Hash::BEGIN";
+}
+subgraph cluster_strict {
+	label="strict";
+	"strict::import";
+	"strict::unimport";
+}
+subgraph cluster_IO_Socket {
+	label="IO::Socket";
+	"IO::Socket::import";
+}
+subgraph cluster_Log_Log4perl_Util_TimeTracker {
+	label="Log::Log4perl::Util::TimeTracker";
+	"Log::Log4perl::Util::TimeTracker::BEGIN";
+}
+subgraph cluster_POE {
+	label="POE";
+	"POE::BEGIN";
+	"POE::import";
+}
+subgraph cluster_Log_Log4perl_Logger {
+	label="Log::Log4perl::Logger";
+	"Log::Log4perl::Logger::BEGIN";
+}
+subgraph cluster_POSIX {
+	label="POSIX";
+	"POSIX::BEGIN";
+	"POSIX::import";
+}
+subgraph cluster_POE_Resources {
+	label="POE::Resources";
+	"POE::Resources::load";
+}
+subgraph cluster_Log_Log4perl_JavaMap {
+	label="Log::Log4perl::JavaMap";
+	"Log::Log4perl::JavaMap::BEGIN";
+}
+subgraph cluster_Exporter_Heavy {
+	label="Exporter::Heavy";
+	"Exporter::Heavy::heavy_export";
+	"Exporter::Heavy::heavy_export_to_level";
+}
+subgraph cluster_Time_HiRes {
+	label="Time::HiRes";
+	"Time::HiRes::import";
+}
+subgraph cluster_Exporter {
+	label="Exporter";
+	"Exporter::import";
+	"Exporter::as_heavy";
+	"Exporter::export_to_level";
+	"Exporter::CORE:subst";
+	"Exporter::export";
+	"Exporter::export_ok_tags";
+	"Exporter::CORE:match";
+}
+subgraph cluster_Carp {
+	label="Carp";
+	"Carp::shortmess_jmp";
+}
+subgraph cluster_Text_LevenshteinXS {
+	label="Text::LevenshteinXS";
+	"Text::LevenshteinXS::BEGIN";
+}
+"DBI::BEGIN" -> "Exporter::export_ok_tags";
+"Time::HiRes::import" -> "Exporter::export_to_level";
+"Exporter::export_to_level" -> "Exporter::as_heavy";
+"Exporter::export" -> "Exporter::as_heavy";
+"Exporter::export_ok_tags" -> "Exporter::as_heavy";
+"Exporter::import" -> "Exporter::CORE:match";
+"Exporter::as_heavy" -> "warnings::unimport";
+"Log::Log4perl::DateFormat::BEGIN" -> "Exporter::import";
+"POE::Kernel::_load_loop" -> "Exporter::import";
+"Log::Log4perl::Layout::PatternLayout::BEGIN" -> "Exporter::import";
+"Log::Log4perl::Util::TimeTracker::BEGIN" -> "Exporter::import";
+"POSIX::BEGIN" -> "Exporter::import";
+"POSIX::import" -> "Exporter::import";
+"POE::BEGIN" -> "Exporter::import";
+"Carp::shortmess_jmp" -> "Exporter::import";
+"Log::Log4perl::Logger::BEGIN" -> "Exporter::import";
+"Log::Log4perl::Level::BEGIN" -> "Exporter::import";
+"POE::import" -> "Exporter::import";
+"Log::Log4perl::Appender::new" -> "Exporter::import";
+"Log::Log4perl::JavaMap::BEGIN" -> "Exporter::import";
+"DBI::install_driver" -> "Exporter::import";
+"Tie::Hash::BEGIN" -> "Exporter::import";
+"POE::Wheel::FollowTail::BEGIN" -> "Exporter::import";
+"main::BEGIN" -> "Exporter::import";
+"POE::Resources::load" -> "Exporter::import";
+"Text::LevenshteinXS::BEGIN" -> "Exporter::import";
+"Exporter::as_heavy" -> "strict::unimport";
+"Exporter::import" -> "Exporter::export";
+"IO::Socket::import" -> "Exporter::export";
+"Exporter::Heavy::heavy_export_to_level" -> "Exporter::export";
+"Exporter::import" -> "Exporter::CORE:subst";
+"Exporter::as_heavy" -> "Exporter::CORE:subst";
+"Exporter::import" -> "Exporter::Heavy::heavy_export";
+"Exporter::as_heavy" -> "strict::import";
+}

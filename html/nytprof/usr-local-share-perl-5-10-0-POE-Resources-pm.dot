@@ -1,0 +1,67 @@
+digraph {
+graph [overlap=false]
+subgraph cluster_IO_File {
+	label="IO::File";
+	"IO::File::CORE:match";
+}
+subgraph cluster_POE_Kernel {
+	label="POE::Kernel";
+	"POE::Kernel::new";
+}
+subgraph cluster_vars {
+	label="vars";
+	"vars::import";
+}
+subgraph cluster_strict {
+	label="strict";
+	"strict::import";
+	"strict::unimport";
+}
+subgraph cluster_IO_Socket {
+	label="IO::Socket";
+	"IO::Socket::CORE:pack";
+	"IO::Socket::import";
+	"IO::Socket::register_domain";
+}
+subgraph cluster_UNIVERSAL {
+	label="UNIVERSAL";
+	"UNIVERSAL::VERSION";
+}
+subgraph cluster_XSLoader {
+	label="XSLoader";
+	"XSLoader::load";
+}
+subgraph cluster_POSIX {
+	label="POSIX";
+	"POSIX::import";
+}
+subgraph cluster_POE_Resources {
+	label="POE::Resources";
+	"POE::Resources::CORE:match";
+	"POE::Resources::load";
+	"POE::Resources::CORE:subst";
+}
+subgraph cluster_Exporter {
+	label="Exporter";
+	"Exporter::import";
+}
+subgraph cluster_warnings_register {
+	label="warnings::register";
+	"warnings::register::import";
+}
+"POE::Resources::load" -> "IO::Socket::register_domain";
+"POE::Resources::load" -> "vars::import";
+"POE::Resources::load" -> "POSIX::import";
+"POE::Resources::load" -> "POE::Resources::CORE:subst";
+"POE::Resources::load" -> "Exporter::import";
+"POE::Resources::load" -> "IO::Socket::CORE:pack";
+"POE::Resources::load" -> "strict::unimport";
+"POE::Resources::load" -> "IO::File::CORE:match";
+"POE::Resources::load" -> "POE::Resources::CORE:match";
+"POE::Resources::load" -> "IO::Socket::import";
+"POE::Resources::load" -> "XSLoader::load";
+"POE::Resources::load" -> "UNIVERSAL::VERSION";
+"POE::Resources::load" -> "strict::import";
+"POE::Resources::load" -> "warnings::register::import";
+"POE::Kernel::new" -> "POE::Resources::load";
+}

@@ -1,0 +1,54 @@
+digraph {
+graph [overlap=false]
+subgraph cluster_strict {
+	label="strict";
+	"strict::import";
+	"strict::unimport";
+}
+subgraph cluster_POSIX_SigAction {
+	label="POSIX::SigAction";
+	"POSIX::SigAction::BEGIN";
+}
+subgraph cluster_POSIX {
+	label="POSIX";
+	"POSIX::BEGIN";
+	"POSIX::import";
+}
+subgraph cluster_POSIX_SigRt {
+	label="POSIX::SigRt";
+	"POSIX::SigRt::BEGIN";
+}
+subgraph cluster_Text_LevenshteinXS {
+	label="Text::LevenshteinXS";
+	"Text::LevenshteinXS::BEGIN";
+}
+subgraph cluster_AutoLoader {
+	label="AutoLoader";
+	"AutoLoader::CORE:match";
+	"AutoLoader::BEGIN";
+	"AutoLoader::find_filename";
+	"AutoLoader::CORE:fteread";
+	"AutoLoader::CORE:substcont";
+	"AutoLoader::import";
+	"AutoLoader::CORE:regcomp";
+	"AutoLoader::CORE:subst";
+	"AutoLoader::AUTOLOAD";
+}
+"AutoLoader::find_filename" -> "AutoLoader::CORE:substcont";
+"AutoLoader::import" -> "AutoLoader::CORE:substcont";
+"AutoLoader::find_filename" -> "AutoLoader::CORE:subst";
+"AutoLoader::import" -> "AutoLoader::CORE:subst";
+"AutoLoader::find_filename" -> "AutoLoader::CORE:match";
+"AutoLoader::import" -> "AutoLoader::CORE:match";
+"AutoLoader::find_filename" -> "AutoLoader::CORE:regcomp";
+"AutoLoader::import" -> "AutoLoader::CORE:regcomp";
+"AutoLoader::AUTOLOAD" -> "AutoLoader::find_filename";
+"AutoLoader::BEGIN" -> "strict::unimport";
+"AutoLoader::find_filename" -> "AutoLoader::CORE:fteread";
+"POSIX::BEGIN" -> "AutoLoader::import";
+"POSIX::SigAction::BEGIN" -> "AutoLoader::import";
+"POSIX::SigRt::BEGIN" -> "AutoLoader::import";
+"Text::LevenshteinXS::BEGIN" -> "AutoLoader::import";
+"POSIX::import" -> "AutoLoader::AUTOLOAD";
+"AutoLoader::BEGIN" -> "strict::import";
+}

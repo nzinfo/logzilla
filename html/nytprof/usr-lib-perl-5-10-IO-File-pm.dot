@@ -1,0 +1,12 @@
+digraph {
+graph [overlap=false]
+subgraph cluster_IO_File {
+	label="IO::File";
+	"IO::File::CORE:match";
+}
+subgraph cluster_POE_Resources {
+	label="POE::Resources";
+	"POE::Resources::load";
+}
+"POE::Resources::load" -> "IO::File::CORE:match";
+}

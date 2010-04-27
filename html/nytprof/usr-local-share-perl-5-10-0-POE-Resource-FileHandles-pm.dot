@@ -1,0 +1,28 @@
+digraph {
+graph [overlap=false]
+subgraph cluster_POE_Kernel {
+	label="POE::Kernel";
+	"POE::Kernel::CORE:binmode";
+	"POE::Kernel::_test_if_kernel_is_idle";
+	"POE::Kernel::_data_handle_initialize";
+	"POE::Kernel::_data_handle_count";
+	"POE::Kernel::CORE:ftfile";
+	"POE::Kernel::new";
+	"POE::Kernel::CORE:select";
+	"POE::Kernel::_data_handle_condition";
+	"POE::Kernel::__ANON__[POE/Kernel.pm:89]";
+	"POE::Kernel::_data_sig_pipe_build";
+}
+subgraph cluster_IO_Handle {
+	label="IO::Handle";
+	"IO::Handle::blocking";
+}
+"POE::Kernel::_test_if_kernel_is_idle" -> "POE::Kernel::_data_handle_count";
+"POE::Kernel::_data_handle_condition" -> "POE::Kernel::CORE:ftfile";
+"POE::Kernel::_data_handle_condition" -> "POE::Kernel::CORE:select";
+"POE::Kernel::_data_handle_condition" -> "IO::Handle::blocking";
+"POE::Kernel::_data_handle_condition" -> "POE::Kernel::CORE:binmode";
+"POE::Kernel::new" -> "POE::Kernel::_data_handle_initialize";
+"POE::Kernel::_data_sig_pipe_build" -> "POE::Kernel::_data_handle_condition";
+"POE::Kernel::_data_handle_condition" -> "POE::Kernel::__ANON__[POE/Kernel.pm:89]";
+}

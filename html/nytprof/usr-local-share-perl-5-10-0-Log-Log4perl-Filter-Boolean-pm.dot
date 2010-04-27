@@ -1,0 +1,32 @@
+digraph {
+graph [overlap=false]
+subgraph cluster_Log_Log4perl_Level {
+	label="Log::Log4perl::Level";
+	"Log::Log4perl::Level::import";
+}
+subgraph cluster_warnings {
+	label="warnings";
+	"warnings::import";
+}
+subgraph cluster_base {
+	label="base";
+	"base::import";
+}
+subgraph cluster_strict {
+	label="strict";
+	"strict::import";
+}
+subgraph cluster_Log_Log4perl_Filter_Boolean {
+	label="Log::Log4perl::Filter::Boolean";
+	"Log::Log4perl::Filter::Boolean::BEGIN";
+}
+subgraph cluster_constant {
+	label="constant";
+	"constant::import";
+}
+"Log::Log4perl::Filter::Boolean::BEGIN" -> "Log::Log4perl::Level::import";
+"Log::Log4perl::Filter::Boolean::BEGIN" -> "constant::import";
+"Log::Log4perl::Filter::Boolean::BEGIN" -> "base::import";
+"Log::Log4perl::Filter::Boolean::BEGIN" -> "warnings::import";
+"Log::Log4perl::Filter::Boolean::BEGIN" -> "strict::import";
+}
