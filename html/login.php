@@ -10,11 +10,13 @@
  *
  */
 
+
 session_start();
 include_once ("config/config.php");
 include_once ("includes/js_header.php");
 include_once ("includes/common_funcs.php");
 include_once ("includes/modules/functions.security.php");
+
 
 //Start security update v0.1
 if($appConfig['captcha'] == "on") {
@@ -25,9 +27,11 @@ include_once ("includes/modules/recaptchalib.php");
 }
 
 //sanitize global variables
+ $_SERVER = cleanArray($_SERVER);
 $_POST = cleanArray($_POST);
 $_GET = cleanArray($_GET);
 $_COOKIE = cleanArray($_COOKIE);
+//var_dump($_GET);
 
 //check if ip is banned
 if($appConfig['ban_ip']=='on') {
@@ -55,6 +59,7 @@ if($_SESSION['AUTHTYPE'] == "none") {
     }
     if (!empty($_SERVER['QUERY_STRING']))
     {
+	
         $destination .= '?' . $_SERVER['QUERY_STRING'];
     }
         g_redirect($destination, "JS"); // Redirect unauthenticated member
@@ -67,8 +72,10 @@ if ($_POST) {
         {
             $destination .= '?' . ($_POST['searchQuery']);
         }
+		
         g_redirect($destination, "JS"); // Redirect unauthenticated member
     } elseif ($_SESSION['error']) {
+	
         g_redirect($SESSION['SITE_URL'], "JS"); // Redirect unauthenticated member
     }
 
@@ -82,6 +89,7 @@ if ($_POST) {
         <form method="post" action="<?php echo  $_SERVER['PHP_SELF']; ?>">
 
         <?php
+		
         if (!empty($_SERVER['QUERY_STRING']))
         {
             $queryString = htmlspecialchars($_SERVER['QUERY_STRING']);

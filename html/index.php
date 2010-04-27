@@ -11,11 +11,16 @@ if (strlen($chk_config) < 300) {
 } else {
    	require_once ("config/config.php");
    	require_once 'includes/common_funcs.php';
+	include_once ("includes/modules/functions.security.php");
 }
 
 
 
 session_start();
+ $_SERVER = cleanArray($_SERVER);
+$_POST = cleanArray($_POST);
+$_GET = cleanArray($_GET);
+$_COOKIE = cleanArray($_COOKIE);
 secure();
 
 $time_start = get_microtime();

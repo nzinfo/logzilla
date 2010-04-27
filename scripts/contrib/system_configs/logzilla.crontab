@@ -1,7 +1,7 @@
 # http://nms.gdd.net/index.php/Install_Guide_for_LogZilla_v3.0
 # Sphinx indexer cron times
 # Note: Your setup may require some tweaking depending on expected message rates!
-# Last updated on 2010-04-26
+# Last updated on 2010-04-27
 #####################################################
 # Run Sphinx "full" scan 30 minutes after midnight
 # in order to create a new index for today.
