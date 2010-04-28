@@ -30,6 +30,6 @@ $appConfig['captcha_private_key'] = "6Lf_w7kSAAAAANOSKIkW4g2uuWkdOfUF1smnVSHh";
 $appConfig['use_salt_password'] = "off";//possible values: "off" or "on"	
 $appConfig['salt'] = "hjgjhgsa^JL88UVB&^%&^%98765%$%$#%";
 $appConfig['num_login_tries'] = 5;
-$appConfig['ban_ip'] = "on"; //possible values, "off" or "on"
+$appConfig['ban_ip'] = "off"; //possible values, "off" or "on"
 $appConfig['max_num_login_tries'] = 20; //maximum number of login tries before getting banned
 $appConfig['ban_time'] = 15; //in minutes
