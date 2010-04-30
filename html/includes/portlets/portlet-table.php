@@ -5,7 +5,7 @@
  * Developed by Clayton Dukes <cdukes@cdukes.com>
  * Copyright (c) 2010 LogZilla, LLC
  * All rights reserved.
- * Last updated on 2010-04-29
+ * Last updated on 2010-04-30
  *
  * Pagination and table formatting created using 
  * http://www.frequency-decoder.com/2007/10/19/client-side-table-pagination-script/
@@ -220,10 +220,11 @@ if($msg_mask) {
         // $cl->SetSortMode(SPH_SORT_ATTR_DESC, "id");
         $cl->SetSortMode(SPH_SORT_EXTENDED, "@id DESC");
         $cl->SetLimits(0, intval($limit));
-        $res = $cl->Query ( $msg_mask, $index);
+        $res = $cl->Query ( htmlentities($msg_mask), $index);
         if ( !$res )
         {
-            die ( "ERROR: " . $cl->GetLastError() . ".\n" );
+      $info = "<font size=\"3\" color=\"white\"><br><br>Sphinx - Error in query: ";
+            die ( "$info" . $cl->GetLastError() . ".\n</font>" );
         } else
         {
             if ($res['total_found'] > 0) {
@@ -513,7 +514,7 @@ if ($order) {
             $explode_url = "";
             $pieces = explode(" ", $msg);
             foreach($pieces as $value) {
-                $explode_url .= " <a href=\"$_SESSION[SITE_URL]$qstring&msg_mask=".urlencode($value)."\"> ".htmlentities($value)." </a> ";
+                $explode_url .= " <a href=\"$_SESSION[SITE_URL]$qstring&msg_mask=".urlencode($value)."\"> ".($value)." </a> ";
             }
         }
         // Link to LZECS if info is available

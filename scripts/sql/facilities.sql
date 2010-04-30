@@ -37,7 +37,7 @@ SET character_set_client = @saved_cs_client;
 
 LOCK TABLES `facilities` WRITE;
 /*!40000 ALTER TABLE `facilities` DISABLE KEYS */;
-INSERT INTO `facilities` VALUES (1,'kernel','0'),(2,'user','1'),(3,'mail','2'),(4,'system daemon','3'),(5,'security/auth','4'),(6,'syslog-ng internal','5'),(7,'printer subsystem','6'),(8,'network news subsystem','7'),(9,'UUCP subsystem','8'),(10,'clock daemon','9'),(11,'security/auth','10'),(12,'FTP daemon','11'),(13,'NTP subsystem','12'),(14,'log audit','13'),(15,'log alert','14'),(16,'clock daemon','15'),(17,'local0','16'),(18,'local1','17'),(19,'local2','18'),(20,'local3','19'),(21,'local4','20'),(22,'local5','21'),(23,'local6','22'),(24,'local7','23'),(25,'MSLog/Application','100'),(26,'MSLog/Security','101'),(27,'MSLog/System','102'),(28,'MSLog/Custom','103');
+INSERT INTO `facilities` VALUES (1,'kernel','0'),(2,'user','1'),(3,'mail','2'),(4,'system daemon','3'),(5,'security/auth','4'),(6,'syslog-ng internal','5'),(7,'printer subsystem','6'),(8,'network news subsystem','7'),(9,'UUCP subsystem','8'),(10,'clock daemon','9'),(11,'security/auth','10'),(12,'FTP daemon','11'),(13,'NTP subsystem','12'),(14,'log audit','13'),(15,'log alert','14'),(16,'clock daemon','15'),(17,'local0','16'),(18,'local1','17'),(19,'local2','18'),(20,'local3','19'),(21,'local4','20'),(22,'local5','21'),(23,'local6','22'),(24,'local7','23');
 /*!40000 ALTER TABLE `facilities` ENABLE KEYS */;
 UNLOCK TABLES;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
@@ -50,4 +50,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2010-04-30  2:48:05
+-- Dump completed on 2010-04-30 18:18:48

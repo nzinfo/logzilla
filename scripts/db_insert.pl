@@ -2,7 +2,7 @@
 
 #
 # db_insert.pl
-# Last updated on 2010-04-29
+# Last updated on 2010-04-30
 #
 # Developed by Clayton Dukes <cdukes@cdukes.com>
 # Copyright (c) 2009 LogZilla, LLC
@@ -455,14 +455,14 @@ sub do_msg {
         if ($prg =~ m/MSWinEventLog\\011.*\\011(.*)\\011.*\\011.*/) {
             my $facilityname = $1;
             if ($facilityname =~ m/^Application/) {
-                $facility = 100;
+                $facility = 23;
             } elsif ($facilityname =~ m/^Security/) {
-                $facility = 101;
+                $facility = 4;
             } elsif ($facilityname =~ m/^System/) {
-                $facility = 102;
+                $facility = 3;
             } else {
                 # Custom facility
-                $facility = 103;
+                $facility = 16;
             }
             if ($msg =~ m/.*\\011(.*)\\011(.*)\\011(.*)\\011(.*)\\011(.*)\\011(.*)\\011(.*)\\011.*\\011(.*)\\011.*/) {
                 my $eventid = $1;
