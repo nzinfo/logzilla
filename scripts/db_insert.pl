@@ -2,7 +2,7 @@
 
 #
 # db_insert.pl
-# Last updated on 2010-04-27
+# Last updated on 2010-04-29
 #
 # Developed by Clayton Dukes <cdukes@cdukes.com>
 # Copyright (c) 2009 LogZilla, LLC
@@ -45,6 +45,7 @@
 # 2010-04-12 - Fixed issue with 1s granularity
 # 2010-04-14 - REMOVED Tail::File and daemonize. Calling db_insert.pl directly from syslog-ng provided much better insert rates (now at 20kmps)
 # 2010-04-20 - Replaced re_pipe with better fields from syslog-ng (only need host, pri, ts, prg and msg)
+# 2010-04-29 - Added regex for Snare windows events
 #
 
 
@@ -450,6 +451,53 @@ sub do_msg {
         $severity =  $pri - ($facility * 8 );
         $prg = $3;
         $msg = $4;
+        # Handle Snare Format
+        if ($prg =~ m/MSWinEventLog\\011.*\\011(.*)\\011.*\\011.*/) {
+            my $facilityname = $1;
+            if ($facilityname =~ m/^Application/) {
+                $facility = 100;
+            } elsif ($facilityname =~ m/^Security/) {
+                $facility = 101;
+            } elsif ($facilityname =~ m/^System/) {
+                $facility = 102;
+            } else {
+                # Custom facility
+                $facility = 103;
+            }
+            if ($msg =~ m/.*\\011(.*)\\011(.*)\\011(.*)\\011(.*)\\011(.*)\\011(.*)\\011(.*)\\011.*\\011(.*)\\011.*/) {
+                my $eventid = $1;
+                my $source = $2;
+                my $username = $3;
+                my $usertype = $4;
+                my $type = $5;
+                my $computer = $6;
+                my $category = $7;
+                my $description = $8;
+                if ($debug > 1) {
+                    print LOG "facility: $facilityname ($facility)\n";
+                    print LOG "eventid: $eventid\n";
+                    print LOG "source: $source\n";
+                    print LOG "username: $username\n";
+                    print LOG "usertype: $usertype\n";
+                    print LOG "type: $type\n";
+                    print LOG "computer: $computer\n";
+                    print LOG "category: $category\n";
+                    print LOG "description: $description\n";
+                }
+                if (($debug > 2) and ($verbose)) { 
+                    print STDOUT "facility: $facilityname ($facility)\n";
+                    print STDOUT "eventid: $eventid\n";
+                    print STDOUT "source: $source\n";
+                    print STDOUT "username: $username\n";
+                    print STDOUT "type: $type\n";
+                    print STDOUT "computer: $computer\n";
+                    print STDOUT "category: $category\n";
+                    print STDOUT "description: $description\n";
+                }
+                $prg = $source;
+                $msg = "Log=".$facilityname.", Source=".$source.", Category=".$category.", Type=".$type.", EventID=".$eventid.", Username=".$username.", Usertype=".$usertype.", Computer=".$computer.", Description=".$description;
+            }
+        }
         $msg =~ s/\\//; # Some messages come in with a trailing slash
         $msg =~ s/'//; # remove any ''s
         $msg =~ s/\t/ /g; # remove any TABs
@@ -465,7 +513,7 @@ sub do_msg {
         $prg =~ s/%FWSM.*\d+/Cisco FWSM/; # Added because FWSM's don't send their program field properly
         $prg =~ s/date=\d+-\d+-\d+/Fortigate Firewall/; # Added because Fortigate's don't follow IETF standards
         $msg =~ s/time=\d+:\d+:\d+\s//; # Added because Fortigate's don't s follow IETF standards
-        @msgs = split(/:/, $msg);
+        # @msgs = split(/:/, $msg);
         if ($prg =~ /^\d+/) { # Some messages come in with the sequence as the PROGRAM field
             $prg = "Cisco Syslog";
         }
