@@ -705,6 +705,4 @@ function is_type($var) {
     }
     return $type;
 }
-
-
 ?>

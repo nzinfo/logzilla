@@ -5,7 +5,7 @@
  * Developed by Clayton Dukes <cdukes@cdukes.com>
  * Copyright (c) 2010 LogZilla, LLC
  * All rights reserved.
- * Last updated on 2010-04-30
+ * Last updated on 2010-05-01
  *
  * Changelog:
  * 2009-12-08 - created
@@ -34,6 +34,38 @@
 <!-- BEGIN BGI Frame support -->
 <script src="includes/js/jquery/bgiframe-2.1.1.js" type="text/javascript"></script>
 <!-- END BGI Frame support -->
+
+<!-- BEGIN Flash Detection -->
+<script type="text/javascript">
+function getFlashVersion(){
+  // ie
+  try {
+    try {
+      // avoid fp6 minor version lookup issues
+      // see: http://blog.deconcept.com/2006/01/11/getvariable-setvariable-crash-internet-explorer-flash-6/
+      var axo = new ActiveXObject('ShockwaveFlash.ShockwaveFlash.6');
+      try { axo.AllowScriptAccess = 'always'; }
+      catch(e) { return '6,0,0'; }
+    } catch(e) {}
+    return new ActiveXObject('ShockwaveFlash.ShockwaveFlash').GetVariable('$version').replace(/\D+/g, ',').match(/^,?(.+),?$/)[1];
+  // other browsers
+  } catch(e) {
+    try {
+      if(navigator.mimeTypes["application/x-shockwave-flash"].enabledPlugin){
+        return (navigator.plugins["Shockwave Flash 2.0"] || navigator.plugins["Shockwave Flash"]).description.replace(/\D+/g, ",").match(/^,?(.+),?$/)[1];
+      }
+    } catch(e) {}
+  }
+  return '0,0,0';
+}
+ 
+var version = getFlashVersion().split(',').shift();
+if(version < 10){
+  alert("No Flash Player Detected (or your version is too old)!");
+        $("#footer").html("<font color=\"red\" size=\"5\" <br>Please download the latest flash player from <a href=\"http://get.adobe.com/flashplayer/\">Adobe</a>");
+}
+</script>
+<!-- END Flash Detection -->
 
 <!-- BEGIN JQuery Portlets -->
 <script type="text/javascript">

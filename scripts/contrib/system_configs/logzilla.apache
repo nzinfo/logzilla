@@ -1,5 +1,5 @@
 # http://nms.gdd.net/index.php/Install_Guide_for_LogZilla_v3.0
-# Last updated on 2010-04-30
+# Last updated on 2010-05-01
 #
 # LogZilla sample apache config
 # Create a file in /etc/apache2/sites-available called "logzilla" and add the following to it: 

@@ -4,7 +4,7 @@
  * Developed by Clayton Dukes <cdukes@cdukes.com>
  * Copyright (c) 2010 LogZilla, LLC
  * All rights reserved.
- * Last updated on 2010-04-30
+ * Last updated on 2010-05-01
  *
  * Changelog:
  * 2010-02-28 - created
@@ -213,7 +213,7 @@ if($msg_mask) {
         $port = intval($_SESSION['SPX_PORT']);
         $cl->SetServer ( $hostip, $port );
         $cl->SetMatchMode ( SPH_MATCH_EXTENDED2 );
-        $res = $cl->Query ( $msg_mask, $index);
+        $res = $cl->Query ( htmlentities($msg_mask), $index);
         if ( !$res )
         {
             die ( "ERROR: " . $cl->GetLastError() . ".\n" );
@@ -457,13 +457,13 @@ $('.XLButtons').remove();
         echo "<td class=\"s_td\"><a href=$_SESSION[SITE_URL]$qstring&mnemonics[]=$row[mne]>".crc2mne($row['mne'])."</a></td>\n";
         if ($_SESSION['CISCO_MNE_PARSE'] == "1" ) {
             $msg = preg_replace('/\s:/', ':', $msg);
-            $msg = preg_replace('/.*%(\w+-\d-\w+):/', '$1', $msg);
+            $msg = preg_replace('/.*%(\w+-.*\d-\w+)\s?:/', '$1', $msg);
         }
         if($_SESSION['MSG_EXPLODE'] == "1") {
             $explode_url = "";
             $pieces = explode(" ", $msg);
             foreach($pieces as $value) {
-                $explode_url .= " <a href=\"$_SESSION[SITE_URL]$qstring&msg_mask=".urlencode($value)."\"> ".htmlentities($value)." </a> ";
+                $explode_url .= " <a href=\"$_SESSION[SITE_URL]$qstring&msg_mask=".urlencode($value)."\"> ".$value." </a> ";
             }
         }
         // Link to LZECS if info is available
