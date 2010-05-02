@@ -13,3 +13,12 @@ LogZilla is a front-end for viewing syslog messages logged to MySQL in real-time
 
 <h3 class="title">License</h3>
 This software is made available to end users under two licenses: a free, open-source version and a commercial version.  For inquiries about purchasing a commercial license, please email <a href="mailto:cdukes@cdukes.com?subject=LogZilla License">cdukes@cdukes.com.</a>
+
+<h3 class="title">Local Installation Information</h3>
+<ul>
+<li>This copy of LogZilla will expire on <?php echo $_SESSION['LZ_LIC_EXPIRES']?></li>
+<li>Maximum number of messages per day: <?php $_SESSION['LZ_LIC_MSGLIMIT']?></li>
+<li>Maximum number of hosts: <?php $_SESSION['LZ_LIC_HOSTS']?></li>
+<li>Authentication modules: <?php $_SESSION['LZ_LIC_AUTH']?></li>
+<li>Adhoc Charts: <?php $_SESSION['LZ_LIC_ADHOC']?></li>
+</ul>

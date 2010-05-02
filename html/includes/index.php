@@ -12,6 +12,9 @@ session_start();
 $page = get_input('page');
 $page = (!empty($page)) ? $page : "Main";
 
+$a = ioncube_file_info(); 
+$_SESSION['LZ_LIC_EXPIRES'] = date("F j, Y",$a['ENCODING_TIME']);
+
 $_licprop = ioncube_license_properties();
 if (is_array($_licprop)) {
     $limit = $_licprop['limit']['value'];
@@ -19,6 +22,19 @@ if (is_array($_licprop)) {
     $auth = $_licprop['auth']['value'];
     $adhoc = $_licprop['adhoc']['value'];
 }
+$_SESSION['LZ_LIC_MSGLIMIT'] = $limit;
+$_SESSION['LZ_LIC_HOSTS'] = $hosts;
+if ($auth == "1") {
+    $_SESSION['LZ_LIC_AUTH'] = "all";
+} else {
+    $_SESSION['LZ_LIC_AUTH'] = '"Local" and "None"';
+}
+if ($adhoc == "1") {
+    $_SESSION['LZ_LIC_ADHOC'] = 'enabled';
+} else {
+    $_SESSION['LZ_LIC_ADHOC'] = 'disabled';
+}
+
 
 $style = "<br><br><h2><center><font color=\"white\">";
 $contact = "<br>Please contact <a href=\"mailto: cdukes@cdukes.com?subject=LogZilla License Request\">Clayton Dukes </a> for a new license.</h2></font></center><br>";
