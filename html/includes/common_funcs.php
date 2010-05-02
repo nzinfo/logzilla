@@ -9,6 +9,8 @@ $_licprop = ioncube_license_properties();
 if (is_array($_licprop) && isset($_licprop['limit']['value']))
 $_licprop = $_licprop['limit']['value'];
 
+echo "Lic Prop = " .$_licprop['limit']; 
+
 error_reporting(E_ALL & ~E_NOTICE);
 
 
