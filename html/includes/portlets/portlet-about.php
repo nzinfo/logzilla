@@ -1,3 +1,7 @@
+<?php
+$basePath = dirname( __FILE__ );
+require_once ($basePath . "/../common_funcs.php");
+?>
 <img style='float: left; border: 0 none; padding-right: 1.5em; padding-left: 1.5em; width: 250px; height: 250px;' src='images/LogZilla_Logo_smoothfont_300x300_transparent.png' alt='Go Go LogZilla!'/>
 <table class="header">
 <tr><td>
@@ -14,11 +18,11 @@ LogZilla is a front-end for viewing syslog messages logged to MySQL in real-time
 <h3 class="title">License</h3>
 This software is made available to end users under two licenses: a free, open-source version and a commercial version.  For inquiries about purchasing a commercial license, please email <a href="mailto:cdukes@cdukes.com?subject=LogZilla License">cdukes@cdukes.com.</a>
 
-<h3 class="title">Local Installation Information</h3>
+<h3 class="title">Local License Information</h3>
 <ul>
-<li>This copy of LogZilla will expire on <?php echo $_SESSION['LZ_LIC_EXPIRES']?></li>
-<li>Maximum number of messages per day: <?php $_SESSION['LZ_LIC_MSGLIMIT']?></li>
-<li>Maximum number of hosts: <?php $_SESSION['LZ_LIC_HOSTS']?></li>
-<li>Authentication modules: <?php $_SESSION['LZ_LIC_AUTH']?></li>
-<li>Adhoc Charts: <?php $_SESSION['LZ_LIC_ADHOC']?></li>
+<li>The license for this copy of LogZilla will expire on <?php echo $_SESSION['LZ_LIC_EXPIRES']?></li>
+<li>Maximum number of messages per day: <?php echo commify($_SESSION['LZ_LIC_MSGLIMIT'])?></li>
+<li>Maximum number of hosts: <?php echo $_SESSION['LZ_LIC_HOSTS']?></li>
+<li>Authentication modules: <?php echo $_SESSION['LZ_LIC_AUTH']?></li>
+<li>Adhoc Charts: <?php echo $_SESSION['LZ_LIC_ADHOC']?></li>
 </ul>
