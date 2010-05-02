@@ -4,25 +4,56 @@ $basePath = dirname( __FILE__ );
 require_once ($basePath . "/html_header.php");
 session_start(); 
 
+
+
+//-----------------------------------------------------
+// BEGIN IONCube Licensing
+//-----------------------------------------------------
+$page = get_input('page');
+$page = (!empty($page)) ? $page : "Main";
+
 $_licprop = ioncube_license_properties();
-if is_array($_licprop) {
+if (is_array($_licprop)) {
     $limit = $_licprop['limit']['value'];
     $hosts = $_licprop['hosts']['value'];
     $auth = $_licprop['auth']['value'];
     $adhoc = $_licprop['adhoc']['value'];
-    $xplode = $_licprop['xplode']['value'];
-    $suppress = $_licprop['suppress']['value'];
-    $excel = $_licprop['excel']['value'];
-    $history = $_licprop['history']['value'];
-    $rbac = $_licprop['rbac']['value'];
 }
 
-$sql = "SELECT value FROM cache where name='msg_sum'";
-$result = perform_query($sql, $dbLink);
-    $num = fetch_array($result);
-    if ($num > $limit) {
-    die("Message limit reached ($limit), please contact cdukes@cdukes.com for a new license<br>");
+$style = "<br><br><h2><center><font color=\"white\">";
+$contact = "<br>Please contact <a href=\"mailto: cdukes@cdukes.com?subject=LogZilla License Request\">Clayton Dukes </a> for a new license.</h2></font></center><br>";
+
+$result = mysql_query("SELECT * FROM hosts", $dbLink);
+$num = mysql_num_rows($result); 
+if ($num > $hosts) {
+    die("$style The ".humanReadable($hosts)." host limit for your license has been exceeded.$contact");
 }
+
+$sql = "SELECT value FROM cache WHERE name=CONCAT('chart_mpd_',DATE_FORMAT(NOW() - INTERVAL 0 DAY, '%Y-%m-%d_%a'))";
+$result = mysql_query($sql, $dbLink); 
+$line = fetch_array($result);
+$num = $line[0];
+if ($num > $limit) {
+    die("$style The ".humanReadable($limit)." message per day limit for your license has been exceeded.$contact");
+}
+
+if (($_SESSION['AUTHTYPE'] !== "local") && ($_SESSION['AUTHTYPE'] !== "none")) { 
+    if ( $auth !== "1") {
+    die("$style This license only allows for \"Local\" and \"None\" authentication types.$contact");
+    }
+}
+
+if ($page == "Graph") { 
+    if ( $adhoc !== "1") {
+        die("<br><br><h2><center><font color=\"white\">This license does not include Adhoc Charts.$contact");
+    }
+}
+
+//-----------------------------------------------------
+// END IONCube Licensing
+//-----------------------------------------------------
+
+
 
 error_reporting(E_ALL & ~E_NOTICE);
 
@@ -60,8 +91,7 @@ http://playground.emanuelblagonic.com/creating-nested-drop-down-menus/
 
 <?php
 $start_time = microtime(true);
-$page = get_input('page');
-$page = (!empty($page)) ? $page : "Main";
+
 $pagecontent = "<div id=\"pagecontent\" style=\"position:absolute; width: 100%; top: 8%; left: 1%;\">\n";
 if ($page == "Main") {
     $pagecontent .= "<form method=\"post\" id=\"results\" name=\"results\" action=\"".$_SESSION['SITE_URL']."\">\n";
@@ -73,7 +103,7 @@ if ($access == "admins") {
 } else {
     $sql = ("SELECT DISTINCT(col) FROM ui_layout WHERE userid=(SELECT id FROM users WHERE username='".$_SESSION['username']."') AND pagename='$page' AND group_access LIKE '%$access%' ORDER BY col ASC");
 }
-$queryresult = perform_query($sql, $dbLink, $_REQUEST['pageId']);
+$queryresult = perform_query($sql, $dbLink, $page);
 
 // Check for invalid page request in the URL (404)
 if(num_rows($queryresult)==0){
@@ -145,7 +175,7 @@ foreach($colarray as $column) {
     } else {
     $sql = ("SELECT header, content FROM ui_layout WHERE userid=(SELECT id FROM users WHERE username='".$_SESSION['username']."') AND pagename='$page' AND group_access LIKE '%$access%' AND col='$column' ORDER BY rowindex ASC");
     }
-    $queryresult = perform_query($sql, $dbLink, $_REQUEST['pageId']);
+    $queryresult = perform_query($sql, $dbLink, $page);
     $rowindexarray = array();
     while ($line = fetch_array($queryresult)) {
         $header = $line['header'];
