@@ -3,6 +3,30 @@
 $basePath = dirname( __FILE__ );
 require_once ($basePath . "/html_header.php");
 session_start(); 
+
+$_licprop = ioncube_license_properties();
+if is_array($_licprop) {
+    $limit = $_licprop['limit']['value'];
+    $hosts = $_licprop['hosts']['value'];
+    $auth = $_licprop['auth']['value'];
+    $adhoc = $_licprop['adhoc']['value'];
+    $xplode = $_licprop['xplode']['value'];
+    $suppress = $_licprop['suppress']['value'];
+    $excel = $_licprop['excel']['value'];
+    $history = $_licprop['history']['value'];
+    $rbac = $_licprop['rbac']['value'];
+}
+
+$sql = "SELECT value FROM cache where name='msg_sum'";
+$result = perform_query($sql, $dbLink);
+    $num = fetch_array($result);
+    if ($num > $limit) {
+    die("Message limit reached ($limit), please contact cdukes@cdukes.com for a new license<br>");
+}
+
+error_reporting(E_ALL & ~E_NOTICE);
+
+
 ?>
 
 <!-- BEGIN HTML Code -->
@@ -99,7 +123,7 @@ while ($line = fetch_array($queryresult)) {
 $colcount = count($colarray);
 $colwidth = round((100 / $colcount), 2);
 $_SESSION['colwidth'] = $colwidth;
-if ($_SESSION['DEBUG'] > 1 ) {
+if ($_SESSION['DEBUG'] > 2 ) {
     echo "$colcount columns in this tab<br>\n";
 }
 //----------------------------------------------------------
@@ -139,13 +163,13 @@ foreach($colarray as $column) {
     // This is used in js_footer for portlet width
     //----------------------------------------------------------
     $_SESSION[$page]['maxrows'] = $lastcol;
-    if ($_SESSION['DEBUG'] > 1) {
+    if ($_SESSION['DEBUG'] > 2) {
         echo "&nbsp;&nbsp;".count($rowindexarray)." rows in this column<br>\n";
     }
     for($i = 0; $i<count($rowindexarray) ; $i++) {
         $header = $rowindexarray[$i][0];
         $content = $rowindexarray[$i][1];
-        if ($_SESSION['DEBUG'] > 1) {
+        if ($_SESSION['DEBUG'] > 2) {
             echo "&nbsp;&nbsp;&nbsp;Column = $column<br>&nbsp;&nbsp;&nbsp;Header = $header<br>&nbsp;&nbsp;&nbsp;Content = $content<br>\n";
         }
         $pagecontent .= "<!-- Starting portlet for $page, $column -->\n";;
@@ -195,7 +219,7 @@ $pagecontent .= "<td width='33%'>\n";
     $pagecontent .= "</div>\n";
 $pagecontent .= "</td>\n";
 $pagecontent .= "<td width='33%'></td>\n";
-if ($_SESSION['DEBUG'] == "1") {
+if ($_SESSION['DEBUG'] > 0) {
     $end_time = microtime(true);
     $pagecontent .= "Page generated in " . round(($end_time - $start_time),5) . " seconds\n";
 }

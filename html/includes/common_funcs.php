@@ -5,15 +5,6 @@ $basePath = dirname( __FILE__ );
 require_once ($basePath ."/../config/config.php");
 require_once ($basePath ."/modules/authentication.php");
 
-$_licprop = ioncube_license_properties();
-if (is_array($_licprop) && isset($_licprop['limit']['value']))
-$_licprop = $_licprop['limit']['value'];
-
-echo "Lic Prop = " .$_licprop['limit']; 
-
-error_reporting(E_ALL & ~E_NOTICE);
-
-
 // ------------------------------
 // Grab all settings from the settings table in the database
 // ------------------------------
