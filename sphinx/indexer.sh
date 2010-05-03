@@ -89,7 +89,7 @@ else
                 if [ $spid ]; then
                         echo "Spawning MERGE indexer for idx_logs and idx_delta_logs"
                         echo "Running command: $indexer --config $spconf --merge idx_logs idx_delta_logs --rotate"
-                        $indexer --config $spconf --merge idx_logs idx_delta_logs --rotate
+                        $indexer --config $spconf --merge idx_logs idx_delta_logs --rotate --merge-dst-range deleted 0 0
                         `echo "UPDATE sph_counter SET max_id= (SELECT MAX(id) FROM $logtable) WHERE \
                         index_name = 'idx_logs'" | mysql -u$dbuser -p$dbpass $db`
                 else

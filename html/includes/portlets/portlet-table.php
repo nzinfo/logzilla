@@ -5,7 +5,7 @@
  * Developed by Clayton Dukes <cdukes@cdukes.com>
  * Copyright (c) 2010 LogZilla, LLC
  * All rights reserved.
- * Last updated on 2010-05-02
+ * Last updated on 2010-05-03
  *
  * Pagination and table formatting created using 
  * http://www.frequency-decoder.com/2007/10/19/client-side-table-pagination-script/
@@ -207,7 +207,10 @@ $qstring .= "&msg_mask=$msg_mask&msg_mask_oper=$msg_mask_oper";
 $orderby = get_input('orderby');
 $qstring .= "&orderby=$orderby";
 
-if($msg_mask) {
+$order = get_input('order');
+$qstring .= "&order=$order";
+
+if($msg_mask !== '') {
     if ($_SESSION['SPX_ENABLE'] == "1") {
         //---------------BEGIN SPHINX
         require_once ($basePath . "/../SPHINX.class.php");
@@ -216,10 +219,14 @@ if($msg_mask) {
         $hostip = $_SESSION['SPX_SRV'];
         $port = intval($_SESSION['SPX_PORT']);
         $cl->SetServer ( $hostip, $port );
-        $cl->SetMatchMode ( SPH_MATCH_EXTENDED2 );
-        // $cl->SetSortMode(SPH_SORT_ATTR_DESC, "id");
-        $cl->SetSortMode(SPH_SORT_EXTENDED, "@id DESC");
-        $cl->SetLimits(0, intval($limit));
+        $cl->SetMatchMode ( SPH_MATCH_ANY );
+           if ($order == 'DESC') {
+           $cl->SetSortMode(SPH_SORT_ATTR_DESC, "$orderby");
+           } else {
+           $cl->SetSortMode(SPH_SORT_ATTR_ASC, "$orderby");
+           }
+            // $cl->SetSortMode(SPH_SORT_EXTENDED2, "$orderby $order");
+        $cl->SetLimits(0, intval($_SESSION['SPX_MAX_MATCHES']));
         $res = $cl->Query ( htmlentities($msg_mask), $index);
         if ( !$res )
         {
@@ -229,16 +236,16 @@ if($msg_mask) {
         {
             if ($res['total_found'] > 0) {
                 $where .= " AND id IN (";
-                $orby .= " ORDER BY FIELD(id,";
+                   // $orby .= " ORDER BY FIELD($orderby,";
                 foreach ( $res["matches"] as $doc => $docinfo ) {
                     $where .= "'$doc',";
-                    $orby .= "'$doc',";
+                       // $orby .= "'$doc',";
                     // echo "$doc<br>\n";
                 }
                 $where = rtrim($where, ",");
-                $orby = rtrim($orby, ",");
+                   // $orby = rtrim($orby, ",");
                 $where .= ")";
-                $orby .= ")";
+                  // $orby .= ")";
             } else {
                 // Negate search since sphinx returned 0 hits
                 $where = "WHERE 1<1";
@@ -359,26 +366,15 @@ if (($dupop) && ($dupop != 'undefined')) {
 }
 // Not implemented yet (for graph generation)
 $topx = get_input('topx');
-    $qstring .= "&topx=$topx";
+$qstring .= "&topx=$topx";
 $graphtype = get_input('graphtype');
-    $qstring .= "&graphtype=$graphtype";
+$qstring .= "&graphtype=$graphtype";
 
-$order = get_input('order');
-    $qstring .= "&order=$order";
-    if ($orderby) {
-        // if ($orderby == 'lo') {
-            // $orderby = 'id';
-        // }
-    if ($_SESSION['SPX_ENABLE'] == "0") {
+if ($orderby) {
     $where.= " ORDER BY $orderby";  
-    // } else {
-    // $where.= " $orby";  
-    }
 }
 if ($order) {
-    if ($_SESSION['SPX_ENABLE'] == "0") {
     $where.= " $order";  
-    }
 }
 
 ?>

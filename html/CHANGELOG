@@ -5,6 +5,7 @@ CHANGELOG
  - Fixed htmlentities display on table output
  - Added license information display to help>about
  - Removed encryption from all but 1 file to keep the project "open source"
+ - Fixed missing ORDER BY clause in results table (for both normal and sphinx searches)
 
 3.0 RC1
  - Added menu item to reset ui_layout

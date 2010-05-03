@@ -21,47 +21,47 @@ if (is_array($_licprop)) {
     $hosts = $_licprop['hosts']['value'];
     $auth = $_licprop['auth']['value'];
     $adhoc = $_licprop['adhoc']['value'];
-}
-$_SESSION['LZ_LIC_MSGLIMIT'] = $limit;
-$_SESSION['LZ_LIC_HOSTS'] = $hosts;
-if ($auth == "1") {
-    $_SESSION['LZ_LIC_AUTH'] = "all";
-} else {
-    $_SESSION['LZ_LIC_AUTH'] = '"Local" and "None"';
-}
-if ($adhoc == "1") {
-    $_SESSION['LZ_LIC_ADHOC'] = 'enabled';
-} else {
-    $_SESSION['LZ_LIC_ADHOC'] = 'disabled';
-}
-
-
-$style = "<br><br><h2><center><font color=\"white\">";
-$contact = "<br>Please contact <a href=\"mailto: cdukes@cdukes.com?subject=LogZilla License Request\">Clayton Dukes </a> for a new license.</h2></font></center><br>";
-
-$result = mysql_query("SELECT * FROM hosts", $dbLink);
-$num = mysql_num_rows($result); 
-if ($num > $hosts) {
-    die("$style The ".humanReadable($hosts)." host limit for your license has been exceeded.$contact");
-}
-
-$sql = "SELECT value FROM cache WHERE name=CONCAT('chart_mpd_',DATE_FORMAT(NOW() - INTERVAL 0 DAY, '%Y-%m-%d_%a'))";
-$result = mysql_query($sql, $dbLink); 
-$line = fetch_array($result);
-$num = $line[0];
-if ($num > $limit) {
-    die("$style The ".humanReadable($limit)." message per day limit for your license has been exceeded.$contact");
-}
-
-if (($_SESSION['AUTHTYPE'] !== "local") && ($_SESSION['AUTHTYPE'] !== "none")) { 
-    if ( $auth !== "1") {
-    die("$style This license only allows for \"Local\" and \"None\" authentication types.$contact");
+    $_SESSION['LZ_LIC_MSGLIMIT'] = $limit;
+    $_SESSION['LZ_LIC_HOSTS'] = $hosts;
+    if ($auth == "1") {
+        $_SESSION['LZ_LIC_AUTH'] = "all";
+    } else {
+        $_SESSION['LZ_LIC_AUTH'] = '"Local" and "None"';
     }
-}
+    if ($adhoc == "1") {
+        $_SESSION['LZ_LIC_ADHOC'] = 'enabled';
+    } else {
+        $_SESSION['LZ_LIC_ADHOC'] = 'disabled';
+    }
 
-if ($page == "Graph") { 
-    if ( $adhoc !== "1") {
-        die("<br><br><h2><center><font color=\"white\">This license does not include Adhoc Charts.$contact");
+
+    $style = "<br><br><h2><center><font color=\"white\">";
+    $contact = "<br>Please contact <a href=\"mailto: cdukes@cdukes.com?subject=LogZilla License Request\">Clayton Dukes </a> for a new license.</h2></font></center><br>";
+
+    $result = mysql_query("SELECT * FROM hosts", $dbLink);
+    $num = mysql_num_rows($result); 
+    if ($num > $hosts) {
+        die("$style The ".humanReadable($hosts)." host limit for your license has been exceeded.$contact");
+    }
+
+    $sql = "SELECT value FROM cache WHERE name=CONCAT('chart_mpd_',DATE_FORMAT(NOW() - INTERVAL 0 DAY, '%Y-%m-%d_%a'))";
+    $result = mysql_query($sql, $dbLink); 
+    $line = fetch_array($result);
+    $num = $line[0];
+    if ($num > $limit) {
+        die("$style The ".humanReadable($limit)." message per day limit for your license has been exceeded.$contact");
+    }
+
+    if (($_SESSION['AUTHTYPE'] !== "local") && ($_SESSION['AUTHTYPE'] !== "none")) { 
+        if ( $auth !== "1") {
+            die("$style This license only allows for \"Local\" and \"None\" authentication types.$contact");
+        }
+    }
+
+    if ($page == "Graph") { 
+        if ( $adhoc !== "1") {
+            die("<br><br><h2><center><font color=\"white\">This license does not include Adhoc Charts.$contact");
+        }
     }
 }
 
