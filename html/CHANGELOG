@@ -3,6 +3,8 @@ CHANGELOG
 3.0.40 RC1
  - Added regex pattern match for Windows Snare logs in db_insert.pl
  - Fixed htmlentities display on table output
+ - Added license information display to help>about
+ - Removed encryption from all but 1 file to keep the project "open source"
 
 3.0 RC1
  - Added menu item to reset ui_layout

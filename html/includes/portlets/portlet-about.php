@@ -22,7 +22,7 @@ This software is made available to end users under two licenses: a free, open-so
 <ul>
 <li>The license for this copy of LogZilla will expire on <?php echo $_SESSION['LZ_LIC_EXPIRES']?></li>
 <li>Maximum number of messages per day: <?php echo commify($_SESSION['LZ_LIC_MSGLIMIT'])?></li>
-<li>Maximum number of hosts: <?php echo $_SESSION['LZ_LIC_HOSTS']?></li>
+<li>Maximum number of hosts: <?php echo commify($_SESSION['LZ_LIC_HOSTS'])?></li>
 <li>Authentication modules: <?php echo $_SESSION['LZ_LIC_AUTH']?></li>
 <li>Adhoc Charts: <?php echo $_SESSION['LZ_LIC_ADHOC']?></li>
 </ul>

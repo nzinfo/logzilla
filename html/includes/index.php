@@ -13,7 +13,7 @@ $page = get_input('page');
 $page = (!empty($page)) ? $page : "Main";
 
 $a = ioncube_file_info(); 
-$_SESSION['LZ_LIC_EXPIRES'] = date("F j, Y",$a['ENCODING_TIME']);
+$_SESSION['LZ_LIC_EXPIRES'] = date("F j, Y", $a['FILE_EXPIRY']);
 
 $_licprop = ioncube_license_properties();
 if (is_array($_licprop)) {
