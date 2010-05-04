@@ -1,193 +1,300 @@
-<?php //003de
-// Copyright (c) LogZilla, LLC.
-// LogZilla 3.0.58
-if(!extension_loaded('ionCube Loader')){$__oc=strtolower(substr(php_uname(),0,3));$__ln='ioncube_loader_'.$__oc.'_'.substr(phpversion(),0,3).(($__oc=='win')?'.dll':'.so');@dl($__ln);if(function_exists('_il_exec')){return _il_exec();}$__ln='/ioncube/'.$__ln;$__oid=$__id=realpath(ini_get('extension_dir'));$__here=dirname(__FILE__);if(strlen($__id)>1&&$__id[1]==':'){$__id=str_replace('\\','/',substr($__id,2));$__here=str_replace('\\','/',substr($__here,2));}$__rd=str_repeat('/..',substr_count($__id,'/')).$__here.'/';$__i=strlen($__rd);while($__i--){if($__rd[$__i]=='/'){$__lp=substr($__rd,0,$__i).$__ln;if(file_exists($__oid.$__lp)){$__ln=$__lp;break;}}}@dl($__ln);}else{die('The file '.__FILE__." is corrupted.\n");}if(function_exists('_il_exec')){return _il_exec();}echo('Site error: the file <b>'.__FILE__.'</b> requires the ionCube PHP Loader '.basename($__ln).' to be installed by the site administrator.');exit(199);
+<?php
+// Copyright (C) 2010 Clayton Dukes, cdukes@cdukes.com
+$basePath = dirname( __FILE__ );
+require_once ($basePath . "/html_header.php");
+session_start(); 
+
+
+
+//-----------------------------------------------------
+// BEGIN IONCube Licensing
+//-----------------------------------------------------
+$page = get_input('page');
+$page = (!empty($page)) ? $page : "Main";
+
+$a = ioncube_file_info(); 
+$_SESSION['LZ_LIC_EXPIRES'] = date("F j, Y", $a['FILE_EXPIRY']);
+
+$_licprop = ioncube_license_properties();
+if (is_array($_licprop)) {
+    $limit = $_licprop['limit']['value'];
+    $hosts = $_licprop['hosts']['value'];
+    $auth = $_licprop['auth']['value'];
+    $adhoc = $_licprop['adhoc']['value'];
+    $_SESSION['LZ_LIC_MSGLIMIT'] = $limit;
+    $_SESSION['LZ_LIC_HOSTS'] = $hosts;
+    if ($auth == "1") {
+        $_SESSION['LZ_LIC_AUTH'] = "all";
+    } else {
+        $_SESSION['LZ_LIC_AUTH'] = '"Local" and "None"';
+    }
+    if ($adhoc == "1") {
+        $_SESSION['LZ_LIC_ADHOC'] = 'enabled';
+    } else {
+        $_SESSION['LZ_LIC_ADHOC'] = 'disabled';
+    }
+
+
+    $style = "<br><br><h2><center><font color=\"white\">";
+    $contact = "<br>Please contact <a href=\"mailto: cdukes@cdukes.com?subject=LogZilla License Request\">Clayton Dukes </a> for a new license.</h2></font></center><br>";
+
+    $result = mysql_query("SELECT * FROM hosts", $dbLink);
+    $num = mysql_num_rows($result); 
+    if ($num > $hosts) {
+        die("$style The ".humanReadable($hosts)." host limit for your license has been exceeded.$contact");
+    }
+
+    $sql = "SELECT value FROM cache WHERE name=CONCAT('chart_mpd_',DATE_FORMAT(NOW() - INTERVAL 0 DAY, '%Y-%m-%d_%a'))";
+    $result = mysql_query($sql, $dbLink); 
+    $line = fetch_array($result);
+    $num = $line[0];
+    if ($num > $limit) {
+        die("$style The ".humanReadable($limit)." message per day limit for your license has been exceeded.$contact");
+    }
+
+    if (($_SESSION['AUTHTYPE'] !== "local") && ($_SESSION['AUTHTYPE'] !== "none")) { 
+        if ( $auth !== "1") {
+            die("$style This license only allows for \"Local\" and \"None\" authentication types.$contact");
+        }
+    }
+
+    if ($page == "Graph") { 
+        if ( $adhoc !== "1") {
+            die("<br><br><h2><center><font color=\"white\">This license does not include Adhoc Charts.$contact");
+        }
+    }
+}
+
+//-----------------------------------------------------
+// END IONCube Licensing
+//-----------------------------------------------------
+
+
+
+error_reporting(E_ALL & ~E_NOTICE);
+
+
 ?>
-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
+
+<!-- BEGIN HTML Code -->
+
+<!-- BEGIN Theme Switcher -->
+<div id="switcher" style="float:right; top: 2%; right: 1%;"></div>
+<!-- END Theme Switcher -->
+
+<!-- BEGIN Placeholders for alert messages (default is top right, so no need to add a class for that) -->
+<div id="msgbox_tl" class="jGrowl top-left"></div>
+<div id="msgbox_br" class="jGrowl bottom-right"></div>
+<div id="msgbox_bl" class="jGrowl bottom-left"></div>
+<div id="msgbox_tc" class="jGrowl center"></div>
+<!-- END Placeholders for alert messages -->
+
+<!-- BEGIN Top Menu Navigation -->
+<div id="container">
+
+<!-- NAVIGATION
+http://playground.emanuelblagonic.com/creating-nested-drop-down-menus/
+-->
+<ul id="menu">
+<?php include("navmenu.php");?>
+</ul>
+<!-- /NAVIGATION -->    
+
+</div>
+<!-- /CONTAINER -->
+
+<!-- END Top Menu Navigation -->
+
+<?php
+$start_time = microtime(true);
+
+$pagecontent = "<div id=\"pagecontent\" style=\"position:absolute; width: 100%; top: 8%; left: 1%;\">\n";
+if ($page == "Main") {
+    $pagecontent .= "<form method=\"post\" id=\"results\" name=\"results\" action=\"".$_SESSION['SITE_URL']."\">\n";
+}
+$colarray = array();
+$access = getgroup($_SESSION['username']);
+if ($access == "admins") {
+    $sql = ("SELECT DISTINCT(col) FROM ui_layout WHERE userid=(SELECT id FROM users WHERE username='".$_SESSION['username']."') AND pagename='$page' ORDER BY col ASC");
+} else {
+    $sql = ("SELECT DISTINCT(col) FROM ui_layout WHERE userid=(SELECT id FROM users WHERE username='".$_SESSION['username']."') AND pagename='$page' AND group_access LIKE '%$access%' ORDER BY col ASC");
+}
+$queryresult = perform_query($sql, $dbLink, $page);
+
+// Check for invalid page request in the URL (404)
+if(num_rows($queryresult)==0){
+    ?>
+<!-- BEGIN 404 -->
+<div class="dialog_hide">
+    <div id="404modal" title='Page Not Found'>
+        The page you requested is either not found or you do not have sufficient access rights.<br>
+        Try one of these pages instead:
+        <ul>
+        <?php
+        $sql = "SELECT DISTINCT(pagename) FROM ui_layout WHERE userid=(SELECT id FROM users WHERE username='".$_SESSION['username']."') AND group_access='$access' ORDER BY pagename ASC";
+    $result = perform_query($sql, $dbLink, $_SERVER['PHP_SELF']);
+    while($row = fetch_array($result)) { 
+        $pagename = $row['pagename'];
+        echo "<li><a href=\"".$_SESSION['SITE_URL']."?page=$pagename\">$pagename</a></li>\n";
+    }
+    ?>
+        </ul>
+    </div>
+</div>
+<script type="text/javascript">
+$().ready(function(){
+        $("#404modal").dialog({
+                        bgiframe: true,
+                        resizable: true,
+                        height: 'auto',
+                        width: '50%',
+                        autoOpen:false,
+                        modal: true,
+                        overlay: {
+                                backgroundColor: '#000',
+                                opacity: 0.5
+                        },
+                });
+                $("#404modal").dialog('open');     
+        });
+</script>
+<!-- END 404 -->
+    <?php
+    exit;
+}
+
+while ($line = fetch_array($queryresult)) {
+    array_push($colarray, $line['col']);
+}
+$colcount = count($colarray);
+$colwidth = round((100 / $colcount), 2);
+$_SESSION['colwidth'] = $colwidth;
+if ($_SESSION['DEBUG'] > 2 ) {
+    echo "$colcount columns in this tab<br>\n";
+}
+//----------------------------------------------------------
+// Store the column count in a session variable
+// This is used in js_footer for portlet height
+//----------------------------------------------------------
+$_SESSION[$page]['maxcols'] = $colcount;
+foreach($colarray as $column) {
+    $pagecontent .= "<!-- BEGIN Column $column -->\n";
+    // !IMPORTANT! the id set below  - $page|$column - is used to save the layouts in savelayout.php
+    if ($colwidth < 100) { // No need to make the portlet draggable if it's the only one on the page.
+    $pagecontent .= "<div class=\"column\" style=\"width: $colwidth%; float: left; padding-bottom: 100px;\" id=\"$page|$column\">\n";
+    }
+    //----------------------------------------------------------
+    // 3. For each column, get the row
+    //----------------------------------------------------------
+    if ($access == "admins") {
+    $sql = ("SELECT header, content FROM ui_layout WHERE userid=(SELECT id FROM users WHERE username='".$_SESSION['username']."') AND pagename='$page' AND col='$column' ORDER BY rowindex ASC");
+    } else {
+    $sql = ("SELECT header, content FROM ui_layout WHERE userid=(SELECT id FROM users WHERE username='".$_SESSION['username']."') AND pagename='$page' AND group_access LIKE '%$access%' AND col='$column' ORDER BY rowindex ASC");
+    }
+    $queryresult = perform_query($sql, $dbLink, $page);
+    $rowindexarray = array();
+    while ($line = fetch_array($queryresult)) {
+        $header = $line['header'];
+        $content = $line['content'];
+        array_push($rowindexarray, array("$header","$content"));
+    }
+    $thiscol = count($rowindexarray);
+    if ($lastcol > $thiscol) {
+        $lastcol = $lastcol;
+    } else {
+        $lastcol = $thiscol;
+    }
+    //----------------------------------------------------------
+    // Store the row count in a session variable
+    // This is used in js_footer for portlet width
+    //----------------------------------------------------------
+    $_SESSION[$page]['maxrows'] = $lastcol;
+    if ($_SESSION['DEBUG'] > 2) {
+        echo "&nbsp;&nbsp;".count($rowindexarray)." rows in this column<br>\n";
+    }
+    for($i = 0; $i<count($rowindexarray) ; $i++) {
+        $header = $rowindexarray[$i][0];
+        $content = $rowindexarray[$i][1];
+        if ($_SESSION['DEBUG'] > 2) {
+            echo "&nbsp;&nbsp;&nbsp;Column = $column<br>&nbsp;&nbsp;&nbsp;Header = $header<br>&nbsp;&nbsp;&nbsp;Content = $content<br>\n";
+        }
+        $pagecontent .= "<!-- Starting portlet for $page, $column -->\n";;
+        $hdid = str_replace(" ", "_", $header);
+        $pagecontent .= "<div class=\"portlet\" id=\"portlet_$hdid\">\n";
+        $pagecontent .="<div class=\"portlet-header\" id=\"portlet-header_$hdid\">$header</div>\n";
+        $pagecontent .="<div class=\"portlet-content\" id=\"portlet-content_$hdid\">\n";
+        //----------------------------------------------------------
+        // include_contents is used to include the actual content
+        // from the file. if you used the regular php include("filename")
+        // here, it would only print that string instead of actually
+        // including the contents of the file.
+        //----------------------------------------------------------
+        $pagecontent .= include_contents($content);
+        $pagecontent .="</div>\n";
+        $pagecontent .= "<!-- Ending portlet for $page, $column -->\n";;
+        $pagecontent .= "</div>\n";
+    }
+    $pagecontent .= "<!-- END Column: $page $column -->\n";
+    $pagecontent .= "</div>\n";
+}
+$pagecontent .= "<!-- Clear style for next tab -->\n";
+$pagecontent .= "<div style=\"clear:both\"></div>\n";
+$pagecontent .= "<!-- END Tab: $page -->\n";
+
+
+
+if ($page == "Main") {
+$pagecontent .= "<table id='footer' size='100%' cellpadding='0' cellspacing='0' border='0'>\n";
+$pagecontent .= "<thead>\n";
+$pagecontent .= "<tr>\n";
+$pagecontent .= "<th></th>\n";
+$pagecontent .= "<th></th>\n";
+$pagecontent .= "<th></th>\n";
+$pagecontent .= "</tr>\n";
+$pagecontent .= "</thead>\n";
+$pagecontent .= "<tbody>\n";
+$pagecontent .= "<td width='33%'>\n";
+// $pagecontent .= "<span id='span_search_params'>The options currently selected will return <span id='span_limit'>the last 10</span> results <span id'span_date>for today</span> for</span> <span id='span_prog'>all programs</span>, <span id='span_pri'>all severities</span>, <span id='span_fac'>all facilities</span>, <span id='span_host'>all hosts</span>, <span id='span_msg'>and all messages</span>\n";
+$pagecontent .= "</td>\n";
+$pagecontent .= "<td width='33%'>\n";
+    $pagecontent .= "<div class='submitButtons'>";
+    $pagecontent .= "<input class='ui-state-default ui-corner-all' type='submit' id='btnSearch' value='Search'>\n";
+    $pagecontent .= "<input class='ui-state-default ui-corner-all' type='submit' id='btnGraph' value='Graph'>\n";
+    $pagecontent .= "<input class='ui-state-default ui-corner-all' type='reset' value='Reset'>\n";
+    $pagecontent .= "<!-- End Submit Buttons -->\n";
+    $pagecontent .= "</div>\n";
+$pagecontent .= "</td>\n";
+$pagecontent .= "<td width='33%'></td>\n";
+if ($_SESSION['DEBUG'] > 0) {
+    $end_time = microtime(true);
+    $pagecontent .= "Page generated in " . round(($end_time - $start_time),5) . " seconds\n";
+}
+$pagecontent .= "</tbody>\n";
+$pagecontent .= "</table>\n";
+}
+
+
+
+    $pagecontent .= "<!-- End Form -->\n";
+    $pagecontent .= "</form>\n";
+$pagecontent .= "</div>\n";
+echo $pagecontent;
+?>
+<!-- END Tabs  -->
+<!-- BEGIN Tip -->
+<?php 
+$sql = "SELECT id, name, text FROM totd where lastshown<(SELECT NOW() - INTERVAL ".$_SESSION['TOOLTIP_REPEAT']." MINUTE) ORDER BY RAND() LIMIT 1";
+$result = perform_query($sql, $dbLink, $_SERVER['PHP_SELF']);
+if(num_rows($result)==1){
+    $sql = "SELECT totd FROM users where username='$_SESSION[username]'";
+    $result = perform_query($sql, $dbLink, $_SERVER['PHP_SELF']);
+    $line = fetch_array($result);
+    if ($line[0] == "show") {
+?>
+<div class="dialog_hide">
+    <div id="tipmodal" title='Useful Tips'>
+    <div id="tiptext"></div>
+    </div>
+</div>
+<?php }} ?>
+<!-- END Tip -->
