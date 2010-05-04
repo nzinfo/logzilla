@@ -119,7 +119,7 @@ close( CONFIG );
 
 my($dbtable,$dbuser,$dbpass,$db,$dbhost,$dbport,$DEBUG,$dedup,$dedup_window,$dedup_dist,$log_path,$bulk_ins,$insert_string,@msgs, $q_time, $q_limit);
 foreach my $var (@config) {
-    next unless $var =~ /^DEFINE/; # read only def's
+    next unless $var =~ /^\s+?DEFINE/; # read only def's
     $dbuser = $1 if ($var =~ /'DBADMIN', '(\w+)'/);
     $dbpass = $1 if ($var =~ /'DBADMINPW', '(\w+)'/);
     $db = $1 if ($var =~ /'DBNAME', '(\w+)'/);
