@@ -2,7 +2,7 @@
 
 #
 # install.pl
-# Last updated on 2010-05-03
+# Last updated on 2010-05-04
 #
 # Developed by Clayton Dukes <cdukes@cdukes.com>
 # Copyright (c) 2010 LogZilla, LLC
@@ -30,15 +30,15 @@ use String::CRC32
 
 system("stty erase ^H");
 sub p {
-	my($prompt, $default) = @_;
-	my $defaultValue = $default ? "[$default]" : "";
-	print "$prompt $defaultValue: ";
-	chomp(my $input = <STDIN>);
-	return $input ? $input : $default;
+    my($prompt, $default) = @_;
+    my $defaultValue = $default ? "[$default]" : "";
+    print "$prompt $defaultValue: ";
+    chomp(my $input = <STDIN>);
+    return $input ? $input : $default;
 }
 
 my $version = "3.0";
-my $subversion = ".56";
+my $subversion = ".58";
 
 # Grab the base path
 my $lzbase = getcwd;
@@ -72,29 +72,33 @@ my $logpath  = &p("Where should log files be stored?", '/var/log/logzilla');
 my $retention  = &p("How long should I keep old logs? (in days)", '30');
 
 
+if (! -d "$logpath") {
+    mkdir "$logpath";
+}
+
 print("\n\033[1m\n\n========================================\033[0m\n");
 print("\n\033[1m\tPath Updates\n\033[0m");
 print("\n\033[1m========================================\n\n\033[0m\n\n");
 print "Getting ready to replace paths in all files with \"$lzbase\"\n";
 my $ok  = &p("Ok to continue?", "y");
 if ($ok =~ /[Yy]/) {
-	my $search = "/path_to_logzilla";
+    my $search = "/path_to_logzilla";
     print "Updating file paths\n";
-	foreach my $file (qx(grep -Rl $search ../* | egrep -v "install.pl|.svn|.sql|CHANGELOG")) {
-		chomp $file;
-		print "Modifying $file\n";
-		system "perl -i -pe 's|$search|$lzbase|g' $file" and warn "Could not modify $file $!\n";
-	}
-	my $search = "/path_to_logs";
+    foreach my $file (qx(grep -Rl $search ../* | egrep -v "install.pl|.svn|.sql|CHANGELOG")) {
+        chomp $file;
+        print "Modifying $file\n";
+        system "perl -i -pe 's|$search|$lzbase|g' $file" and warn "Could not modify $file $!\n";
+    }
+    my $search = "/path_to_logs";
     print "Updating log paths\n";
-	foreach my $file (qx(grep -Rl $search ../* | egrep -v "install.pl|.svn|.sql|CHANGELOG")) {
-		chomp $file;
-		print "Modifying $file\n";
-		system "perl -i -pe 's|$search|$logpath|g' $file" and warn "Could not modify $file $!\n";
-	}
-	$paths_updated++;
+    foreach my $file (qx(grep -Rl $search ../* | egrep -v "install.pl|.svn|.sql|CHANGELOG")) {
+        chomp $file;
+        print "Modifying $file\n";
+        system "perl -i -pe 's|$search|$logpath|g' $file" and warn "Could not modify $file $!\n";
+    }
+    $paths_updated++;
 } else {
-	print "Skipping path updates\n";
+    print "Skipping path updates\n";
 }
 
 print("\n\033[1m\n\n========================================\033[0m\n");
@@ -104,43 +108,43 @@ print "All data will be installed into the $dbname database\n";
 my $ok  = &p("Ok to continue?", "y");
 if ($ok =~ /[Yy]/) {
 # First, create the mysql database and create the $dbname
-	my $dbh;
-	$dbh = DBI->connect( "DBI:mysql:mysql:$dbhost:$dbport", $dbroot, $dbrootpass );
-	if (!$dbh) {
-		print "Can't connect to the mysql database: ", $DBI::errstr, "\n";
-		exit;
-	}
+    my $dbh;
+    $dbh = DBI->connect( "DBI:mysql:mysql:$dbhost:$dbport", $dbroot, $dbrootpass );
+    if (!$dbh) {
+        print "Can't connect to the mysql database: ", $DBI::errstr, "\n";
+        exit;
+    }
 
-	# Check version of MySQL
-	my $sth = $dbh->prepare("SELECT version()") or die "Could not create the $dbname database: $DBI::errstr";
-	$sth->execute;
-	while (my @data = $sth->fetchrow_array()) {
-		my $ver = $data[0];
-		if ($ver !~ /5\.1/) {
-			print("\n\033[1m\tERROR!\n\033[0m");
-			print "LogZilla requires MySQL v5.1 or better.\n";
-			print "Your version is $ver\n";
-			print "Please upgrade MySQL to v5.1 or better and re-run this installation.\n";
-			exit;
-		}
-	}
+    # Check version of MySQL
+    my $sth = $dbh->prepare("SELECT version()") or die "Could not create the $dbname database: $DBI::errstr";
+    $sth->execute;
+    while (my @data = $sth->fetchrow_array()) {
+        my $ver = $data[0];
+        if ($ver !~ /5\.1/) {
+            print("\n\033[1m\tERROR!\n\033[0m");
+            print "LogZilla requires MySQL v5.1 or better.\n";
+            print "Your version is $ver\n";
+            print "Please upgrade MySQL to v5.1 or better and re-run this installation.\n";
+            exit;
+        }
+    }
 
-	my $sth = $dbh->prepare("create database $dbname");
-	$sth->execute;
-	if ($dbh->err) {
-		print("\n\033[1m\tERROR!\n\033[0m");
-		print "Database \"$dbname\" already exists!\nPlease delete it and re-run $0\n";
-		exit;
-	}
-	$dbh->disconnect();
+    my $sth = $dbh->prepare("create database $dbname");
+    $sth->execute;
+    if ($dbh->err) {
+        print("\n\033[1m\tERROR!\n\033[0m");
+        print "Database \"$dbname\" already exists!\nPlease delete it and re-run $0\n";
+        exit;
+    }
+    $dbh->disconnect();
 
 
 # Now that we have the DB created, re-connect and create the tables
-	$dbh = DBI->connect( "DBI:mysql:$dbname:$dbhost:$dbport", $dbroot, $dbrootpass );
-	if (!$dbh) {
-		print "Can't connect to $dbname database: ", $DBI::errstr, "\n";
-		exit;
-	}
+    $dbh = DBI->connect( "DBI:mysql:$dbname:$dbhost:$dbport", $dbroot, $dbrootpass );
+    if (!$dbh) {
+        print "Can't connect to $dbname database: ", $DBI::errstr, "\n";
+        exit;
+    }
 
 # Create main table
     my $sth = $dbh->prepare("
@@ -164,8 +168,8 @@ if ($ok =~ /[Yy]/) {
         KEY program (program),
         KEY suppress (suppress)
         ) ENGINE=MyISAM
-		") or die "Could not create $dbtable table: $DBI::errstr";
-	$sth->execute;
+        ") or die "Could not create $dbtable table: $DBI::errstr";
+    $sth->execute;
 
 # Create sphinx table
     my $res = `mysql -u$dbroot -p$dbrootpass $dbname < sql/sph_counter.sql`;
@@ -206,41 +210,41 @@ if ($ok =~ /[Yy]/) {
 # Insert settings data
     my $res = `mysql -u$dbroot -p$dbrootpass $dbname < sql/settings.sql`;
     print $res;
-	my $sth = $dbh->prepare("
+    my $sth = $dbh->prepare("
         update settings set value='$url' where name='SITE_URL';
-		") or die "Could not update settings table: $DBI::errstr";
+        ") or die "Could not update settings table: $DBI::errstr";
     $sth->execute;
-	my $sth = $dbh->prepare("
+    my $sth = $dbh->prepare("
         update settings set value='$email' where name='ADMIN_EMAIL';
-		") or die "Could not update settings table: $DBI::errstr";
+        ") or die "Could not update settings table: $DBI::errstr";
     $sth->execute;
-	my $sth = $dbh->prepare("
+    my $sth = $dbh->prepare("
         update settings set value='$siteadmin' where name='ADMIN_NAME';
-		") or die "Could not update settings table: $DBI::errstr";
+        ") or die "Could not update settings table: $DBI::errstr";
     $sth->execute;
-	my $sth = $dbh->prepare("
+    my $sth = $dbh->prepare("
         update settings set value='$lzbase' where name='PATH_BASE';
-		") or die "Could not update settings table: $DBI::errstr";
+        ") or die "Could not update settings table: $DBI::errstr";
     $sth->execute;
-	my $sth = $dbh->prepare("
+    my $sth = $dbh->prepare("
         update settings set value='$sitename' where name='SITE_NAME';
-		") or die "Could not update settings table: $DBI::errstr";
+        ") or die "Could not update settings table: $DBI::errstr";
     $sth->execute;
-	my $sth = $dbh->prepare("
+    my $sth = $dbh->prepare("
         update settings set value='$dbtable' where name='TBL_MAIN';
-		") or die "Could not update settings table: $DBI::errstr";
+        ") or die "Could not update settings table: $DBI::errstr";
     $sth->execute;
-	my $sth = $dbh->prepare("
+    my $sth = $dbh->prepare("
         update settings set value='$logpath' where name='PATH_LOGS';
-		") or die "Could not update settings table: $DBI::errstr";
+        ") or die "Could not update settings table: $DBI::errstr";
     $sth->execute;
-	my $sth = $dbh->prepare("
+    my $sth = $dbh->prepare("
         update settings set value='$version' where name='VERSION';
-		") or die "Could not update settings table: $DBI::errstr";
+        ") or die "Could not update settings table: $DBI::errstr";
     $sth->execute;
-	my $sth = $dbh->prepare("
+    my $sth = $dbh->prepare("
         update settings set value='$subversion' where name='VERSION_SUB';
-		") or die "Could not update settings table: $DBI::errstr";
+        ") or die "Could not update settings table: $DBI::errstr";
     $sth->execute;
 
 
@@ -248,17 +252,17 @@ if ($ok =~ /[Yy]/) {
 # Insert user data
     my $res = `mysql -u$dbroot -p$dbrootpass $dbname < sql/users.sql`;
     print $res;
-	my $sth = $dbh->prepare("
+    my $sth = $dbh->prepare("
         update users set username='$siteadmin' where username='admin';
-		") or die "Could not insert user data: $DBI::errstr";
+        ") or die "Could not insert user data: $DBI::errstr";
     $sth->execute;
-	my $sth = $dbh->prepare("
+    my $sth = $dbh->prepare("
         update users set pwhash=MD5('$siteadminpw') where username='$siteadmin';
-		") or die "Could not insert user data: $DBI::errstr";
+        ") or die "Could not insert user data: $DBI::errstr";
     $sth->execute;
-	my $sth = $dbh->prepare("
+    my $sth = $dbh->prepare("
         delete from users where username='guest';
-		") or die "Could not insert user data: $DBI::errstr";
+        ") or die "Could not insert user data: $DBI::errstr";
     $sth->execute;
 
 # Groups
@@ -291,83 +295,90 @@ if ($ok =~ /[Yy]/) {
 
 
 # Get some date values in order to create the MySQL Partition
-	my ($sec, $min, $hour, $curmday, $curmon, $curyear, $wday, $yday, $isdst) = localtime time;
-	$curyear = $curyear + 1900;
-	$curmon = $curmon + 1;
-	my ($year,$mon,$mday) = Date::Calc::Add_Delta_Days($curyear,$curmon,$curmday,1);
-	my $pAdd = "p".$year.sprintf("%02d",$mon).sprintf("%02d",$mday);
-	my $dateTomorrow = $year."-".sprintf("%02d",$mon)."-".sprintf("%02d",$mday);
+    my ($sec, $min, $hour, $curmday, $curmon, $curyear, $wday, $yday, $isdst) = localtime time;
+    $curyear = $curyear + 1900;
+    $curmon = $curmon + 1;
+    my ($year,$mon,$mday) = Date::Calc::Add_Delta_Days($curyear,$curmon,$curmday,1);
+    my $pAdd = "p".$year.sprintf("%02d",$mon).sprintf("%02d",$mday);
+    my $dateTomorrow = $year."-".sprintf("%02d",$mon)."-".sprintf("%02d",$mday);
 
 # Create initial Partition of the $dbtable table
-	my $sth = $dbh->prepare("
-		alter table $dbtable PARTITION BY RANGE( TO_DAYS( lo ) ) (
-		PARTITION $pAdd VALUES LESS THAN (to_days('$dateTomorrow'))
-		);
-		") or die "Could not create partition for the $dbtable table: $DBI::errstr";
-	$sth->execute; 
+    my $sth = $dbh->prepare("
+        alter table $dbtable PARTITION BY RANGE( TO_DAYS( lo ) ) (
+        PARTITION $pAdd VALUES LESS THAN (to_days('$dateTomorrow'))
+        );
+        ") or die "Could not create partition for the $dbtable table: $DBI::errstr";
+    $sth->execute; 
 
 # Create Partition events
-	my $event = qq{
-	CREATE EVENT `logs_add_partition` ON SCHEDULE EVERY 1 DAY STARTS '$dateTomorrow 00:00:00' ON COMPLETION NOT PRESERVE ENABLE DO
-	BEGIN
-	DECLARE new_partition CHAR(32) DEFAULT
-	CONCAT ('p', DATE_FORMAT(DATE_ADD(CURDATE(), INTERVAL 1 DAY), '%Y%m%d'));
-	DECLARE max_day INTEGER DEFAULT TO_DAYS(NOW()) +1;
+    my $event = qq{
+    CREATE EVENT `logs_add_partition` ON SCHEDULE EVERY 1 DAY STARTS '$dateTomorrow 00:00:00' ON COMPLETION NOT PRESERVE ENABLE DO
+    BEGIN
+    DECLARE new_partition CHAR(32) DEFAULT
+    CONCAT ('p', DATE_FORMAT(DATE_ADD(CURDATE(), INTERVAL 1 DAY), '%Y%m%d'));
+    DECLARE max_day INTEGER DEFAULT TO_DAYS(NOW()) +1;
 
-	SET \@s = 
-	CONCAT('ALTER TABLE $dbtable ADD PARTITION (PARTITION ', new_partition,
-	' VALUES LESS THAN (', max_day, '))');
-	PREPARE stmt FROM \@s;
-	EXECUTE stmt;
-	DEALLOCATE PREPARE stmt;
-	END 
-	};
-	my $sth = $dbh->prepare("
-		$event
-		") or die "Could not create partition events: $DBI::errstr";
-	$sth->execute;
+    SET \@s = 
+    CONCAT('ALTER TABLE $dbtable ADD PARTITION (PARTITION ', new_partition,
+    ' VALUES LESS THAN (', max_day, '))');
+    PREPARE stmt FROM \@s;
+    EXECUTE stmt;
+    DEALLOCATE PREPARE stmt;
+    END 
+    };
+    my $sth = $dbh->prepare("
+        $event
+        ") or die "Could not create partition events: $DBI::errstr";
+    $sth->execute;
 
-	my $event = qq{
-	CREATE EVENT `logs_del_partition` ON SCHEDULE EVERY 1 DAY STARTS '$dateTomorrow 00:00:02' ON COMPLETION NOT PRESERVE ENABLE DO
-	BEGIN
-	DECLARE old_partitions CHAR(64) DEFAULT '';
-	SELECT CONCAT( 'ALTER TABLE $dbtable DROP PARTITION ', 
-	GROUP_CONCAT( PARTITION_NAME ))
-	INTO \@s
-	FROM information_schema.PARTITIONS
-	WHERE   TABLE_SCHEMA=schema() AND
-	TABLE_NAME='$dbtable' AND
-	CREATE_TIME < DATE_SUB( CURDATE(), INTERVAL $retention DAY )
-	GROUP BY TABLE_NAME;
+    my $event = qq{
+    CREATE EVENT `logs_del_partition` ON SCHEDULE EVERY 1 DAY STARTS '$dateTomorrow 00:00:02' ON COMPLETION NOT PRESERVE ENABLE DO
+    BEGIN
+    DECLARE old_partitions CHAR(64) DEFAULT '';
+    SELECT CONCAT( 'ALTER TABLE $dbtable DROP PARTITION ', 
+    GROUP_CONCAT( PARTITION_NAME ))
+    INTO \@s
+    FROM information_schema.PARTITIONS
+    WHERE   TABLE_SCHEMA=schema() AND
+    TABLE_NAME='$dbtable' AND
+    CREATE_TIME < DATE_SUB( CURDATE(), INTERVAL $retention DAY )
+    GROUP BY TABLE_NAME;
 
-	PREPARE stmt FROM \@s;
-	EXECUTE stmt;
-	DEALLOCATE PREPARE stmt;
-	END
-	};
-	my $sth = $dbh->prepare("
-		$event
-		") or die "Could not create partition events: $DBI::errstr";
-	$sth->execute;
+    PREPARE stmt FROM \@s;
+    EXECUTE stmt;
+    DEALLOCATE PREPARE stmt;
+    END
+    };
+    my $sth = $dbh->prepare("
+        $event
+        ") or die "Could not create partition events: $DBI::errstr";
+    $sth->execute;
 
 # Turn the event scheduler on
-	my $sth = $dbh->prepare("
-    SET GLOBAL event_scheduler = 1;
-		") or die "Could not enable the Global event scheduler: $DBI::errstr";
-	$sth->execute;
+    my $sth = $dbh->prepare("
+        SET GLOBAL event_scheduler = 1;
+        ") or die "Could not enable the Global event scheduler: $DBI::errstr";
+    $sth->execute;
 
 
 # Grant access to $dbadmin
-	my $grant = qq{GRANT ALL PRIVILEGES ON $dbname.* TO '$dbadmin'\@'$dbhost' IDENTIFIED BY '$dbadminpw';};
-	my $sth = $dbh->prepare("
-		$grant
-		") or die "Could not create $dbadmin user on $dbname: $DBI::errstr";
-	$sth->execute;
+    my $grant = qq{GRANT ALL PRIVILEGES ON $dbname.* TO '$dbadmin'\@'$dbhost' IDENTIFIED BY '$dbadminpw';};
+    my $sth = $dbh->prepare("
+        $grant
+        ") or die "Could not create $dbadmin user on $dbname: $DBI::errstr";
+    $sth->execute;
+    if ($dbhost == "127.0.0.1") {
+        my $grant = qq{GRANT ALL PRIVILEGES ON $dbname.* TO '$dbadmin'\@'localhost' IDENTIFIED BY '$dbadminpw';};
+        my $sth = $dbh->prepare("
+            $grant
+            ") or die "Could not create $dbadmin user on $dbname: $DBI::errstr";
+        $sth->execute;
+    }
 
 
-	$dbh->disconnect();
+    $dbh->disconnect();
 } else {
-	print "Skipped database creation\n";
+    print "Skipped database creation\n";
 }
 print("\n\033[1m\n\n========================================\033[0m\n");
 print("\n\033[1m\tConfig.php generation\n\033[0m");
@@ -375,30 +386,30 @@ print("\n\033[1m========================================\n\n\033[0m\n\n");
 print "Generating $lzbase/html/config/config.php\n";
 my $ok  = &p("Ok to continue?", "y");
 if ($ok =~ /[Yy]/) {
-	my $config =qq{<?php
-DEFINE('DBADMIN', '$dbadmin');
-DEFINE('DBADMINPW', '$dbadminpw');
-DEFINE('DBNAME', '$dbname');
-DEFINE('DBHOST', '$dbhost');
-DEFINE('DBPORT', '$dbport');
-DEFINE('LOG_QUERIES', 'FALSE');
-DEFINE('LOG_PATH', '$logpath');
-DEFINE('MYSQL_QUERY_LOG', '$logpath/mysql_query.log');
-};
-my $file="$lzbase/html/config/config.php";
-open(CNF,">$file") || die("Cannot Open $file: $!"); 
-print CNF "$config"; 
-my $rfile="$lzbase/scripts/sql/regexp.txt";
-open(FILE,$rfile) || die("Cannot Open file: $!"); 
-my @data = <FILE>;
-foreach my $line (@data) {
-    print CNF "$line";
-}
-print CNF "?>\n"; 
-	close(CNF); 
-	close(FILE); 
+    my $config =qq{<?php
+    DEFINE('DBADMIN', '$dbadmin');
+    DEFINE('DBADMINPW', '$dbadminpw');
+    DEFINE('DBNAME', '$dbname');
+    DEFINE('DBHOST', '$dbhost');
+    DEFINE('DBPORT', '$dbport');
+    DEFINE('LOG_QUERIES', 'FALSE');
+    DEFINE('LOG_PATH', '$logpath');
+    DEFINE('MYSQL_QUERY_LOG', '$logpath/mysql_query.log');
+    };
+    my $file="$lzbase/html/config/config.php";
+    open(CNF,">$file") || die("Cannot Open $file: $!"); 
+    print CNF "$config"; 
+    my $rfile="$lzbase/scripts/sql/regexp.txt";
+    open(FILE,$rfile) || die("Cannot Open file: $!"); 
+    my @data = <FILE>;
+    foreach my $line (@data) {
+        print CNF "$line";
+    }
+    print CNF "?>\n"; 
+    close(CNF); 
+    close(FILE); 
 } else {
-	print "Skipped config generation\n";
+    print "Skipped config generation\n";
 }
 
 #Create log files for later use by the server
@@ -418,9 +429,9 @@ if (! -f $logfile) {
 close(LOG);
 
 if ($paths_updated >0) {
-	print("\n\033[1m\n\n========================================\033[0m\n");
-	print("\n\033[1m\tSystem files\n\033[0m");
-	print("\n\033[1m========================================\n\n\033[0m\n\n");
+    print("\n\033[1m\n\n========================================\033[0m\n");
+    print("\n\033[1m\tSystem files\n\033[0m");
+    print("\n\033[1m========================================\n\n\033[0m\n\n");
     #if ( -d "/etc/init.d") {
     #print "Adding LogZilla init file to /etc/init.d\n";
     #my $ok  = &p("Ok to continue?", "y");
@@ -445,7 +456,7 @@ if ($paths_updated >0) {
         if ($ok =~ /[Yy]/) {
             system("cp contrib/system_configs/logzilla.logrotate /etc/logrotate.d/logzilla");
         } else {
-			print "Skipped logrotate.d file, you will need to manually copy:\n";
+            print "Skipped logrotate.d file, you will need to manually copy:\n";
             print "cp contrib/system_configs/logzilla.logrotate /etc/logrotate.d/logzilla\n";
         }
     } else {
@@ -453,9 +464,6 @@ if ($paths_updated >0) {
         print "Unable to locate your /etc/logrotate.d directory\n";
         print "You will need to manually copy:\n";
         print "cp contrib/system_configs/logzilla.logrotate /etc/logrotate.d/logzilla\n";
-    }
-    if (! -d "$logpath") {
-        mkdir "$logpath";
     }
     my $file  = &p("Where is your syslog-ng.conf file located?", "/etc/syslog-ng/syslog-ng.conf");
     if (-f "$file") {
@@ -489,23 +497,23 @@ if ($paths_updated >0) {
                 system "perl -i -pe 's|s_all|$source|g' contrib/system_configs/syslog-ng.conf" and warn "Could not modify contrib/system_configs/syslog-ng.conf $!\n";
             }
             open(CNF,">>$file") || die("Cannot Open $file: $!"); 
-			open(FILE,"contrib/system_configs/syslog-ng.conf") || die("Cannot Open file: $!"); 
-			my @data = <FILE>;
-			foreach my $line (@data) {
-				print CNF "$line";
-			}
-			close(CNF); 
-			close(FILE); 
-		} else {
-			print "Skipped syslog-ng merge\n";
-			print "You will need to manually merge contrib/system_configs/syslog-ng.conf with yours.\n";
-		}
-	} else {
-		print "Unable to locate your syslog-ng.conf file\n";
-		print "You will need to manually merge contrib/system_configs/syslog-ng.conf with yours.\n";
-	}
+            open(FILE,"contrib/system_configs/syslog-ng.conf") || die("Cannot Open file: $!"); 
+            my @data = <FILE>;
+            foreach my $line (@data) {
+                print CNF "$line";
+            }
+            close(CNF); 
+            close(FILE); 
+        } else {
+            print "Skipped syslog-ng merge\n";
+            print "You will need to manually merge contrib/system_configs/syslog-ng.conf with yours.\n";
+        }
+    } else {
+        print "Unable to locate your syslog-ng.conf file\n";
+        print "You will need to manually merge contrib/system_configs/syslog-ng.conf with yours.\n";
+    }
 } else {
-	print "Since you chose not to update paths, you will need to manually merge contrib/system_configs/syslog-ng.conf with your syslog-ng.conf.\n";
+    print "Since you chose not to update paths, you will need to manually merge contrib/system_configs/syslog-ng.conf with your syslog-ng.conf.\n";
 }
 print("\n\033[1m\tLogZilla installation complete...\n\033[0m");
 print("\033[1mNote: you may need to enable the MySQL Event Scheduler in your /etc/my.cnf file.\n\033[0m");
