@@ -1,11 +1,14 @@
 CHANGELOG
 
-3.0.40 RC1
+3.0RC1
  - Added regex pattern match for Windows Snare logs in db_insert.pl
  - Fixed htmlentities display on table output
  - Added license information display to help>about
  - Removed encryption from all but 1 file to keep the project "open source"
- - Fixed missing ORDER BY clause in results table (for both normal and sphinx searches)
+ 0.59 - Fixed missing ORDER BY clause in results table (for both normal and sphinx searches)
+ 0.64 - Modified msg_mask filters and escape strings for message filter drilldowns (wasn't escaping everything properly and was throwing an error for Sphinx)
+      - Added pattern match for ASA Mnemonics in db_insert.pl
+      - Added filter in db_insert.pl to strip out " and ' from any incoming messages.
 
 3.0 RC1
  - Added menu item to reset ui_layout

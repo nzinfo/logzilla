@@ -5,7 +5,7 @@
  * Developed by Clayton Dukes <cdukes@cdukes.com>
  * Copyright (c) 2010 LogZilla, LLC
  * All rights reserved.
- * Last updated on 2010-05-04
+ * Last updated on 2010-05-05
  *
  * Pagination and table formatting created using 
  * http://www.frequency-decoder.com/2007/10/19/client-side-table-pagination-script/
@@ -199,7 +199,6 @@ $qstring .= "&limit=$limit";
 
 // portlet-sphinxquery
 $msg_mask = get_input('msg_mask');
-$msg_mask = html_entity_decode($msg_mask);
 $msg_mask = preg_replace ('/^Search through .*\sMessages/m', '', $msg_mask);
 $msg_mask_oper = get_input('msg_mask_oper');
 $qstring .= "&msg_mask=$msg_mask&msg_mask_oper=$msg_mask_oper";
@@ -227,7 +226,9 @@ if($msg_mask !== '') {
            }
             // $cl->SetSortMode(SPH_SORT_EXTENDED2, "$orderby $order");
         $cl->SetLimits(0, intval($_SESSION['SPX_MAX_MATCHES']));
-        $res = $cl->Query ( htmlentities($msg_mask), $index);
+        $escaped = $cl->EscapeString ( "$msg_mask" );
+        $res = $cl->Query ($escaped, $index);
+
         if ( !$res )
         {
       $info = "<font size=\"3\" color=\"white\"><br><br>Sphinx - Error in query: ";
@@ -254,6 +255,7 @@ if($msg_mask !== '') {
         }
         //---------------END SPHINX
     } else {
+        $msg_mask = mysql_real_escape_string($msg_mask);
         switch ($msg_mask_oper) {
             case "=":
                 $where.= " AND msg='$msg_mask'";  

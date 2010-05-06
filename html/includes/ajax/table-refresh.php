@@ -4,7 +4,7 @@
  * Developed by Clayton Dukes <cdukes@cdukes.com>
  * Copyright (c) 2010 LogZilla, LLC
  * All rights reserved.
- * Last updated on 2010-05-04
+ * Last updated on 2010-05-05
  *
  * Changelog:
  * 2010-02-28 - created
@@ -188,45 +188,60 @@ if ($mnemonics) {
     $where .= ")";
 }
 
+$limit = get_input('limit');
+$limit = (!empty($limit)) ? $limit : "10";
+$qstring .= "&limit=$limit";
+
 // portlet-sphinxquery
 $msg_mask = get_input('msg_mask');
-$msg_mask = html_entity_decode($msg_mask);
 $msg_mask = preg_replace ('/^Search through .*\sMessages/m', '', $msg_mask);
 $msg_mask_oper = get_input('msg_mask_oper');
 $qstring .= "&msg_mask=$msg_mask&msg_mask_oper=$msg_mask_oper";
 
-if($msg_mask) {
+$orderby = get_input('orderby');
+$qstring .= "&orderby=$orderby";
+
+$order = get_input('order');
+$qstring .= "&order=$order";
+
+if($msg_mask !== '') {
     if ($_SESSION['SPX_ENABLE'] == "1") {
         //---------------BEGIN SPHINX
         require_once ($basePath . "/../SPHINX.class.php");
-        // Get the search variable from URL
-        // $var = @$_GET['msg_mask'] ;
-        // $trimmed = trim($$msg_mask); //trim whitespace from the stored variable
-
-        // $q = $trimmed;
-#$q = "SELECT id ,group_id,title FROM documents where title = 'test one'";
-#$q = " SELECT id, group_id, UNIX_TIMESTAMP(date_added) AS date_added, title, content FROM documents";
-        $index = "idx_logs";
-
+        $index = "idx_logs idx_delta_logs";
         $cl = new SphinxClient ();
         $hostip = $_SESSION['SPX_SRV'];
         $port = intval($_SESSION['SPX_PORT']);
         $cl->SetServer ( $hostip, $port );
-        $cl->SetMatchMode ( SPH_MATCH_EXTENDED2 );
-        $res = $cl->Query ( htmlentities($msg_mask), $index);
+        $cl->SetMatchMode ( SPH_MATCH_ANY );
+           if ($order == 'DESC') {
+           $cl->SetSortMode(SPH_SORT_ATTR_DESC, "$orderby");
+           } else {
+           $cl->SetSortMode(SPH_SORT_ATTR_ASC, "$orderby");
+           }
+            // $cl->SetSortMode(SPH_SORT_EXTENDED2, "$orderby $order");
+        $cl->SetLimits(0, intval($_SESSION['SPX_MAX_MATCHES']));
+        $escaped = $cl->EscapeString ( "$msg_mask" );
+        $res = $cl->Query ($escaped, $index);
+
         if ( !$res )
         {
-            die ( "ERROR: " . $cl->GetLastError() . ".\n" );
+      $info = "<font size=\"3\" color=\"white\"><br><br>Sphinx - Error in query: ";
+            die ( "$info" . $cl->GetLastError() . ".\n</font>" );
         } else
         {
             if ($res['total_found'] > 0) {
                 $where .= " AND id IN (";
+                   // $orby .= " ORDER BY FIELD($orderby,";
                 foreach ( $res["matches"] as $doc => $docinfo ) {
                     $where .= "'$doc',";
+                       // $orby .= "'$doc',";
                     // echo "$doc<br>\n";
                 }
                 $where = rtrim($where, ",");
+                   // $orby = rtrim($orby, ",");
                 $where .= ")";
+                  // $orby .= ")";
             } else {
                 // Negate search since sphinx returned 0 hits
                 $where = "WHERE 1<1";
@@ -235,6 +250,7 @@ if($msg_mask) {
         }
         //---------------END SPHINX
     } else {
+        $msg_mask = mysql_real_escape_string($msg_mask);
         switch ($msg_mask_oper) {
             case "=":
                 $where.= " AND msg='$msg_mask'";  
@@ -316,9 +332,6 @@ if($notes_mask) {
 }
 
 // portlet-search_options
-$limit = get_input('limit');
-$limit = (!empty($limit)) ? $limit : "10";
-    $qstring .= "&limit=$limit";
 $dupop = get_input('dupop');
 $qstring .= "&dupop=$dupop";
 $dupop_orig = $dupop;
@@ -350,18 +363,11 @@ if (($dupop) && ($dupop != 'undefined')) {
 }
 // Not implemented yet (for graph generation)
 $topx = get_input('topx');
-    $qstring .= "&topx=$topx";
+$qstring .= "&topx=$topx";
 $graphtype = get_input('graphtype');
-    $qstring .= "&graphtype=$graphtype";
+$qstring .= "&graphtype=$graphtype";
 
-$orderby = get_input('orderby');
-    $qstring .= "&orderby=$orderby";
-$order = get_input('order');
-    $qstring .= "&order=$order";
-    if ($orderby) {
-        if ($orderby == 'lo') {
-            $orderby = 'id';
-        }
+if ($orderby) {
     $where.= " ORDER BY $orderby";  
 }
 if ($order) {

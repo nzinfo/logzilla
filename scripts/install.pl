@@ -2,7 +2,7 @@
 
 #
 # install.pl
-# Last updated on 2010-05-04
+# Last updated on 2010-05-05
 #
 # Developed by Clayton Dukes <cdukes@cdukes.com>
 # Copyright (c) 2010 LogZilla, LLC
@@ -38,7 +38,7 @@ sub p {
 }
 
 my $version = "3.0";
-my $subversion = ".64";
+my $subversion = ".65";
 
 # Grab the base path
 my $lzbase = getcwd;
