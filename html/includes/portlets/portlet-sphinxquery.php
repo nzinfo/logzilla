@@ -42,6 +42,13 @@ if ((has_portlet_access($_SESSION['username'], 'Messages') == TRUE) || ($_SESSIO
     <td width="95%">
 <?php if ($_SESSION['SHOWCOUNTS'] > 0) {?>
         <input autocomplete="off" type="text" style="width: 95%; text-align: left; position: relative; left: 3%;" class="rounded_textbox watermark ui-widget ui-corner-all" name="msg_mask" id="msg_mask" size=30>
+            <div style="width: 95%; text-align: left; position: relative; left: 3%;">
+            <input checked="checked" type="radio" name="q_type" value="any" /> Any
+            <input type="radio" name="q_type" value="all" /> All
+            <input type="radio" name="q_type" value="phrase" /> Phrase
+            <input type="radio" name="q_type" value="boolean" /> Boolean
+            <input type="radio" name="q_type" value="extended" /> Extended
+            </div>
 <?php } else { ?>
         <input autocomplete="off" type="text" style="width: 95%; text-align: left; position: relative; left: 3%;" class="rounded_textbox ui-widget ui-corner-all" name="msg_mask" id="msg_mask" size=30>
 <?php } ?>

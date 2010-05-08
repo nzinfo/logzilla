@@ -2,7 +2,7 @@
 
 #
 # install.pl
-# Last updated on 2010-05-05
+# Last updated on 2010-05-07
 #
 # Developed by Clayton Dukes <cdukes@cdukes.com>
 # Copyright (c) 2010 LogZilla, LLC
@@ -38,7 +38,7 @@ sub p {
 }
 
 my $version = "3.0";
-my $subversion = ".65";
+my $subversion = ".66";
 
 # Grab the base path
 my $lzbase = getcwd;
@@ -172,43 +172,43 @@ if ($ok =~ /[Yy]/) {
     $sth->execute;
 
 # Create sphinx table
-    my $res = `mysql -u$dbroot -p$dbrootpass $dbname < sql/sph_counter.sql`;
+    my $res = `mysql -u$dbroot -p$dbrootpass -h $dbhost -P $dbport $dbname < sql/sph_counter.sql`;
     print $res;
 
 # Create cache table
-    my $res = `mysql -u$dbroot -p$dbrootpass $dbname < sql/cache.sql`;
+    my $res = `mysql -u$dbroot -p$dbrootpass -h $dbhost -P $dbport $dbname < sql/cache.sql`;
     print $res;
 
 # Create hosts table
-    my $res = `mysql -u$dbroot -p$dbrootpass $dbname < sql/hosts.sql`;
+    my $res = `mysql -u$dbroot -p$dbrootpass -h $dbhost -P $dbport $dbname < sql/hosts.sql`;
     print $res;
 
 # Create mnemonics table
-    my $res = `mysql -u$dbroot -p$dbrootpass $dbname < sql/mne.sql`;
+    my $res = `mysql -u$dbroot -p$dbrootpass -h $dbhost -P $dbport $dbname < sql/mne.sql`;
     print $res;
 
 # Create programs table
-    my $res = `mysql -u$dbroot -p$dbrootpass $dbname < sql/programs.sql`;
+    my $res = `mysql -u$dbroot -p$dbrootpass -h $dbhost -P $dbport $dbname < sql/programs.sql`;
     print $res;
 
 # Create suppress table
-    my $res = `mysql -u$dbroot -p$dbrootpass $dbname < sql/suppress.sql`;
+    my $res = `mysql -u$dbroot -p$dbrootpass -h $dbhost -P $dbport $dbname < sql/suppress.sql`;
     print $res;
 
 # Create facilities table
-    my $res = `mysql -u$dbroot -p$dbrootpass $dbname < sql/facilities.sql`;
+    my $res = `mysql -u$dbroot -p$dbrootpass -h $dbhost -P $dbport $dbname < sql/facilities.sql`;
     print $res;
 
 # Create severities table
-    my $res = `mysql -u$dbroot -p$dbrootpass $dbname < sql/severities.sql`;
+    my $res = `mysql -u$dbroot -p$dbrootpass -h $dbhost -P $dbport $dbname < sql/severities.sql`;
     print $res;
 
 # Create ban table
-    my $res = `mysql -u$dbroot -p$dbrootpass $dbname < sql/banned_ips.sql`;
+    my $res = `mysql -u$dbroot -p$dbrootpass -h $dbhost -P $dbport $dbname < sql/banned_ips.sql`;
     print $res;
 
 # Insert settings data
-    my $res = `mysql -u$dbroot -p$dbrootpass $dbname < sql/settings.sql`;
+    my $res = `mysql -u$dbroot -p$dbrootpass -h $dbhost -P $dbport $dbname < sql/settings.sql`;
     print $res;
     my $sth = $dbh->prepare("
         update settings set value='$url' where name='SITE_URL';
@@ -250,7 +250,7 @@ if ($ok =~ /[Yy]/) {
 
 
 # Insert user data
-    my $res = `mysql -u$dbroot -p$dbrootpass $dbname < sql/users.sql`;
+    my $res = `mysql -u$dbroot -p$dbrootpass -h $dbhost -P $dbport $dbname < sql/users.sql`;
     print $res;
     my $sth = $dbh->prepare("
         update users set username='$siteadmin' where username='admin';
@@ -266,31 +266,31 @@ if ($ok =~ /[Yy]/) {
     $sth->execute;
 
 # Groups
-    my $res = `mysql -u$dbroot -p$dbrootpass $dbname < sql/groups.sql`;
+    my $res = `mysql -u$dbroot -p$dbrootpass -h $dbhost -P $dbport $dbname < sql/groups.sql`;
     print $res;
 
 # Insert totd data
-    my $res = `mysql -u$dbroot -p$dbrootpass $dbname < sql/totd.sql`;
+    my $res = `mysql -u$dbroot -p$dbrootpass -h $dbhost -P $dbport $dbname < sql/totd.sql`;
     print $res;
 
 # Insert LZECS data
-    my $res = `mysql -u$dbroot -p$dbrootpass $dbname < sql/lzecs.sql`;
+    my $res = `mysql -u$dbroot -p$dbrootpass -h $dbhost -P $dbport $dbname < sql/lzecs.sql`;
     print $res;
 
 # Insert Suppress data
-    my $res = `mysql -u$dbroot -p$dbrootpass $dbname < sql/suppress.sql`;
+    my $res = `mysql -u$dbroot -p$dbrootpass -h $dbhost -P $dbport $dbname < sql/suppress.sql`;
     print $res;
 
 # Insert ui_layout data
-    my $res = `mysql -u$dbroot -p$dbrootpass $dbname < sql/ui_layout.sql`;
+    my $res = `mysql -u$dbroot -p$dbrootpass -h $dbhost -P $dbport $dbname < sql/ui_layout.sql`;
     print $res;
 
 # Insert help data
-    my $res = `mysql -u$dbroot -p$dbrootpass $dbname < sql/help.sql`;
+    my $res = `mysql -u$dbroot -p$dbrootpass -h $dbhost -P $dbport $dbname < sql/help.sql`;
     print $res;
 
 # Insert history table
-    my $res = `mysql -u$dbroot -p$dbrootpass $dbname < sql/history.sql`;
+    my $res = `mysql -u$dbroot -p$dbrootpass -h $dbhost -P $dbport $dbname < sql/history.sql`;
     print $res;
 
 

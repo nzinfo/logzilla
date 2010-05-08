@@ -2,7 +2,7 @@
 
 #
 # db_insert.pl
-# Last updated on 2010-05-05
+# Last updated on 2010-05-07
 #
 # Developed by Clayton Dukes <cdukes@cdukes.com>
 # Copyright (c) 2009 LogZilla, LLC
@@ -204,7 +204,7 @@ my $re_pipe = qr/(\S+)\t(\d+)\t(\S+)\t(.*)/;
 # v3.0 Fields are: Host, PRI, Program,  and MSG
 # the $severity and $facility fields are split from the $pri coming in so that they can be stored as integers into 2 separate db columns
 # re_mne is used to capture Cisco Mnemonics
-my $re_mne = qr/%(\w+-.*\d-\w+)\s?:/;
+my $re_mne = qr/%(\w+-.*\d-\w+)\s?:?/;
 
 $dbh->disconnect();
 $dbh = DBI->connect( "DBI:mysql:$db:$dbhost", $dbuser, $dbpass );
@@ -501,18 +501,17 @@ sub do_msg {
             }
         }
         $msg =~ s/\\//; # Some messages come in with a trailing slash
-        $msg =~ s/'//; # remove any ''s
-        $msg =~ s/\t/ /g; # remove any TABs
+        #$msg =~ s/"|'//g; # Remove quotes so we don't screw up search filters later on.
+        $msg =~ s/\t/ /g; # remove any TABs (gotta love windows...)
         # if ($msg =~ /%(\w+-.*\d-\w+):/) { # modified to below to catch some IOS-XR messages (which have a space before the colon)
         if ($msg =~ m/$re_mne/) {
             $mne = $1;
-        } elsif ($prg =~ /%(\w+-\d+-\d+)\s?:?/) { # Attempt to capture ACE and ASA Mnemonics (they send the mne's as a program)
+        } elsif ($prg =~ /$re_mne/) { # Attempt to capture ACE and ASA Mnemonics (they send the mne's as a program)
             $mne = $1;
         } else {
             $mne = "None";
         }
         $msg =~ s/[\x00-\x1F\x80-\xFF]//; # Remove any non-printable characters
-        $msg =~ s/"|'//g; # Remove quotes so we don't screw up search filters later on.
         $prg =~ s/%ACE.*\d+/Cisco ACE/; # Added because ACE modules don't send their program field properly
         $prg =~ s/%ASA.*\d+/Cisco ASA/; # Added because ASA's don't send their program field properly
         $prg =~ s/%FWSM.*\d+/Cisco FWSM/; # Added because FWSM's don't send their program field properly

@@ -5,7 +5,7 @@
  * Developed by Clayton Dukes <cdukes@cdukes.com>
  * Copyright (c) 2010 LogZilla, LLC
  * All rights reserved.
- * Last updated on 2010-05-05
+ * Last updated on 2010-05-07
  *
  * Pagination and table formatting created using 
  * http://www.frequency-decoder.com/2007/10/19/client-side-table-pagination-script/
@@ -211,6 +211,7 @@ $qstring .= "&order=$order";
 
 if($msg_mask !== '') {
     if ($_SESSION['SPX_ENABLE'] == "1") {
+        $qtype = get_input('q_type');
         //---------------BEGIN SPHINX
         require_once ($basePath . "/../SPHINX.class.php");
         $index = "idx_logs idx_delta_logs";
@@ -218,39 +219,51 @@ if($msg_mask !== '') {
         $hostip = $_SESSION['SPX_SRV'];
         $port = intval($_SESSION['SPX_PORT']);
         $cl->SetServer ( $hostip, $port );
-        $cl->SetMatchMode ( SPH_MATCH_ANY );
-           if ($order == 'DESC') {
-           $cl->SetSortMode(SPH_SORT_ATTR_DESC, "$orderby");
-           } else {
-           $cl->SetSortMode(SPH_SORT_ATTR_ASC, "$orderby");
-           }
-            // $cl->SetSortMode(SPH_SORT_EXTENDED2, "$orderby $order");
+        switch ($qtype) {
+            case "any":
+                $cl->SetMatchMode ( SPH_MATCH_ANY );
+            break;
+            case "phrase":
+                $cl->SetMatchMode ( SPH_MATCH_PHRASE );
+            break;
+            case "boolean":
+                $cl->SetMatchMode ( SPH_MATCH_BOOLEAN );
+            break;
+            case "extended":
+                $cl->SetMatchMode ( SPH_MATCH_EXTENDED2 );
+            break;
+            default:
+            $cl->SetMatchMode ( SPH_MATCH_ALL );
+        }
+        if ($order == 'DESC') {
+            $cl->SetSortMode(SPH_SORT_ATTR_DESC, "$orderby");
+        } else {
+            $cl->SetSortMode(SPH_SORT_ATTR_ASC, "$orderby");
+        }
         $cl->SetLimits(0, intval($_SESSION['SPX_MAX_MATCHES']));
-        $escaped = $cl->EscapeString ( "$msg_mask" );
-        $res = $cl->Query ($escaped, $index);
+        // $escaped = $cl->EscapeString ( "$msg_mask" );
+        $sphinx_results = $cl->Query ($msg_mask, $index);
 
-        if ( !$res )
+        if ( !$sphinx_results )
         {
       $info = "<font size=\"3\" color=\"white\"><br><br>Sphinx - Error in query: ";
             die ( "$info" . $cl->GetLastError() . ".\n</font>" );
         } else
         {
-            if ($res['total_found'] > 0) {
+            if ($sphinx_results['total_found'] > 0) {
+               //  echo "<pre>\n";
+               //  die(print_r($sphinx_results));
+               //  echo "</pre>\n";
                 $where .= " AND id IN (";
-                   // $orby .= " ORDER BY FIELD($orderby,";
-                foreach ( $res["matches"] as $doc => $docinfo ) {
+                foreach ( $sphinx_results["matches"] as $doc => $docinfo ) {
                     $where .= "'$doc',";
-                       // $orby .= "'$doc',";
-                    // echo "$doc<br>\n";
                 }
                 $where = rtrim($where, ",");
-                   // $orby = rtrim($orby, ",");
                 $where .= ")";
-                  // $orby .= ")";
             } else {
                 // Negate search since sphinx returned 0 hits
                 $where = "WHERE 1<1";
-                //  die(print_r($res));
+                //  die(print_r($sphinx_results));
             }
         }
         //---------------END SPHINX
@@ -517,10 +530,10 @@ if ($order) {
         }
         // Link to LZECS if info is available
             if($_SESSION['MSG_EXPLODE'] == "1") {
-                 // echo "<td class=\"s_td wide\"><a onclick=\"lzecs(this); return false\" id='$msg' href=\"javascript:void(0);\">[LZECS]&nbsp;&nbsp;</a>$explode_url</td>\n";
-                 echo "<td class=\"s_td wide\">$explode_url</td>\n";
+                  // echo "<td class=\"s_td wide\"><a onclick=\"lzecs(this); return false\" id='$msg' href=\"javascript:void(0);\">[LZECS]&nbsp;&nbsp;</a>$explode_url</td>\n";
+                  echo "<td class=\"s_td wide\">$explode_url</td>\n";
             } else {
-                //  echo "<td class=\"s_td wide\"><a onclick=\"lzecs(this); return false\" id='$msg' href=\"javascript:void(0);\">[LZECS]&nbsp;&nbsp;</a>$msg</td>\n";
+                //   echo "<td class=\"s_td wide\"><a onclick=\"lzecs(this); return false\" id='$msg' href=\"javascript:void(0);\">[LZECS]&nbsp;&nbsp;</a>$msg</td>\n";
                  echo "<td class=\"s_td wide\">$msg</td>\n";
             }
             if ($_SESSION['DEDUP'] == 1) { 
@@ -542,15 +555,29 @@ if ($order) {
 $postvars = $qstring;
 $qstring = myURL().$qstring;
 if ($_SESSION['DEBUG'] > 0 ) {
-echo "<u><b>The SQL query:</u></b><br>\n";
-$sql = str_replace("AND", "<br>AND", $sql);
-$sql = str_replace("OR", "<br>OR", $sql);
-echo "$sql\n"; 
-echo "<br><br><u><b>Post Variables:</u></b><br>\n";
-$str = str_replace("&", "<br>&", $postvars);
-echo "$str<br>\n";
-$end_time = microtime(true);
-echo "Page generated in " . round(($end_time - $start_time),5) . " seconds\n";
+    if ($_SESSION['SPX_ENABLE'] == "1") {
+        echo "<u><b>Sphinx Query:</u></b><br>\n";
+        echo "Query type = $qtype<br>\n";
+        echo "Found ".$sphinx_results['total']." matching documents in ".$sphinx_results['time']." seconds<br>\n";
+        echo count($sphinx_results['words'])." search terms:<br>\n";
+        if (is_array($sphinx_results['words'])) {
+            foreach ($sphinx_results['words'] as $key=>$word) {
+                echo "&nbsp;&nbsp;&nbsp;&nbsp;\"$key\" found ".$sphinx_results['words'][$key]['hits']." times<br>\n";
+            }
+        }
+    }
+    // echo "<pre>\n";
+    // die(print_r($sphinx_results));
+    // echo "</pre>\n";
+    echo "<u><b>The SQL query:</u></b><br>\n";
+    $sql = str_replace("AND", "<br>AND", $sql);
+    $sql = str_replace("OR", "<br>OR", $sql);
+    echo "$sql\n"; 
+    echo "<br><br><u><b>Post Variables:</u></b><br>\n";
+    $str = str_replace("&", "<br>&", $postvars);
+    echo "$str<br>\n";
+    $end_time = microtime(true);
+    echo "Page generated in " . round(($end_time - $start_time),5) . " seconds\n";
 }
 ?>
   <input type="hidden" name="tail" id="tail" value="<?php echo $tail?>">
