@@ -5,7 +5,7 @@
  * Developed by Clayton Dukes <cdukes@cdukes.com>
  * Copyright (c) 2010 LogZilla, LLC
  * All rights reserved.
- * Last updated on 2010-05-07
+ * Last updated on 2010-05-08
  *
  * Pagination and table formatting created using 
  * http://www.frequency-decoder.com/2007/10/19/client-side-table-pagination-script/
@@ -211,6 +211,7 @@ $qstring .= "&order=$order";
 
 if($msg_mask !== '') {
     if ($_SESSION['SPX_ENABLE'] == "1") {
+        //$msg_mask = mysql_real_escape_string($msg_mask);
         $qtype = get_input('q_type');
         //---------------BEGIN SPHINX
         require_once ($basePath . "/../SPHINX.class.php");
@@ -556,8 +557,9 @@ $postvars = $qstring;
 $qstring = myURL().$qstring;
 if ($_SESSION['DEBUG'] > 0 ) {
     if ($_SESSION['SPX_ENABLE'] == "1") {
-        echo "<u><b>Sphinx Query:</u></b><br>\n";
-        echo "Query type = $qtype<br>\n";
+        echo "<b><u>Sphinx Query</u></b><pre class=\"code\">$msg_mask</pre><br>\n";
+        echo "<b><u>Query type</u></b><br>$qtype<br><br>\n";
+        echo "<b><u>Results</u></b><br>\n";
         echo "Found ".$sphinx_results['total']." matching documents in ".$sphinx_results['time']." seconds<br>\n";
         echo count($sphinx_results['words'])." search terms:<br>\n";
         if (is_array($sphinx_results['words'])) {
@@ -565,6 +567,7 @@ if ($_SESSION['DEBUG'] > 0 ) {
                 echo "&nbsp;&nbsp;&nbsp;&nbsp;\"$key\" found ".$sphinx_results['words'][$key]['hits']." times<br>\n";
             }
         }
+        echo "<br>\n";
     }
     // echo "<pre>\n";
     // die(print_r($sphinx_results));

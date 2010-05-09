@@ -195,6 +195,13 @@ pre {
     /* width: 99%; */
     word-wrap: break-word; /* Internet Explorer 5.5+ */
 }
+pre.code
+    {
+        background-color:   #f0f0f0;
+        padding:            0.5em;
+        margin-left:        2em;
+        margin-right:       2em;
+    }
 /* END preformatted text */
 /* BEGIN codeblock */
 .codeblock {

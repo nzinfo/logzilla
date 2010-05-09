@@ -5,7 +5,7 @@
  * Developed by Clayton Dukes <cdukes@cdukes.com>
  * Copyright (c) 2010 LogZilla, LLC
  * All rights reserved.
- * Last updated on 2010-05-07
+ * Last updated on 2010-05-08
  *
  * Changelog:
  * 2009-12-08 - created
@@ -67,6 +67,14 @@ if(version < 10){
 </script>
 <!-- END Flash Detection -->
 
+<!-- BEGIN Help Modal -->
+<div class="dialog_hide">
+    <div id="help_dialog" title="Help">
+            <span id="help_text" class="text ui-corner-all"></span>
+    </div>
+</div>
+<!-- END Help Modal -->
+
 <!-- BEGIN JQuery Portlets -->
 <script type="text/javascript">
 $(document).ready(function(){
@@ -85,29 +93,41 @@ $(document).ready(function(){
         //---------------------------------------------------------------
         // BEGIN: Context sensitive help
         //---------------------------------------------------------------
-		$(".portlet-header .ui-icon-help").click(function() {
+        $(".portlet-header .ui-icon-help").click(function() {
             var pname = $(this).closest("div").attr("id");
             pname = pname.replace("portlet-header_", "");
             pname = pname.replace(/_/g, " ");
-            switch(pname)
-            {
-            <?php
-            $dbLink = db_connect_syslog(DBADMIN, DBADMINPW);
-	        $sql = "SELECT name,description FROM help";
-	        $result = perform_query($sql, $dbLink, $_SERVER['PHP_SELF']);
-	        while($row = fetch_array($result)) {
-                $name = $row['name'];
-                $desc = $row['description'];
-                echo "\tcase \"$name\":\n";
-                echo "\t\t$('#msgbox_br').jGrowl(\n";
-                echo "\t\t'$desc'\n";
-                echo "\t\t);\n";
-                echo "\t\tbreak;\n";
-                }
-                ?>
-            default:
-            $('#msgbox_br').jGrowl('Context sensitive help for ' + pname + ' is not available');
-            }
+            $("#help_dialog").dialog({
+                        bgiframe: true,
+                        resizable: true,
+                        height: '600',
+                        width: '80%',
+                        position: [100,100],
+                        autoOpen:false,
+                        modal: false,
+                        show: "blind",
+                        hide: "clip",
+                        title: pname+ " help",
+                        open: function() {
+                           $.get("includes/ajax/json.help.php?pname="+pname, function(data){
+                               if (data !== '') {
+                         $("#help_text").html(data);
+                         } else {
+                         $("#help_text").text("No Help Available");
+                         }
+                           });
+                         },
+                        overlay: {
+                                backgroundColor: '#000',
+                                opacity: 0.5
+                        },
+                        buttons: {
+                                'Close': function() {
+                                        $(this).dialog('close');
+                                },
+                        }
+                });
+                $("#help_dialog").dialog('open');     
 		   	});
         //---------------------------------------------------------------
         // END: Context sensitive help
@@ -1293,7 +1313,7 @@ return (hour==0)? 12 : hour
 }
 return (num<=9)? "0"+num : num//if this is minute or sec field
 }
-$("#portlet-header_Date_and_Time").replaceWith("<div class=\"portlet-header\">Current Server Time: <span id=\"timecontainer\"></span></div>");
+$("#portlet-header_Date_and_Time").replaceWith("<div class=\"portlet-header\" id=\"portlet-header_Date_and_Time\">Current Server Time: <span id=\"timecontainer\"></span></div>");
 new showLocalTime("timecontainer", "server-php", 0, "short")
 
 </script>
