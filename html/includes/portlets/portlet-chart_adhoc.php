@@ -274,7 +274,7 @@ if ($mnemonics) {
     $qstring .= "&dupop=$dupop";
     $dupcount = get_input('dupcount');
     $qstring .= "&dupcount=$dupcount";
-    if ($dupop) {
+    if (($dupop) && ($dupop != 'undefined')) {
         switch ($dupop) {
             case "gt":
                 $dupop = ">";

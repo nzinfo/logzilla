@@ -26,6 +26,9 @@ CHANGELOG
     - Began adding content on all help dialogs
  0.67 
     - Completed help content
+ 0.68 
+    - Fixed invalid SITE_URL setting for the ioncube directories
+    - Fixed 'undefined' bug when recalling a saved chart
 
 3.0 RC1 - initial release
  - Added menu item to reset ui_layout
