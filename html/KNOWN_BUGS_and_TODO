@@ -6,8 +6,4 @@ Known Bugs:
 
 
 TODO:
-* Add context sensitive help to portlet ?'s by filling in mysql help table with descriptions for all portlets
-* Create documentation for:
-    1. Installation
-    2. Administration Guide
-    3. User Guide
+* Create documentation for an Administration Guide.

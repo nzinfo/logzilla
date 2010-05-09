@@ -5,7 +5,7 @@
  * Developed by Clayton Dukes <cdukes@cdukes.com>
  * Copyright (c) 2010 LogZilla, LLC
  * All rights reserved.
- * Last updated on 2010-05-08
+ * Last updated on 2010-05-09
  *
  * Pagination and table formatting created using 
  * http://www.frequency-decoder.com/2007/10/19/client-side-table-pagination-script/
@@ -234,7 +234,9 @@ if($msg_mask !== '') {
                 $cl->SetMatchMode ( SPH_MATCH_EXTENDED2 );
             break;
             default:
-            $cl->SetMatchMode ( SPH_MATCH_ALL );
+            $qtype = "any";
+            $msg_mask = addslashes($msg_mask);
+            $cl->SetMatchMode ( SPH_MATCH_ANY );
         }
         if ($order == 'DESC') {
             $cl->SetSortMode(SPH_SORT_ATTR_DESC, "$orderby");
@@ -556,7 +558,7 @@ if ($order) {
 $postvars = $qstring;
 $qstring = myURL().$qstring;
 if ($_SESSION['DEBUG'] > 0 ) {
-    if ($_SESSION['SPX_ENABLE'] == "1") {
+    if (($_SESSION['SPX_ENABLE'] == "1") && ($msg_mask !== '')) {
         echo "<b><u>Sphinx Query</u></b><pre class=\"code\">$msg_mask</pre><br>\n";
         echo "<b><u>Query type</u></b><br>$qtype<br><br>\n";
         echo "<b><u>Results</u></b><br>\n";

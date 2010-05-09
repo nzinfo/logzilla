@@ -5,7 +5,7 @@
  * Developed by Clayton Dukes <cdukes@cdukes.com>
  * Copyright (c) 2010 LogZilla, LLC
  * All rights reserved.
- * Last updated on 2010-05-08
+ * Last updated on 2010-05-09
  *
  * Changelog:
  * 2009-12-08 - created
@@ -105,7 +105,7 @@ $(document).ready(function(){
                         position: [100,100],
                         autoOpen:false,
                         modal: false,
-                        show: "blind",
+                        show: "slide",
                         hide: "clip",
                         title: pname+ " help",
                         open: function() {
@@ -1048,7 +1048,7 @@ $(".portlet-header .ui-icon-disk").click(function() {
                                 opacity: 0.5
                         },
                         buttons: {
-                                'Save to History': function() {
+                                'Save to Favorites': function() {
                                         $(this).dialog('close');
                                         var urlname = $("#urlname").val();
                                         var show_suppressed = $('#show_suppressed :selected').val();
@@ -1129,7 +1129,7 @@ $(".portlet-header .ui-icon-disk").click(function() {
 
 //---------------------------------------------------------------
 // BEGIN: Get URL function
-// Places the output in the menu under "History"
+// Places the output in the menu under "Favorites"
 //---------------------------------------------------------------
 $.get("includes/ajax/qhistory.php?action=get&spanid=search_history", function(data){
 $("#search_history").append(data);
@@ -1139,7 +1139,7 @@ $("#chart_history").append(data);
         });
 //---------------------------------------------------------------
 // END: Get URL function
-// Places the output in the menu under "History"
+// Places the output in the menu under "Favorites"
 //---------------------------------------------------------------
 </script>
 <!-- END Add Save URL icon to search results -->

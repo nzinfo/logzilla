@@ -22,8 +22,10 @@ CHANGELOG
         use them: http://sphinxsearch.com/docs/manual-0.9.9.html#matching-modes
  0.66 
     - Changed display for Help menus to Modal Dialog
-    - DB: altered help table to increase the varchar size for descriptions
+    - DB: altered help table to increase the text size for descriptions
     - Began adding content on all help dialogs
+ 0.67 
+    - Completed help content
 
 3.0 RC1 - initial release
  - Added menu item to reset ui_layout

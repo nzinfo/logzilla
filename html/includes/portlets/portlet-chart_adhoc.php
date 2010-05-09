@@ -5,7 +5,7 @@
  * Developed by Clayton Dukes <cdukes@cdukes.com>
  * Copyright (c) 2010 LogZilla, LLC
  * All rights reserved.
- * Last updated on 2010-05-08
+ * Last updated on 2010-05-09
  *
  * Changelog:
  * 2010-03-06 - created
@@ -661,7 +661,7 @@ $(".portlet-header .ui-icon-disk").click(function() {
                                 opacity: 0.5
                         },
                         buttons: {
-                                'Save to History': function() {
+                                'Save to Favorites': function() {
                                         $(this).dialog('close');
                                         var urlname = $("#urlname").val();
                                         var show_suppressed = $('#show_suppressed :selected').val();
@@ -792,7 +792,7 @@ $(".XLButtons").appendTo("#portlet-header_Graph_Results");
             <input type="text" name="url" id="url" class="text ui-widget-content ui-corner-all" />
         </fieldset>
         <hr>
-        <b>You may either click "Save to History" now, or modify individual parameters below before saving.</b>
+        <b>You may either click "Save to Favorites" now, or modify individual parameters below before saving.</b>
         <hr>
 
             <table id="tbl_usave" cellpadding="0" cellspacing="0" border="0" width="100%">

@@ -1,6 +1,6 @@
 <?php
 // Copyright (c) 2010 LogZilla, LLC, cdukes@cdukes.com
-// Last updated on 2010-05-08
+// Last updated on 2010-05-09
 
 //----------------------------------------------------------------------------------------
 // This is a simple menu layout for the top menu on the search page
@@ -88,7 +88,7 @@ session_start();
     <!-- END Top Level with 2nd Level -->
 
     <!-- BEGIN Top Level with 2nd Level -->
-    <li><a href="#">History</a>
+    <li><a href="#">Favorites</a>
         <ul>
             <!-- BEGIN 2nd Level with 3nd Level -->
             <li><a href="#">Saved Searches</a>
