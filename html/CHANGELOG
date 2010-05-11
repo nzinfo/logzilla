@@ -24,11 +24,13 @@ CHANGELOG
     - Changed display for Help menus to Modal Dialog
     - DB: altered help table to increase the text size for descriptions
     - Began adding content on all help dialogs
- 0.67 
+ 0.67-0.71
     - Completed help content
- 0.68 
     - Fixed invalid SITE_URL setting for the ioncube directories
     - Fixed 'undefined' bug when recalling a saved chart
+ 0.72
+    - Added updated help file (forgot to include it on the last dump)
+    - Replaced regex for Mnemonics  in db_insert.pl with a better one.
 
 3.0 RC1 - initial release
  - Added menu item to reset ui_layout

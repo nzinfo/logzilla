@@ -2,7 +2,7 @@
 
 #
 # db_insert.pl
-# Last updated on 2010-05-09
+# Last updated on 2010-05-10
 #
 # Developed by Clayton Dukes <cdukes@cdukes.com>
 # Copyright (c) 2009 LogZilla, LLC
@@ -204,7 +204,8 @@ my $re_pipe = qr/(\S+)\t(\d+)\t(\S+)\t(.*)/;
 # v3.0 Fields are: Host, PRI, Program,  and MSG
 # the $severity and $facility fields are split from the $pri coming in so that they can be stored as integers into 2 separate db columns
 # re_mne is used to capture Cisco Mnemonics
-my $re_mne = qr/%(\w+-.*\d-\w+)\s?:?/;
+# my $re_mne = qr/%(\w+-.*\d-\w+)\s?:?/;
+my $re_mne = qr/%(\w+.+?)[:|\s]/;
 
 $dbh->disconnect();
 $dbh = DBI->connect( "DBI:mysql:$db:$dbhost", $dbuser, $dbpass );
