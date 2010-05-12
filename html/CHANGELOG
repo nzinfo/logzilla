@@ -31,6 +31,8 @@ CHANGELOG
  0.72
     - Added updated help file (forgot to include it on the last dump)
     - Replaced regex for Mnemonics  in db_insert.pl with a better one.
+ 0.73
+    - Modified regex for Cisco Firewalls
 
 3.0 RC1 - initial release
  - Added menu item to reset ui_layout
