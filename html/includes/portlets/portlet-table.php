@@ -5,7 +5,7 @@
  * Developed by Clayton Dukes <cdukes@cdukes.com>
  * Copyright (c) 2010 LogZilla, LLC
  * All rights reserved.
- * Last updated on 2010-05-12
+ * Last updated on 2010-05-16
  *
  * Pagination and table formatting created using 
  * http://www.frequency-decoder.com/2007/10/19/client-side-table-pagination-script/
@@ -533,11 +533,11 @@ if ($order) {
         }
         // Link to LZECS if info is available
             if($_SESSION['MSG_EXPLODE'] == "1") {
-                  // echo "<td class=\"s_td wide\"><a onclick=\"lzecs(this); return false\" id='$msg' href=\"javascript:void(0);\">[LZECS]&nbsp;&nbsp;</a>$explode_url</td>\n";
-                  echo "<td class=\"s_td wide\">$explode_url</td>\n";
+                   echo "<td class=\"s_td wide\"><a onclick=\"lzecs(this); return false\" id='$msg' href=\"javascript:void(0);\">[LZECS]&nbsp;&nbsp;</a>$explode_url</td>\n";
+                  // echo "<td class=\"s_td wide\">$explode_url</td>\n";
             } else {
-                //   echo "<td class=\"s_td wide\"><a onclick=\"lzecs(this); return false\" id='$msg' href=\"javascript:void(0);\">[LZECS]&nbsp;&nbsp;</a>$msg</td>\n";
-                 echo "<td class=\"s_td wide\">$msg</td>\n";
+                   echo "<td class=\"s_td wide\"><a onclick=\"lzecs(this); return false\" id='$msg' href=\"javascript:void(0);\">[LZECS]&nbsp;&nbsp;</a>$msg</td>\n";
+                //  echo "<td class=\"s_td wide\">$msg</td>\n";
             }
             if ($_SESSION['DEDUP'] == 1) { 
                 echo "<td class=\"s_td\">$row[fo]</td>\n";

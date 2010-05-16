@@ -17,6 +17,28 @@ define ('ERROR_UNKNOWN_ARCH',3);
 define ('ERROR_UNSUPPORTED_ARCH',4);
 define ('ERROR_UNSUPPORTED_ARCH_OS',5);
 define ('ERROR_WINDOWS_64_BIT',6);
+define ('ERROR_RUNTIME_EXT_DIR_NOT_FOUND',101);
+define ('ERROR_RUNTIME_LOADER_FILE_NOT_FOUND',102);
+define ('ERROR_INI_NOT_FIRST_ZE',201);
+define ('ERROR_INI_WRONG_ZE_START',202);
+define ('ERROR_INI_ZE_LINE_NOT_FOUND',203);
+define ('ERROR_INI_LOADER_FILE_NOT_FOUND',204);
+define ('ERROR_INI_NOT_FULL_PATH',205);
+define ('ERROR_INI_NO_PATH',206);
+define ('ERROR_INI_NOT_FOUND',207);
+define ('ERROR_LOADER_UNEXPECTED_NAME',301);
+define ('ERROR_LOADER_NOT_READABLE',302);
+define ('ERROR_LOADER_PHP_MISMATCH',303);
+define ('ERROR_LOADER_NONTS_PHP_TS',304);
+define ('ERROR_LOADER_TS_PHP_NONTS',305);
+define ('ERROR_LOADER_WRONG_OS',306);
+define ('ERROR_LOADER_WRONG_ARCH',307);
+define ('ERROR_LOADER_WIN_SERVER_NONWIN',321);
+define ('ERROR_LOADER_WIN_NONTS_PHP_TS',322);
+define ('ERROR_LOADER_WIN_TS_PHP_NONTS',323);
+define ('ERROR_LOADER_WIN_PHP_MISMATCH',324);
+define ('ERROR_LOADER_PHP_VERSION_UNKNOWN',390);
+
 
 define ('SERVER_UNKNOWN',0);
 define ('HAS_PHP_INI',1);
@@ -26,31 +48,31 @@ define ('SERVER_VPS',5);
 define ('SERVER_DEDICATED',7); 
 define ('SERVER_LOCAL',9);
 
-define ('LOADERS_PAGE',                                                 // Main webpage from where loaders can be downloaded.
+define ('LOADERS_PAGE',
             'http://loaders.ioncube.com/');                                 
-define ('SUPPORT_SITE',                                                 // Support helpdesk URL. 
+define ('SUPPORT_SITE',
             'http://support.ioncube.com/');                                 
-define ('LOADER_FORUM_URL',                                             // URL to forum about the ionCube Loader.
+define ('LOADER_FORUM_URL',
             'http://forum.ioncube.com/viewforum.php?f=4');                  
-define ('LOADERS_FAQ_URL',                                              // URL for the Loaders FAQ.
+define ('LOADERS_FAQ_URL',
             'http://www.ioncube.com/faqs/loaders.php');                     
-define ('UNIX_ERRORS_URL',                                              // Help for errors with the Loader on Unix systems.
+define ('UNIX_ERRORS_URL',
             'http://www.ioncube.com/loaders/unix_startup_errors.php');      
-define ('LOADER_WIZARD_URL',                                            // URL from where this wizard script can be downloaded.
+define ('LOADER_WIZARD_URL',
             LOADERS_PAGE);                                                  
-define ('ENCODER_URL',                                                  // URL for the Encoder. 
+define ('ENCODER_URL',
             'http://www.ioncube.com/sa_encoder.php');                       
-define ('LOADER_VERSION_URL',                                           // Base URL to get Loader versioning and platform information.
+define ('LOADER_VERSION_URL',
             'http://www.ioncube.com/feeds/product_info/versions.php');    
-define ('WIZARD_LATEST_VERSION_URL',                                    // URL to get latest version of the Loader Wizard.
+define ('WIZARD_LATEST_VERSION_URL',
             LOADER_VERSION_URL . '?item=loader-wizard'); 
-define ('PHP_COMPILERS_URL',                                            // URL to get the supported compilers for PHP.
+define ('PHP_COMPILERS_URL',
             LOADER_VERSION_URL . '?item=php-compilers');
-define ('LOADER_PLATFORM_URL',                                          // URL to get the platforms on which the Loader is available.
+define ('LOADER_PLATFORM_URL',
             LOADER_VERSION_URL . '?item=loader-platforms');   
-define ('LOADER_LATEST_VERSIONS_URL',                                   // URL to get latest versions of the Loader.
+define ('LOADER_LATEST_VERSIONS_URL',
             LOADER_VERSION_URL . '?item=loader-versions'); 
-define ('IONCUBE_DOWNLOADS_SERVER',                                     // Actual loader downloads server.
+define ('IONCUBE_DOWNLOADS_SERVER',
             'http://downloads2.ioncube.com/loader_downloads');          
 
 define ('LOADER_NAME_CHECK',true);
@@ -67,7 +89,7 @@ define ('SESSION_LIFETIME_MINUTES',10);
 
 function script_version()
 {
-    return "2.7";
+    return "2.9";
 }
 
 function retrieve_latest_version()
@@ -258,7 +280,7 @@ function supported_os_variants($os_code,$arch_code)
 
     foreach ($pinfo as $p) {
         if ($p['os'] == $os_code && $p['arch'] == $arch_code) {
-            $os_arch_matches[$p['os_human']] = (isset($p['os_mod']))?str_replace('_','',$p['os_mod']):'';
+            $os_arch_matches[$p['os_human']] = (isset($p['os_mod']))?(0 + str_replace('_','',$p['os_mod'])):'';
         } 
         if ($p['os'] == $os_code) {
             $os_found = true;
@@ -415,7 +437,7 @@ function ic_system_info()
     $is_cli = false;
     $php_ini_path = '';
     $is_supported_compiler = true;
-    $php_compiler = '';
+    $php_compiler = is_ms_windows()?'vc6':'';
 
     ob_start();
     phpinfo(INFO_GENERAL);
@@ -447,11 +469,10 @@ function ic_system_info()
         if (preg_match('/compiler/i',$line)) {
             $supported_match = join('|',supported_win_compilers());
             $is_supported_compiler = preg_match("/($supported_match)/i",$line);
-            if (!$is_supported_compiler) {
-                if (preg_match("/(VC[0-9]+)/i",$line,$match)) {
-                    $php_compiler = $match[1];
-                }
-
+            if (preg_match("/(VC[0-9]+)/i",$line,$match)) {
+                $php_compiler = strtolower($match[1]);
+            } else {
+                $php_compiler = '';
             }
         }
     }
@@ -475,6 +496,7 @@ function ic_system_info()
            'DEBUG_BUILD'        => $debug_build,
            'PHP_INI'            => $php_ini_path,
            'PHP_INI_BASENAME'   => $php_ini_basename,
+           'PHP_INI_DIR'        => get_cfg_var('config-file-scan-dir'),
            'PHPRC'              => getenv('PHPRC'),
            'CGI_CLI'            => $cgi_cli,
            'IS_CGI'             => $is_cgi,
@@ -717,8 +739,9 @@ function get_reqd_version($variants)
     $nearest_version = 0;
     $loader_info = get_loaderinfo();
     $os_version = $loader_info['osver2'][0] . '.' . $loader_info['osver2'][1];
+    $os_version_major = $loader_info['osver2'][0];
     foreach ($variants as $v) {
-        if ($v == $os_version) {
+        if ($v == $os_version || (is_int($v) && $v == $os_version_major)) {
             $exact_match = true;
             $nearest_version = $v;
             break;
@@ -763,25 +786,25 @@ function get_loader_location_from_ini($php_ini = '')
                 $loader_path = $corr_matches[1];
                 break;
             } else {
-                $errors[] = "The ionCube Loader must be the first zend_extension listed in the configuration file, $php_ini.";
+                $errors[ERROR_INI_NOT_FIRST_ZE] = "The ionCube Loader must be the first zend_extension listed in the configuration file, $php_ini.";
                 $first_ext = false;
             }
         }
         if (preg_match("/^\s*$wrong_ext_start\s*=\s*\"?([^\"]+)\"?/i",$l,$bad_start_matches)) {
             if (preg_match("/$loader_name_match/i",$bad_start_matches[1])) {
                 $bad_zend_ext_msg = "The line for the ionCube Loader in the configuration file, $php_ini, should start with $ext_start and <b>not</b> $wrong_ext_start.";
-                $errors[] = $bad_zend_ext_msg;
+                $errors[ERROR_INI_WRONG_ZE_START] = $bad_zend_ext_msg;
             }
             $loader_path = $bad_start_matches[1];
         }
     }
     $loader_path = trim($loader_path);
     if ($loader_path == '') {
-        $errors[] = "The necessary zend_extension line could not be found in the configuration file, $php_ini.";
+        $errors[ERROR_INI_ZE_LINE_NOT_FOUND] = "The necessary zend_extension line could not be found in the configuration file, $php_ini.";
     } elseif (!file_exists($loader_path)) {
-        $errors[] = "The loader file  $loader_path, listed in the configuration file, $php_ini, does not exist.";
+        $errors[ERROR_INI_LOADER_FILE_NOT_FOUND] = "The loader file  $loader_path, listed in the configuration file, $php_ini, does not exist or is not accessible.";
     } elseif (basename($loader_path) == $loader_path) {
-        $errors[] = "A full path must be specified for the loader file in the configuration file, $php_ini.";
+        $errors[ERROR_INI_NOT_FULL_PATH] = "A full path must be specified for the loader file in the configuration file, $php_ini.";
     }
     if (empty($errors)) {
         return $loader_path;
@@ -1016,11 +1039,11 @@ function runtime_loading_errors()
     $errors = array();
     $ext_path = extension_dir_path();
     if (false === $ext_path) {
-        $errors[] = "Extensions directory cannot be found.";
+        $errors[ERROR_RUNTIME_EXT_DIR_NOT_FOUND] = "Extensions directory cannot be found.";
     } else {
         $expected_file = dirname(__FILE__) . DIRECTORY_SEPARATOR . get_loader_name();
         if (!file_exists($expected_file)) {
-            $errors[] = "The Loader file was expected to be at $expected_file but could not be found.";
+            $errors[ERROR_RUNTIME_LOADER_FILE_NOT_FOUND] = "The Loader file was expected to be at $expected_file but could not be found.";
         } else {
             $errors = loader_compatibility_test($expected_file);
         }
@@ -1032,7 +1055,7 @@ function runtime_loading_errors()
 function windows_package_name()
 {
     $sys = get_sysinfo();
-    return (LOADERS_PACKAGE_PREFIX . 'win' . '_' . $sys['PHP_COMPILER'] .  '_' . ($sys['THREAD_SAFE']?'':'nonts_') . 'x86');
+    return (LOADERS_PACKAGE_PREFIX . 'win' . '_' . ($sys['THREAD_SAFE']?'':'nonts_') . $sys['PHP_COMPILER'] .  '_' . 'x86');
 }
 
 function loader_download_instructions()
@@ -1087,32 +1110,38 @@ uploading from a local PC to your server.<br>";
     echo '</li>';
 }
 
+function loader_install_dir($server_type)
+{
+    if (SERVER_SHARED_INI == $server_type) {
+        $loader_dir = get_default_loader_dir();
+    } else {
+        if (is_ms_windows()) {
+            $sysinfo = get_sysinfo();
+            if ($sysinfo['SS'] == 'IIS') {
+                if (false === ($ext_dir = extension_dir_path())) {
+                    $loader_dir = $_SERVER['windir'] . '\\' . WINDOWS_IIS_LOADER_DIR;
+                } else {
+                    $loader_dir = $ext_dir;
+                }
+            } else {
+                if (!empty($sysinfo['PHP_INI'])) {
+                    $parent_dir = dirname($sysinfo['PHP_INI']);
+                } else {
+                    $parent_dir = $_SERVER["PHPRC"];
+                }
+                $loader_dir = $parent_dir . '\\' . 'ioncube';
+            }
+        } else {
+            $loader_dir = UNIX_SYSTEM_LOADER_DIR;
+        }
+    }
+    return $loader_dir;
+}
+
 function loader_install_instructions($server_type,$loader_dir = '')
 {
     if (empty($loader_dir)) {
-        if (SERVER_SHARED_INI == $server_type) {
-            $loader_dir = get_default_loader_dir();
-        } else {
-            if (is_ms_windows()) {
-                $sysinfo = get_sysinfo();
-                if ($sysinfo['SS'] == 'IIS') {
-                    if (false === ($ext_dir = extension_dir_path())) {
-                        $loader_dir = $_SERVER['windir'] . '\\' . WINDOWS_IIS_LOADER_DIR;
-                    } else {
-                        $loader_dir = $ext_dir;
-                    }
-                } else {
-                    if (!empty($sysinfo['PHP_INI'])) {
-                        $parent_dir = dirname($sysinfo['PHP_INI']);
-                    } else {
-                        $parent_dir = $_SERVER["PHPRC"];
-                    }
-                    $loader_dir = $parent_dir . '\\' . 'ioncube';
-                }
-            } else {
-                $loader_dir = UNIX_SYSTEM_LOADER_DIR;
-            }
-        }
+        $loader_dir = loader_install_dir($server_type);
     }
     if (SERVER_LOCAL == $server_type) {
         echo "<li>Put the Loader files in <code>$loader_dir</code></li>";
@@ -1170,7 +1199,9 @@ function zend_extension_instructions($server_type,$loader_dir)
         $html_dir = shared_ini_location();
         $ini_path = $html_dir . "/" . $php_ini_name;
         if (file_exists($ini_path)) {
-            if (is_writeable($ini_path)) {
+            $loader_loc = get_loader_location_from_ini($ini_path);
+            $missing_ze_line = is_array($loader_loc) && array_key_exists(ERROR_INI_ZE_LINE_NOT_FOUND,$loader_loc);
+            if ($missing_ze_line && is_writeable($ini_path)) {
                 if (function_exists('file_get_contents')) {
                     $ini_strs = @file_get_contents($ini_path);
                 } else {
@@ -1184,6 +1215,7 @@ function zend_extension_instructions($server_type,$loader_dir)
                 fwrite($fh,$ini_strs);
                 fclose($fh);
                 $editing_ini = false;
+                echo "<li>Your php.ini file at $ini_path has been modified to include the necessary line for the ionCube Loader.";
             } else {
                echo "<li>Edit the <code>$php_ini_name</code> in your <code>$html_dir</code> directory";
             }
@@ -1202,7 +1234,13 @@ function zend_extension_instructions($server_type,$loader_dir)
            $editing_ini = false;
         }
     } elseif (!empty($sysinfo['PHP_INI'])) {
-        echo "<li>Edit the file <code>${sysinfo['PHP_INI']}</code>";
+        if (empty($sysinfo['PHP_INI_DIR'])) {
+            echo "<li>Edit the file <code>${sysinfo['PHP_INI']}</code>";
+        } else {
+            $php_ini_name = 'ioncube.ini';
+            echo "<li><a href=\"$self?page=phpini&amp;ininame=$php_ini_name\">Save this $php_ini_name file</a> and put it in your ini files directory, <code>${sysinfo['PHP_INI_DIR']}</code>";
+            $editing_ini = false;
+        }
     } else {
         echo "<li>Edit the system <code>$php_ini_name</code> file";
     }
@@ -1210,6 +1248,13 @@ function zend_extension_instructions($server_type,$loader_dir)
         echo " and <b>before</b> any other $kwd lines add:<br>";
         foreach ($zend_extension_lines as $zl) {
             echo "<code>$zl</code><br>";
+        }
+        if (isset($sysinfo['PHP_INI']) && file_exists($sysinfo['PHP_INI'])) {
+            $loader_loc = get_loader_location_from_ini();
+            $missing_ze_line = is_array($loader_loc) && array_key_exists(ERROR_INI_ZE_LINE_NOT_FOUND,$loader_loc);
+            if ($missing_ze_line) {
+                echo "<a>Alternatively, replace your current <code>${sysinfo['PHP_INI']}</code> file with <a href=\"$self?page=phpconfig&amp;download=1&amp;prepend=1\">this new $php_ini_name file</a>."; 
+            }
         }
     }
     echo '</li>';
@@ -1340,7 +1385,6 @@ function support_ticket_information($error_list = array())
     }
     $ticket_strs[] = "[hr]";
     $ticket_strs[] = "SYSTEM INFORMATION";
-    $ticket_strs[] = "[table]";
     $info_lines = array();
     $info_lines["Machine architecture"] = $ld['arch'];
     $info_lines["Word size"] = $ld['wordsize'];
@@ -1380,8 +1424,10 @@ function support_ticket_information($error_list = array())
         $info_lines["Loader path"] =  "LOADER PATH NOT FOUND";
     }
     $info_lines["Wizard script path"] = '[url]http://' . $_SERVER["HTTP_HOST"] . get_self() . '[/url]';
+    $ticket_strs[] = "[table]";
     foreach ($info_lines as $h => $i) {
-        $ticket_strs[] = '[tr][td]' . $h . '[/td]' . '[td]' . $i . '[/td][/tr]';
+        $value = (empty($i))?'EMPTY':$i;
+        $ticket_strs[] = '[tr][td]' . $h . '[/td]' . '[td]' . $value . '[/td][/tr]';
     }
     $ticket_strs[] = '[/table]';
     $ticket_strs[] = '[hr]';
@@ -1399,12 +1445,12 @@ function os_arch_string_check($loader_str)
         $loader_info = get_loaderinfo();
         $dirname = calc_dirname();
         if (strtolower($dirname) != $os_matches[1] && strtolower($loader_info['osname']) != $os_matches[2]) {
-            $errors[] = "You have the wrong loader for your operating system, ". $loader_info['osname'] . ".";
+            $errors[ERROR_LOADER_WRONG_OS] = "You have the wrong loader for your operating system, ". $loader_info['osname'] . ".";
         } elseif ($loader_info['arch'] != ($ap = required_loader_arch($os_matches[3],$loader_info['oscode'],$loader_info['wordsize']))) {
             $err_str = "You have the wrong loaders for your machine architecture.";
             $err_str .= " Your system is " . $loader_info['arch'];
             $err_str .= " but the loader you are using is for " . $ap . ".";
-            $errors[] = $err_str;
+            $errors[ERROR_LOADER_WRONG_ARCH] = $err_str;
         }
     }
     return $errors;
@@ -1419,7 +1465,7 @@ function loader_compatibility_test($loader_location)
         $installed_loader_name = basename($loader_location);
         $expected_loader_name = get_loader_name();
         if ($installed_loader_name != $expected_loader_name) {
-            $errors[] = "The installed loader (<code>$installed_loader_name</code>) does not have the name expected (<code>$expected_loader_name</code>) for your system. Please check that you have the correct loader for your system.";
+            $errors[ERROR_LOADER_UNEXPECTED_NAME] = "The installed loader (<code>$installed_loader_name</code>) does not have the name expected (<code>$expected_loader_name</code>) for your system. Please check that you have the correct loader for your system.";
         }
     }
     if (empty($errors) && !is_readable($loader_location)) {
@@ -1431,7 +1477,7 @@ function loader_compatibility_test($loader_location)
             $execute_error .= "<br>Please also check that the web server has been restarted.";
         }
         $execute_error .= ".";
-        $errors[] = $execute_error;
+        $errors[ERROR_LOADER_NOT_READABLE] = $execute_error;
     }
     if (function_exists('file_get_contents')) {
         $loader_strs = @file_get_contents($loader_location);
@@ -1444,30 +1490,30 @@ function loader_compatibility_test($loader_location)
         if ($version_matches[1] != $phpv['major'] || $version_matches[2]  != $phpv['minor']) {
             $loader_php = $version_matches[1] . "." . $version_matches[2];
             $server_php =  $phpv['major'] . "." .  $phpv['minor'];
-            $errors[] = "The installed loader is for PHP $loader_php but your server is running PHP $server_php.";
+            $errors[ERROR_LOADER_PHP_MISMATCH] = "The installed loader is for PHP $loader_php but your server is running PHP $server_php.";
         }
         if (is_bool($sysinfo['THREAD_SAFE']) &&  $sysinfo['THREAD_SAFE'] && !is_ms_windows() && !(isset($version_matches[4]) && $version_matches[4] == '-ts')) {
-            $errors[] = "Your server is running a thread-safe version of PHP but the loader is not a thread-safe version.";
+            $errors[ERROR_LOADER_NONTS_PHP_TS] = "Your server is running a thread-safe version of PHP but the loader is not a thread-safe version.";
         } elseif (isset($version_matches[4]) && $version_matches[4] == '-ts' && !(is_bool($sysinfo['THREAD_SAFE']) &&  $sysinfo['THREAD_SAFE'])) {
-            $errors[] = "Your server is running a non-thread-safe version of PHP but the loader is a thread-safe version.";
+            $errors[ERROR_LOADER_TS_PHP_NONTS] = "Your server is running a non-thread-safe version of PHP but the loader is a thread-safe version.";
         }
     } elseif (preg_match("/ioncube_loader_.\.._(.)\.(.)\.(..?)(_nonts)?\.dll/i",$loader_strs,$version_matches)) {
         if (!is_ms_windows()) {
-            $errors[] = "You have a Windows loader but your server does not appear to be running Windows.";
+            $errors[ERROR_LOADER_WIN_SERVER_NONWIN] = "You have a Windows loader but your server does not appear to be running Windows.";
         } else {
             if (isset($version_matches[4]) && $version_matches[4] == '_nonts' && is_bool($sysinfo['THREAD_SAFE']) &&  $sysinfo['THREAD_SAFE']) {
-                $errors[] = "You have the non-thread-safe version of the Windows loader but you need the thread-safe one.";
+                $errors[ERROR_LOADER_WIN_NONTS_PHP_TS] = "You have the non-thread-safe version of the Windows loader but you need the thread-safe one.";
             } elseif (!(is_bool($sysinfo['THREAD_SAFE']) &&  $sysinfo['THREAD_SAFE']) && !(isset($version_matches[4]) && $version_matches[4] == '_nonts')) {
-                $errors[] = "You have the thread-safe version of the Windows loader but you need the non-thread-safe one."; 
+                $errors[ERROR_LOADER_WIN_TS_PHP_NONTS] = "You have the thread-safe version of the Windows loader but you need the non-thread-safe one."; 
             }
             if ($version_matches[1] != $phpv['major'] || $version_matches[2]  != $phpv['minor']) {
                 $loader_php = $version_matches[1] . "." . $version_matches[2];
                 $server_php =  $phpv['major'] . "." .  $phpv['minor'];
-                $errors[] = "The installed loader is for PHP $loader_php but your server is running PHP $server_php.";
+                $errors[ERROR_LOADER_WIN_PHP_MISMATCH] = "The installed loader is for PHP $loader_php but your server is running PHP $server_php.";
             }
         }
     } else {
-            $errors[] = "The PHP version for the loader cannot be determined - please check that you have a valid ionCube Loader.";
+            $errors[ERROR_LOADER_PHP_VERSION_UNKNOWN] = "The PHP version for the loader cannot be determined - please check that you have a valid ionCube Loader.";
     } 
     $errors = array_merge($errors,os_arch_string_check($loader_strs));
 
@@ -1803,9 +1849,9 @@ function ini_loader_errors()
         if (!shared_and_runtime_loading()) {
             $sys = get_sysinfo();
             if (empty($sys['PHP_INI'])) {
-                $errors[] = 'No file path found for the PHP configuration file (php.ini).';
+                $errors[ERROR_INI_NO_PATH] = 'No file path found for the PHP configuration file (php.ini).';
             } elseif (!file_exists($sys['PHP_INI'])) {
-                $errors[] = 'The PHP configuration file (' . $sys['PHP_INI'] .') cannot be found.';
+                $errors[ERROR_INI_NOT_FOUND] = 'The PHP configuration file (' . $sys['PHP_INI'] .') cannot be found.';
             }
         }
         $errors = array_merge($errors,loader_compatibility_test($loader_loc));
@@ -1831,14 +1877,18 @@ function ini_loader_warnings()
         $rel_path = '';
         for ($seps = 0; $seps < $depth; $seps++) {
             $ini_loc = $here . '/' . $rel_path . $ini_name;
-            if (file_exists($ini_loc) && $sys['PHP_INI'] != $ini_loc) {
-                $full_ini_loc = realpath($ini_loc);
+            $full_ini_loc = realpath($ini_loc);
+            if (file_exists($ini_loc) && $sys['PHP_INI'] != $full_ini_loc) {
                 $advice = "The file $full_ini_loc is not being recognised by PHP.";
                 $advice .= " Please check that the name and location of the file are correct.";
                 if (!ini_same_dir_as_wizard()) {
                     $phprc = realpath(getenv('PHPRC'));
-                    if (!empty($phprc) && $full_ini_loc != $phprc) {
-                        $advice .= " Please try copying the <code>$full_ini_loc</code> file to <code>" . $phprc . "</code>.";
+                    if (!empty($phprc)) {
+                        $ini_dir = dirname($sys['PHP_INI']);
+                        $ini_loc_dir = dirname($full_ini_loc);
+                        if ($ini_loc_dir != $phprc && $ini_dir != $phprc) {
+                            $advice .= " Please try copying the <code>$full_ini_loc</code> file to <code>" . $phprc . "</code>.";
+                        }
                     } else {
                         $rootpath = realpath($_SERVER['DOCUMENT_ROOT']);
                         if ($full_ini_loc != $rootpath) {
@@ -1908,14 +1958,13 @@ function list_loader_errors($errors = array(),$warnings = array(),$suggest_resta
 
 function phpini_page()
 {
-    if (empty($loader_dir)) {
-        $loader_dir = get_default_loader_dir();
-    }
-    $loader_name = get_loader_name(); 
-    $loader_loc = $loader_dir . "/" . $loader_name;
     $loader_loc = get_loader_location(get_request_parameter('ldpath'));
+    $ini_file_name = get_request_parameter('ininame');
+    if (empty($ini_file_name)) {
+        $ini_file_name = ini_file_name();
+    }
     header('Content-Type: text/plain');
-    header('Content-Disposition: attachment; filename='. ini_file_name());
+    header('Content-Disposition: attachment; filename=' . $ini_file_name);
     echo php_ini_contents($loader_loc); 
 }
 
@@ -1923,7 +1972,22 @@ function phpconfig_page()
 {
     $sys = get_sysinfo();
     if (isset($sys['PHP_INI']) && file_exists($sys['PHP_INI'])) {
-        header('Content-Type: text/plain');
+        $download = get_request_parameter('download');
+        if (!empty($download)) {
+            $ini_file_name = ini_file_name();
+            header('Content-Type: application/octet-stream');
+            header('Content-Disposition: attachment; filename=' . $ini_file_name);
+        } else {
+            header('Content-Type: text/plain');
+        }
+        $prepend = get_request_parameter('prepend');
+        if (!empty($prepend)) {
+            $server_type = find_server_type();
+            $loader_dir = loader_install_dir($server_type);
+            $zend_lines = zend_extension_lines($loader_dir);
+            echo join(PHP_EOL,$zend_lines);
+            echo PHP_EOL;
+        }
         @readfile($sys['PHP_INI']);
     } else {
         echo "php.ini file could not be read.";
@@ -1938,19 +2002,25 @@ function extra_page()
     $ldinf = get_loaderinfo();
     $self = get_self();
     echo "<h4>Additional Information</h4>";
-    echo "<p>";
+    echo "<table>";
+    $lines = array();
     if (is_string($loader_path)) {
-        echo "Loader is at " . $loader_path;
-        echo "<br>File size is " . filesize($loader_path) . " bytes.";
-        echo "<br>MD5 sum is " . md5_file($loader_path);
-        echo "<br><a href=\"$self?page=loaderbin\">Download loader file</a>";
+        $lines['Loader is at'] = $loader_path;
+        $lines['File size is'] = filesize($loader_path) . " bytes.";
+        $lines ['MD5 sum is'] = md5_file($loader_path);
+        $lines ['Loader file'] = "<a href=\"$self?page=loaderbin\">Download loader file</a>";
     } else {
-        echo "Loader cannot be found.";
+        $lines ['Loader file'] = "Loader cannot be found.";
     }
-    echo "<br>PHPRC is " . $sys['PHPRC'];
-    echo "<br>Server type is " . server_type_string();
-    echo "<br>Server word size is " . $ldinf['wordsize'];
-    echo "</p>";
+    $lines['PHPRC is'] = $sys['PHPRC'];
+    $lines ['INI DIR is'] = $sys['PHP_INI_DIR'];
+    $lines['Server type is'] = server_type_string();
+    $lines['Server word size is'] = $ldinf['wordsize'];
+    foreach ($lines as $h => $i) {
+        $v = (empty($i))?'<em>EMPTY</em>':$i;
+        echo '<tr><th>'. $h . ':</th>' . '<td>' . $v . '</td></tr>';
+    }
+    echo "</table>";
     footer(true);
 }
 
@@ -2182,6 +2252,10 @@ function css_page()
     p,#main div {
         max-width: 1000px;
         width: 75%;
+    }
+
+    th {
+        text-align: left;
     }
 
     .alert {

@@ -1,5 +1,12 @@
 CHANGELOG
 
+3.0.74 - *RELEASE VERSION*
+ - Released May 16th, 2010
+ - Install Guide: http://nms.gdd.net/index.php/Install_Guide_for_LogZilla_v3.0
+ - User Guide: http://nms.gdd.net/index.php/LogZilla_3.0_User_Guide
+ - LogZilla is made available to end users under two licenses: a free, open-source version and a commercial version. 
+ - For inquiries about purchasing a commercial license, please email logzilla@gdd.net
+
 3.0RC1 - updates
  - Added regex pattern match for Windows Snare logs in db_insert.pl
  - Fixed htmlentities display on table output
@@ -33,6 +40,9 @@ CHANGELOG
     - Replaced regex for Mnemonics  in db_insert.pl with a better one.
  0.73
     - Modified regex for Cisco Firewalls
+ 0.74
+    - Added better regex for Cisco Firewall Mnemonics
+    - Removed leading / from ioncube link in index.php
 
 3.0 RC1 - initial release
  - Added menu item to reset ui_layout
