@@ -1,5 +1,17 @@
 CHANGELOG
 
+3.0.76 - updates
+ - Modified contribs/logreplay to allow a limit on number of hosts that will be generated, 
+    default is 50 so you don't overrun the demo license during testing.
+ - Modified contribs/genreport to allow the types of reports to generate (total messages, average per hour, etc.).
+ - Updated Demo License to allow for 500kmpd, 50 hosts, Adhoc Charts and LDAP auth. Expires July 9th, 2010.
+ - Added quotes to dbrootpass in install.pl to help with passwords (see http://forum.logzilla.info/index.php/topic,179.0.html)
+ - DB: Modified the way events and partitions get automatically created/dropped.
+ - DB: Added an ARCHIVE table to move old events to before dropping them.
+ - DB: Added an index to the FO and LO columns
+ - Fixed bug in db_insert.pl that was not importing any remaining messages at the end of STDIN (program exit)
+ - Fixed bug in db_insert.pl that would sometimes insert a duplicate of the same message
+
 3.0.75 - *RELEASE VERSION*
  - Released May 16th, 2010
  - Install Guide: http://nms.gdd.net/index.php/Install_Guide_for_LogZilla_v3.0

@@ -32,6 +32,7 @@ my $to = 'cdukes@cdukes.com';
 my $subject = 'LogZilla Excel Report';
 my $body = "Report generated on $now";
 my $basepath = "/path_to_logzilla";
+my $smtphost = "localhost";
 ####### MODIFY above to suit your needs ##############
 
 my ($db, $dbhost, $dbport, $dbuser, $dbpass, $dbtable, @ids, $dbids);
@@ -43,7 +44,7 @@ my @config = <CONFIG>;
 close( CONFIG );
 
 foreach my $var (@config) {
-    next unless $var =~ /^DEFINE/; # read only def's
+    next unless $var =~ /DEFINE/; # read only def's
     $dbuser = $1 if ($var =~ /'DBADMIN', '(\w+)'/);
     $dbpass = $1 if ($var =~ /'DBADMINPW', '(\w+)'/);
     $db = $1 if ($var =~ /'DBNAME', '(\w+)'/);
@@ -113,7 +114,7 @@ $msg->attach(
 );
 
 #$msg->send('smtp','localhost', Debug=>1 );
-$msg->send('smtp','localhost');
+$msg->send('smtp',"$smtphost");
 print "Mail Sent\n";
 
 # Delete the temp file

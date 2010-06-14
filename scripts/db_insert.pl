@@ -2,7 +2,7 @@
 
 #
 # db_insert.pl
-# Last updated on 2010-05-16
+# Last updated on 2010-06-14
 #
 # Developed by Clayton Dukes <cdukes@cdukes.com>
 # Copyright (c) 2009 LogZilla, LLC
@@ -46,6 +46,7 @@
 # 2010-04-14 - REMOVED Tail::File and daemonize. Calling db_insert.pl directly from syslog-ng provided much better insert rates (now at 20kmps)
 # 2010-04-20 - Replaced re_pipe with better fields from syslog-ng (only need host, pri, ts, prg and msg)
 # 2010-04-29 - Added regex for Snare windows events
+# 2010-06-13 - Fixed bug that was inserting duplicate messages
 #
 
 
@@ -66,7 +67,7 @@ $| = 1;
 use vars qw/ %opt /;
 
 # Set command line vars
-my ($debug, $config, $logfile, $verbose, $dbh, $selftest, $qsize);
+my ($debug, $config, $logfile, $verbose, $dbh);
 
 #
 # Command line options processing
@@ -74,14 +75,12 @@ my ($debug, $config, $logfile, $verbose, $dbh, $selftest, $qsize);
 sub init()
 {
     use Getopt::Std;
-    my $opt_string = 'hd:c:l:svq:';
+    my $opt_string = 'hd:c:l:v';
     getopts( "$opt_string", \%opt ) or usage();
     usage() if $opt{h};
     $debug = defined($opt{'d'}) ? $opt{'d'} : '0';
     $logfile = $opt{'l'} if $opt{'l'};
     $verbose = $opt{'v'} if $opt{'v'};
-    $qsize = $opt{'q'} if $opt{'q'};
-    $selftest = $opt{'s'} if $opt{'s'};
     $config = defined($opt{'c'}) ? $opt{'c'} : "/path_to_logzilla/html/config/config.php";
 }
 
@@ -101,11 +100,6 @@ This program is used to process incoming syslog messages from a file.
     -l        : log file (default used from config.php if not set here)
     -c        : config file (overrides the default config.php file location set in the '\$config' variable in this script)
     example: $0 -l /var/log/foo.log -d 5 -c /path_to_logzilla/html/config/config.php -v -t /var/log/syslog
-
-    -s        : **Special Option**: 
-            This option may be used to run a self test
-            You can run a self  test by typing:
-            $0 -s -c /path_to_logzilla/html/config/config.php (replace with the path to your config)
 EOF
     exit;
 }
@@ -153,6 +147,9 @@ while (my @settings = $sth->fetchrow_array()) {
     $q_time = $settings[1] if ($settings[0] =~ /^Q_TIME$/);
     $q_limit = $settings[1] if ($settings[0] =~ /^Q_LIMIT$/);
 }
+# cdukes: 2010-06-07: Manually set q_time and q_limit for testing
+#$q_time = 15;
+#$q_limit = 10;
 
 # If debug is set in the settings table, then increment debug to at least 1
 if ($DEBUG > "0") {
@@ -242,37 +239,9 @@ my ($mpd, @mpd, $day);
 my $sumcount;
 my $now;
 
-open (DUMP, ">$dumpfile") or die "can't open $dumpfile: $!\n";
-close (DUMP);
+#open (DUMP, ">$dumpfile") or die "can't open $dumpfile: $!\n";
+#close (DUMP);
 $db_load->{TraceLevel} = 4 if (($debug > 4) and ($verbose));
-if ($selftest) {
-    my $sth = $dbh->prepare("
-        DELETE from $dbtable where host='dbins_testhost';
-        ") or die "Could not delete old test results: $DBI::errstr";
-    $sth->execute;
-    my $cmd = "$0";
-    $cmd .= " -d 3"; # Force debug on so test results are shown 
-    $cmd .= " -c " . $opt{'c'} if $opt{'c'};
-    $cmd .= " -l " . $opt{'l'} if $opt{'l'};
-    $cmd .= " -v "; # Force verbose mode so results are printed to screen
-    print STDOUT "\nPERFORMING SELF TEST USING COMMAND: $cmd\n\n";
-    my $res = `printf "\n" | $cmd -q 1`;
-    print STDOUT "Database Lookup (resulting message should be from Fred):\n";
-    my $sth = $dbh->prepare("
-        SELECT msg FROM $dbtable ORDER BY id DESC LIMIT 1;
-        ") or die "Could not fetch last row: $DBI::errstr";
-    $sth->execute;
-    if (my $res = $sth->fetchrow_array() ) {
-        print STDOUT "$res\n";
-        print STDOUT "SELF TEST COMPLETE!\n";
-    } else {
-        print STDOUT "Test Failed\n";
-    }
-    exit;
-}
-if ($qsize) {
-    $q_limit = $qsize;
-}
 # Pre-populate cache's with db values
 my $prg_select = $dbh->prepare("SELECT * FROM programs");
 $prg_select->execute();
@@ -290,17 +259,28 @@ while (my $ref = $mne_select->fetchrow_hashref()) {
     $mne_cache{$ref->{'name'}} = $ref->{'crc'};
 }
 while (my $msg = <STDIN>) {
-    chomp($msg);
+    push(@dumparr, do_msg($msg));
+    if (eof()) { # check for end of last file
+        open (DUMP, ">$dumpfile") or die "can't open $dumpfile: $!\n";
+        print LOG "EOF - Flushing buffer\n" if ($debug > 0);
+        print STDOUT "EOF - Flushing buffer\n" if ($debug > 0);
+        print STDOUT "Importing $#dumparr messages into the database\n" if ($debug > 0);
+        print LOG "Importing $#dumparr messages into the database\n" if ($debug > 0);
+        print DUMP @dumparr;
+        undef (@dumparr);
+        close (DUMP);
+        $db_load->execute();
+        if ($db_load->errstr()) {
+            print STDOUT "FATAL: Unable to execute SQL statement: ", $db_load->errstr(), "\n" if ($debug > 0);
+        }
+        print LOG "Ending insert: " . strftime("%H:%M:%S", localtime) ."\n" if ($debug > 0);
+        print STDOUT "Ending insert: " . strftime("%H:%M:%S", localtime) ."\n" if (($debug > 0) and ($verbose));
+    }
     my $now = strftime("%Y-%m-%d %H:%M:%S", localtime);
     print LOG "\n\n-=-=-=-=-=-=-=\nLOOP START: $now\n" if ($debug > 10);
-    if ($qsize) {
-        for (my $i=0; $i <= 5; $i++) {
-            push (@dumparr, "dbins_testhost\t86\tdb_insert.pl\tdb_insert.pl[$$]: %SYS-5-CONFIG_I: Configured from 172.16.0.123 by Fred Flinstone <fred\@flinstone.com>\tSYS-5-CONFIG_I\t$datetime\t$datetime\t\n");
-        }
-    }
     $mps++;
-    if (($#dumparr < $q_limit) && ($start_time <= $time_limit)) {
-        push(@dumparr, do_msg($msg));
+    #print STDOUT $#dumparr."\n";
+    if ((($#dumparr + 1) < $q_limit) && ($start_time <= $time_limit)) {
         print LOG "DEBUG: Pushing message into the array because either the size of the dumparr is < Q_limit or the start time <= time limit\n" if ($debug > 10);
         print LOG "DEBUG: Dump array size = ".$#dumparr."\n" if ($debug > 10);
         print LOG "DEBUG: Q Limit set to ".$q_limit."\n" if ($debug > 10);
@@ -310,46 +290,40 @@ while (my $msg = <STDIN>) {
         print LOG "DEBUG: *NEW* Start Time is ".$start_time."\n" if ($debug > 10);
     } else { 
         print LOG "DEBUG: Limit reached, processing queue\n" if ($debug > 10);
-        if ($#dumparr >= 0 ) {
-            if ($start_time >= $time_limit) {
-                print STDOUT "\n\nQueue time limit reached ($q_time seconds)\n" if ($debug > 0) ;
-                print LOG "\n\nQueue time limit reached ($q_time seconds)\n" if ($debug > 0);
-            } else {
-                my $t = ($end_time - $start_time);
-                if ($t > 0) {
-                    $tmp_mps = round($q_limit / $t);
-                } else {
-                    $tmp_mps = round($q_limit / 1);
-                }
-                print LOG "\n\nQueue Limit Reached: $q_limit messages in $t seconds ($tmp_mps MPS)\n" if ($debug > 0);
-                print STDOUT "\n\nQueue Limit Reached: $q_limit messages in $t seconds ($tmp_mps MPS)\n" if ($debug > 0);
-            }
-            foreach my $var (@mps) {
-                if ($var =~ m/(.*),(.*),(.*)/) {
-                    $db_insert_mpX->execute("$1", "$2", "$3");
-                    print STDOUT "Inserting MPS string: $1, $2, $3\n" if ($debug > 1);
-                }
-            }
-            open (DUMP, ">$dumpfile") or die "can't open $dumpfile: $!\n";
-            print LOG "Starting insert: " . strftime("%H:%M:%S", localtime) ."\n" if ($debug > 0);
-            print STDOUT "Starting insert: " . strftime("%H:%M:%S", localtime) ."\n" if (($debug > 0) and ($verbose));
-            print STDOUT "Importing $#dumparr messages into the database\n" if ($debug > 0);
-            print LOG "Importing $#dumparr messages into the database\n" if ($debug > 0);
-            print DUMP @dumparr;
-            close (DUMP);
-            $db_load->execute();
-            if ($db_load->errstr()) {
-                print STDOUT "FATAL: Unable to execute SQL statement: ", $db_load->errstr(), "\n" if ($debug > 0);
-            }
-            print LOG "Ending insert: " . strftime("%H:%M:%S", localtime) ."\n" if ($debug > 0);
-            print STDOUT "Ending insert: " . strftime("%H:%M:%S", localtime) ."\n" if (($debug > 0) and ($verbose));
-            @dumparr = ();
-            $time_limit = ($start_time + $q_time);
+        if ($start_time >= $time_limit) {
+            print STDOUT "\n\nQueue time limit reached ($q_time seconds)\n" if ($debug > 0) ;
+            print LOG "\n\nQueue time limit reached ($q_time seconds)\n" if ($debug > 0);
         } else {
-            push(@dumparr, do_msg($msg));
-            print LOG "DEBUG: SHOULD NOT HIT THIS\nDEBUG:Dump array size = ".$#dumparr."\nDEBUG: Contents = " . @dumparr ."\n" if ($debug > 10);
-            print LOG "DEBUG: Current Message is $msg\n" . @dumparr if ($debug > 10);
+            my $t = ($end_time - $start_time);
+            if ($t > 0) {
+                $tmp_mps = round($q_limit / $t);
+            } else {
+                $tmp_mps = round($q_limit / 1);
+            }
+            print LOG "\n\nQueue Limit Reached: $q_limit messages in $t seconds ($tmp_mps MPS)\n" if ($debug > 0);
+            print STDOUT "\n\nQueue Limit Reached: $q_limit messages in $t seconds ($tmp_mps MPS)\n" if ($debug > 0);
         }
+        foreach my $var (@mps) {
+            if ($var =~ m/(.*),(.*),(.*)/) {
+                $db_insert_mpX->execute("$1", "$2", "$3");
+                print STDOUT "Inserting MPS string: $1, $2, $3\n" if ($debug > 1);
+            }
+        }
+        open (DUMP, ">$dumpfile") or die "can't open $dumpfile: $!\n";
+        print LOG "Starting insert: " . strftime("%H:%M:%S", localtime) ."\n" if ($debug > 0);
+        print STDOUT "Starting insert: " . strftime("%H:%M:%S", localtime) ."\n" if (($debug > 0) and ($verbose));
+        print STDOUT "Importing $#dumparr messages into the database\n" if ($debug > 0);
+        print LOG "Importing $#dumparr messages into the database\n" if ($debug > 0);
+        print DUMP @dumparr;
+        undef (@dumparr);
+        close (DUMP);
+        $db_load->execute();
+        if ($db_load->errstr()) {
+            print STDOUT "FATAL: Unable to execute SQL statement: ", $db_load->errstr(), "\n" if ($debug > 0);
+        }
+        print LOG "Ending insert: " . strftime("%H:%M:%S", localtime) ."\n" if ($debug > 0);
+        print STDOUT "Ending insert: " . strftime("%H:%M:%S", localtime) ."\n" if (($debug > 0) and ($verbose));
+        $time_limit = ($start_time + $q_time);
     }
     my $mps_timer_end = (time);
     my $secs = ($mps_timer_end - $mps_timer_start);
@@ -435,11 +409,8 @@ sub round {
 }
 sub do_msg {
     $msg = shift;
-    if (!$qsize) {
-        print LOG "\n\nINCOMING MESSAGE:\n$msg\n" if ($debug > 0);
-        print STDOUT "\n\nINCOMING MESSAGE:\n$msg\n" if (($debug > 2) and ($verbose));
-    }
-
+    print LOG "\n\nINCOMING MESSAGE:\n$msg\n" if ($debug > 0);
+    print STDOUT "\n\nINCOMING MESSAGE:\n$msg\n" if (($debug > 2) and ($verbose));
     # Get current date and time
     $datetime_now = strftime("%Y-%m-%d %H:%M:%S", localtime);
 
@@ -512,7 +483,8 @@ sub do_msg {
         if ($prg =~ m/$re_mne_prg/) { # Attempt to capture Cisco Firewall Mnemonics (they send the mne's as a program)
             $mne = $1;
         }
-        $msg =~ s/[\x00-\x1F\x80-\xFF]//; # Remove any non-printable characters
+        # 2010-05-20: CDUKES - had to remove the non-printable filter below, it was killing German Umlauts.
+        # $msg =~ s/[\x00-\x1F\x80-\xFF]//; # Remove any non-printable characters
         $prg =~ s/%ACE.*\d+/Cisco ACE/; # Added because ACE modules don't send their program field properly
         $prg =~ s/%ASA.*\d+/Cisco ASA/; # Added because ASA's don't send their program field properly
         $prg =~ s/%FWSM.*\d+/Cisco FWSM/; # Added because FWSM's don't send their program field properly
@@ -573,10 +545,8 @@ sub do_msg {
     } else {
         # If something gets inserted wrong from the PIPE we'll set host = blank so we can error out later
         $host = "";
-        if (!$qsize) {
-            print LOG "INVALID MESSAGE FORMAT:\n$msg\n" if ($debug > 0);
-            print STDOUT "INVALID MESSAGE FORMAT:\n$msg\n" if (($debug > 0) and ($verbose));
-        }
+        print LOG "INVALID MESSAGE FORMAT:\n$msg\n" if ($debug > 0);
+        print STDOUT "INVALID MESSAGE FORMAT:\n$msg\n" if (($debug > 0) and ($verbose));
     }
     # If the SQZ feature is enabled, continue, if not we'll just insert the record afterward
     if($dedup eq 1) {
@@ -659,11 +629,9 @@ sub do_msg {
         if ($host ne "")  {
             $queue = "$host\t$facility\t$severity\t$prg32\t$msg\t$mne32\t$datetime_now\t$datetime_now\t\n";
         } else {
-            if (!$qsize) {
-                $do_msg_mps++;
-                print LOG "Error inserting record $msg\n" if ($debug > 3); 
-                print STDOUT "Error inserting record $msg\n" if (($debug > 3) and ($verbose)); 
-            }
+            $do_msg_mps++;
+            print LOG "Error inserting record $msg\n" if ($debug > 3); 
+            print STDOUT "Error inserting record $msg\n" if (($debug > 3) and ($verbose)); 
         }
     } else {
         print LOG "insert = $insert, Skipping insert of this message since it was a duplicate\n" if ($debug > 3);

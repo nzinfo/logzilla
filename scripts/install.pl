@@ -2,7 +2,7 @@
 
 #
 # install.pl
-# Last updated on 2010-05-16
+# Last updated on 2010-06-14
 #
 # Developed by Clayton Dukes <cdukes@cdukes.com>
 # Copyright (c) 2010 LogZilla, LLC
@@ -11,6 +11,7 @@
 # Changelog:
 # 2009-11-15 - created
 # 2010-10-10 - Modified to work with LogZilla v3.0
+# 2010-06-07 - Modified partitioning and events
 #
 
 use strict;
@@ -38,7 +39,7 @@ sub p {
 }
 
 my $version = "3.0";
-my $subversion = ".75";
+my $subversion = ".76";
 
 # Grab the base path
 my $lzbase = getcwd;
@@ -51,6 +52,7 @@ print("\n\033[1m========================================\n\n\033[0m\n\n");
 
 my $dbroot = &p("Enter the MySQL root username", "root");
 $dbroot = qq{$dbroot};
+print "\nNote: Mysql passwords with a ' in them may not work\n";
 my $dbrootpass = &p("Enter the password for $dbroot", "mysql");
 $dbrootpass = qq{$dbrootpass};
 my $dbname = &p("Database to install to", "syslog");
@@ -59,6 +61,7 @@ my $dbhost  = &p("Enter the name of the MySQL server", "127.0.0.1");
 my $dbport  = &p("Enter the port of the MySQL server", "3306");
 my $dbadmin  = &p("Enter the name to create as the owner of the $dbtable database", "syslogadmin");
 $dbadmin = qq{$dbadmin};
+print "Note that a password containing ' may not work.\n";
 my $dbadminpw = &p("Enter the password for the $dbadmin user", "$dbadmin");
 $dbadminpw = qq{$dbadminpw};
 my $siteadmin  = &p("Enter the name to create as the WEBSITE owner", "admin");
@@ -166,49 +169,55 @@ if ($ok =~ /[Yy]/) {
         KEY severity (severity),
         KEY mne (mne),
         KEY program (program),
-        KEY suppress (suppress)
+        KEY suppress (suppress),
+        KEY lo (lo),
+        KEY fo (fo)
         ) ENGINE=MyISAM
         ") or die "Could not create $dbtable table: $DBI::errstr";
     $sth->execute;
 
 # Create sphinx table
-    my $res = `mysql -u$dbroot -p$dbrootpass -h $dbhost -P $dbport $dbname < sql/sph_counter.sql`;
+    my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/sph_counter.sql`;
     print $res;
 
 # Create cache table
-    my $res = `mysql -u$dbroot -p$dbrootpass -h $dbhost -P $dbport $dbname < sql/cache.sql`;
+    my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/cache.sql`;
     print $res;
 
 # Create hosts table
-    my $res = `mysql -u$dbroot -p$dbrootpass -h $dbhost -P $dbport $dbname < sql/hosts.sql`;
+    my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/hosts.sql`;
     print $res;
 
 # Create mnemonics table
-    my $res = `mysql -u$dbroot -p$dbrootpass -h $dbhost -P $dbport $dbname < sql/mne.sql`;
+    my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/mne.sql`;
     print $res;
 
 # Create programs table
-    my $res = `mysql -u$dbroot -p$dbrootpass -h $dbhost -P $dbport $dbname < sql/programs.sql`;
+    my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/programs.sql`;
     print $res;
 
 # Create suppress table
-    my $res = `mysql -u$dbroot -p$dbrootpass -h $dbhost -P $dbport $dbname < sql/suppress.sql`;
+    my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/suppress.sql`;
     print $res;
 
 # Create facilities table
-    my $res = `mysql -u$dbroot -p$dbrootpass -h $dbhost -P $dbport $dbname < sql/facilities.sql`;
+    my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/facilities.sql`;
     print $res;
 
 # Create severities table
-    my $res = `mysql -u$dbroot -p$dbrootpass -h $dbhost -P $dbport $dbname < sql/severities.sql`;
+    my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/severities.sql`;
     print $res;
 
 # Create ban table
-    my $res = `mysql -u$dbroot -p$dbrootpass -h $dbhost -P $dbport $dbname < sql/banned_ips.sql`;
+    my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/banned_ips.sql`;
+    print $res;
+
+# Create archive table
+    my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/logs_archive.sql`;
     print $res;
 
 # Insert settings data
-    my $res = `mysql -u$dbroot -p$dbrootpass -h $dbhost -P $dbport $dbname < sql/settings.sql`;
+    my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/settings.sql`;
     print $res;
     my $sth = $dbh->prepare("
         update settings set value='$url' where name='SITE_URL';
@@ -250,7 +259,7 @@ if ($ok =~ /[Yy]/) {
 
 
 # Insert user data
-    my $res = `mysql -u$dbroot -p$dbrootpass -h $dbhost -P $dbport $dbname < sql/users.sql`;
+    my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/users.sql`;
     print $res;
     my $sth = $dbh->prepare("
         update users set username='$siteadmin' where username='admin';
@@ -266,31 +275,31 @@ if ($ok =~ /[Yy]/) {
     $sth->execute;
 
 # Groups
-    my $res = `mysql -u$dbroot -p$dbrootpass -h $dbhost -P $dbport $dbname < sql/groups.sql`;
+    my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/groups.sql`;
     print $res;
 
 # Insert totd data
-    my $res = `mysql -u$dbroot -p$dbrootpass -h $dbhost -P $dbport $dbname < sql/totd.sql`;
+    my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/totd.sql`;
     print $res;
 
 # Insert LZECS data
-    my $res = `mysql -u$dbroot -p$dbrootpass -h $dbhost -P $dbport $dbname < sql/lzecs.sql`;
+    my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/lzecs.sql`;
     print $res;
 
 # Insert Suppress data
-    my $res = `mysql -u$dbroot -p$dbrootpass -h $dbhost -P $dbport $dbname < sql/suppress.sql`;
+    my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/suppress.sql`;
     print $res;
 
 # Insert ui_layout data
-    my $res = `mysql -u$dbroot -p$dbrootpass -h $dbhost -P $dbport $dbname < sql/ui_layout.sql`;
+    my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/ui_layout.sql`;
     print $res;
 
 # Insert help data
-    my $res = `mysql -u$dbroot -p$dbrootpass -h $dbhost -P $dbport $dbname < sql/help.sql`;
+    my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/help.sql`;
     print $res;
 
 # Insert history table
-    my $res = `mysql -u$dbroot -p$dbrootpass -h $dbhost -P $dbport $dbname < sql/history.sql`;
+    my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/history.sql`;
     print $res;
 
 
@@ -312,18 +321,36 @@ if ($ok =~ /[Yy]/) {
 
 # Create Partition events
     my $event = qq{
-    CREATE EVENT `logs_add_partition` ON SCHEDULE EVERY 1 DAY STARTS '$dateTomorrow 00:00:00' ON COMPLETION NOT PRESERVE ENABLE DO
-    BEGIN
-    DECLARE new_partition CHAR(32) DEFAULT
-    CONCAT ('p', DATE_FORMAT(DATE_ADD(CURDATE(), INTERVAL 1 DAY), '%Y%m%d'));
-    DECLARE max_day INTEGER DEFAULT TO_DAYS(NOW()) +1;
+    CREATE EVENT logs_add_partition ON SCHEDULE EVERY 1 DAY STARTS '$dateTomorrow 00:00:00' ON COMPLETION NOT PRESERVE ENABLE DO CALL logs_add_part_proc();
+    };
+    my $sth = $dbh->prepare("
+        $event
+        ") or die "Could not create partition events: $DBI::errstr";
+    $sth->execute;
 
-    SET \@s = 
-    CONCAT('ALTER TABLE $dbtable ADD PARTITION (PARTITION ', new_partition,
-    ' VALUES LESS THAN (', max_day, '))');
-    PREPARE stmt FROM \@s;
-    EXECUTE stmt;
-    DEALLOCATE PREPARE stmt;
+    my $event = qq{
+    CREATE EVENT logs_add_archive ON SCHEDULE EVERY 1 DAY STARTS '$dateTomorrow 00:10:00' ON COMPLETION NOT PRESERVE ENABLE DO CALL logs_add_archive_proc();
+    };
+    my $sth = $dbh->prepare("
+        $event
+        ") or die "Could not create partition events: $DBI::errstr";
+    $sth->execute;
+
+    my $event = qq{
+    CREATE EVENT logs_del_partition ON SCHEDULE EVERY 1 DAY STARTS '$dateTomorrow 00:15:00' ON COMPLETION NOT PRESERVE ENABLE DO CALL logs_delete_part_proc();
+    };
+    my $sth = $dbh->prepare("
+        $event
+        ") or die "Could not create partition events: $DBI::errstr";
+    $sth->execute;
+
+    my $event = qq{
+    CREATE PROCEDURE logs_add_archive_proc()
+    SQL SECURITY DEFINER
+    COMMENT 'Creates archive for messages older than $retention days' 
+    BEGIN    
+    INSERT INTO `logs_archive` SELECT * FROM `$dbtable` 
+    WHERE `$dbtable`.`lo` < DATE_SUB(CURDATE(), INTERVAL $retention DAY);
     END 
     };
     my $sth = $dbh->prepare("
@@ -332,22 +359,45 @@ if ($ok =~ /[Yy]/) {
     $sth->execute;
 
     my $event = qq{
-    CREATE EVENT `logs_del_partition` ON SCHEDULE EVERY 1 DAY STARTS '$dateTomorrow 00:00:02' ON COMPLETION NOT PRESERVE ENABLE DO
-    BEGIN
-    DECLARE old_partitions CHAR(64) DEFAULT '';
-    SELECT CONCAT( 'ALTER TABLE $dbtable DROP PARTITION ', 
-    GROUP_CONCAT( PARTITION_NAME ))
+    CREATE PROCEDURE logs_add_part_proc()
+    SQL SECURITY DEFINER
+    COMMENT 'Creates partitions for tomorrow' 
+    BEGIN    
+        DECLARE new_partition CHAR(32) DEFAULT
+        CONCAT ('p', DATE_FORMAT(DATE_ADD(CURDATE(), INTERVAL 1 DAY), '%Y%m%d'));
+        DECLARE max_day INTEGER DEFAULT TO_DAYS(NOW()) +1;
+        SET \@s =
+                CONCAT('ALTER TABLE `logs` ADD PARTITION (PARTITION ', new_partition,
+                    ' VALUES LESS THAN (', max_day, '))');
+        PREPARE stmt FROM \@s;
+        EXECUTE stmt;
+        DEALLOCATE PREPARE stmt;
+    END 
+    };
+    my $sth = $dbh->prepare("
+        $event
+        ") or die "Could not create partition events: $DBI::errstr";
+    $sth->execute;
+
+    my $event = qq{
+    CREATE PROCEDURE logs_delete_part_proc()
+    SQL SECURITY DEFINER
+    COMMENT 'Deletes partitions older than $retention days' 
+    BEGIN    
+    SELECT CONCAT( 'ALTER TABLE `$dbtable` DROP PARTITION ',
+    GROUP_CONCAT(`partition_name`))
     INTO \@s
-    FROM information_schema.PARTITIONS
-    WHERE   TABLE_SCHEMA=schema() AND
-    TABLE_NAME='$dbtable' AND
-    CREATE_TIME < DATE_SUB( CURDATE(), INTERVAL $retention DAY )
-    GROUP BY TABLE_NAME;
+    FROM `information_schema`.`partitions`
+        WHERE `table_schema` = '$dbname'
+        AND `table_name` = '$dbtable'
+        AND DATE(`partition_description`) <
+        DATE_SUB(CURDATE(), INTERVAL $retention DAY)
+        GROUP BY TABLE_NAME;
 
     PREPARE stmt FROM \@s;
     EXECUTE stmt;
     DEALLOCATE PREPARE stmt;
-    END
+    END 
     };
     my $sth = $dbh->prepare("
         $event
