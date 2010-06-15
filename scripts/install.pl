@@ -2,7 +2,7 @@
 
 #
 # install.pl
-# Last updated on 2010-06-14
+# Last updated on 2010-06-15
 #
 # Developed by Clayton Dukes <cdukes@cdukes.com>
 # Copyright (c) 2010 LogZilla, LLC
@@ -39,7 +39,7 @@ sub p {
 }
 
 my $version = "3.0";
-my $subversion = ".76";
+my $subversion = ".77";
 
 # Grab the base path
 my $lzbase = getcwd;
@@ -388,11 +388,11 @@ if ($ok =~ /[Yy]/) {
     GROUP_CONCAT(`partition_name`))
     INTO \@s
     FROM `information_schema`.`partitions`
-        WHERE `table_schema` = '$dbname'
-        AND `table_name` = '$dbtable'
-        AND DATE(`partition_description`) <
-        DATE_SUB(CURDATE(), INTERVAL $retention DAY)
-        GROUP BY TABLE_NAME;
+    WHERE `table_schema` = '$dbname'
+    AND `table_name` = '$dbtable'
+    AND `partition_description` <
+    TO_DAYS(DATE_SUB(CURDATE(), INTERVAL $retention DAY))
+    GROUP BY TABLE_NAME;
 
     PREPARE stmt FROM \@s;
     EXECUTE stmt;

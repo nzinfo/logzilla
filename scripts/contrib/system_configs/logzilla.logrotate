@@ -1,7 +1,7 @@
 # http://nms.gdd.net/index.php/Install_Guide_for_LogZilla_v3.0
 # LogZilla logrotate snippet for Ubuntu Linux
 # contributed by Clayton Dukes
-# Last updated on 2010-06-14
+# Last updated on 2010-06-15
 #
 /path_to_logs/*.log {
   missingok

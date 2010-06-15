@@ -5,7 +5,7 @@
  * Developed by Clayton Dukes <cdukes@cdukes.com>
  * Copyright (c) 2010 LogZilla, LLC
  * All rights reserved.
- * Last updated on 2010-06-14
+ * Last updated on 2010-06-15
  *
  * Pagination and table formatting created using 
  * http://www.frequency-decoder.com/2007/10/19/client-side-table-pagination-script/
