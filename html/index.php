@@ -14,20 +14,11 @@ if (strlen($chk_config) < 300) {
 	include_once ("includes/modules/functions.security.php");
 }
 
-
 session_start();
  $_SERVER = cleanArray($_SERVER);
 $_POST = cleanArray($_POST);
 $_GET = cleanArray($_GET);
 $_COOKIE = cleanArray($_COOKIE);
-
-if(!extension_loaded('ionCube Loader')){
-    echo "The IONCube loader is missing, please follow the instructions below for your architecture:<br>";
-    echo "<a href=\"".$_SESSION['SITE_URL']."ioncube\">32 bit OS</a><br>";
-    echo "<a href=\"".$_SESSION['SITE_URL']."ioncube_64\">64 bit OS</a><br>";
-    echo "<a href=\"http://nms.gdd.net/index.php/Install_Guide_for_LogZilla_v3.0#IONCube_Licensing\">Online Guide</a>";
-    exit;
-}
 
 secure();
 

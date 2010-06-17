@@ -44,6 +44,18 @@ if($appConfig['ban_ip']=='on') {
 
 //End security update v0.1
 
+if(!extension_loaded('ionCube Loader')){
+    echo "The IONCube loader is missing, please follow the instructions below for your architecture:<br>";
+    echo "<a href=\"".$_SESSION['SITE_URL']."ioncube\">32 bit OS</a><br>";
+    echo "<a href=\"".$_SESSION['SITE_URL']."ioncube_64\">64 bit OS</a><br>";
+    echo "<a href=\"http://nms.gdd.net/index.php/Install_Guide_for_LogZilla_v3.0#IONCube_Licensing\">Online Guide</a>";
+    exit;
+}
+
+if (!function_exists('json_encode')) {
+    echo "<div style='align: center; text-align: center; border: 3px dotted red;'>ERROR!<br>Your version of PHP does not have json_encode(), which LogZilla requires.</div>\n";
+}
+
 if($_SESSION['AUTHTYPE'] == "none") {
     $username = "local_noauth";
     $sessionId = session_id();

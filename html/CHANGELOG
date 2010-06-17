@@ -1,5 +1,8 @@
 CHANGELOG
 
+3.0.78 - update
+ - Added test to make sure the json_encode() function was available. Some Gentoo systems don't have it enabled.
+
 3.0.77 - updates
  - Finsihed working out the auto-partitioning and archive table routines
     SPECIAL NOTE: on larger systems, you may need to adjust the timing of each called procedure.
