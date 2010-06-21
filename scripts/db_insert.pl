@@ -197,7 +197,7 @@ if (($debug > 0) or ($verbose)) {
 }
 
 my ($host, %host_cache, $facility, $pri, $prg, %program_cache, $prg32, $msg, $mne, %mne_cache, $mne32, $severity); 
-my $re_pipe = qr/(\S+)\t(\d+)\t(\S+)\t(.*)/;
+my $re_pipe = qr/(\S+)\t(\d+)\t(\S+)?\t(.*)/;
 # v3.0 Fields are: Host, PRI, Program,  and MSG
 # the $severity and $facility fields are split from the $pri coming in so that they can be stored as integers into 2 separate db columns
 # re_mne is used to capture Cisco Mnemonics
@@ -426,6 +426,7 @@ sub do_msg {
         $severity =  $pri - ($facility * 8 );
         $prg = $3;
         $msg = $4;
+        $prg = "Cisco ASA" if ($msg =~ /^%PIX/);
         # Handle Snare Format
         if ($prg =~ m/MSWinEventLog\\011.*\\011(.*)\\011.*\\011.*/) {
             my $facilityname = $1;
@@ -475,6 +476,7 @@ sub do_msg {
         }
         $msg =~ s/\\//; # Some messages come in with a trailing slash
         $msg =~ s/\t/ /g; # remove any TABs (gotta love windows...)
+        $msg =~ s/\177/ /g; # Fix for NT Events Logs (they send 0x7f with the message)
         if ($msg =~ m/$re_mne/) {
             $mne = $1;
         } else {

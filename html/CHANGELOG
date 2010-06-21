@@ -1,5 +1,9 @@
 CHANGELOG
 
+3.0.79 - update
+ - Added regex for PIX firewalls to db_insert
+ - Added regex to remove HEX 7f Characters in NT Event Logs
+
 3.0.78 - update
  - Added test to make sure the json_encode() function was available. Some Gentoo systems don't have it enabled.
 
