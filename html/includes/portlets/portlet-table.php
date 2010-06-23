@@ -14,7 +14,7 @@
  *
  */
 
-session_start();
+// session_start();
 $basePath = dirname( __FILE__ );
 require_once ($basePath . "/../common_funcs.php");
 if ((has_portlet_access($_SESSION['username'], 'Search Results') == TRUE) || ($_SESSION['AUTHTYPE'] == "none")) {

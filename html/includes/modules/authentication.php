@@ -138,7 +138,8 @@ function grant_access($userName, $actionName, $dbLink) {
 
 # cdukes - Added below for 2.9.4
 function secure () {
-    if (!($_SESSION["username"]) || ($_SESSION["username"] == "")) {
+    getsettings();
+    if (!isset($_SESSION["username"]) || ($_SESSION["username"] == "")) {
         $destination = $_SESSION["SITE_URL"]."login.php";
         // Remember search query across login
         if (!empty($_SERVER['QUERY_STRING']))

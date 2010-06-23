@@ -1,8 +1,8 @@
 <?php
 // Copyright (C) 2010 Clayton Dukes, cdukes@cdukes.com
 
-error_reporting(E_ALL);
-// ini_set("display_errors", 1);
+error_reporting(E_ALL & ~E_NOTICE);
+ini_set("display_errors", 1);
 
 $basePath = dirname( __FILE__ );
 require_once ($basePath ."/../config/config.php");
@@ -275,8 +275,10 @@ function g_redirect($url,$mode)
  */
 {
   if (strncmp('http:',$url,5) && strncmp('https:',$url,6)) {
-
-     $starturl = ($_SERVER["HTTPS"] == 'on' ? 'https' : 'http') . '://'.
+      if (!isset($_SERVER["HTTPS"])) {
+          $_SERVER["HTTPS"] = "undefine";
+      }  
+      $starturl = ($_SERVER["HTTPS"] == 'on' ? 'https' : 'http') . '://'.
                  (empty($_SERVER['HTTP_HOST'])? $_SERVER['SERVER_NAME'] :
                  $_SERVER['HTTP_HOST']);
 
@@ -529,8 +531,13 @@ function msg_decode($str) {
 // Return the current page URL
 //------------------------------------------------------------------------------
 function myURL() {
- $pageURL = 'http';
- if ($_SERVER["HTTPS"] == "on") {$pageURL .= "s";}
+    $pageURL = 'http';
+    if (!isset($_SERVER["HTTPS"])) { 
+        $_SERVER["HTTPS"] = "undefine";
+    }
+    if ($_SERVER["HTTPS"] === "on") {
+        $pageURL .= "s";
+    }
  $pageURL .= "://";
  if ($_SERVER["SERVER_PORT"] != "80") {
   $pageURL .= $_SERVER["SERVER_NAME"].":".$_SERVER["SERVER_PORT"].$_SERVER["REQUEST_URI"];
