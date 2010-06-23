@@ -1,6 +1,9 @@
 <?php
 // Copyright (C) 2010 Clayton Dukes, cdukes@cdukes.com
 
+error_reporting(E_ALL);
+// ini_set("display_errors", 1);
+
 $basePath = dirname( __FILE__ );
 require_once ($basePath ."/../config/config.php");
 require_once ($basePath ."/modules/authentication.php");

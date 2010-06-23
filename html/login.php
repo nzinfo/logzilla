@@ -129,7 +129,7 @@ if ($_POST) {
 
 	   	<tr>
         <?php 
-        if ($_SESSION['error'] != '') {
+        if (isset($_SESSION['error'])) {
             echo "<div style='align: center; text-align: center; border: 2px dotted red;'>$_SESSION[error]</div>\n";
             unset($_SESSION['error']);
         }
@@ -172,7 +172,11 @@ if ($_POST) {
 	   	</SELECT>    
 	   	</td>
 	   	</tr>
-
+        <?php if($_SESSION['AUTHTYPE'] == "ldap") {
+            if (!function_exists('ldap_connect')) {
+                echo "<div style='align: center; text-align: center; border: 3px dotted red;'>ERROR!<br>Your version of PHP does not have ldap_connect(), which LogZilla requires.</div>\n";
+            }
+        } ?>
 	   	</table>
 	<?
 	//Start security update v0.1

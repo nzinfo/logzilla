@@ -8,10 +8,10 @@ CHANGELOG
  - Added test to make sure the json_encode() function was available. Some Gentoo systems don't have it enabled.
 
 3.0.77 - updates
- - Finsihed working out the auto-partitioning and archive table routines
+ - Finished working out the auto-partitioning and archive table routines
     SPECIAL NOTE: on larger systems, you may need to adjust the timing of each called procedure.
     This can be changed in install.pl in the "# Create Partition events" section. 
-    For now, they are staggerred at midnight, 12:10 and 12:15
+    For now, they are staggered at midnight, 12:10 and 12:15
 
 3.0.76 - updates
  - Modified contribs/logreplay to allow a limit on number of hosts that will be generated, 

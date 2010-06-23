@@ -27,7 +27,7 @@ use File::Copy;
 
 # not needed here, but might as well warn the user to install it now since db_insert will need them
 use Text::LevenshteinXS qw(distance); 
-use String::CRC32
+use String::CRC32;
 
 system("stty erase ^H");
 sub p {
@@ -39,7 +39,7 @@ sub p {
 }
 
 my $version = "3.0";
-my $subversion = ".79";
+my $subversion = ".80";
 
 # Grab the base path
 my $lzbase = getcwd;

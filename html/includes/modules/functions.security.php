@@ -34,6 +34,7 @@ function clean($var) {
 function cleanArray($array) {
 	//cleans an entire array recursively
 	//both keys and values
+    $arrayClean = "";
 	foreach($array as $key=>$value) {
 		if(is_array($value)) {
 			$arrayClean[clean($key)] = cleanArray($value);
