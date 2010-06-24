@@ -2,7 +2,7 @@
 // Copyright (C) 2010 Clayton Dukes, cdukes@cdukes.com
 
 error_reporting(E_ALL & ~E_NOTICE);
-ini_set("display_errors", 1);
+# ini_set("display_errors", 1);
 
 $basePath = dirname( __FILE__ );
 require_once ($basePath ."/../config/config.php");

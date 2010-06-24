@@ -1,5 +1,12 @@
 CHANGELOG
 
+3.0.84 - updates
+ - Converted functions.security.php from dos to unix format.
+ - Enabled error_reporting(E_ALL & ~E_NOTICE) in common_funcs.php to catch errors.
+
+3.0.83 - updates
+ - Fixed typo in mail_daily_report.pl
+
 3.0.82 - updates
  - Modified mail_daily_report.pl to fix msg count for today's date.
 
