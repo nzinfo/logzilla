@@ -68,7 +68,7 @@ while (my @settings = $sth->fetchrow_array()) {
 
 my $q_msgs_total= $dbh->prepare("SELECT value FROM cache WHERE name='msg_sum'");
 my $q_msgs_last24= $dbh->prepare("SELECT SUM(value) AS last24 FROM cache WHERE name LIKE 'chart_mph_%' AND updatetime BETWEEN NOW() - INTERVAL 23 HOUR and NOW() - INTERVAL 0 HOUR");
-my $q_msgs_today= $dbh->prepare("SELECT * FROM cache WHERE name LIKE 'chart_mph_%' AND updatetime > CONCAT(CURDATE(), ' 00:00:00')");
+my $q_msgs_today= $dbh->prepare("SELECT SUM(value) FROM cache WHERE name LIKE 'chart_mph_%' AND updatetime > CONCAT(CURDATE(), ' 00:00:00')");
 my $q_msgs_lasthour= $dbh->prepare("SELECT SUM(counter) AS lasthour FROM $dbtable WHERE lo BETWEEN NOW() - INTERVAL 2 HOUR and NOW() - INTERVAL 1 HOUR");
 my $q_msgs_thishour= $dbh->prepare("SELECT SUM(counter) AS thishour FROM $dbtable WHERE lo BETWEEN NOW() - INTERVAL 1 HOUR and NOW() - INTERVAL 0 HOUR");
 my $q_msgs_avg_perhour= $dbh->prepare("SELECT ROUND(SUM(value)/24) AS avg_last24 FROM cache WHERE name LIKE 'chart_mph_%' AND updatetime BETWEEN NOW() - INTERVAL 23 HOUR and NOW() - INTERVAL 0 HOUR;");
