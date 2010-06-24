@@ -1,10 +1,19 @@
 CHANGELOG
 
-3.0.79 - update
+3.0.82 - updates
+ - Modified mail_daily_report.pl to fix msg count for today's date.
+
+3.0.81 - updates
+ - Fixed session errors
+
+3.0.80 - updates
+ - Fixed ArrayClean error
+
+3.0.79 - updates
  - Added regex for PIX firewalls to db_insert
  - Added regex to remove HEX 7f Characters in NT Event Logs
 
-3.0.78 - update
+3.0.78 - updates
  - Added test to make sure the json_encode() function was available. Some Gentoo systems don't have it enabled.
 
 3.0.77 - updates
