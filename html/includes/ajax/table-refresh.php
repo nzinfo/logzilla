@@ -4,13 +4,14 @@
  * Developed by Clayton Dukes <cdukes@cdukes.com>
  * Copyright (c) 2010 LogZilla, LLC
  * All rights reserved.
- * Last updated on 2010-06-15
+ * Last updated on 2010-06-23
  *
  * Changelog:
  * 2010-02-28 - created
  *
  */
 
+session_start();
 $basePath = dirname( __FILE__ );
 require_once ($basePath . "/../common_funcs.php");
 if ((has_portlet_access($_SESSION['username'], 'Search Results') == TRUE) || ($_SESSION['AUTHTYPE'] == "none")) {
@@ -493,8 +494,7 @@ $('.XLButtons').remove();
   </tbody>
   </table>
   </div>
-<?php } else { ?>
-<script type="text/javascript">
-$('#portlet_Search_Results').remove()
-</script>
-<?php } ?>
+<?php } else { 
+    die("Access Denied for user: ".$_SESSION['username']);
+}
+?>
