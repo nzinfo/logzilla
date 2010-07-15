@@ -1,5 +1,13 @@
 CHANGELOG
 
+3.0.85 - updates
+ - Updated license.txt
+ - Updated license errors (blank page was showing instead of error when license expired).
+ - Modified portlets/portlet-search_options and added a round to $dedup_pct.
+ - Modified sphinx.conf charset to ignore '=' as a delimiter.
+    See http://forum.logzilla.info/index.php/topic,208.0.html for more information
+ - Fixed invalid MNE capture for Juniper devices
+
 3.0.84 - updates
  - Converted functions.security.php from dos to unix format.
  - Enabled error_reporting(E_ALL & ~E_NOTICE) in common_funcs.php to catch errors.
