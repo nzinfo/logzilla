@@ -67,7 +67,7 @@ $| = 1;
 use vars qw/ %opt /;
 
 # Set command line vars
-my ($debug, $config, $logfile, $verbose, $dbh);
+my ($debug, $config, $logfile, $verbose, $dbh, $sleep);
 
 #
 # Command line options processing
@@ -75,12 +75,13 @@ my ($debug, $config, $logfile, $verbose, $dbh);
 sub init()
 {
     use Getopt::Std;
-    my $opt_string = 'hd:c:l:v';
+    my $opt_string = 'hd:c:l:vs:';
     getopts( "$opt_string", \%opt ) or usage();
     usage() if $opt{h};
     $debug = defined($opt{'d'}) ? $opt{'d'} : '0';
     $logfile = $opt{'l'} if $opt{'l'};
     $verbose = $opt{'v'} if $opt{'v'};
+    $sleep = $opt{'s'} if $opt{'s'};
     $config = defined($opt{'c'}) ? $opt{'c'} : "/path_to_logzilla/html/config/config.php";
 }
 
@@ -259,6 +260,11 @@ while (my $ref = $mne_select->fetchrow_hashref()) {
     $mne_cache{$ref->{'name'}} = $ref->{'crc'};
 }
 while (my $msg = <STDIN>) {
+    # Sleep option is only used for development purposes (it's used to throttle incoming message rates)
+    if ($sleep) {
+		print STDOUT "Sleeping for $sleep seconds\n";
+        sleep $sleep;
+    }
     push(@dumparr, do_msg($msg));
     if (eof()) { # check for end of last file
         open (DUMP, ">$dumpfile") or die "can't open $dumpfile: $!\n";
@@ -503,6 +509,10 @@ sub do_msg {
         # i.e.: /USR/SBIN/CRON would be inserted into the DB as just CRON
         if ($prg =~ /\//) { 
             $prg = fileparse($prg);
+        }
+        # Add filter for Juniper boxes - invalid mnemonics were being picked up.
+        if ($prg =~ /Juniper/) { 
+            $mne = "None";
         }
         # Below is an attempt to grab the SEQ id 
         # Note: sequence numbers really are best effort

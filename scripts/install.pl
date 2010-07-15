@@ -39,7 +39,7 @@ sub p {
 }
 
 my $version = "3.0";
-my $subversion = ".84";
+my $subversion = ".85";
 
 # Grab the base path
 my $lzbase = getcwd;
@@ -154,7 +154,7 @@ if ($ok =~ /[Yy]/) {
         CREATE TABLE $dbtable (
         id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
         host varchar(128) NOT NULL,
-        facility enum('0','1','2','3','4','5','6','7','8','9','10','11','12','13','14','15','16','17','18','19','20','21','22','23','100','101','102','103') NOT NULL,
+        facility enum('0','1','2','3','4','5','6','7','8','9','10','11','12','13','14','15','16','17','18','19','20','21','22','23') NOT NULL,
         severity enum('0','1','2','3','4','5','6','7') NOT NULL,
         program int(10) unsigned NOT NULL,
         msg varchar(2048) NOT NULL,
@@ -172,7 +172,7 @@ if ($ok =~ /[Yy]/) {
         KEY suppress (suppress),
         KEY lo (lo),
         KEY fo (fo)
-        ) ENGINE=MyISAM
+        ) ENGINE=MyISAM DEFAULT CHARSET=utf8 
         ") or die "Could not create $dbtable table: $DBI::errstr";
     $sth->execute;
 

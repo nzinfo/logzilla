@@ -38,7 +38,7 @@ if ($_SESSION['SHOWCOUNTS'] == "1") {
         // subtract 100 from the total below to get the opposite effect (savings = 90% rather than 10%)
         // Calculation is to get the percentage of messages to messages_per_host (convert a ratio to percentage)
         $dedup_tot = (100 - (round(100/($mph * 100),4)) * 100);
-        $dedup_pct = "($dedup_tot%)";
+        $dedup_pct = round($dedup_tot,4)."%";
     }
 }
 ?>
