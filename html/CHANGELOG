@@ -1,5 +1,19 @@
 CHANGELOG
 
+3.0.86 - Minor updates
+ - Commented out mysql_pconnect so that LZ will default to mysql_connect
+    My test server was keeping connections open and eventually caused a crash.
+    pconnect has been the default for so long, I can't remember why it was chosen.
+    There doesn't seem to be any logical reason to use it, but if you need it, you
+    can uncomment it from common_funcs.php.
+ - Modified min username and password length in config/config.php regex from 4 to 1.
+    Ref: http://forum.logzilla.info/index.php/topic,228.0.html
+ - Added $baseurl variable to scripts/contrib/genreport/genreport.pl
+ - Removed old css include for Facebox plugin
+ - Added "session_start()" to json.sparkline.php so that it wouldn't query the DB every second for settings
+ - Modified the MPD chart cache calculation to divide by 2 for today's entries (it was doubling the totals).
+ - Added Regex for 3Com Firewalls in db_insert.pl
+
 3.0.85 - updates
  - Updated license.txt
  - Updated license errors (blank page was showing instead of error when license expired).

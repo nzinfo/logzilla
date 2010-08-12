@@ -181,6 +181,13 @@ if (! -f $logfile) {
 select(LOG);
 print LOG "\n$datetime\nStarting $logfile for $file_path at pid $$\n";
 print LOG "Using Database: $db\n";
+print LOG "Debug level: $debug\n";
+print LOG "Table: $dbtable\n";
+print LOG "Adminuser: $dbuser\n";
+print LOG "DB: $db\n";
+print LOG "DB Host: $dbhost\n";
+print LOG "DB Port: $dbport\n";
+print LOG "Deduplication Feature = $dedup\n";
 print STDOUT "\n$datetime\nStarting $logfile for $file_path at pid $$\n" if (($debug > 0) and ($verbose));
 print STDOUT "Using Database: $db\n" if (($debug > 0) and ($verbose));
 
@@ -262,7 +269,7 @@ while (my $ref = $mne_select->fetchrow_hashref()) {
 while (my $msg = <STDIN>) {
     # Sleep option is only used for development purposes (it's used to throttle incoming message rates)
     if ($sleep) {
-		print STDOUT "Sleeping for $sleep seconds\n";
+        print STDOUT "Sleeping for $sleep seconds\n";
         sleep $sleep;
     }
     push(@dumparr, do_msg($msg));
@@ -324,8 +331,8 @@ while (my $msg = <STDIN>) {
         undef (@dumparr);
         close (DUMP);
         $db_load->execute();
-        if ($db_load->errstr()) {
-            print STDOUT "FATAL: Unable to execute SQL statement: ", $db_load->errstr(), "\n" if ($debug > 0);
+        if ($dbh->errstr()) {
+            print STDOUT "FATAL: Unable to execute SQL statement: ", $dbh->errstr(), "\n" if ($debug > 0);
         }
         print LOG "Ending insert: " . strftime("%H:%M:%S", localtime) ."\n" if ($debug > 0);
         print STDOUT "Ending insert: " . strftime("%H:%M:%S", localtime) ."\n" if (($debug > 0) and ($verbose));
@@ -349,7 +356,7 @@ while (my $msg = <STDIN>) {
         print LOG "\n#######\nCurrent MPS = $mps ($do_msg_mps deduplicated)\n#######\n" if ($debug > 2);
         $mpm += $mps;
         push(@mps, "chart_mps_$sec,$mps,$now");
-        $db_insert_sum->{TraceLevel} = 4 if ($debug > 4);
+        $db_insert_sum->{TraceLevel} = 4 if (($debug > 4) and ($verbose));
         $db_insert_sum->execute($mps, $now, $mps);
         if ($#mps == 60) {
             my $now = strftime("%Y-%m-%d %H:%M:%S", localtime);
@@ -480,6 +487,10 @@ sub do_msg {
                 $msg = "Log=".$facilityname.", Source=".$source.", Category=".$category.", Type=".$type.", EventID=".$eventid.", Username=".$username.", Usertype=".$usertype.", Computer=".$computer.", Description=".$description;
             }
         }
+        if ($msg =~ /3Com_Firewall/) {
+            $prg = "3Com Firewall";
+            $msg =~ s/\[3Com_Firewall\]?\s(.*)/$1/;
+        }
         $msg =~ s/\\//; # Some messages come in with a trailing slash
         $msg =~ s/\t/ /g; # remove any TABs (gotta love windows...)
         $msg =~ s/\177/ /g; # Fix for NT Events Logs (they send 0x7f with the message)
@@ -499,7 +510,7 @@ sub do_msg {
         $prg =~ s/date=\d+-\d+-\d+/Fortigate Firewall/; # Added because Fortigate's don't follow IETF standards
         $msg =~ s/time=\d+:\d+:\d+\s//; # Added because Fortigate's don't s follow IETF standards
         # @msgs = split(/:/, $msg);
-        if ($prg =~ /^\d+/) { # Some messages come in with the sequence as the PROGRAM field
+        if (($prg =~ /^\d+/) && ($prg != "3Com Firewall")) { # Some messages come in with the sequence as the PROGRAM field
             $prg = "Cisco Syslog";
         }
         if (!$prg) {

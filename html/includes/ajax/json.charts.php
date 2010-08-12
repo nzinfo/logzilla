@@ -543,7 +543,7 @@ switch ($chartId) {
    	// -------------------------
    	$array = array();
     // Below will update today every time the page is refreshed, otherwise we get stale data
-    $sql = "REPLACE INTO cache (updatetime,name, value) SELECT NOW(), CONCAT('chart_mpd_',DATE_FORMAT(NOW(), '%Y-%m-%d_%a')), SUM(value) FROM cache WHERE name LIKE 'chart_mph_%'";
+    $sql = "REPLACE INTO cache (updatetime,name, value) SELECT NOW(), CONCAT('chart_mpd_',DATE_FORMAT(NOW(), '%Y-%m-%d_%a')), (SUM(value)/2) FROM cache WHERE name LIKE 'chart_mph_%'";
     $result = perform_query($sql, $dbLink, $_SERVER['PHP_SELF']);
    	for($i = 0; $i<=$_SESSION['CHART_MPD_DAYS'] ; $i++) {
 		// Check cache first

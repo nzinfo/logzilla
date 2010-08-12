@@ -92,12 +92,14 @@ function validate_input($value, $regExpName) {
 function db_connect_syslog($dbUser, $dbPassword, $connType = 'P') {
 	$server_string = DBHOST.":".DBPORT;
 	$link = "";
+    /* removed pconnect so that LZ uses standard connections that will close more gracefully
 	if(function_exists('mysql_pconnect') && $connType == 'P') {
 		$link = @mysql_pconnect($server_string, $dbUser, $dbPassword);
 	}
 	elseif(function_exists('mysql_connect')) {
+    */
 		$link = @mysql_connect($server_string, $dbUser, $dbPassword);
-	}
+	// }
 	if(!$link) {
 		return FALSE;
 	}

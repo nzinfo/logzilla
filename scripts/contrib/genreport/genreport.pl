@@ -32,6 +32,7 @@ my $to = 'cdukes@cdukes.com';
 my $subject = 'LogZilla Excel Report';
 my $body = "Report generated on $now";
 my $basepath = "/path_to_logzilla";
+my $baseurl = "http://localhost";
 my $smtphost = "localhost";
 ####### MODIFY above to suit your needs ##############
 
@@ -87,7 +88,7 @@ for (my $i=0; $i <= $#ids; $i++) {
 $dbids =~ s/&dbid\[\]=$//g;
 #print "$dbids\n";
 
-my $url = "http://localhost/includes/excel.php";
+my $url = $baseurl . "/includes/excel.php";
 my $res = `curl -s -d "$dbids&rpt_type=$rpt_type" $url`;
 
 my $filename = "file.xls";
