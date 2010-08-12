@@ -391,6 +391,10 @@ if ($mnemonics) {
                         $x_horiz_labels[] = $line[$dbcolumn];
                 }
             }
+        } else {
+            $dotValues[] = 0;
+            $x_horiz_labels[] =  ""; 
+            $title = new title( "$ucTopx $limit $propername Report\nNo results match your search criteria"."\n" );
         }
         $line_dot->set_values( $dotLabels );
 
@@ -439,6 +443,10 @@ if ($mnemonics) {
                         $x_horiz_labels[] = $line[$dbcolumn];
                 }
             }
+        } else {
+            $dotValues[] = 0;
+            $x_horiz_labels[] =  "No results found"; 
+            $title = new title( "$ucTopx $limit $propername Report\nNo results match your search criteria"."\n" );
         }
         // Set bar values
         $bar->set_values( $dotValues );
@@ -490,6 +498,9 @@ if ($mnemonics) {
                 }
                 $ids[] = $line['id'];
             }
+        } else {
+            $pievalues[] = new pie_value(intval(0),  "No results found"); 
+            $title = new title( "$ucTopx $limit $propername Report\nNo results match your search criteria"."\n" );
         }
         // Generate random pie colors
         for($i = 0; $i<=count($pievalues) ; $i++) {

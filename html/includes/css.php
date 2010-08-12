@@ -49,9 +49,9 @@ This file contains any custom css that I've written
 <link type="text/css" rel="stylesheet" href="includes/js/jquery/plugins/jgrowl/jquery.jgrowl.css" />
 <!-- END JGrowl -->
 
-<!-- BEGIN Facebox -->
+<!-- BEGIN Facebox REMOVED - no longer used
 <link type="text/css" rel="stylesheet" href="includes/js/jquery/plugins/facebox/facebox.css" />
-<!-- END Facebox -->
+ END Facebox -->
 
 <!-- BEGIN Table Sorter -->
 <link rel="stylesheet" type="text/css" media="screen" href="css/table.css" />

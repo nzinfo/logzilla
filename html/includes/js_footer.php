@@ -369,9 +369,7 @@ function reloadIE(id, display, url) {
    	first = false;
 }
 </script>
-<!-- BEGIN Sparklines 
-Removed due to performance issues...
--->
+<!-- BEGIN Sparklines -->
 <script type="text/javascript" src="includes/js/jquery/plugins/jquery.sparkline.min.js"></script>
 <script type="text/javascript">
 average = function(a){
@@ -424,7 +422,7 @@ mdraw = function() {
                     $('#spark_mps').text("NaN");
                     };
             } else {
-            $('.dynamicsparkline').text("No Data");
+            $('.dynamicsparkline').text("No Incoming Messages");
             $('#spark_mps').text("");
             };
         });

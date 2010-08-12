@@ -1,6 +1,6 @@
 $regExpArray = array(
-            "username" => "(^[A-Za-z_.@]{4,}\$)",
-            "password"=>"(^.{4,}\$)",
+            "username" => "(^[A-Za-z_.@]{1,}\$)",
+            "password"=>"(^.{1,}\$)",
             "pageId"=>"(^\w+$)",
             "sessionId"=>"(^\w{32}\$)",
             "date"=>"/^yesterday$|^today$|^now$|^([0123]*\d)-([012]*\d)-(\d){4}$/i",
