@@ -1,6 +1,11 @@
 CHANGELOG
 
-3.0.86 - Minor updates
+3.0.87 - updates
+ - Replaced re_mne regex in db_insert.pl to better capture Cisco Mnemonics.
+ - Added a catch-all for incoming junk program strings in db_insert.pl (note - Kanji users may have to comment this out)
+ - Modified portlets/portlet-search_options and added error catching for negative $dedup_pct calcs (if there's not enough data).
+
+3.0.86 - updates
  - Commented out mysql_pconnect so that LZ will default to mysql_connect
     My test server was keeping connections open and eventually caused a crash.
     pconnect has been the default for so long, I can't remember why it was chosen.
