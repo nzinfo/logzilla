@@ -1,5 +1,8 @@
 CHANGELOG
 
+3.0.88 - minor
+ - Changes a few text files (readme, etc.)
+
 3.0.87 - updates
  - Replaced re_mne regex in db_insert.pl to better capture Cisco Mnemonics.
  - Added a catch-all for incoming junk program strings in db_insert.pl (note - Kanji users may have to comment this out)
