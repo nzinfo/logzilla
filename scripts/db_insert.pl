@@ -47,6 +47,7 @@
 # 2010-04-20 - Replaced re_pipe with better fields from syslog-ng (only need host, pri, ts, prg and msg)
 # 2010-04-29 - Added regex for Snare windows events
 # 2010-06-13 - Fixed bug that was inserting duplicate messages
+# 2010-08-20 - New regex for Cisco Mnemonics
 #
 
 
@@ -210,7 +211,8 @@ my $re_pipe = qr/(\S+)\t(\d+)\t(\S+)?\t(.*)/;
 # the $severity and $facility fields are split from the $pri coming in so that they can be stored as integers into 2 separate db columns
 # re_mne is used to capture Cisco Mnemonics
 # my $re_mne = qr/%(\w+-.*\d-\w+)\s?:?/;
-my $re_mne = qr/%(\w+.+?)[:|\s]/;
+#my $re_mne = qr/%(\w+.+?)[:|\s]/;
+my $re_mne = qr/\%([A-Z\-\d\_]+?\-\d+\-[A-Z\-\_\d]+?)(?:\:|\s)/;
 my $re_mne_prg = qr/%(\w+-\d+-\S+):?/; # Attempt to capture Cisco Firewall Mnemonics (they send the mne's as a program)
 
 $dbh->disconnect();
@@ -520,6 +522,10 @@ sub do_msg {
         # i.e.: /USR/SBIN/CRON would be inserted into the DB as just CRON
         if ($prg =~ /\//) { 
             $prg = fileparse($prg);
+        }
+        # Catch-all for junk streams...
+        if ($prg !~ /[A-Za-z]/) {
+            $prg = "Unknown";
         }
         # Add filter for Juniper boxes - invalid mnemonics were being picked up.
         if ($prg =~ /Juniper/) { 
