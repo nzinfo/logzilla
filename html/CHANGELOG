@@ -1,9 +1,14 @@
 CHANGELOG
 
-3.0.88 - updates
- - Changes a few text files (readme, etc.)
- - Removed license.txt, you can now obtain one from http://www.logzilla.info
+3.0.90 - minor
+ - Work on upgrade script
+
+3.0.89 - updates
  - Added an upgrade script
+ - Removed license.txt, you can now obtain one from http://www.logzilla.info
+
+3.0.88 - minor
+ - Changes a few text files (readme, etc.)
 
 3.0.87 - updates
  - Replaced re_mne regex in db_insert.pl to better capture Cisco Mnemonics.
