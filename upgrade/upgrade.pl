@@ -23,7 +23,7 @@ sub p {
 }
 
 my $version = "3.0";
-my $subversion = ".88";
+my $subversion = ".90";
 
 # Grab the base path
 my $lzbase = getcwd;
@@ -106,10 +106,10 @@ my $ok  = &p("Ok to continue?", "y");
 if ($ok =~ /[Yy]/) {
 
     switch ($cur_subversion) {
-        case ".86" { 
-            system "patch -d ../ -p0 < upgrades/3086-3088.patch\n";
+        case ".85" { 
+            system "patch -d ../ -p0 < upgrades/3085-3090.patch\n";
         }
-        case ".88" { print "Already at version .88" }
+        case ".90" { print "Already at version .90" }
 
         else { 
             print "Automatic upgrade is not available for $curversion".$cur_subversion."\n"; 
