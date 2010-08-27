@@ -1,5 +1,8 @@
 CHANGELOG
 
+3.0.91 - minor
+ - Added check for missing license to index.php
+
 3.0.90 - minor
  - Work on upgrade script
 
