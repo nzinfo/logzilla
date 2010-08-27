@@ -13,6 +13,14 @@ if (strlen($chk_config) < 300) {
    	require_once 'includes/common_funcs.php';
 	include_once ("includes/modules/functions.security.php");
 }
+// Check to see if  a license exists.
+$chk_lic = file_get_contents("../license.txt");
+if (strlen($chk_lic) < 300) {
+    echo "<center><h2>\n";
+    echo "Invalid license file or license.txt missing<br>Please visit <a href=\"http://www.logzilla.info\" target=\"_new\">http://www.logzilla.info</a> to obtain a free or commercial license.\n";
+    echo "</center></h2>\n";
+    exit;
+}
 
 session_start();
  $_SERVER = cleanArray($_SERVER);
