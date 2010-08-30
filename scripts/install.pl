@@ -39,7 +39,7 @@ sub p {
 }
 
 my $version = "3.0";
-my $subversion = ".91";
+my $subversion = ".92";
 
 # Grab the base path
 my $lzbase = getcwd;
@@ -56,10 +56,11 @@ print "\nNote: Mysql passwords with a ' in them may not work\n";
 my $dbrootpass = &p("Enter the password for $dbroot", "mysql");
 $dbrootpass = qq{$dbrootpass};
 my $dbname = &p("Database to install to", "syslog");
-my $dbtable = &p("Database table to install to", "logs");
+#my $dbtable = &p("Database table to install to", "logs");
+my $dbtable =  "logs";
 my $dbhost  = &p("Enter the name of the MySQL server", "127.0.0.1");
 my $dbport  = &p("Enter the port of the MySQL server", "3306");
-my $dbadmin  = &p("Enter the name to create as the owner of the $dbtable database", "syslogadmin");
+my $dbadmin  = &p("Enter the name to create as the owner of the $dbname database", "syslogadmin");
 $dbadmin = qq{$dbadmin};
 print "Note that a password containing ' may not work.\n";
 my $dbadminpw = &p("Enter the password for the $dbadmin user", "$dbadmin");
@@ -72,7 +73,7 @@ my $email  = &p("Enter your email address", 'cdukes@cdukes.com');
 my $sitename  = &p("Enter a name for your website", 'The home of LogZilla');
 my $url  = &p("Enter the base url for your site (include trailing slash)", '/logs/');
 my $logpath  = &p("Where should log files be stored?", '/var/log/logzilla');
-my $retention  = &p("How long should I keep old logs? (in days)", '30');
+my $retention  = &p("How long before I archive old logs? (in days)", '7');
 
 
 if (! -d "$logpath") {
