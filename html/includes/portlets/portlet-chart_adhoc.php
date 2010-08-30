@@ -115,6 +115,8 @@ if ($facilities) {
     $where .= ")";
 }
 $mnemonics = get_input('mnemonics');
+// 2010-08-29 - Added below to only include Cisco Mnemonics in the charts
+    $where .= " AND mne !='".mne2crc('None')."'";
 if ($mnemonics) {
     $where .= " AND mne IN (";
     foreach ($mnemonics as $mnemonic) {

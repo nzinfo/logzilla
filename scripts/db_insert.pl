@@ -288,6 +288,23 @@ while (my $msg = <STDIN>) {
         if ($db_load->errstr()) {
             print STDOUT "FATAL: Unable to execute SQL statement: ", $db_load->errstr(), "\n" if ($debug > 0);
         }
+        # 2010-08-29: Added to insert cached hosts, progs and mnes upon exit
+        my @hosts = keys %host_cache;
+        foreach my $h (@hosts) {
+            $db_insert_host->execute($h);
+        }
+        my @prgs = keys %program_cache;
+        foreach my $p (@prgs) {
+            $db_insert_prg->execute($p, $program_cache{$p});
+        }
+        my @mnes = keys %mne_cache;
+        foreach my $m (@mnes) {
+            $db_insert_mne->execute($m, $mne_cache{$m});
+        }
+        %host_cache = ();
+        %program_cache = ();
+        %mne_cache = ();
+        # End add
         print LOG "Ending insert: " . strftime("%H:%M:%S", localtime) ."\n" if ($debug > 0);
         print STDOUT "Ending insert: " . strftime("%H:%M:%S", localtime) ."\n" if (($debug > 0) and ($verbose));
     }

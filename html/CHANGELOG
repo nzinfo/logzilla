@@ -1,5 +1,11 @@
 CHANGELOG
 
+3.0.92 - updates
+ - Added filter to not include "None" Mnemonics in Cisco Mnemonic Charts.
+ - Added flush of host, prog and mne upon exit from db_insert (so smaller servers won't lose cache)
+ - Removed the word "Options" from the menu - it doesn't fit well on linux desktop Firefox
+ - Added a link to www.logzilla.info in the navmenu
+
 3.0.91 - minor
  - Added check for missing license to index.php
 

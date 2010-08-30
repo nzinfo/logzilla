@@ -24,11 +24,14 @@ session_start();
     <li><a href="#">
     <?php 
     $user = ucfirst($_SESSION['username']);
+    /* Removed "options" - doesn't look good on linux desktops
     if (strlen($user) <=6 ) {
         echo "$user's Options";
     } else {
         echo "$user";
     }
+    */
+        echo "$user";
     ?></a>
         <ul>
             <?php 
@@ -75,6 +78,7 @@ session_start();
                     <li><a href="http://php-syslog-ng.gdd.net/login.php" target="_blank">Demo Site</a></li>
                     <li><a href="http://nms.gdd.net" target="_blank">NMS Wiki</a></li>
                     <li><a href="http://forum.logzilla.info" target="_blank">LogZilla Forum</a></li>
+                    <li><a href="http://www.logzilla.info" target="_blank">Get Licenses</a></li>
                     <li><a href="http://www.cisco.com/en/US/technologies/collateral/tk869/tk769/white_paper_c11-557812.html" target="_blank">Whitepaper</a></li>
                 </ul>
             </li>
