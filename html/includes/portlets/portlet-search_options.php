@@ -178,9 +178,9 @@ if ($_SESSION['SHOWCOUNTS'] == "1") {
         <td>Show</td>
         <td>
         <select name="show_suppressed" id="show_suppressed">
-        <option value="all">All Events</option>
+        <option selected value="all">All Events</option>
         <option value="suppressed">Suppressed Events</option>
-        <option selected value="unsuppressed">Unsuppressed Events</option>
+        <option value="unsuppressed">Unsuppressed Events</option>
         </select>
         </td>
     </tr>

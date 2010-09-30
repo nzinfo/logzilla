@@ -33,28 +33,6 @@ $qstring .= "?page=Results";
 
 $show_suppressed = get_input('show_suppressed');
 $qstring .= "&show_suppressed=$show_suppressed";
-    switch ($show_suppressed) {
-        case "suppressed":
-        $where.= " AND suppress > NOW()";  
-        $where .= " OR host IN (SELECT name from suppress where col='host' AND expire>NOW())";
-        $where .= " OR facility IN (SELECT name from suppress where col='facility' AND expire>NOW())";
-        $where .= " OR severity IN (SELECT name from suppress where col='severity' AND expire>NOW())";
-        $where .= " OR program IN (SELECT name from suppress where col='program' AND expire>NOW())";
-        $where .= " OR msg IN (SELECT name from suppress where col='msg' AND expire>NOW())";
-        $where .= " OR counter IN (SELECT name from suppress where col='counter' AND expire>NOW())";
-        $where .= " OR notes IN (SELECT name from suppress where col='notes' AND expire>NOW())";
-            break;
-        case "unsuppressed":
-        $where.= " AND suppress < NOW()";  
-        $where .= " AND host NOT IN (SELECT name from suppress where col='host' AND expire>NOW())";
-        $where .= " AND facility NOT IN (SELECT name from suppress where col='facility' AND expire>NOW())";
-        $where .= " AND severity NOT IN (SELECT name from suppress where col='severity' AND expire>NOW())";
-        $where .= " AND program NOT IN (SELECT name from suppress where col='program' AND expire>NOW())";
-        $where .= " AND msg NOT IN (SELECT name from suppress where col='msg' AND expire>NOW())";
-        $where .= " AND counter NOT IN (SELECT name from suppress where col='counter' AND expire>NOW())";
-        $where .= " AND notes NOT IN (SELECT name from suppress where col='notes' AND expire>NOW())";
-        break;
-}
 
 //------------------------------------------------------------
 // START date/time
@@ -101,9 +79,7 @@ if ($lo_checkbox == "on") {
             $start .= " $lo_time_start"; 
             $end .= " $lo_time_end"; 
         }
-        if (($start !== "$today 00:00:00") && ($end !== "$today 23:59:59")) {
-            $where.= " ".strtoupper($date_andor)." lo BETWEEN '$start' AND '$end'";
-        }
+        $where.= " ".strtoupper($date_andor)." lo BETWEEN '$start' AND '$end'";
     }
 }
 //------------------------------------------------------------
@@ -206,79 +182,10 @@ $order = get_input('order');
 $qstring .= "&order=$order";
 
 if($msg_mask !== '') {
-    if ($_SESSION['SPX_ENABLE'] == "1") {
-        //---------------BEGIN SPHINX
-        require_once ($basePath . "/../SPHINX.class.php");
-        $index = "idx_logs idx_delta_logs";
-        $cl = new SphinxClient ();
-        $hostip = $_SESSION['SPX_SRV'];
-        $port = intval($_SESSION['SPX_PORT']);
-        $cl->SetServer ( $hostip, $port );
-        $cl->SetMatchMode ( SPH_MATCH_ANY );
-           if ($order == 'DESC') {
-           $cl->SetSortMode(SPH_SORT_ATTR_DESC, "$orderby");
-           } else {
-           $cl->SetSortMode(SPH_SORT_ATTR_ASC, "$orderby");
-           }
-            // $cl->SetSortMode(SPH_SORT_EXTENDED2, "$orderby $order");
-        $cl->SetLimits(0, intval($_SESSION['SPX_MAX_MATCHES']));
-        $escaped = $cl->EscapeString ( "$msg_mask" );
-        $res = $cl->Query ($escaped, $index);
-
-        if ( !$res )
-        {
-      $info = "<font size=\"3\" color=\"white\"><br><br>Sphinx - Error in query: ";
-            die ( "$info" . $cl->GetLastError() . ".\n</font>" );
-        } else
-        {
-            if ($res['total_found'] > 0) {
-                $where .= " AND id IN (";
-                   // $orby .= " ORDER BY FIELD($orderby,";
-                foreach ( $res["matches"] as $doc => $docinfo ) {
-                    $where .= "'$doc',";
-                       // $orby .= "'$doc',";
-                    // echo "$doc<br>\n";
-                }
-                $where = rtrim($where, ",");
-                   // $orby = rtrim($orby, ",");
-                $where .= ")";
-                  // $orby .= ")";
-            } else {
-                // Negate search since sphinx returned 0 hits
-                $where = "WHERE 1<1";
-                //  die(print_r($res));
-            }
-        }
-        //---------------END SPHINX
-    } else {
         $msg_mask = mysql_real_escape_string($msg_mask);
-        switch ($msg_mask_oper) {
-            case "=":
-                $where.= " AND msg='$msg_mask'";  
-            break;
-
-            case "!=":
-                $where.= " AND msg='$msg_mask'";  
-            break;
-
-            case "LIKE":
-                $where.= " AND msg LIKE '%$msg_mask%'";  
-            break;
-
-            case "! LIKE":
-                $where.= " AND msg NOT LIKE '%$msg_mask%'";  
-            break;
-
-            case "RLIKE":
-                $where.= " AND msg RLIKE '$msg_mask'";  
-            break;
-
-            case "! RLIKE":
-                $where.= " AND msg NOT LIKE '$msg_mask'";  
-            break;
-        }
-    }
+                $where.= " AND msg like '%$msg_mask%'";  
 }
+
 $notes_mask = get_input('notes_mask');
 $notes_mask = preg_replace ('/^Search through .*\sNotes/m', '', $notes_mask);
 $notes_mask_oper = get_input('notes_mask_oper');
@@ -406,7 +313,19 @@ $('.XLButtons').remove();
 
   <tbody>
   <?php
-  $sql = "SELECT * FROM ".$_SESSION['TBL_MAIN'] ." $where LIMIT $limit";
+  
+switch ($show_suppressed): 
+        case "suppressed":
+                $sql = "SELECT * FROM ".$_SESSION['TBL_MAIN']."_suppressed $where LIMIT $limit";
+        break;
+        case "unsuppressed":
+                $sql = "SELECT * FROM ".$_SESSION['TBL_MAIN']."_unsuppressed $where LIMIT $limit";
+        break;
+        default:
+                $sql = "SELECT * FROM ".$_SESSION['TBL_MAIN'] ." $where LIMIT $limit";
+endswitch;
+
+  
   $result = perform_query($sql, $dbLink, $_SERVER['PHP_SELF']); 
   $count = mysql_num_rows($result);
   if ($count < 1) {

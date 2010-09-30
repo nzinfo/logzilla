@@ -177,6 +177,70 @@ if ($ok =~ /[Yy]/) {
         ") or die "Could not create $dbtable table: $DBI::errstr";
     $sth->execute;
 
+# Create Views
+    my $sth = $dbh->prepare("
+Create view logs_suppressed as 
+select *
+from $dbtable where (($dbtable.`suppress` > now()) or
+$dbtable.`host` in (select `suppress`.`name` from
+`suppress` where ((`suppress`.`col` = 'host') and
+(`suppress`.`expire` > now()))) or $dbtable.`facility`
+in (select `suppress`.`name` from `suppress` where
+((`suppress`.`col` = 'facility') and
+(`suppress`.`expire` > now()))) or $dbtable.`severity`
+in (select `suppress`.`name` from `suppress` where
+((`suppress`.`col` = 'severity') and
+(`suppress`.`expire` > now()))) or $dbtable.`program` in
+(select `suppress`.`name` from `suppress` where
+((`suppress`.`col` = 'program') and
+(`suppress`.`expire` > now()))) or $dbtable.`mne` in
+(select `suppress`.`name` from `suppress` where
+((`suppress`.`col` = 'mnemonic') and
+(`suppress`.`expire` > now()))) or $dbtable.`msg` in
+(select `suppress`.`name` from `suppress` where
+((`suppress`.`col` = 'msg') and (`suppress`.`expire` >
+now()))) or $dbtable.`counter` in (select
+`suppress`.`name` from `suppress` where
+((`suppress`.`col` = 'counter') and
+(`suppress`.`expire` > now()))) or $dbtable.`notes` in
+(select `suppress`.`name` from `suppress` where
+((`suppress`.`col` = 'notes') and (`suppress`.`expire`
+> now()))))
+        ") or die "Could not create $dbtable table: $DBI::errstr";
+    $sth->execute;
+
+   my $sth = $dbh->prepare("
+Create view logs_unsuppressed as
+select *
+from $dbtable where (($dbtable.`suppress` < now()) and
+(not($dbtable.`host` in (select `suppress`.`name` from
+`suppress` where ((`suppress`.`col` = 'host') and
+(`suppress`.`expire` > now()))))) and
+(not($dbtable.`facility` in (select `suppress`.`name`
+from `suppress` where ((`suppress`.`col` = 'facility')
+and (`suppress`.`expire` > now()))))) and
+(not($dbtable.`severity` in (select `suppress`.`name`
+from `suppress` where ((`suppress`.`col` = 'severity')
+and (`suppress`.`expire` > now()))))) and
+(not($dbtable.`program` in (select `suppress`.`name`
+from `suppress` where ((`suppress`.`col` = 'program')
+and (`suppress`.`expire` > now()))))) and
+(not($dbtable.`mne` in (select `suppress`.`name` from
+`suppress` where ((`suppress`.`col` = 'mnemonic') and
+(`suppress`.`expire` > now()))))) and
+(not($dbtable.`msg` in (select `suppress`.`name` from
+`suppress` where ((`suppress`.`col` = 'msg') and
+(`suppress`.`expire` > now()))))) and
+(not($dbtable.`counter` in (select `suppress`.`name`
+from `suppress` where ((`suppress`.`col` = 'counter')
+and (`suppress`.`expire` > now()))))) and
+(not($dbtable.`notes` in (select `suppress`.`name` from
+`suppress` where ((`suppress`.`col` = 'notes') and
+(`suppress`.`expire` > now()))))))
+        ") or die "Could not create $dbtable table: $DBI::errstr";
+    $sth->execute;
+
+
 # Create sphinx table
     my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/sph_counter.sql`;
     print $res;

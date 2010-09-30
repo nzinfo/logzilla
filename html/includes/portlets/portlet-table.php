@@ -29,6 +29,7 @@ $start_time = microtime(true);
 $today = date("Y-m-d");
 //construct where clause 
 $where = "WHERE 1=1";
+$msg_mask = '';
 
 $qstring = '';
 $page = get_input('page');
@@ -36,30 +37,7 @@ $qstring .= "?page=$page";
 
 $show_suppressed = get_input('show_suppressed');
 $qstring .= "&show_suppressed=$show_suppressed";
-    switch ($show_suppressed) {
-        case "suppressed":
-        $where.= " AND suppress > NOW()";  
-        $where .= " OR host IN (SELECT name from suppress where col='host' AND expire>NOW())";
-        $where .= " OR facility IN (SELECT name from suppress where col='facility' AND expire>NOW())";
-        $where .= " OR severity IN (SELECT name from suppress where col='severity' AND expire>NOW())";
-        $where .= " OR program IN (SELECT name from suppress where col='program' AND expire>NOW())";
-        $where .= " OR mne IN (SELECT name from suppress where col='mnemonic' AND expire>NOW())";
-        $where .= " OR msg IN (SELECT name from suppress where col='msg' AND expire>NOW())";
-        $where .= " OR counter IN (SELECT name from suppress where col='counter' AND expire>NOW())";
-        $where .= " OR notes IN (SELECT name from suppress where col='notes' AND expire>NOW())";
-            break;
-        case "unsuppressed":
-        $where.= " AND suppress < NOW()";  
-        $where .= " AND host NOT IN (SELECT name from suppress where col='host' AND expire>NOW())";
-        $where .= " AND facility NOT IN (SELECT name from suppress where col='facility' AND expire>NOW())";
-        $where .= " AND severity NOT IN (SELECT name from suppress where col='severity' AND expire>NOW())";
-        $where .= " AND program NOT IN (SELECT name from suppress where col='program' AND expire>NOW())";
-        $where .= " AND mne NOT IN (SELECT name from suppress where col='mnemonic' AND expire>NOW())";
-        $where .= " AND msg NOT IN (SELECT name from suppress where col='msg' AND expire>NOW())";
-        $where .= " AND counter NOT IN (SELECT name from suppress where col='counter' AND expire>NOW())";
-        $where .= " AND notes NOT IN (SELECT name from suppress where col='notes' AND expire>NOW())";
-        break;
-}
+
 
 //------------------------------------------------------------
 // START date/time
@@ -84,6 +62,7 @@ $lo_time_start = get_input('lo_time_start');
 $lo_time_end = get_input('lo_time_end');
     $qstring .= "&lo_time_end=$lo_time_end";
 // FO
+$filter_fo = "";
 if ($fo_checkbox == "on") {
     if($fo_date!='') {
         list($start,$end) = explode(' to ', $fo_date);
@@ -93,9 +72,11 @@ if ($fo_checkbox == "on") {
             $end .= " $fo_time_end"; 
         }
             $where.= " AND fo BETWEEN '$start' AND '$end'";
+	    $filter_fo ="fo=>'$start' and fo<='$end'";
     }
 }
 // LO
+$filter_lo = "";
 $start = "";
 $end = "";
 if ($lo_checkbox == "on") {
@@ -106,9 +87,8 @@ if ($lo_checkbox == "on") {
             $start .= " $lo_time_start"; 
             $end .= " $lo_time_end"; 
         }
-        if (($start !== "$today 00:00:00") && ($end !== "$today 23:59:59")) {
             $where.= " ".strtoupper($date_andor)." lo BETWEEN '$start' AND '$end'";
-        }
+          $filter_lo ="lo=>'$start' and lo<='$end'";
     }
 }
 //------------------------------------------------------------
@@ -127,26 +107,36 @@ $hosts = get_input('hosts');
 $qstring .= "&hosts=$hosts";
 if ($hosts) {
     $pieces = explode(",", $hosts);
+
     $where .= " AND host IN (";
+    $msg_mask .= "@host ";
     foreach ($pieces as $mask) {
         $where.= "'$mask',";  
+        $msg_mask .= "$mask|";
     }
     $where = rtrim($where, ",");
+    $msg_mask = rtrim($msg_mask, "|");
     $where .= ")";
+    $msg_mask .= " ";
 }
 // portlet-programs
 $programs = get_input('programs');
 if ($programs) {
     $where .= " AND program IN (";
+    $msg_mask .= " @program ";
+    
     foreach ($programs as $program) {
         if (!preg_match("/^\d+/m", $program)) {
             $program = prg2crc($program);
         }
             $where.= "'$program',";
+            $msg_mask .= "$program|";
         $qstring .= "&programs[]=$program";
     }
     $where = rtrim($where, ",");
+    $msg_mask = rtrim($msg_mask, "|");
     $where .= ")";
+    $msg_mask .= " ";
 }
 
 // portlet-severities
@@ -161,7 +151,7 @@ if ($severities) {
         $qstring .= "&severities[]=$severity";
     }
     $where = rtrim($where, ",");
-    $where .= ")";
+    $where .= " )";
 }
 
 
@@ -182,26 +172,35 @@ if ($facilities) {
 $mnemonics = get_input('mnemonics');
 if ($mnemonics) {
     $where .= " AND mne IN (";
+    $msg_mask .= " @mne ";
     foreach ($mnemonics as $mnemonic) {
         if (!preg_match("/^\d+/m", $mnemonic)) {
             $mnemonic = mne2crc($mnemonic);
         }
         $where.= "'$mnemonic',";
+         $msg_mask .= "$mnemonic|";
         $qstring .= "&mnemonics[]=$mnemonic";
     }
     $where = rtrim($where, ",");
+    $msg_mask = rtrim($msg_mask, "|");
     $where .= ")";
+    $msg_mask .= " ";    
 }
+
 
 $limit = get_input('limit');
 $limit = (!empty($limit)) ? $limit : "10";
 $qstring .= "&limit=$limit";
 
 // portlet-sphinxquery
-$msg_mask = get_input('msg_mask');
-$msg_mask = preg_replace ('/^Search through .*\sMessages/m', '', $msg_mask);
+$msg_mask_get = get_input('msg_mask');
+$msg_mask_get = preg_replace ('/^Search through .*\sMessages/m', '', $msg_mask_get);
 $msg_mask_oper = get_input('msg_mask_oper');
-$qstring .= "&msg_mask=$msg_mask&msg_mask_oper=$msg_mask_oper";
+$qstring .= "&msg_mask=$msg_mask_get&msg_mask_oper=$msg_mask_oper";
+if($msg_mask_get !== '') {
+	$msg_mask .= " @MSG $msg_mask_get";
+	}
+
 
 $orderby = get_input('orderby');
 $qstring .= "&orderby=$orderby";
@@ -209,9 +208,47 @@ $qstring .= "&orderby=$orderby";
 $order = get_input('order');
 $qstring .= "&order=$order";
 
-if($msg_mask !== '') {
-    if ($_SESSION['SPX_ENABLE'] == "1") {
-        //$msg_mask = mysql_real_escape_string($msg_mask);
+// portlet-search_options
+$dupop = get_input('dupop');
+$qstring .= "&dupop=$dupop";
+$filter_dup_min = "0";
+$filter_dup_max = "999";
+$dupop_orig = $dupop;
+$dupcount = get_input('dupcount');
+$qstring .= "&dupcount=$dupcount";
+if (($dupop) && ($dupop != 'undefined')) {
+    switch ($dupop) {
+        case "gt":
+            $dupop = ">";
+            $filter_dup_min = $dupcount + 1;
+        break;
+
+        case "lt":
+            $dupop = "<";
+            $filter_dup_max = $dupcount - 1;
+        break;
+
+        case "eq":
+            $dupop = "=";
+            $filter_dup_min = $dupcount;
+            $filter_dup_max = $dupcount;
+        break;
+
+        case "gte":
+            $dupop = ">=";
+            $filter_dup_min = $dupcount;
+        break;
+            $filter_dup_min = $dupcount;
+        case "lte":
+            $dupop = "<=";
+            
+        break;
+    }
+    $where.= " AND counter $dupop '$dupcount'"; 
+}
+    
+if ($_SESSION['SPX_ENABLE'] == "1") {
+#        $msg_mask = mysql_real_escape_string($msg_mask);
         $qtype = get_input('q_type');
         //---------------BEGIN SPHINX
         require_once ($basePath . "/../SPHINX.class.php");
@@ -234,18 +271,29 @@ if($msg_mask !== '') {
                 $cl->SetMatchMode ( SPH_MATCH_EXTENDED2 );
             break;
             default:
-            $qtype = "any";
-            $msg_mask = addslashes($msg_mask);
-            $cl->SetMatchMode ( SPH_MATCH_ANY );
+            $qtype = "boolean";
+            $cl->SetMatchMode ( SPH_MATCH_BOOLEAN );
         }
         if ($order == 'DESC') {
             $cl->SetSortMode(SPH_SORT_ATTR_DESC, "$orderby");
         } else {
             $cl->SetSortMode(SPH_SORT_ATTR_ASC, "$orderby");
         }
+	if ($severities) {
+	$cl->SetFilter( 'severity', $severities ); }
+	if ($facilities) {
+	$cl->SetFilter( 'facility', $facilities ); } 
+	$cl->SetFilter( $filter_fo );
+        $cl->SetFilter( $filter_lo );
+        $cl->SetFilterRange ( 'counter', $filter_dup_min, $filter_dup_max );
+
         $cl->SetLimits(0, intval($_SESSION['SPX_MAX_MATCHES']));
-        // $escaped = $cl->EscapeString ( "$msg_mask" );
-        $sphinx_results = $cl->Query ($msg_mask, $index);
+        		
+	$escaped = $cl->EscapeString ( $msg_mask );
+	$escaped = str_replace("\\@","@",$escaped);
+	echo "escaped $escaped";
+        $sphinx_results = $cl->Query ($escaped, $index);
+	
 
         if ( !$sphinx_results )
         {
@@ -257,7 +305,7 @@ if($msg_mask !== '') {
                //  echo "<pre>\n";
                //  die(print_r($sphinx_results));
                //  echo "</pre>\n";
-                $where .= " AND id IN (";
+                $where = " where id IN (";
                 foreach ( $sphinx_results["matches"] as $doc => $docinfo ) {
                     $where .= "'$doc',";
                 }
@@ -298,7 +346,7 @@ if($msg_mask !== '') {
             break;
         }
     }
-}
+
 $notes_mask = get_input('notes_mask');
 $notes_mask = preg_replace ('/^Search through .*\sNotes/m', '', $notes_mask);
 $notes_mask_oper = get_input('notes_mask_oper');
@@ -352,36 +400,7 @@ if($notes_mask) {
     }
 }
 
-// portlet-search_options
-$dupop = get_input('dupop');
-$qstring .= "&dupop=$dupop";
-$dupop_orig = $dupop;
-$dupcount = get_input('dupcount');
-$qstring .= "&dupcount=$dupcount";
-if (($dupop) && ($dupop != 'undefined')) {
-    switch ($dupop) {
-        case "gt":
-            $dupop = ">";
-        break;
 
-        case "lt":
-            $dupop = "<";
-        break;
-
-        case "eq":
-            $dupop = "=";
-        break;
-
-        case "gte":
-            $dupop = ">=";
-        break;
-
-        case "lte":
-            $dupop = "<=";
-        break;
-    }
-    $where.= " AND counter $dupop '$dupcount'"; 
-}
 // Not implemented yet (for graph generation)
 $topx = get_input('topx');
 $qstring .= "&topx=$topx";
@@ -451,7 +470,19 @@ if ($order) {
   $row = fetch_array($result);        
   $total = $row['value'];
 
-  $sql = "SELECT * FROM ".$_SESSION['TBL_MAIN'] ." $where LIMIT $limit";
+
+switch ($show_suppressed): 
+	case "suppressed":
+		$sql = "SELECT * FROM ".$_SESSION['TBL_MAIN']."_suppressed $where LIMIT $limit";
+	break;
+        case "unsuppressed":
+		$sql = "SELECT * FROM ".$_SESSION['TBL_MAIN']."_unsuppressed $where LIMIT $limit";
+        break;
+	default:
+                $sql = "SELECT * FROM ".$_SESSION['TBL_MAIN'] ." $where LIMIT $limit";
+endswitch;
+
+
   $result = perform_query($sql, $dbLink, $_SERVER['PHP_SELF']); 
   $count = mysql_num_rows($result);
   if ($count > 0) {
