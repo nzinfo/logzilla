@@ -28,7 +28,7 @@ my $today = strftime("%Y-%m-%d", localtime);
 ####### MODIFY below to suit your needs ##############
 my $limit = 100;
 my $from = 'root@localhost.com';
-my $to = 'cdukes@cdukes.com';
+my $to = 'REPLACEME@###.com';
 my $subject = 'LogZilla Excel Report';
 my $body = "Report generated on $now";
 my $basepath = "/path_to_logzilla";

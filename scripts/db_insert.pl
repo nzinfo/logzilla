@@ -206,7 +206,8 @@ if (($debug > 0) or ($verbose)) {
 }
 
 my ($host, %host_cache, $facility, $pri, $prg, %program_cache, $prg32, $msg, $mne, %mne_cache, $mne32, $severity); 
-my $re_pipe = qr/(\S+)\t(\d+)\t(\S+)?\t(.*)/;
+# my $re_pipe = qr/(\S+)\t(\d+)\t(\S+)?\t(.*)/;
+my $re_pipe = qr/(\S+)\t(\d+)\t(\S+).*\t(.*)/;
 # v3.0 Fields are: Host, PRI, Program,  and MSG
 # the $severity and $facility fields are split from the $pri coming in so that they can be stored as integers into 2 separate db columns
 # re_mne is used to capture Cisco Mnemonics
@@ -527,6 +528,7 @@ sub do_msg {
         $prg =~ s/%ASA.*\d+/Cisco ASA/; # Added because ASA's don't send their program field properly
         $prg =~ s/%FWSM.*\d+/Cisco FWSM/; # Added because FWSM's don't send their program field properly
         $prg =~ s/date=\d+-\d+-\d+/Fortigate Firewall/; # Added because Fortigate's don't follow IETF standards
+        $prg =~ s/:$//; # Strip trailing colon from some programs (such as kernel)
         $msg =~ s/time=\d+:\d+:\d+\s//; # Added because Fortigate's don't s follow IETF standards
         # @msgs = split(/:/, $msg);
         if (($prg =~ /^\d+/) && ($prg != "3Com Firewall")) { # Some messages come in with the sequence as the PROGRAM field

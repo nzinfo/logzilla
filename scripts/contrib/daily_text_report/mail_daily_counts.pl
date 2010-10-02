@@ -30,7 +30,7 @@ my $today = strftime("%Y-%m-%d", localtime);
 ####### MODIFY below to suit your needs ##############
 my $smtphost = "localhost";
 my $from = 'root@localhost.com';
-my $to = 'cdukes@cdukes.com';
+my $to = 'REPLACEME@###.com';
 my $subject = "LogZilla Daily Report - $now";
 my $body;
 my $basepath = "/path_to_logzilla"; ## CHANGE THIS!

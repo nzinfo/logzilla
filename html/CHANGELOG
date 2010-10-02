@@ -1,11 +1,15 @@
 CHANGELOG
 
 3.0.93 - updates
+TH:
  - lz now uses sphinx search: msg, host, program, severity, facility, mnemonic, fo, lo, counter.
  - "show suppressed" is implemented in database views
  - sphinx is used in saved searches
  - lo works whithin "today"
  - if tail is used, sphinx is disabled cause they a only updated every 5 minutes
+CD:
+ - DB: Fixed typo in help for "FO - Last Occurrence" (should be "LO")
+ - Changed re_pipe in db_insert.pl to account for program names with trailing spaces (like kernel in CentOS)
 
 3.0.92 - updates
  - Added filter to not include "None" Mnemonics in Cisco Mnemonic Charts.
@@ -24,7 +28,7 @@ CHANGELOG
  - Removed license.txt, you can now obtain one from http://www.logzilla.info
 
 3.0.88 - minor
- - Changes a few text files (readme, etc.)
+ - Changed a few text files (readme, etc.)
 
 3.0.87 - updates
  - Replaced re_mne regex in db_insert.pl to better capture Cisco Mnemonics.
@@ -179,8 +183,8 @@ CHANGELOG
  - added number of results return as well as the total matching rows to the results page
  - Added MPS ticker to header along with average MPS
  - db_insert now uses mysql's LOAD DATA INFILE so that larger systems won't bottleneck at 1kmps (a Mysql limit on number of inserts per second). The load data command allows for around 20kmps.
- - Modified CISCO_TAG_PARSE and re_pipe (in db_insert) to handle windows event logs. Apparently someone at MS decided it would be a good idea to include TABs in the messages...ugh!
-- Added Cisco Mnemonics to both the search page and the charts - to get Top Mnemonics, set Sort Order to "count" and Group By to "Mnemonic"
+ - Modified CISCO_TAG_PARSE and re_pipe (in db_insert) to handle windows event logs.
+ - Added Cisco Mnemonics to both the search page and the charts - to get Top Mnemonics, set Sort Order to "count" and Group By to "Mnemonic"
 
 
 3.0Beta16
