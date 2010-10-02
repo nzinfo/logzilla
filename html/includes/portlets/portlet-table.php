@@ -283,15 +283,15 @@ if ($_SESSION['SPX_ENABLE'] == "1") {
 	$cl->SetFilter( 'severity', $severities ); }
 	if ($facilities) {
 	$cl->SetFilter( 'facility', $facilities ); } 
-	$cl->SetFilter( $filter_fo );
-        $cl->SetFilter( $filter_lo );
-        $cl->SetFilterRange ( 'counter', $filter_dup_min, $filter_dup_max );
+	$cl->SetFilter( 'fo', $filter_fo );
+        $cl->SetFilter( 'lo', $filter_lo );
+        $cl->SetFilterRange ( 'counter', intval($filter_dup_min), intval($filter_dup_max) );
 
         $cl->SetLimits(0, intval($_SESSION['SPX_MAX_MATCHES']));
         		
 	$escaped = $cl->EscapeString ( $msg_mask );
 	$escaped = str_replace("\\@","@",$escaped);
-	echo "escaped $escaped";
+	// echo "escaped $escaped";
         $sphinx_results = $cl->Query ($escaped, $index);
 	
 
