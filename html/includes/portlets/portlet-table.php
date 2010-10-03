@@ -30,7 +30,7 @@ $today = date("Y-m-d");
 //construct where clause 
 $where = "WHERE 1=1";
 $msg_mask = '';
-
+$total = 'unknown';
 $qstring = '';
 $page = get_input('page');
 $qstring .= "?page=$page";
@@ -291,10 +291,11 @@ if ($_SESSION['SPX_ENABLE'] == "1") {
         		
 	$escaped = $cl->EscapeString ( $msg_mask );
 	$escaped = str_replace("\\@","@",$escaped);
-	// echo "escaped $escaped";
-        $sphinx_results = $cl->Query ($escaped, $index);
+        
+	$sphinx_results = $cl->Query ($escaped, $index);
+     
+	$total = $sphinx_results['total_found'];
 	
-
         if ( !$sphinx_results )
         {
       $info = "<font size=\"3\" color=\"white\"><br><br>Sphinx - Error in query: ";
@@ -463,13 +464,6 @@ if ($order) {
 
   <tbody>
   <?php
-  // $total = get_total_rows($_SESSION['TBL_MAIN'], $dbLink);
-
-  $sql = "SELECT value from cache where name='msg_sum'";
-  $result = perform_query($sql, $dbLink, $_SERVER['PHP_SELF']); 
-  $row = fetch_array($result);        
-  $total = $row['value'];
-
 
 switch ($show_suppressed): 
 	case "suppressed":
@@ -482,8 +476,28 @@ switch ($show_suppressed):
                 $sql = "SELECT * FROM ".$_SESSION['TBL_MAIN'] ." $where LIMIT $limit";
 endswitch;
 
-
   $result = perform_query($sql, $dbLink, $_SERVER['PHP_SELF']); 
+
+  if ($total == 'unknown') {
+
+	switch ($show_suppressed):
+        	case "suppressed":
+                	$sql = "SELECT count(*) as tots FROM ".$_SESSION['TBL_MAIN']."_suppressed $where";
+        	break;
+        	case "unsuppressed":
+                	$sql = "SELECT count(*) as tots FROM ".$_SESSION['TBL_MAIN']."_unsuppressed $where";
+        	break;
+        	default:
+                	$sql = "SELECT count(*) as tots FROM ".$_SESSION['TBL_MAIN'] ." $where";
+	endswitch;
+
+	$tots =perform_query($sql, $dbLink, $_SERVER['PHP_SELF']);
+	while($row = fetch_array($tots)) {
+        $total = $row['tots'];
+	}
+}
+
+
   $count = mysql_num_rows($result);
   if ($count > 0) {
       $info = "<center>Showing $count of ".commify($total)." entries</center>";
