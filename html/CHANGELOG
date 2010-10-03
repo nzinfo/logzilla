@@ -1,5 +1,9 @@
 CHANGELOG
 
+3.0.96 - updates
+TH:
+ - Fixed the Timerange Problem on fo and lo while searching with sphinx
+
 3.0.95 - updates
 TH:
  - Fixed the "showing xx of yyy entries", yyy now correct calculated
