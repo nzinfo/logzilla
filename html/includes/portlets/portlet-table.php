@@ -62,33 +62,36 @@ $lo_time_start = get_input('lo_time_start');
 $lo_time_end = get_input('lo_time_end');
     $qstring .= "&lo_time_end=$lo_time_end";
 // FO
-$filter_fo = "";
+$filter_fo_start = "";
+$filter_fo_end = "";
+
 if ($fo_checkbox == "on") {
     if($fo_date!='') {
         list($start,$end) = explode(' to ', $fo_date);
         if($end=='') $end = "$start" ; 
-        if($fo_time_start!=$fo_time_end) {
-            $start .= " $fo_time_start"; 
-            $end .= " $fo_time_end"; 
-        }
-            $where.= " AND fo BETWEEN '$start' AND '$end'";
-	    $filter_fo ="fo=>'$start' and fo<='$end'";
+        $start .= " $fo_time_start"; 
+        $end .= " $fo_time_end"; 
+
+        $where.= " AND fo BETWEEN '$start' AND '$end'";
+	$filter_fo_start = "$start" ;
+	$filter_fo_end = "$end" ;
     }
 }
 // LO
-$filter_lo = "";
+$filter_lo_start = "";
+$filter_lo_end = "";
 $start = "";
 $end = "";
 if ($lo_checkbox == "on") {
     if($lo_date!='') {
         list($start,$end) = explode(' to ', $lo_date);
-        if($end=='') $end = "$start" ; 
-        if($lo_time_start!=$lo_time_end) {
-            $start .= " $lo_time_start"; 
-            $end .= " $lo_time_end"; 
-        }
-            $where.= " ".strtoupper($date_andor)." lo BETWEEN '$start' AND '$end'";
-          $filter_lo ="lo=>'$start' and lo<='$end'";
+	if($end=='') $end = "$start" ; 
+        $start .= " $lo_time_start"; 
+        $end .= " $lo_time_end"; 
+
+        $where.= " ".strtoupper($date_andor)." lo BETWEEN '$start' AND '$end'";
+        $filter_lo_start = "$start" ;
+	$filter_lo_end = "$end" ;
     }
 }
 //------------------------------------------------------------
@@ -283,8 +286,19 @@ if ($_SESSION['SPX_ENABLE'] == "1") {
 	$cl->SetFilter( 'severity', $severities ); }
 	if ($facilities) {
 	$cl->SetFilter( 'facility', $facilities ); } 
-	$cl->SetFilter( 'fo', $filter_fo );
-        $cl->SetFilter( 'lo', $filter_lo );
+
+	// Convert datetime to timestamp
+	$timestamp_array = date_parse($filter_fo_start);
+	$filter_fo_min = mktime($timestamp_array['hour'],$timestamp_array['minute'],$timestamp_array['second'],$timestamp_array['month'],$timestamp_array['day'],$timestamp_array['year']);
+        $timestamp_array = date_parse($filter_fo_end);
+        $filter_fo_max = mktime($timestamp_array['hour'],$timestamp_array['minute'],$timestamp_array['second'],$timestamp_array['month'],$timestamp_array['day'],$timestamp_array['year']);
+        $timestamp_array = date_parse($filter_lo_start);
+        $filter_lo_min = mktime($timestamp_array['hour'],$timestamp_array['minute'],$timestamp_array['second'],$timestamp_array['month'],$timestamp_array['day'],$timestamp_array['year']);
+        $timestamp_array = date_parse($filter_lo_end);
+        $filter_lo_max = mktime($timestamp_array['hour'],$timestamp_array['minute'],$timestamp_array['second'],$timestamp_array['month'],$timestamp_array['day'],$timestamp_array['year']);
+
+	if ($fo_checkbox == "on")  $cl->SetFilterRange ( 'fo', $filter_fo_min,  $filter_fo_max );
+	if ($lo_checkbox == "on")  $cl->SetFilterRange ( 'lo', $filter_lo_min,  $filter_lo_max );
         $cl->SetFilterRange ( 'counter', intval($filter_dup_min), intval($filter_dup_max) );
 
         $cl->SetLimits(0, intval($_SESSION['SPX_MAX_MATCHES']));
