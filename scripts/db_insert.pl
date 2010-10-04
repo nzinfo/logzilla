@@ -48,6 +48,8 @@
 # 2010-04-29 - Added regex for Snare windows events
 # 2010-06-13 - Fixed bug that was inserting duplicate messages
 # 2010-08-20 - New regex for Cisco Mnemonics
+# 2010-10-04 - Changed temp file storage from /dev/shm to /tmp to support more OS's
+# 2010-10-04 - Removed LOCAL command from LOAD DATA
 #
 
 
@@ -58,6 +60,7 @@ use Text::LevenshteinXS qw(distance);
 use File::Spec;
 use File::Basename;
 use String::CRC32;
+use Date::Calc;
 
 
 $| = 1;
@@ -231,8 +234,10 @@ my $db_insert = $dbh->prepare("INSERT INTO $dbtable (host,facility,severity,prog
 my $db_insert_prg = $dbh->prepare("INSERT IGNORE INTO programs (name,crc) VALUES (?,?) ");
 my $db_insert_mne = $dbh->prepare("INSERT IGNORE INTO mne (name,crc) VALUES (?,?) ");
 my $db_insert_host = $dbh->prepare("INSERT IGNORE INTO hosts (host) VALUES (?) ");
-my $dumpfile = "/dev/shm/infile.txt";
-my $sql = qq{LOAD DATA LOCAL INFILE '$dumpfile' INTO TABLE logs FIELDS TERMINATED BY "\\t" LINES TERMINATED BY "\\n" (host,facility,severity,program,msg,mne,fo,lo)};
+#my $dumpfile = "/dev/shm/infile.txt";
+my $dumpfile = "/tmp/logzilla_import.txt";
+#my $sql = qq{LOAD DATA LOCAL INFILE '$dumpfile' INTO TABLE logs FIELDS TERMINATED BY "\\t" LINES TERMINATED BY "\\n" (host,facility,severity,program,msg,mne,fo,lo)};
+my $sql = qq{LOAD DATA INFILE '$dumpfile' INTO TABLE logs FIELDS TERMINATED BY "\\t" LINES TERMINATED BY "\\n" (host,facility,severity,program,msg,mne,fo,lo)};
 my $db_insert_mpX = $dbh->prepare("REPLACE INTO cache (name,value,updatetime) VALUES (?,?,?)");
 my $db_insert_sum = $dbh->prepare("INSERT INTO cache (name,value,updatetime) VALUES ('msg_sum',?,?) ON DUPLICATE KEY UPDATE value=value + ?");
 my $db_load = $dbh->prepare("$sql");
@@ -250,8 +255,10 @@ my ($mpd, @mpd, $day);
 my $sumcount;
 my $now;
 
-#open (DUMP, ">$dumpfile") or die "can't open $dumpfile: $!\n";
-#close (DUMP);
+open (DUMP, ">$dumpfile") or die "can't open $dumpfile: $!\n";
+close (DUMP);
+my $mode = 0644;   chmod $mode, "$dumpfile";  
+
 $db_load->{TraceLevel} = 4 if (($debug > 4) and ($verbose));
 # Pre-populate cache's with db values
 my $prg_select = $dbh->prepare("SELECT * FROM programs");
@@ -352,6 +359,29 @@ while (my $msg = <STDIN>) {
         close (DUMP);
         $db_load->execute();
         if ($dbh->errstr()) {
+            # cdukes: Added to catch errors on missing partitions
+            # This will auto-create a new partition if it is missing.
+            if ($dbh->errstr() =~ /Table has no partition for value (\d+)/) {
+                # Get some date values in order to create the MySQL Partition
+                my ($sec, $min, $hour, $curmday, $curmon, $curyear, $wday, $yday, $isdst) = localtime time;
+                $curyear = $curyear + 1900;
+                $curmon = $curmon + 1;
+                my ($year,$mon,$mday) = Date::Calc::Add_Delta_Days($curyear,$curmon,$curmday,1);
+                my $pAdd = "p".$year.sprintf("%02d",$mon).sprintf("%02d",$mday);
+                my $dateTomorrow = $year."-".sprintf("%02d",$mon)."-".sprintf("%02d",$mday);
+                print STDOUT "\n\n\n\n\n\n\n\n\n\n\nERROR: MISSING PARTITION VALUE FOR $1\nAuto-creating Partition for $dateTomorrow\n" if ($debug > 0);
+                print LOG "\nERROR: MISSING PARTITION VALUE FOR $1\nAuto-creating NEW Partition for $dateTomorrow\n";
+
+                # Create initial Partition of the $dbtable table
+                my $sth = $dbh->prepare("
+                    ALTER TABLE $dbtable ADD PARTITION (PARTITION $pAdd VALUES LESS THAN ($dateTomorrow))
+                    ");
+                $sth->execute; 
+
+                # Or this? (need to test)
+                #my $sth = $dbh->prepare("CALL logs_add_part_proc()");
+                #$sth->execute; 
+            }
             print STDOUT "FATAL: Unable to execute SQL statement: ", $dbh->errstr(), "\n" if ($debug > 0);
         }
         print LOG "Ending insert: " . strftime("%H:%M:%S", localtime) ."\n" if ($debug > 0);

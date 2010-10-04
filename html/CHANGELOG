@@ -1,4 +1,7 @@
 CHANGELOG
+3.0.97 - update
+CD:
+ - Added code to auto-repair missing partitions from mysql.
 
 3.0.96 - updates
 TH:
