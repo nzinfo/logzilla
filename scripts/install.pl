@@ -39,7 +39,7 @@ sub p {
 }
 
 my $version = "3.0";
-my $subversion = ".97";
+my $subversion = ".98";
 
 # Grab the base path
 my $lzbase = getcwd;
@@ -256,6 +256,11 @@ if ($ok =~ /[Yy]/) {
         update settings set value='$subversion' where name='VERSION_SUB';
         ") or die "Could not update settings table: $DBI::errstr";
     $sth->execute;
+    my $sth = $dbh->prepare("
+        update settings set value='$retention' where name='RETENTION';
+        ") or die "Could not update settings table: $DBI::errstr";
+    $sth->execute;
+
 
 
 
@@ -377,28 +382,28 @@ if ($ok =~ /[Yy]/) {
     my $dateTomorrow = $year."-".sprintf("%02d",$mon)."-".sprintf("%02d",$mday);
 
 # Create initial Partition of the $dbtable table
-    my $sth = $dbh->prepare("
-        alter table $dbtable PARTITION BY RANGE( TO_DAYS( lo ) ) (
-        PARTITION $pAdd VALUES LESS THAN (to_days('$dateTomorrow'))
-        );
-        ") or die "Could not create partition for the $dbtable table: $DBI::errstr";
-    $sth->execute; 
+    #my $sth = $dbh->prepare("
+    #alter table $dbtable PARTITION BY RANGE( TO_DAYS( lo ) ) (
+    #PARTITION $pAdd VALUES LESS THAN (to_days('$dateTomorrow'))
+    #);
+    #") or die "Could not create partition for the $dbtable table: $DBI::errstr";
+    #$sth->execute; 
 
 # Create Partition events
-    my $event = qq{
-    CREATE EVENT logs_add_partition ON SCHEDULE EVERY 1 DAY STARTS '$dateTomorrow 00:00:00' ON COMPLETION NOT PRESERVE ENABLE DO CALL logs_add_part_proc();
-    };
-    my $sth = $dbh->prepare("
-        $event
-        ") or die "Could not create partition events: $DBI::errstr";
-    $sth->execute;
+    #my $event = qq{
+    #CREATE EVENT logs_add_partition ON SCHEDULE EVERY 1 DAY STARTS '$dateTomorrow 00:00:00' ON COMPLETION NOT PRESERVE ENABLE DO CALL logs_add_part_proc();
+    #};
+    #my $sth = $dbh->prepare("
+    #$event
+    #") or die "Could not create partition events: $DBI::errstr";
+    #$sth->execute;
 
     my $event = qq{
     CREATE EVENT logs_add_archive ON SCHEDULE EVERY 1 DAY STARTS '$dateTomorrow 00:10:00' ON COMPLETION NOT PRESERVE ENABLE DO CALL logs_add_archive_proc();
     };
     my $sth = $dbh->prepare("
         $event
-        ") or die "Could not create partition events: $DBI::errstr";
+        ") or die "Could not create archive events: $DBI::errstr";
     $sth->execute;
 
     my $event = qq{
@@ -409,45 +414,31 @@ if ($ok =~ /[Yy]/) {
         ") or die "Could not create partition events: $DBI::errstr";
     $sth->execute;
 
-    my $event = qq{
-    CREATE PROCEDURE logs_add_archive_proc()
-    SQL SECURITY DEFINER
-    COMMENT 'Creates archive for messages older than $retention days' 
-    BEGIN    
-    INSERT INTO `logs_archive` SELECT * FROM `$dbtable` 
-    WHERE `$dbtable`.`lo` < DATE_SUB(CURDATE(), INTERVAL $retention DAY);
-    END 
-    };
-    my $sth = $dbh->prepare("
-        $event
-        ") or die "Could not create partition events: $DBI::errstr";
-    $sth->execute;
-
-    my $event = qq{
-    CREATE PROCEDURE logs_add_part_proc()
-    SQL SECURITY DEFINER
-    COMMENT 'Creates partitions for tomorrow' 
-    BEGIN    
-    DECLARE new_partition CHAR(32) DEFAULT
-    CONCAT ('p', DATE_FORMAT(DATE_ADD(CURDATE(), INTERVAL 1 DAY), '%Y%m%d'));
-    DECLARE max_day INTEGER DEFAULT TO_DAYS(NOW()) +1;
-    SET \@s =
-    CONCAT('ALTER TABLE `logs` ADD PARTITION (PARTITION ', new_partition,
-    ' VALUES LESS THAN (', max_day, '))');
-    PREPARE stmt FROM \@s;
-    EXECUTE stmt;
-    DEALLOCATE PREPARE stmt;
-    END 
-    };
-    my $sth = $dbh->prepare("
-        $event
-        ") or die "Could not create partition events: $DBI::errstr";
-    $sth->execute;
+    #my $event = qq{
+    #CREATE PROCEDURE logs_add_part_proc()
+    #SQL SECURITY DEFINER
+    #COMMENT 'Creates partitions for tomorrow' 
+    #BEGIN    
+    #DECLARE new_partition CHAR(32) DEFAULT
+    #CONCAT ('p', DATE_FORMAT(DATE_ADD(CURDATE(), INTERVAL 1 DAY), '%Y%m%d'));
+    #DECLARE max_day INTEGER DEFAULT TO_DAYS(NOW()) +1;
+    #SET \@s =
+    #CONCAT('ALTER TABLE `logs` ADD PARTITION (PARTITION ', new_partition,
+    #' VALUES LESS THAN (', max_day, '))');
+    #PREPARE stmt FROM \@s;
+    #EXECUTE stmt;
+    #DEALLOCATE PREPARE stmt;
+    #END 
+    #};
+    #my $sth = $dbh->prepare("
+    #    $event
+    #    ") or die "Could not create partition events: $DBI::errstr";
+    #$sth->execute;
 
     my $event = qq{
     CREATE PROCEDURE logs_delete_part_proc()
     SQL SECURITY DEFINER
-    COMMENT 'Deletes partitions older than $retention days' 
+    COMMENT 'Deletes old partitions - based on value of settings>retention' 
     BEGIN    
     SELECT CONCAT( 'ALTER TABLE `$dbtable` DROP PARTITION ',
     GROUP_CONCAT(`partition_name`))
@@ -456,7 +447,7 @@ if ($ok =~ /[Yy]/) {
     WHERE `table_schema` = '$dbname'
     AND `table_name` = '$dbtable'
     AND `partition_description` <
-    TO_DAYS(DATE_SUB(CURDATE(), INTERVAL $retention DAY))
+    TO_DAYS(DATE_SUB(CURDATE(), INTERVAL (SELECT value from settings WHERE name='RETENTION') DAY))
     GROUP BY TABLE_NAME;
 
     IF \@s IS NOT NULL then
@@ -471,7 +462,23 @@ if ($ok =~ /[Yy]/) {
         ") or die "Could not create partition events: $DBI::errstr";
     $sth->execute;
 
+    my $event = qq{
+    CREATE PROCEDURE logs_add_archive_proc()
+    SQL SECURITY DEFINER
+    COMMENT 'Creates archive for old messages' 
+    BEGIN    
+    INSERT INTO `logs_archive` SELECT * FROM `$dbtable` 
+    WHERE `$dbtable`.`lo` < DATE_SUB(CURDATE(), INTERVAL (SELECT value from settings WHERE name='RETENTION') DAY);
+    END 
+    };
+    my $sth = $dbh->prepare("
+        $event
+        ") or die "Could not create partition events: $DBI::errstr";
+    $sth->execute;
+
+
 # Turn the event scheduler on
+
     my $sth = $dbh->prepare("
         SET GLOBAL event_scheduler = 1;
         ") or die "Could not enable the Global event scheduler: $DBI::errstr";

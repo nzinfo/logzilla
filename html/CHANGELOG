@@ -1,4 +1,10 @@
 CHANGELOG
+
+3.0.98 - update
+CD:
+ - Removed the MySQL event to create a new partition every day since db_insert.pl now does it automatically.
+ - Archive renention days is now set through the admin interface (admin>settings>retention).
+
 3.0.97 - update
 CD:
  - Added code to auto-repair missing partitions from mysql.
