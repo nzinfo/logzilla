@@ -68,10 +68,13 @@ $filter_fo_end = "";
 if ($fo_checkbox == "on") {
     if($fo_date!='') {
         list($start,$end) = explode(' to ', $fo_date);
-        if($end=='') $end = "$start" ; 
-        $start .= " $fo_time_start"; 
+	if($end=='') $end = "$start" ; 
+        if(($start==$end) and ($fo_time_start>$fo_time_end)) {
+	 	$endx = strtotime($end);
+		$endx = $endx+24*3600;
+         	$end = date('Y-m-d', mktime(0,0,0,date('m',$endx),date('d',$endx),date('Y',$endx))); }
+	$start .= " $fo_time_start"; 
         $end .= " $fo_time_end"; 
-
         $where.= " AND fo BETWEEN '$start' AND '$end'";
 	$filter_fo_start = "$start" ;
 	$filter_fo_end = "$end" ;
@@ -86,7 +89,12 @@ if ($lo_checkbox == "on") {
     if($lo_date!='') {
         list($start,$end) = explode(' to ', $lo_date);
 	if($end=='') $end = "$start" ; 
-        $start .= " $lo_time_start"; 
+        if(($start==$end) and ($lo_time_start>$lo_time_end)) {
+                $endx = strtotime($end);
+                $endx = $endx+24*3600;
+                $end = date('Y-m-d', mktime(0,0,0,date('m',$endx),date('d',$endx),date('Y',$endx))); }
+
+	$start .= " $lo_time_start"; 
         $end .= " $lo_time_end"; 
 
         $where.= " ".strtoupper($date_andor)." lo BETWEEN '$start' AND '$end'";
