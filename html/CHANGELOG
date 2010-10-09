@@ -1,5 +1,9 @@
 CHANGELOG
 
+3.1.0 - bugfix
+CD:
+ - Small fix for introduced partition bug
+
 3.0.99 - update
 TH:
  - try to fix the datepicker bug
@@ -7,7 +11,7 @@ TH:
 3.0.98 - update
 CD:
  - Removed the MySQL event to create a new partition every day since db_insert.pl now does it automatically.
- - Archive renention days is now set through the admin interface (admin>settings>retention).
+ - Archive retention days is now set through the admin interface (admin>settings>retention).
 
 3.0.97 - update
 CD:

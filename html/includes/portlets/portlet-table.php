@@ -522,7 +522,7 @@ endswitch;
 
   $count = mysql_num_rows($result);
   if ($count > 0) {
-      $info = "<center>Showing $count of ".commify($total)." entries</center>";
+      $info = "<center>Showing $count of ".commify($total)." Results</center>";
       ?>
           <script type="text/javascript">
           $("#portlet-header_Search_Results").html('<?php echo "$info"?>');

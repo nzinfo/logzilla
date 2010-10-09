@@ -39,7 +39,7 @@ sub p {
 }
 
 my $version = "3.0";
-my $subversion = ".98";
+my $subversion = ".100";
 
 # Grab the base path
 my $lzbase = getcwd;
@@ -382,12 +382,12 @@ if ($ok =~ /[Yy]/) {
     my $dateTomorrow = $year."-".sprintf("%02d",$mon)."-".sprintf("%02d",$mday);
 
 # Create initial Partition of the $dbtable table
-    #my $sth = $dbh->prepare("
-    #alter table $dbtable PARTITION BY RANGE( TO_DAYS( lo ) ) (
-    #PARTITION $pAdd VALUES LESS THAN (to_days('$dateTomorrow'))
-    #);
-    #") or die "Could not create partition for the $dbtable table: $DBI::errstr";
-    #$sth->execute; 
+    my $sth = $dbh->prepare("
+    alter table $dbtable PARTITION BY RANGE( TO_DAYS( lo ) ) (
+    PARTITION $pAdd VALUES LESS THAN (to_days('$dateTomorrow'))
+    );
+    ") or die "Could not create partition for the $dbtable table: $DBI::errstr";
+    $sth->execute; 
 
 # Create Partition events
     #my $event = qq{

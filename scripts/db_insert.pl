@@ -294,6 +294,10 @@ while (my $msg = <STDIN>) {
         close (DUMP);
         $db_load->execute();
         if ($db_load->errstr()) {
+            if ($dbh->errstr() =~ /Table has no partition for value (\d+)/) {
+                makepart($1);
+                $db_load->execute();
+            }
             print STDOUT "FATAL: Unable to execute SQL statement: ", $db_load->errstr(), "\n" if ($debug > 0);
         }
         # 2010-08-29: Added to insert cached hosts, progs and mnes upon exit
@@ -362,25 +366,7 @@ while (my $msg = <STDIN>) {
             # cdukes: Added to catch errors on missing partitions
             # This will auto-create a new partition if it is missing.
             if ($dbh->errstr() =~ /Table has no partition for value (\d+)/) {
-                # Get some date values in order to create the MySQL Partition
-                my ($sec, $min, $hour, $curmday, $curmon, $curyear, $wday, $yday, $isdst) = localtime time;
-                $curyear = $curyear + 1900;
-                $curmon = $curmon + 1;
-                my ($year,$mon,$mday) = Date::Calc::Add_Delta_Days($curyear,$curmon,$curmday,1);
-                my $pAdd = "p".$year.sprintf("%02d",$mon).sprintf("%02d",$mday);
-                my $dateTomorrow = $year."-".sprintf("%02d",$mon)."-".sprintf("%02d",$mday);
-                print STDOUT "\n\n\n\n\n\n\n\n\n\n\nERROR: MISSING PARTITION VALUE FOR $1\nAuto-creating Partition for $dateTomorrow\n" if ($debug > 0);
-                print LOG "\nERROR: MISSING PARTITION VALUE FOR $1\nAuto-creating NEW Partition for $dateTomorrow\n";
-
-                # Create initial Partition of the $dbtable table
-                my $sth = $dbh->prepare("
-                    ALTER TABLE $dbtable ADD PARTITION (PARTITION $pAdd VALUES LESS THAN ($dateTomorrow))
-                    ");
-                $sth->execute; 
-
-                # Or this? (need to test)
-                #my $sth = $dbh->prepare("CALL logs_add_part_proc()");
-                #$sth->execute; 
+                makepart($1);
             }
             print STDOUT "FATAL: Unable to execute SQL statement: ", $dbh->errstr(), "\n" if ($debug > 0);
         }
@@ -469,6 +455,25 @@ while (my $msg = <STDIN>) {
 sub round {
     my($number) = shift;
     return int($number + .5);
+}
+
+sub makepart {
+    my $tday = shift;
+    # Get some date values in order to create the MySQL Partition
+    my ($sec, $min, $hour, $curmday, $curmon, $curyear, $wday, $yday, $isdst) = localtime time;
+    $curyear = $curyear + 1900;
+    $curmon = $curmon + 1;
+    my ($year,$mon,$mday) = Date::Calc::Add_Delta_Days($curyear,$curmon,$curmday,1);
+    my $pAdd = "p".$year.sprintf("%02d",$mon).sprintf("%02d",$mday);
+    my $dateTomorrow = $year."-".sprintf("%02d",$mon)."-".sprintf("%02d",$mday);
+    print STDOUT "\n\n\n\n\n\n\n\n\n\n\nERROR: MISSING PARTITION VALUE FOR $tday\nAuto-creating Partition for $dateTomorrow\n" if ($debug > 0);
+    print LOG "\nERROR: MISSING PARTITION VALUE FOR $tday\nAuto-creating NEW Partition for $dateTomorrow\n";
+
+    # Create initial Partition of the $dbtable table
+    my $sth = $dbh->prepare("
+        ALTER TABLE $dbtable ADD PARTITION (PARTITION $pAdd VALUES LESS THAN (to_days('$dateTomorrow')))
+        ");
+    $sth->execute; 
 }
 sub do_msg {
     $msg = shift;
