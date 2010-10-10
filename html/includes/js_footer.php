@@ -602,36 +602,46 @@ function reload_chart(chart_id,json_file)
 <!-- BEGIN Date Picker Functions -->
 <script type="text/javascript">
 $(document).ready(function(){
-        if($(window.parent.document).find('iframe').size()){
+    if($(window.parent.document).find('iframe').size()){
         var inframe = true;
-        }
+    }
+    var dedup = <?php echo ($_SESSION['DEDUP'])?>; 
+    if (dedup == "1") {
         $('#fo_date').daterangepicker({
-posX: null,
-posY: null,
-appendTo: '#fo_date_wrapper',
-arrows: 'true',
-dateFormat: 'yy-mm-dd',
-rangeSplitter: 'to',
-onOpen:function(){ if(inframe){ $(window.parent.document).find('iframe:eq(0)').width(700).height('35em');} }, 
-onClose: function(){ if(inframe){ $(window.parent.document).find('iframe:eq(0)').width('100%').height('5em');} }
-});
-        $('#lo_date').daterangepicker({
-posX: null,
-posY: null,
-appendTo: '#lo_date_wrapper',
-arrows: 'true',
-dateFormat: 'yy-mm-dd',
-rangeSplitter: 'to',
-onOpen:function(){ if(inframe){ $(window.parent.document).find('iframe:eq(0)').width(700).height('35em');} }, 
-onClose: function(){ if(inframe){ $(window.parent.document).find('iframe:eq(0)').width('100%').height('5em');} }
-});
+        posX: null,
+        posY: null,
+        appendTo: '#fo_date_wrapper',
+        arrows: 'true',
+        dateFormat: 'yy-mm-dd',
+        rangeSplitter: 'to',
+        onOpen:function(){ if(inframe){ $(window.parent.document).find('iframe:eq(0)').width(700).height('35em');} }, 
+        onClose: function(){ if(inframe){ $(window.parent.document).find('iframe:eq(0)').width('100%').height('5em');} }
         });
+    } else {
+        $('#fotr').remove()
+        $('#trandor').remove()
+        $('#lo_checkbox').remove()
+        $('#lotext').remove()
+    };
+    $('#lo_date').daterangepicker({
+    posX: null,
+    posY: null,
+    appendTo: '#lo_date_wrapper',
+    arrows: 'true',
+    dateFormat: 'yy-mm-dd',
+    rangeSplitter: 'to',
+    onOpen:function(){ if(inframe){ $(window.parent.document).find('iframe:eq(0)').width(700).height('35em');} }, 
+    onClose: function(){ if(inframe){ $(window.parent.document).find('iframe:eq(0)').width('100%').height('5em');} }
+    });
+});
 </script>
 <!-- END Date Picker Functions -->
 
 <!-- BEGIN Time Picker Functions -->
 <script type="text/javascript">
 $(document).ready(function(){
+    var dedup = <?php echo ($_SESSION['DEDUP'])?>; 
+    if (dedup == "1") {
         $("#fo_time_start, #fo_time_end").timePicker();
         // Store time used by duration.
         var oldTime = $.timePicker("#fo_time_start").getTime();
@@ -664,6 +674,7 @@ $(document).ready(function(){
         $("#fo_time_end").focus(function() {
             $(this).removeClass("watermark");
             });
+    };
         });
 $(document).ready(function(){
         $("#lo_time_start, #lo_time_end").timePicker();

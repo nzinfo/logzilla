@@ -18,7 +18,7 @@ require_once ($basePath . "/../common_funcs.php");
 if ((has_portlet_access($_SESSION['username'], 'Date and Time') == TRUE) || ($_SESSION['AUTHTYPE'] == "none")) { 
 ?>
 <TABLE WIDTH="100%" BORDER="0">
-    <TR>
+    <TR id="fotr">
         <TD WIDTH="10%">
         <input type="checkbox" name="fo_checkbox" id="fo_checkbox">
         <b>FO</b>
@@ -34,8 +34,8 @@ if ((has_portlet_access($_SESSION['username'], 'Date and Time') == TRUE) || ($_S
             </div>
         </TD>
     </TR>
-<tr>
-    <td width="5%">
+<tr id="trandor">
+    <td id="tdandor" width="5%">
         <select name="date_andor" id="date_andor">
         <option>AND
         <option>OR
@@ -46,9 +46,17 @@ if ((has_portlet_access($_SESSION['username'], 'Date and Time') == TRUE) || ($_S
 </tr>
 
     <TR>
+<?php if ($_SESSION['DEDUP'] == "1") { ?>
         <TD WIDTH="10%">
+            <?php } else {?>
+        <TD WIDTH="25%">
+            <?php } ?>
         <input type="checkbox" name="lo_checkbox" id="lo_checkbox" checked>
+<?php if ($_SESSION['DEDUP'] == "0") { ?>
+        Date/Time
+            <?php } else {?>
         <b>LO</b>
+            <?php } ?>
         </TD>
         <TD WIDTH="90%" COLSPAN="2">
             <div id="lo_date_wrapper">
@@ -63,7 +71,7 @@ if ((has_portlet_access($_SESSION['username'], 'Date and Time') == TRUE) || ($_S
     </TR>
 </TABLE>
 <?php } else { ?>
-<script type="text/javascript">
-$('#portlet_Date_and_Time').remove()
-</script>
+    <script type="text/javascript">
+    $('#portlet_Date_and_Time').remove()
+    </script>
 <?php } ?>

@@ -101,7 +101,9 @@ if ($_SESSION['SHOWCOUNTS'] == "1") {
         <option value="facility">Facility</option>
         <option value="severity">Severity</option>
         <option value="msg">Message</option>
+        <?php if ($_SESSION['DEDUP'] == "1") { ?>
         <option value="fo">First Occurrence</option>
+        <?php } ?>
         <option value="lo" selected>Last Occurrence</option>
         </select>
         </td>
