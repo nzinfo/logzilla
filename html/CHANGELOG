@@ -1,6 +1,10 @@
 CHANGELOG
 
-3.1.0 - bugfix
+3.1.01 - minor
+CD:
+ - Removed "First Occurrence" references when deduplication is not enabled.
+
+3.1.00 - bugfix
 CD:
  - Small fix for introduced partition bug
 
