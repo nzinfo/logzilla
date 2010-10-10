@@ -1,5 +1,12 @@
 CHANGELOG
 
+3.1.02 - enhancement
+CD:
+ - Added a new setting for using advanced search capabilities. The default is now boolean only. To utilize the more advabced features, simply change the admin>settings option for "SPX_ADV" to 1 (enabled).
+ - DB Changes:
+   - settings table changed
+   - help table changed
+
 3.1.01 - minor
 CD:
  - Removed "First Occurrence" references when deduplication is not enabled.
