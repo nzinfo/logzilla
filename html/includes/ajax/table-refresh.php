@@ -68,6 +68,8 @@ if ($fo_checkbox == "on") {
             $where.= " AND fo BETWEEN '$start' AND '$end'";
     }
 }
+/*
+
 // LO
 $start = "";
 $end = "";
@@ -82,6 +84,7 @@ if ($lo_checkbox == "on") {
         $where.= " ".strtoupper($date_andor)." lo BETWEEN '$start' AND '$end'";
     }
 }
+*/
 //------------------------------------------------------------
 // END date/time
 //------------------------------------------------------------

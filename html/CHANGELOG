@@ -1,5 +1,9 @@
 CHANGELOG
 
+3.1.05 - bugfix
+TH:
+ - don´t look at lo while tail (trivial)
+
 3.1.04 - enhancement
 TH:
  - enable show retention variable in the settings table
