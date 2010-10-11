@@ -1,5 +1,10 @@
 CHANGELOG
 
+3.1.03 - bugfix
+TH:
+ - corrected mne and program filter in sph search string
+ - enable show retention variable in the settings table
+
 3.1.02 - enhancement
 CD:
  - Added a new setting for using advanced search capabilities. The default is now boolean only. To utilize the more advabced features, simply change the admin>settings option for "SPX_ADV" to 1 (enabled).
