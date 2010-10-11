@@ -1,9 +1,12 @@
 CHANGELOG
 
+3.1.04 - enhancement
+TH:
+ - enable show retention variable in the settings table
+
 3.1.03 - bugfix
 TH:
  - corrected mne and program filter in sph search string
- - enable show retention variable in the settings table
 
 3.1.02 - enhancement
 CD:
