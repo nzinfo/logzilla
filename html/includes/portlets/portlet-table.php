@@ -29,7 +29,7 @@ $start_time = microtime(true);
 $today = date("Y-m-d");
 //construct where clause 
 $where = "WHERE 1=1";
-$msg_mask = '';
+$sph_msg_mask = '';
 $total = 'unknown';
 $qstring = '';
 $page = get_input('page');
@@ -120,34 +120,34 @@ if ($hosts) {
     $pieces = explode(",", $hosts);
 
     $where .= " AND host IN (";
-    $msg_mask .= "@host ";
+    $sph_msg_mask .= "@host ";
     foreach ($pieces as $mask) {
         $where.= "'$mask',";  
-        $msg_mask .= "$mask|";
+        $sph_msg_mask .= "$mask|";
     }
     $where = rtrim($where, ",");
-    $msg_mask = rtrim($msg_mask, "|");
+    $sph_msg_mask = rtrim($sph_msg_mask, "|");
     $where .= ")";
-    $msg_mask .= " ";
+    $sph_msg_mask .= " ";
 }
 // portlet-programs
 $programs = get_input('programs');
 if ($programs) {
     $where .= " AND program IN (";
-    $msg_mask .= " @program ";
+    $sph_msg_mask .= " @program ";
     
     foreach ($programs as $program) {
         if (!preg_match("/^\d+/m", $program)) {
             $program = prg2crc($program);
         }
             $where.= "'$program',";
-            $msg_mask .= "$program|";
+            $sph_msg_mask .= "$program|";
         $qstring .= "&programs[]=$program";
     }
     $where = rtrim($where, ",");
-    $msg_mask = rtrim($msg_mask, "|");
+    $sph_msg_mask = rtrim($sph_msg_mask, "|");
     $where .= ")";
-    $msg_mask .= " ";
+    $sph_msg_mask .= " ";
 }
 
 // portlet-severities
@@ -183,19 +183,19 @@ if ($facilities) {
 $mnemonics = get_input('mnemonics');
 if ($mnemonics) {
     $where .= " AND mne IN (";
-    $msg_mask .= " @mne ";
+    $sph_msg_mask .= " @mne ";
     foreach ($mnemonics as $mnemonic) {
         if (!preg_match("/^\d+/m", $mnemonic)) {
             $mnemonic = mne2crc($mnemonic);
         }
         $where.= "'$mnemonic',";
-         $msg_mask .= "$mnemonic|";
+         $sph_msg_mask .= "$mnemonic|";
         $qstring .= "&mnemonics[]=$mnemonic";
     }
     $where = rtrim($where, ",");
-    $msg_mask = rtrim($msg_mask, "|");
+    $sph_msg_mask = rtrim($sph_msg_mask, "|");
     $where .= ")";
-    $msg_mask .= " ";    
+    $sph_msg_mask .= " ";    
 }
 
 
@@ -208,10 +208,6 @@ $msg_mask_get = get_input('msg_mask');
 $msg_mask_get = preg_replace ('/^Search through .*\sMessages/m', '', $msg_mask_get);
 $msg_mask_oper = get_input('msg_mask_oper');
 $qstring .= "&msg_mask=$msg_mask_get&msg_mask_oper=$msg_mask_oper";
-if($msg_mask_get !== '') {
-	$msg_mask .= " @MSG $msg_mask_get";
-	}
-
 
 $orderby = get_input('orderby');
 $qstring .= "&orderby=$orderby";
@@ -259,12 +255,19 @@ if (($dupop) && ($dupop != 'undefined')) {
 }
     
 if ($_SESSION['SPX_ENABLE'] == "1") {
-#        $msg_mask = mysql_real_escape_string($msg_mask);
         $qtype = get_input('q_type');
         //---------------BEGIN SPHINX
         require_once ($basePath . "/../SPHINX.class.php");
         $index = "idx_logs idx_delta_logs";
         $cl = new SphinxClient ();
+	
+	if($msg_mask_get !== '') {
+        $escaped = $cl->EscapeString ("$msg_mask_get");
+        $escaped = str_replace("@","\@",$escaped);
+        $msg_mask = "$sph_msg_mask @MSG $escaped";
+        }
+                else $msg_mask = "$sph_msg_mask";
+
         $hostip = $_SESSION['SPX_SRV'];
         $port = intval($_SESSION['SPX_PORT']);
         $cl->SetServer ( $hostip, $port );
@@ -310,11 +313,8 @@ if ($_SESSION['SPX_ENABLE'] == "1") {
         $cl->SetFilterRange ( 'counter', intval($filter_dup_min), intval($filter_dup_max) );
 
         $cl->SetLimits(0, intval($_SESSION['SPX_MAX_MATCHES']));
-        		
-	$escaped = $cl->EscapeString ( $msg_mask );
-	$escaped = str_replace("\\@","@",$escaped);
-        
-	$sphinx_results = $cl->Query ($escaped, $index);
+
+	$sphinx_results = $cl->Query ($msg_mask, $index);
      
 	$total = $sphinx_results['total_found'];
 	
@@ -342,7 +342,7 @@ if ($_SESSION['SPX_ENABLE'] == "1") {
         }
         //---------------END SPHINX
     } else {
-        $msg_mask = mysql_real_escape_string($msg_mask);
+        $msg_mask = mysql_real_escape_string($msg_mask_get);
         switch ($msg_mask_oper) {
             case "=":
                 $where.= " AND msg='$msg_mask'";  
