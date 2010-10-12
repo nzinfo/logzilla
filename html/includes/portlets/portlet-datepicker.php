@@ -54,6 +54,7 @@ if ((has_portlet_access($_SESSION['username'], 'Date and Time') == TRUE) || ($_S
         <input type="checkbox" name="lo_checkbox" id="lo_checkbox" checked>
 <?php if ($_SESSION['DEDUP'] == "0") { ?>
         Date/Time
+        <input type="hidden" name="lo_checkbox" value="on">
             <?php } else {?>
         <b>LO</b>
             <?php } ?>
