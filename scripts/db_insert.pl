@@ -366,9 +366,11 @@ while (my $msg = <STDIN>) {
             # cdukes: Added to catch errors on missing partitions
             # This will auto-create a new partition if it is missing.
             if ($dbh->errstr() =~ /Table has no partition for value (\d+)/) {
+                print STDOUT "FATAL: Unable to create partition: ", $dbh->errstr(), "\n" if ($debug > 0);
                 makepart($1);
+            } else {
+                print STDOUT "FATAL: Unable to execute SQL statement: ", $dbh->errstr(), "\n" if ($debug > 0);
             }
-            print STDOUT "FATAL: Unable to execute SQL statement: ", $dbh->errstr(), "\n" if ($debug > 0);
         }
         print LOG "Ending insert: " . strftime("%H:%M:%S", localtime) ."\n" if ($debug > 0);
         print STDOUT "Ending insert: " . strftime("%H:%M:%S", localtime) ."\n" if (($debug > 0) and ($verbose));

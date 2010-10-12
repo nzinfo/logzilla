@@ -39,7 +39,7 @@ sub p {
 }
 
 my $version = "3.0";
-my $subversion = ".106";
+my $subversion = ".107";
 
 # Grab the base path
 my $lzbase = getcwd;
@@ -415,6 +415,15 @@ if ($ok =~ /[Yy]/) {
         ") or die "Could not create partition events: $DBI::errstr";
     $sth->execute;
 
+    # CDUKES: [[ticket:17]]
+    my $event = qq{
+    CREATE EVENT cacheUpdate ON SCHEDULE EVERY 1 DAY STARTS '$dateTomorrow 01:00:00' ON COMPLETION NOT PRESERVE ENABLE DO CALL updateCache();
+    };
+    my $sth = $dbh->prepare("
+        $event
+        ") or die "Could not create event: cacheUpdate: $DBI::errstr";
+    $sth->execute;
+
     #my $event = qq{
     #CREATE PROCEDURE logs_add_part_proc()
     #SQL SECURITY DEFINER
@@ -477,6 +486,19 @@ if ($ok =~ /[Yy]/) {
         ") or die "Could not create partition events: $DBI::errstr";
     $sth->execute;
 
+    # CDUKES: [[ticket:17]]
+    my $event = qq{
+    CREATE PROCEDURE updateCache()
+    SQL SECURITY DEFINER
+    COMMENT 'Verifies cache totals every night' 
+    BEGIN    
+    REPLACE INTO cache (name,value,updatetime) VALUES ('msg_sum', (SELECT SUM(counter) FROM `$dbtable`),NOW());
+    END 
+    };
+    my $sth = $dbh->prepare("
+        $event
+        ") or die "Could not create updateCache Procedure: $DBI::errstr";
+    $sth->execute;
 
 # Turn the event scheduler on
 
@@ -487,18 +509,26 @@ if ($ok =~ /[Yy]/) {
 
 
 # Grant access to $dbadmin
-    my $grant = qq{GRANT ALL PRIVILEGES ON $dbname.* TO '$dbadmin'\@'$dbhost' IDENTIFIED BY '$dbadminpw';};
+    my $grant = qq{GRANT ALL PRIVILEGES ON $dbname.* TO '$dbadmin'\@'%' IDENTIFIED BY '$dbadminpw';};
     my $sth = $dbh->prepare("
         $grant
         ") or die "Could not create $dbadmin user on $dbname: $DBI::errstr";
     $sth->execute;
-    if ($dbhost == "127.0.0.1") {
-        my $grant = qq{GRANT ALL PRIVILEGES ON $dbname.* TO '$dbadmin'\@'localhost' IDENTIFIED BY '$dbadminpw';};
-        my $sth = $dbh->prepare("
-            $grant
-            ") or die "Could not create $dbadmin user on $dbname: $DBI::errstr";
-        $sth->execute;
-    }
+
+    # CDUKES: [[ticket:16]]
+    my $grant = qq{GRANT FILE ON $dbname.* TO '$dbadmin'\@'%' IDENTIFIED BY '$dbadminpw';};
+    my $sth = $dbh->prepare("
+        $grant
+        ") or die "Could not create $dbadmin user on $dbname: $DBI::errstr";
+    $sth->execute;
+    # CDUKES: Changed above to %, so below should not be necessary
+    #if ($dbhost == "127.0.0.1") {
+    #my $grant = qq{GRANT ALL PRIVILEGES ON $dbname.* TO '$dbadmin'\@'localhost' IDENTIFIED BY '$dbadminpw';};
+    #my $sth = $dbh->prepare("
+    #$grant
+    #") or die "Could not create $dbadmin user on $dbname: $DBI::errstr";
+    #$sth->execute;
+    #}
 
 
     $dbh->disconnect();
