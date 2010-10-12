@@ -1,5 +1,10 @@
 CHANGELOG
 
+3.0.107 - enhancements/fixes
+CD:
+ - Added MySQL event to verify cache counters nightly (at 1:00am by default).
+ - Fix for permission issue on new auto-create partition function
+
 3.0.106 - bugfix
 CD:
  - Add input type=hidden for LO in datepicker when deduplication is off
