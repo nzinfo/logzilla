@@ -263,7 +263,7 @@ if ($_SESSION['SPX_ENABLE'] == "1") {
 	
 	if($msg_mask_get !== '') {
         $escaped = $cl->EscapeString ("$msg_mask_get");
-        $escaped = str_replace("@","\@",$escaped);
+//      $escaped = str_replace("@","\@",$escaped);
         $msg_mask = "$sph_msg_mask @MSG $escaped";
         }
                 else $msg_mask = "$sph_msg_mask";

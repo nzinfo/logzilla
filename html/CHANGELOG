@@ -1,5 +1,9 @@
 CHANGELOG
 
+3.0.109 - fixes
+TH:
+ - another sphinx search fix (searches with '@')
+
 3.0.108 - fixes
 CD:
  - load infile permission fix
