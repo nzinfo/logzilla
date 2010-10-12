@@ -1,5 +1,9 @@
 CHANGELOG
 
+3.0.108 - fixes
+CD:
+ - load infile permission fix
+
 3.0.107 - enhancements/fixes
 CD:
  - Added MySQL event to verify cache counters nightly (at 1:00am by default).
