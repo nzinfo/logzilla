@@ -50,6 +50,7 @@
 # 2010-08-20 - New regex for Cisco Mnemonics
 # 2010-10-04 - Changed temp file storage from /dev/shm to /tmp to support more OS's
 # 2010-10-04 - Removed LOCAL command from LOAD DATA
+# 2010-10-13 - Bug found during deduplication procedure.
 #
 
 
@@ -164,9 +165,9 @@ if ($DEBUG > "0") {
 
 # Initialize some vars for later use
 my $insert = 1;
-my ($distance,$datetime_now,$datetime_past,$fo);
+my ($distance,$datetime_now,$datetime_past,$fo, $update_id, $numrows);
 my (@rows, @fos, @inserts);
-my $counter = 1;
+my $counter;
 my $datetime = strftime("%Y-%m-%d %H:%M:%S", localtime);
 my $message;
 $logfile = "$log_path/".basename($0, ".pl").".log" if not ($logfile);
@@ -248,7 +249,8 @@ my $start_time = (time);
 my $end_time;
 my $time_limit = ($start_time + $q_time);
 my $mps_timer_start = $start_time;
-my ($do_msg_mps, $mps, $tmp_mps, @mps, $sec);
+my ($do_msg_mps, $tmp_mps, @mps, $sec);
+my $mps = 1;
 my ($mpm, @mpm, $min);
 my ($mph, @mph, $hr);
 my ($mpd, @mpd, $day);
@@ -287,8 +289,9 @@ while (my $msg = <STDIN>) {
         open (DUMP, ">$dumpfile") or die "can't open $dumpfile: $!\n";
         print LOG "EOF - Flushing buffer\n" if ($debug > 0);
         print STDOUT "EOF - Flushing buffer\n" if ($debug > 0);
-        print STDOUT "Importing $#dumparr messages into the database\n" if ($debug > 0);
-        print LOG "Importing $#dumparr messages into the database\n" if ($debug > 0);
+        my $arrcnt = scalar @dumparr;
+        print STDOUT "Importing $arrcnt messages into the database\n" if ($debug > 0);
+        print LOG "Importing $arrcnt messages into the database\n" if ($debug > 0);
         print DUMP @dumparr;
         undef (@dumparr);
         close (DUMP);
@@ -312,6 +315,17 @@ while (my $msg = <STDIN>) {
         my @mnes = keys %mne_cache;
         foreach my $m (@mnes) {
             $db_insert_mne->execute($m, $mne_cache{$m});
+        }
+        $now = strftime("%Y-%m-%d %H:%M:%S", localtime);
+        $sec = strftime("%S", localtime);
+        $mps = $mps + $do_msg_mps;
+        push(@mps, "chart_mps_$sec,$mps,$now");
+        $db_insert_sum->execute($mps, $now, $mps);
+        foreach my $var (@mps) {
+            if ($var =~ m/(.*),(.*),(.*)/) {
+                $db_insert_mpX->execute("$1", "$2", "$3");
+                print STDOUT "Inserting MPS string: $1, $2, $3\n" if ($debug > 1);
+            }
         }
         %host_cache = ();
         %program_cache = ();
@@ -354,10 +368,11 @@ while (my $msg = <STDIN>) {
             }
         }
         open (DUMP, ">$dumpfile") or die "can't open $dumpfile: $!\n";
+        my $arrcnt = scalar @dumparr;
         print LOG "Starting insert: " . strftime("%H:%M:%S", localtime) ."\n" if ($debug > 0);
         print STDOUT "Starting insert: " . strftime("%H:%M:%S", localtime) ."\n" if (($debug > 0) and ($verbose));
-        print STDOUT "Importing $#dumparr messages into the database\n" if ($debug > 0);
-        print LOG "Importing $#dumparr messages into the database\n" if ($debug > 0);
+        print STDOUT "Importing $arrcnt messages into the database\n" if ($debug > 0);
+        print LOG "Importing $arrcnt messages into the database\n" if ($debug > 0);
         print DUMP @dumparr;
         undef (@dumparr);
         close (DUMP);
@@ -658,55 +673,57 @@ sub do_msg {
             }
         }
         # If rows matched above, we're now going to process them for deduplication
+        $numrows = scalar @rows;
+        $counter = 1;
         my $numrows = scalar @rows;
         if ($numrows > 0) {
+            # Set the first row as the update row and grab info
+            $update_id = $rows[0];
             print LOG "Found $numrows duplicate rows\n" if ($debug > 3);
             print STDOUT "Found $numrows duplicate rows\n" if (($debug > 3) and ($verbose));
             # Next, sort the row id's so that we know the oldest in order to update it later (we only want to update the oldest row and delete the newer ones that are duplicates)
             @rows = sort @rows; 
-            # Set the first row as the update row and grab info
-            my $update_id = $rows[0];
             $db_select_id->execute($update_id);
             while (my $ref = $db_select_id->fetchrow_hashref()) {
                 $fo = $ref->{'fo'};
-                # If FO doesn't exist, then set the current datetime instead.
+                ## If FO doesn't exist, then set the current datetime instead.
                 if (!$fo) { $fo = $datetime_now }
-                push (@fos, $fo);
+                #push (@fos, $fo);
             }
+        }
+        for (my $i=0; $i <= $#rows; $i++) {
             # Next, for each row found, we're going to select it and get some information such as the fo and counter
-            for (my $i=0; $i <= $#rows; $i++) {
-                print LOG "Processing rows:\n\tSource: $rows[0]\n\tCurrent: $rows[$i]\n" if ($debug > 3);
-                print STDOUT "Processing rows:\n\tSource: $rows[0]\n\tCurrent: $rows[$i]\n" if (($debug > 3) and ($verbose));
-                $db_select_id->execute($rows[$i]);
-                while (my $ref = $db_select_id->fetchrow_hashref()) {
-                    print LOG "Counter from DBID $rows[$i] = ".$ref->{'counter'}."\n" if ($debug > 3);
-                    print STDOUT "Counter from DBID $rows[$i] = ".$ref->{'counter'}."\n" if (($debug > 3) and ($verbose));
-                    $counter = ($counter + $ref->{'counter'});
-                    print LOG "New Counter = $counter\n" if ($debug > 3);
-                    print STDOUT "New Counter = $counter\n" if (($debug > 3) and ($verbose));
-                }
-                # Sort the arrays so that we get the first ones
-                @fos = sort @fos; 
-                $fo = $fos[0];
-                # if the row returned is greater than 0 (i.e. not the FIRST record) then delete it as a duplicate.
-                # Skip the first record (which will be the source ID)
-                if ($rows[0] != $rows[$i]) {
-                    print LOG "DELETING DB Record: $rows[$i] which is a duplicate record of $rows[0]\n" if ($debug > 3);
-                    print STDOUT "DELETING DB Record: $rows[$i] which is a duplicate record of $rows[0]\n" if (($debug > 3) and ($verbose));
-                    $db_del->execute($rows[$i]);
-                }
-                # Else, if the row returned is the FIRST record, we need to update it with new counter, fo and lo
-                print LOG "UPDATING DB Record: $update_id with new counter and timestamps\n" if ($debug > 3);
-                print STDOUT "UPDATING DB Record: $update_id with new counter and timestamps\n" if (($debug > 3) and ($verbose));
-                $do_msg_mps++;
-                $db_update->execute($counter,$fo,$datetime_now,$update_id);
+            print LOG "Processing $numrows rows:\n\tSource: $update_id\n\tCurrent: $rows[$i]\n" if ($debug > 3);
+            print STDOUT "Processing $numrows rows:\n\tSource: $update_id\n\tCurrent: $rows[$i]\n" if (($debug > 3) and ($verbose));
+            $db_select_id->{TraceLevel} = 4 if (($debug > 4) and ($verbose));
+            $db_select_id->execute($rows[$i]);
+            while (my $ref = $db_select_id->fetchrow_hashref()) {
+                print LOG "Counter from DBID $rows[$i] = ".$ref->{'counter'}."\n" if ($debug > 3);
+                print STDOUT "Counter from DBID $rows[$i] = ".$ref->{'counter'}."\n" if (($debug > 3) and ($verbose));
+                $counter = ($counter + $ref->{'counter'});
+                print LOG "New Counter = $counter\n" if ($debug > 3);
+                print STDOUT "New Counter = $counter\n" if (($debug > 3) and ($verbose));
             }
+            if ($rows[$i] > 0) {
+                # Todo - check on forking to speed this up?
+                #$dbh->{InactiveDestroy} = 1;
+                #fork and exit;
+                print LOG "DELETING DB Record: $rows[$i] which is a duplicate record of $update_id\n" if ($debug > 3);
+                print STDOUT "DELETING DB Record: $rows[$i] which is a duplicate record of $update_id\n" if (($debug > 3) and ($verbose));
+                $db_del->{TraceLevel} = 4 if (($debug > 4) and ($verbose));
+                $db_del->execute($rows[$i]);
+            }
+            # if the row returned is the FIRST record, we need to update it with new counter, fo and lo
+            print LOG "UPDATING DB Record: $update_id with new counter ($counter) and timestamps\n" if ($debug > 3);
+            print STDOUT "UPDATING DB Record: $update_id with new counter ($counter) and timestamps\n" if (($debug > 3) and ($verbose));
+            $db_update->{TraceLevel} = 4 if (($debug > 4) and ($verbose));
+            $db_update->execute($counter,$fo,$datetime_now,$update_id);
             # Since we've already done an update of the first record, we don't need to insert anything after this
             $insert = 0;
             # reset vars for new loop
             @rows =();
-            @fos = ();
-            $counter = 1;
+            #@fos = ();
+            $do_msg_mps++;
         }
     }
     # Now that the distance test is over we need to insert any new records that either didn't previously exist or because we had the dedup feature disabled
@@ -719,8 +736,8 @@ sub do_msg {
             print STDOUT "Error inserting record $msg\n" if (($debug > 3) and ($verbose)); 
         }
     } else {
-        print LOG "insert = $insert, Skipping insert of this message since it was a duplicate\n" if ($debug > 3);
-        print STDOUT "insert = $insert, Skipping insert of this message since it was a duplicate\n" if (($debug > 3) and ($verbose));
+        print LOG "insert = $insert, Skipping insert of this message since it was a duplicate of database id $update_id\n" if ($debug > 3);
+        print STDOUT "insert = $insert, Skipping insert of this message since it was a duplicate of database id $update_id\n" if (($debug > 3) and ($verbose));
     }
     return $queue;
 }
