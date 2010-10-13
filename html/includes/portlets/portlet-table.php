@@ -97,6 +97,7 @@ if ($lo_checkbox == "on") {
 	$start .= " $lo_time_start"; 
         $end .= " $lo_time_end"; 
 
+	if ($date_andor=='') $date_andor = 'AND';
         $where.= " ".strtoupper($date_andor)." lo BETWEEN '$start' AND '$end'";
         $filter_lo_start = "$start" ;
 	$filter_lo_end = "$end" ;
