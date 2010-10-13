@@ -1,5 +1,10 @@
 CHANGELOG
 
+3.0.111 - fixes
+TH:
+ - date_andor set default AND when not set 
+ - suppression uses view in ad-hoc charts
+
 3.0.110 - Bug
 CD:
  - Counter was off when deduplicating

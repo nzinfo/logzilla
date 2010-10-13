@@ -33,28 +33,7 @@ if ((has_portlet_access($_SESSION['username'], 'Graph Results') == TRUE) || ($_S
 
 $show_suppressed = get_input('show_suppressed');
 $qstring .= "&show_suppressed=$show_suppressed";
-    switch ($show_suppressed) {
-        case "suppressed":
-        $where.= " AND suppress > NOW()";  
-        $where .= " OR host IN (SELECT name from suppress where col='host' AND expire>NOW())";
-        $where .= " OR facility IN (SELECT name from suppress where col='facility' AND expire>NOW())";
-        $where .= " OR severity IN (SELECT name from suppress where col='severity' AND expire>NOW())";
-        $where .= " OR program IN (SELECT name from suppress where col='program' AND expire>NOW())";
-        $where .= " OR msg IN (SELECT name from suppress where col='msg' AND expire>NOW())";
-        $where .= " OR counter IN (SELECT name from suppress where col='counter' AND expire>NOW())";
-        $where .= " OR notes IN (SELECT name from suppress where col='notes' AND expire>NOW())";
-            break;
-        case "unsuppressed":
-        $where.= " AND suppress < NOW()";  
-        $where .= " AND host NOT IN (SELECT name from suppress where col='host' AND expire>NOW())";
-        $where .= " AND facility NOT IN (SELECT name from suppress where col='facility' AND expire>NOW())";
-        $where .= " AND severity NOT IN (SELECT name from suppress where col='severity' AND expire>NOW())";
-        $where .= " AND program NOT IN (SELECT name from suppress where col='program' AND expire>NOW())";
-        $where .= " AND msg NOT IN (SELECT name from suppress where col='msg' AND expire>NOW())";
-        $where .= " AND counter NOT IN (SELECT name from suppress where col='counter' AND expire>NOW())";
-        $where .= " AND notes NOT IN (SELECT name from suppress where col='notes' AND expire>NOW())";
-        break;
-}
+    
     // Special - this gets posted via javascript since it comes from the hosts grid
     // Form code is somewhere near line 843 of js_footer.php
     $hosts = get_input('hosts');
@@ -260,6 +239,7 @@ if ($mnemonics) {
                 $start .= " $lo_time_start"; 
                 $end .= " $lo_time_end"; 
             }
+            if ($date_andor=='') $date_andor = 'AND';
             $where.= " ".strtoupper($date_andor)." lo BETWEEN '$start' AND '$end'";
         }
     }
@@ -358,7 +338,18 @@ if ($mnemonics) {
     }
     $ucTopx = ucfirst($topx);
 
-    $sql = "SELECT id, host, facility, severity, program, msg, mne, fo, lo, SUM(counter) as count FROM ".$_SESSION['TBL_MAIN']." $where $groupby $orderby $order LIMIT $limit";
+
+    switch ($show_suppressed):
+        case "suppressed":
+                $sql = "SELECT id, host, facility, severity, program, msg, mne, fo, lo, SUM(counter) as count FROM ".$_SESSION['TBL_MAIN']."_suppressed $where $groupby $orderby $order LIMIT $limit";
+        break;
+        case "unsuppressed":
+                $sql = "SELECT id, host, facility, severity, program, msg, mne, fo, lo, SUM(counter) as count FROM ".$_SESSION['TBL_MAIN']."_unsuppressed  $where $groupby $orderby $order LIMIT $limit";
+        break;
+        default:
+                $sql = "SELECT id, host, facility, severity, program, msg, mne, fo, lo, SUM(counter) as count FROM ".$_SESSION['TBL_MAIN'] ."  $where $groupby $orderby $order LIMIT $limit";
+    endswitch;
+
     $result = perform_query($sql, $dbLink, "portlet-chart_adhoc");
 
 
