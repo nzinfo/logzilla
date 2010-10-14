@@ -282,7 +282,7 @@ while (my $msg = <STDIN>) {
     # Sleep option is only used for development purposes (it's used to throttle incoming message rates)
     if ($sleep) {
         print STDOUT "Sleeping for $sleep seconds\n";
-        sleep $sleep;
+        select( undef, undef, undef, $sleep );
     }
     push(@dumparr, do_msg($msg));
     if (eof()) { # check for end of last file
@@ -568,6 +568,7 @@ sub do_msg {
         $msg =~ s/\177/ /g; # Fix for NT Events Logs (they send 0x7f with the message)
         if ($msg =~ m/$re_mne/) {
             $mne = $1;
+            $prg = "Cisco Syslog";
         } else {
             $mne = "None";
         }
@@ -663,28 +664,25 @@ sub do_msg {
         # For each of the rows obtained above, calculate the likeness of messages using a distance measurement
         while (my $ref = $db_select->fetchrow_hashref()) {
             $distance = distance($ref->{'msg'},$msg);
-
-            # If the distance between the two messages is less than $dedup_dist then we'll consider it a match and deduplicate the message
-            if ($distance < $dedup_dist ) {
-                # Store the identical record into an array for later processing
-                push(@rows, $ref->{'id'});
-                print LOG "A duplicate message was found with database id: ".$ref->{'id'}." having a distance of $distance\n" if ($debug > 3);
-                print STDOUT "A duplicate message was found with database id: ".$ref->{'id'}." having a distance of $distance\n" if (($debug > 3) and ($verbose));
-            }
+            # If the distance between the two messages is less than $dedup_dist then we'll consider it a match 
+            # Store the identical record into an array for later processing
+            push(@rows, $ref->{'id'});
         }
-        # If rows matched above, we're now going to process them for deduplication
+        # Set the source row and remove it from the array (so it doesn't deduplicate itself)
+        @rows = sort @rows; 
+        $update_id = $rows[0];
+        shift(@rows);
         $numrows = scalar @rows;
+        # If rows matched above, we're now going to process them for deduplication
         $counter = 1;
-        my $numrows = scalar @rows;
         if ($numrows > 0) {
             # Set the first row as the update row and grab info
-            $update_id = $rows[0];
             print LOG "Found $numrows duplicate rows\n" if ($debug > 3);
             print STDOUT "Found $numrows duplicate rows\n" if (($debug > 3) and ($verbose));
             # Next, sort the row id's so that we know the oldest in order to update it later (we only want to update the oldest row and delete the newer ones that are duplicates)
-            @rows = sort @rows; 
             $db_select_id->execute($update_id);
             while (my $ref = $db_select_id->fetchrow_hashref()) {
+                $counter = $ref->{'counter'};
                 $fo = $ref->{'fo'};
                 ## If FO doesn't exist, then set the current datetime instead.
                 if (!$fo) { $fo = $datetime_now }
@@ -704,20 +702,18 @@ sub do_msg {
                 print LOG "New Counter = $counter\n" if ($debug > 3);
                 print STDOUT "New Counter = $counter\n" if (($debug > 3) and ($verbose));
             }
-            if ($rows[$i] > 0) {
-                # Todo - check on forking to speed this up?
-                #$dbh->{InactiveDestroy} = 1;
-                #fork and exit;
-                print LOG "DELETING DB Record: $rows[$i] which is a duplicate record of $update_id\n" if ($debug > 3);
-                print STDOUT "DELETING DB Record: $rows[$i] which is a duplicate record of $update_id\n" if (($debug > 3) and ($verbose));
-                $db_del->{TraceLevel} = 4 if (($debug > 4) and ($verbose));
-                $db_del->execute($rows[$i]);
-            }
             # if the row returned is the FIRST record, we need to update it with new counter, fo and lo
             print LOG "UPDATING DB Record: $update_id with new counter ($counter) and timestamps\n" if ($debug > 3);
             print STDOUT "UPDATING DB Record: $update_id with new counter ($counter) and timestamps\n" if (($debug > 3) and ($verbose));
             $db_update->{TraceLevel} = 4 if (($debug > 4) and ($verbose));
             $db_update->execute($counter,$fo,$datetime_now,$update_id);
+            # Todo - check on forking to speed this up?
+            #$dbh->{InactiveDestroy} = 1;
+            #fork and exit;
+            print LOG "DELETING DB Record: $rows[$i] which is a duplicate record of $update_id\n" if ($debug > 3);
+            print STDOUT "DELETING DB Record: $rows[$i] which is a duplicate record of $update_id\n" if (($debug > 3) and ($verbose));
+            $db_del->{TraceLevel} = 4 if (($debug > 4) and ($verbose));
+            $db_del->execute($rows[$i]);
             # Since we've already done an update of the first record, we don't need to insert anything after this
             $insert = 0;
             # reset vars for new loop

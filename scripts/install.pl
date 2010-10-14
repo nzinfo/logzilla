@@ -39,7 +39,7 @@ sub p {
 }
 
 my $version = "3.0";
-my $subversion = ".111";
+my $subversion = ".112";
 
 # Grab the base path
 my $lzbase = getcwd;
