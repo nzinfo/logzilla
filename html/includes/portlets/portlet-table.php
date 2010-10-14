@@ -289,11 +289,31 @@ if ($_SESSION['SPX_ENABLE'] == "1") {
             $qtype = "boolean";
             $cl->SetMatchMode ( SPH_MATCH_BOOLEAN );
         }
+	switch ($orderby) {
+	    case "id":
+		$sph_sort = "@id";
+            break;
+            case "counter":
+                $sph_sort = "counter";
+            break;
+            case "facility":
+                $sph_sort = "facility";
+            break; 
+            case "severity":
+                $sph_sort = "severity";
+            break;
+            case "fo":
+                $sph_sort = "fo";
+            break;
+            default:
+                $sph_sort = "lo";
+	}
         if ($order == 'DESC') {
-            $cl->SetSortMode(SPH_SORT_ATTR_DESC, "$orderby");
+            $sph_sort .= " DESC";
         } else {
-            $cl->SetSortMode(SPH_SORT_ATTR_ASC, "$orderby");
+            $sph_sort .= " ASC";
         }
+	$cl->SetSortMode ( SPH_SORT_EXTENDED , $sph_sort );
 	if ($severities) {
 	$cl->SetFilter( 'severity', $severities ); }
 	if ($facilities) {

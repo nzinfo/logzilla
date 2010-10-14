@@ -96,11 +96,8 @@ if ($_SESSION['SHOWCOUNTS'] == "1") {
         <select name="orderby" id="orderby">
         <option value="id">Database ID</option>
         <option value="counter">Count</option>
-        <option value="host">Host</option>
-        <option value="program">Program</option>
         <option value="facility">Facility</option>
         <option value="severity">Severity</option>
-        <option value="msg">Message</option>
         <?php if ($_SESSION['DEDUP'] == "1") { ?>
         <option value="fo">First Occurrence</option>
         <?php } ?>
