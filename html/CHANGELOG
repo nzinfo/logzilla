@@ -1,5 +1,11 @@
 CHANGELOG
 
+3.0.112 - updates/fix
+CD:
+ - Set program to "Cisco Syslog" when Mnemonic is detected
+ - Set correct sort order on hosts table (was set to ASC)
+ - fix for dedup bug [[ticket:35]]
+
 3.0.111 - fixes
 TH:
  - date_andor set default AND when not set 
