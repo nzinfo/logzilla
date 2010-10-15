@@ -1,5 +1,9 @@
 CHANGELOG
 
+3.0.116 - Fix
+CD:
+ - #16 Fix for dbadmin grant during install
+
 3.0.115 - updates/prep for 3.1 release
 CD:
  - Moved CHANGELOG to CHANGELOG.detailed and created a summary of changes only to the new CHANGELOG

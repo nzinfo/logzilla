@@ -39,7 +39,7 @@ sub p {
 }
 
 my $version = "3.0";
-my $subversion = ".115";
+my $subversion = ".116";
 
 # Grab the base path
 my $lzbase = getcwd;
@@ -509,14 +509,14 @@ if ($ok =~ /[Yy]/) {
 
 
 # Grant access to $dbadmin
-    my $grant = qq{GRANT ALL PRIVILEGES ON $dbname.* TO '$dbadmin'\@'%' IDENTIFIED BY '$dbadminpw';};
+    my $grant = qq{GRANT ALL PRIVILEGES ON $dbname.* TO '$dbadmin'\@'$dbhost' IDENTIFIED BY '$dbadminpw';};
     my $sth = $dbh->prepare("
         $grant
         ") or die "Could not create $dbadmin user on $dbname: $DBI::errstr";
     $sth->execute;
 
     # CDUKES: [[ticket:16]]
-    my $grant = qq{GRANT FILE ON *.* TO '$dbadmin'\@'%' IDENTIFIED BY '$dbadminpw';};
+    my $grant = qq{GRANT FILE ON *.* TO '$dbadmin'\@'$dbhost' IDENTIFIED BY '$dbadminpw';};
     my $sth = $dbh->prepare("
         $grant
         ") or die "Could not create $dbadmin user on $dbname: $DBI::errstr";
