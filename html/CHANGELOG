@@ -1,5 +1,11 @@
 CHANGELOG
 
+3.0.114 - updates/prep for 3.1 release
+CD:
+ - Removed upgrades/ directory 
+   - upgrades can be done using http://nms.gdd.net/index.php/Upgrade_Procedures_for_Logzilla_3.0#New.2FEasier_upgrade_procedures
+ - Fix for #41 - Wrap long text in the results table so it diesn't scroll off the page.
+
 3.0.113 - fixes
 TH:
  - order now works for offered fields

@@ -612,6 +612,8 @@ endswitch;
             // $msg = preg_replace('/\s:/', ':', $msg);
             $msg = preg_replace('/.*%(\w+-.*\d-\w+)\s?:/', '$1', $msg);
         }
+        # CDUKES: [[ticket:41]] - break long text so it doesn't scroll off the page
+        $msg = wordwrap($msg, 90, "<br />", true);
         if($_SESSION['MSG_EXPLODE'] == "1") {
             $explode_url = "";
             $pieces = explode(" ", $msg);
