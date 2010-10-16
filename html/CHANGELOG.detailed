@@ -1,5 +1,10 @@
 CHANGELOG
 
+3.0.117 - Minor
+CD:
+ - #43: Changed revision to 3.1
+ - Added minor tweaks to the install Q&A
+
 3.0.116 - Fix
 CD:
  - #16 Fix for dbadmin grant during install
