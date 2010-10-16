@@ -38,8 +38,8 @@ sub p {
     return $input ? $input : $default;
 }
 
-my $version = "3.0";
-my $subversion = ".116";
+my $version = "3.1";
+my $subversion = ".117";
 
 # Grab the base path
 my $lzbase = getcwd;
@@ -384,10 +384,10 @@ if ($ok =~ /[Yy]/) {
 
 # Create initial Partition of the $dbtable table
     my $sth = $dbh->prepare("
-    alter table $dbtable PARTITION BY RANGE( TO_DAYS( lo ) ) (
-    PARTITION $pAdd VALUES LESS THAN (to_days('$dateTomorrow'))
-    );
-    ") or die "Could not create partition for the $dbtable table: $DBI::errstr";
+        alter table $dbtable PARTITION BY RANGE( TO_DAYS( lo ) ) (
+        PARTITION $pAdd VALUES LESS THAN (to_days('$dateTomorrow'))
+        );
+        ") or die "Could not create partition for the $dbtable table: $DBI::errstr";
     $sth->execute; 
 
 # Create Partition events
@@ -620,11 +620,12 @@ if ($paths_updated >0) {
         print "You will need to manually copy:\n";
         print "cp contrib/system_configs/logzilla.logrotate /etc/logrotate.d/logzilla\n";
     }
-    my $file  = &p("Where is your syslog-ng.conf file located?", "/etc/syslog-ng/syslog-ng.conf");
-    if (-f "$file") {
-        print "Adding syslog-ng configuration to $file\n";
-        my $ok  = &p("Ok to continue?", "y");
-        if ($ok =~ /[Yy]/) {
+    print "\n\nAdding LogZilla to syslog-ng\n";
+    my $ok  = &p("Ok to continue?", "y");
+    if ($ok =~ /[Yy]/) {
+        my $file  = &p("Where is your syslog-ng.conf file located?", "/etc/syslog-ng/syslog-ng.conf");
+        if (-f "$file") {
+            print "Adding syslog-ng configuration to $file\n";
             # Find syslog-ng.conf source definition
             my (@sources, $source);
             open( NGCONFIG, $file );
@@ -670,10 +671,8 @@ if ($paths_updated >0) {
 } else {
     print "Since you chose not to update paths, you will need to manually merge contrib/system_configs/syslog-ng.conf with your syslog-ng.conf.\n";
 }
-print("\n\033[1m\tLogZilla installation complete...\n\033[0m");
-print("\033[1mNote: you may need to enable the MySQL Event Scheduler in your /etc/my.cnf file.\n\033[0m");
-print("\033[1mPlease visit http://forum.logzilla.info/index.php/topic,71.0.html for more information.\n\033[0m");
-print("\033[1m\nAlso, please visit http://nms.gdd.net/index.php/Install_Guide_for_LogZilla_v3.0#UDP_Buffers to learn how to increase your UDP buffer size (otherwise you may drop messages).\n\033[0m");
-#print("\n\033[1m\tTo Start LogZilla (you'll need to restart syslog-ng also), type:\n\033[0m");
-#print("\033[1m\t/etc/init.d/syslog-ng restart && /etc/init.d/logzilla start\n\033[0m");
-print("\033[1m\nPlease run /etc/init.d/syslog-ng restart\n\033[0m");
+print("\n\033[1m\tLogZilla installation complete!\n\033[0m");
+#print("\033[1mNote: you may need to enable the MySQL Event Scheduler in your /etc/my.cnf file.\n\033[0m");
+#print("\033[1mPlease visit http://forum.logzilla.info/index.php/topic,71.0.html for more information.\n\033[0m");
+#print("\033[1m\nAlso, please visit http://nms.gdd.net/index.php/Install_Guide_for_LogZilla_v3.0#UDP_Buffers to learn how to increase your UDP buffer size (otherwise you may drop messages).\n\033[0m");
+print("\033[1m\n\tPlease be sure to restart syslog-ng..\n\033[0m");
