@@ -1,6 +1,10 @@
 CHANGELOG
 
-3.0.117 - Minor
+3.1.117 - Bugfix
+CD:
+ - #16: Fix for auto-create partition bug when debug not enabled
+
+3.1.117 - Minor
 CD:
  - #43: Changed revision to 3.1
  - Added minor tweaks to the install Q&A

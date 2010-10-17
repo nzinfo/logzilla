@@ -238,10 +238,10 @@ my $db_insert_host = $dbh->prepare("INSERT IGNORE INTO hosts (host) VALUES (?) "
 #my $dumpfile = "/dev/shm/infile.txt";
 my $dumpfile = "/tmp/logzilla_import.txt";
 #my $sql = qq{LOAD DATA LOCAL INFILE '$dumpfile' INTO TABLE logs FIELDS TERMINATED BY "\\t" LINES TERMINATED BY "\\n" (host,facility,severity,program,msg,mne,fo,lo)};
-my $sql = qq{LOAD DATA INFILE '$dumpfile' INTO TABLE logs FIELDS TERMINATED BY "\\t" LINES TERMINATED BY "\\n" (host,facility,severity,program,msg,mne,fo,lo)};
+my $infile_prep = qq{LOAD DATA INFILE '$dumpfile' INTO TABLE logs FIELDS TERMINATED BY "\\t" LINES TERMINATED BY "\\n" (host,facility,severity,program,msg,mne,fo,lo)};
+my $db_load_infile = $dbh->prepare("$infile_prep");
 my $db_insert_mpX = $dbh->prepare("REPLACE INTO cache (name,value,updatetime) VALUES (?,?,?)");
 my $db_insert_sum = $dbh->prepare("INSERT INTO cache (name,value,updatetime) VALUES ('msg_sum',?,?) ON DUPLICATE KEY UPDATE value=value + ?");
-my $db_load = $dbh->prepare("$sql");
 my $queue;
 my @dumparr;
 
@@ -261,7 +261,8 @@ open (DUMP, ">$dumpfile") or die "can't open $dumpfile: $!\n";
 close (DUMP);
 my $mode = 0644;   chmod $mode, "$dumpfile";  
 
-$db_load->{TraceLevel} = 4 if (($debug > 4) and ($verbose));
+$db_load_infile->{TraceLevel} = 4 if (($debug > 4) and ($verbose));
+$dbh->{PrintError} = 1;
 # Pre-populate cache's with db values
 my $prg_select = $dbh->prepare("SELECT * FROM programs");
 $prg_select->execute();
@@ -295,13 +296,18 @@ while (my $msg = <STDIN>) {
         print DUMP @dumparr;
         undef (@dumparr);
         close (DUMP);
-        $db_load->execute();
-        if ($db_load->errstr()) {
-            if ($dbh->errstr() =~ /Table has no partition for value (\d+)/) {
+        $dbh->{RaiseError} = 1;
+        $db_load_infile->execute();
+        if ($db_load_infile->errstr()) {
+            # cdukes: Added to catch errors on missing partitions
+            # This will auto-create a new partition if it is missing.
+            if ($db_load_infile->errstr() =~ /Table has no partition for value (\d+)/) {
+                print STDOUT "Auto-creating missing partiton\n";
+                print LOG "Auto-creating missing partiton\n";
                 makepart($1);
-                $db_load->execute();
+            } else {
+                print STDOUT "FATAL: Unable to execute SQL statement: ", $db_load_infile->errstr(), "\n" if ($debug > 0);
             }
-            print STDOUT "FATAL: Unable to execute SQL statement: ", $db_load->errstr(), "\n" if ($debug > 0);
         }
         # 2010-08-29: Added to insert cached hosts, progs and mnes upon exit
         my @hosts = keys %host_cache;
@@ -376,15 +382,17 @@ while (my $msg = <STDIN>) {
         print DUMP @dumparr;
         undef (@dumparr);
         close (DUMP);
-        $db_load->execute();
-        if ($dbh->errstr()) {
+        $dbh->{RaiseError} = 1;
+        $db_load_infile->execute();
+        if ($db_load_infile->errstr()) {
             # cdukes: Added to catch errors on missing partitions
             # This will auto-create a new partition if it is missing.
-            if ($dbh->errstr() =~ /Table has no partition for value (\d+)/) {
-                print STDOUT "FATAL: Unable to create partition: ", $dbh->errstr(), "\n" if ($debug > 0);
+            if ($db_load_infile->errstr() =~ /Table has no partition for value (\d+)/) {
+                print STDOUT "Auto-creating missing partiton\n";
+                print LOG "Auto-creating missing partiton\n";
                 makepart($1);
             } else {
-                print STDOUT "FATAL: Unable to execute SQL statement: ", $dbh->errstr(), "\n" if ($debug > 0);
+                print STDOUT "FATAL: Unable to execute SQL statement: ", $db_load_infile->errstr(), "\n" if ($debug > 0);
             }
         }
         print LOG "Ending insert: " . strftime("%H:%M:%S", localtime) ."\n" if ($debug > 0);
