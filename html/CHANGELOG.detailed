@@ -1,6 +1,11 @@
 CHANGELOG
 
-3.1.117 - Bugfix
+3.1.119 - Bugfix
+CD:
+ - #16: Another fix for auto-create partition bug when debug not enabled
+        Bug only occurs during normal operation, worked during testing because we were using the console to generate.
+
+3.1.118 - Bugfix
 CD:
  - #16: Fix for auto-create partition bug when debug not enabled
 

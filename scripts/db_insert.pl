@@ -262,6 +262,7 @@ close (DUMP);
 my $mode = 0644;   chmod $mode, "$dumpfile";  
 
 $db_load_infile->{TraceLevel} = 4 if (($debug > 4) and ($verbose));
+$dbh->{RaiseError} = 1;
 $dbh->{PrintError} = 1;
 # Pre-populate cache's with db values
 my $prg_select = $dbh->prepare("SELECT * FROM programs");
@@ -296,17 +297,16 @@ while (my $msg = <STDIN>) {
         print DUMP @dumparr;
         undef (@dumparr);
         close (DUMP);
-        $dbh->{RaiseError} = 1;
         $db_load_infile->execute();
-        if ($db_load_infile->errstr()) {
+        if ($dbh->errstr()) {
             # cdukes: Added to catch errors on missing partitions
             # This will auto-create a new partition if it is missing.
-            if ($db_load_infile->errstr() =~ /Table has no partition for value (\d+)/) {
+            if ($dbh->errstr() =~ /Table has no partition for value (\d+)/) {
                 print STDOUT "Auto-creating missing partiton\n";
                 print LOG "Auto-creating missing partiton\n";
                 makepart($1);
             } else {
-                print STDOUT "FATAL: Unable to execute SQL statement: ", $db_load_infile->errstr(), "\n" if ($debug > 0);
+                print STDOUT "FATAL: Unable to execute SQL statement: ", $dbh->errstr(), "\n";
             }
         }
         # 2010-08-29: Added to insert cached hosts, progs and mnes upon exit
@@ -382,17 +382,16 @@ while (my $msg = <STDIN>) {
         print DUMP @dumparr;
         undef (@dumparr);
         close (DUMP);
-        $dbh->{RaiseError} = 1;
         $db_load_infile->execute();
-        if ($db_load_infile->errstr()) {
+        if ($dbh->errstr()) {
             # cdukes: Added to catch errors on missing partitions
             # This will auto-create a new partition if it is missing.
-            if ($db_load_infile->errstr() =~ /Table has no partition for value (\d+)/) {
+            if ($dbh->errstr() =~ /Table has no partition for value (\d+)/) {
                 print STDOUT "Auto-creating missing partiton\n";
                 print LOG "Auto-creating missing partiton\n";
                 makepart($1);
             } else {
-                print STDOUT "FATAL: Unable to execute SQL statement: ", $db_load_infile->errstr(), "\n" if ($debug > 0);
+                print STDOUT "FATAL: Unable to execute SQL statement: ", $dbh->errstr(), "\n";
             }
         }
         print LOG "Ending insert: " . strftime("%H:%M:%S", localtime) ."\n" if ($debug > 0);

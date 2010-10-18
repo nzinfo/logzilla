@@ -39,7 +39,7 @@ sub p {
 }
 
 my $version = "3.1";
-my $subversion = ".118";
+my $subversion = ".119";
 
 # Grab the base path
 my $lzbase = getcwd;
@@ -507,6 +507,18 @@ if ($ok =~ /[Yy]/) {
         ") or die "Could not enable the Global event scheduler: $DBI::errstr";
     $sth->execute;
 
+    # Remove old user in case this is an upgrade
+    # Have to do this for the new LOAD DATA INFILE
+    my $grant = qq{GRANT USAGE ON *.* TO '$dbadmin'\@'$dbhost';};
+    my $sth = $dbh->prepare("
+        $grant
+        ") or die "Could not temporarily drop the $dbadmin user on $dbname: $DBI::errstr";
+    $sth->execute;
+    my $grant = qq{DROP USER '$dbadmin'\@'$dbhost';};
+    my $sth = $dbh->prepare("
+        $grant
+        ") or die "Could not temporarily drop the $dbadmin user on $dbname: $DBI::errstr";
+    $sth->execute;
 
 # Grant access to $dbadmin
     my $grant = qq{GRANT ALL PRIVILEGES ON $dbname.* TO '$dbadmin'\@'$dbhost' IDENTIFIED BY '$dbadminpw';};
@@ -521,15 +533,6 @@ if ($ok =~ /[Yy]/) {
         $grant
         ") or die "Could not create $dbadmin user on $dbname: $DBI::errstr";
     $sth->execute;
-    # CDUKES: Changed above to %, so below should not be necessary
-    #if ($dbhost == "127.0.0.1") {
-    #my $grant = qq{GRANT ALL PRIVILEGES ON $dbname.* TO '$dbadmin'\@'localhost' IDENTIFIED BY '$dbadminpw';};
-    #my $sth = $dbh->prepare("
-    #$grant
-    #") or die "Could not create $dbadmin user on $dbname: $DBI::errstr";
-    #$sth->execute;
-    #}
-
 
     $dbh->disconnect();
 } else {
