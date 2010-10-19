@@ -298,15 +298,13 @@ while (my $msg = <STDIN>) {
         undef (@dumparr);
         close (DUMP);
         $db_load_infile->execute();
-        if ($dbh->errstr()) {
+        if ($db_load_infile->errstr()) {
             # cdukes: Added to catch errors on missing partitions
             # This will auto-create a new partition if it is missing.
-            if ($dbh->errstr() =~ /Table has no partition for value (\d+)/) {
-                print STDOUT "Auto-creating missing partiton\n";
-                print LOG "Auto-creating missing partiton\n";
+            if ($db_load_infile->errstr() =~ /Table has no partition for value (\d+)/) {
                 makepart($1);
             } else {
-                print STDOUT "FATAL: Unable to execute SQL statement: ", $dbh->errstr(), "\n";
+                print STDOUT "FATAL: Unable to execute SQL statement: ", $db_load_infile->errstr(), "\n";
             }
         }
         # 2010-08-29: Added to insert cached hosts, progs and mnes upon exit
@@ -383,15 +381,13 @@ while (my $msg = <STDIN>) {
         undef (@dumparr);
         close (DUMP);
         $db_load_infile->execute();
-        if ($dbh->errstr()) {
+        if ($db_load_infile->errstr()) {
             # cdukes: Added to catch errors on missing partitions
             # This will auto-create a new partition if it is missing.
-            if ($dbh->errstr() =~ /Table has no partition for value (\d+)/) {
-                print STDOUT "Auto-creating missing partiton\n";
-                print LOG "Auto-creating missing partiton\n";
+            if ($db_load_infile->errstr() =~ /Table has no partition for value (\d+)/) {
                 makepart($1);
             } else {
-                print STDOUT "FATAL: Unable to execute SQL statement: ", $dbh->errstr(), "\n";
+                print STDOUT "FATAL: Unable to execute SQL statement: ", $db_load_infile->errstr(), "\n";
             }
         }
         print LOG "Ending insert: " . strftime("%H:%M:%S", localtime) ."\n" if ($debug > 0);
@@ -490,14 +486,12 @@ sub makepart {
     my ($year,$mon,$mday) = Date::Calc::Add_Delta_Days($curyear,$curmon,$curmday,1);
     my $pAdd = "p".$year.sprintf("%02d",$mon).sprintf("%02d",$mday);
     my $dateTomorrow = $year."-".sprintf("%02d",$mon)."-".sprintf("%02d",$mday);
-    print STDOUT "\n\n\n\n\n\n\n\n\n\n\nERROR: MISSING PARTITION VALUE FOR $tday\nAuto-creating Partition for $dateTomorrow\n" if ($debug > 0);
-    print LOG "\nERROR: MISSING PARTITION VALUE FOR $tday\nAuto-creating NEW Partition for $dateTomorrow\n";
-
-    # Create initial Partition of the $dbtable table
     my $sth = $dbh->prepare("
         ALTER TABLE $dbtable ADD PARTITION (PARTITION $pAdd VALUES LESS THAN (to_days('$dateTomorrow')))
         ");
     $sth->execute; 
+    print STDOUT "Auto-creating missing partition for $dateTomorrow\n";
+    print LOG "Auto-creating missing partition for $dateTomorrow\n";
 }
 sub do_msg {
     $msg = shift;
