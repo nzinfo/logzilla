@@ -39,7 +39,7 @@ sub p {
 }
 
 my $version = "3.1";
-my $subversion = ".120";
+my $subversion = ".121";
 
 # Grab the base path
 my $lzbase = getcwd;
@@ -521,17 +521,32 @@ if ($ok =~ /[Yy]/) {
     $sth->execute;
 
 # Grant access to $dbadmin
-    my $grant = qq{GRANT ALL PRIVILEGES ON $dbname.* TO '$dbadmin'\@'$dbhost' IDENTIFIED BY '$dbadminpw';};
+# TH: everything simple and stupid :-)
+    my $create = qq{create user '$dbadmin'\@'$dbhost' IDENTIFIED BY '$dbadminpw';};
     my $sth = $dbh->prepare("
-        $grant
+        $create
         ") or die "Could not create $dbadmin user on $dbname: $DBI::errstr";
     $sth->execute;
 
-    # CDUKES: [[ticket:16]]
-    my $grant = qq{GRANT FILE ON *.* TO '$dbadmin'\@'$dbhost' IDENTIFIED BY '$dbadminpw';};
+
+    my $grant = qq{GRANT ALL PRIVILEGES ON $dbname.* TO '$dbadmin'\@'$dbhost';};
     my $sth = $dbh->prepare("
         $grant
-        ") or die "Could not create $dbadmin user on $dbname: $DBI::errstr";
+        ") or die "Could not grant $dbadmin ALL PRIVILEGES $dbname: $DBI::errstr";
+    $sth->execute;
+
+    # CDUKES: [[ticket:16]]
+    my $grant = qq{GRANT FILE ON *.* TO '$dbadmin'\@'$dbhost';};
+    my $sth = $dbh->prepare("
+        $grant
+        ") or die "Could not grant $dbadmin FILE on $dbname: $DBI::errstr";
+    $sth->execute;
+
+    # THOMAS HONZIK: [[ticket:16]]
+    my $flush = qq{FLUSH PRIVILEGES;};
+    my $sth = $dbh->prepare("
+        $flush
+        ") or die "Could not FLUSH PRIVILEGES: $DBI::errstr";
     $sth->execute;
 
     $dbh->disconnect();
