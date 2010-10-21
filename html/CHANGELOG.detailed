@@ -1,5 +1,10 @@
 CHANGELOG
 
+3.1.122 - DB User
+CD:
+ - #16: added test for existing syslogadmin
+
+
 3.1.120 - Bugfix
 CD:
  - #16: Another attempt to auto-create partition bug when debug not enabled
