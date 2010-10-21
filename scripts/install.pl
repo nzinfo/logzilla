@@ -39,7 +39,7 @@ sub p {
 }
 
 my $version = "3.1";
-my $subversion = ".121";
+my $subversion = ".122";
 
 # Grab the base path
 my $lzbase = getcwd;
@@ -507,6 +507,8 @@ if ($ok =~ /[Yy]/) {
         ") or die "Could not enable the Global event scheduler: $DBI::errstr";
     $sth->execute;
 
+
+    # DB User
     # Remove old user in case this is an upgrade
     # Have to do this for the new LOAD DATA INFILE
     my $grant = qq{GRANT USAGE ON *.* TO '$dbadmin'\@'$dbhost';};
@@ -521,25 +523,46 @@ if ($ok =~ /[Yy]/) {
     $sth->execute;
 
 # Grant access to $dbadmin
-# TH: everything simple and stupid :-)
-    my $create = qq{create user '$dbadmin'\@'$dbhost' IDENTIFIED BY '$dbadminpw';};
+    my $grant = qq{GRANT ALL PRIVILEGES ON $dbname.* TO '$dbadmin'\@'$dbhost' IDENTIFIED BY '$dbadminpw';};
     my $sth = $dbh->prepare("
-        $create
+        $grant
+        ") or die "Could not create $dbadmin user on $dbname: $DBI::errstr";
+    $sth->execute;
+
+    # CDUKES: [[ticket:16]]
+    my $grant = qq{GRANT FILE ON *.* TO '$dbadmin'\@'$dbhost' IDENTIFIED BY '$dbadminpw';};
+    my $sth = $dbh->prepare("
+        $grant
         ") or die "Could not create $dbadmin user on $dbname: $DBI::errstr";
     $sth->execute;
 
 
-    my $grant = qq{GRANT ALL PRIVILEGES ON $dbname.* TO '$dbadmin'\@'$dbhost';};
+    # Repeat for localhost
+    # Remove old user in case this is an upgrade
+    # Have to do this for the new LOAD DATA INFILE
+    my $grant = qq{GRANT USAGE ON *.* TO '$dbadmin'\@'localhost';};
     my $sth = $dbh->prepare("
         $grant
-        ") or die "Could not grant $dbadmin ALL PRIVILEGES $dbname: $DBI::errstr";
+        ") or die "Could not temporarily drop the $dbadmin user on $dbname: $DBI::errstr";
+    $sth->execute;
+    my $grant = qq{DROP USER '$dbadmin'\@'localhost';};
+    my $sth = $dbh->prepare("
+        $grant
+        ") or die "Could not temporarily drop the $dbadmin user on $dbname: $DBI::errstr";
+    $sth->execute;
+
+# Grant access to $dbadmin
+    my $grant = qq{GRANT ALL PRIVILEGES ON $dbname.* TO '$dbadmin'\@'localhost' IDENTIFIED BY '$dbadminpw';};
+    my $sth = $dbh->prepare("
+        $grant
+        ") or die "Could not create $dbadmin user on $dbname: $DBI::errstr";
     $sth->execute;
 
     # CDUKES: [[ticket:16]]
-    my $grant = qq{GRANT FILE ON *.* TO '$dbadmin'\@'$dbhost';};
+    my $grant = qq{GRANT FILE ON *.* TO '$dbadmin'\@'localhost' IDENTIFIED BY '$dbadminpw';};
     my $sth = $dbh->prepare("
         $grant
-        ") or die "Could not grant $dbadmin FILE on $dbname: $DBI::errstr";
+        ") or die "Could not create $dbadmin user on $dbname: $DBI::errstr";
     $sth->execute;
 
     # THOMAS HONZIK: [[ticket:16]]
