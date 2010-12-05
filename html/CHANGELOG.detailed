@@ -1,9 +1,13 @@
 CHANGELOG
 
+3.1.123 - Event Triggering
+CD:
+ - Initial work on #62 (Event Triggers)
+ - (minor) Modified default settings in settings.sql for some unused LDAP options (defaulted them to hidden)
+
 3.1.122 - DB User
 CD:
  - #16: added test for existing syslogadmin
-
 
 3.1.120 - Bugfix
 CD:

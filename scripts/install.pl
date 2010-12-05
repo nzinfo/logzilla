@@ -39,7 +39,7 @@ sub p {
 }
 
 my $version = "3.1";
-my $subversion = ".122";
+my $subversion = ".123";
 
 # Grab the base path
 my $lzbase = getcwd;
@@ -217,6 +217,11 @@ if ($ok =~ /[Yy]/) {
 # Create archive table
     my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/logs_archive.sql`;
     print $res;
+
+# Create triggers table
+    my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/triggers.sql`;
+    print $res;
+
 
 # Insert settings data
     my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/settings.sql`;
