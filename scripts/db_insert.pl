@@ -51,7 +51,7 @@
 # 2010-10-04 - Changed temp file storage from /dev/shm to /tmp to support more OS's
 # 2010-10-04 - Removed LOCAL command from LOAD DATA
 # 2010-10-13 - Bug found during deduplication procedure.
-#
+# 2010-12-02 - Added Event triggering/email alerts
 
 
 use strict;
@@ -62,6 +62,8 @@ use File::Spec;
 use File::Basename;
 use String::CRC32;
 use Date::Calc;
+use MIME::Lite;
+use Data::Dumper
 
 
 $| = 1;
@@ -280,6 +282,65 @@ $mne_select->execute();
 while (my $ref = $mne_select->fetchrow_hashref()) {
     $mne_cache{$ref->{'name'}} = $ref->{'crc'};
 }
+
+# Begin Alert Triggers
+my ($from, $to, $subj, %trigger_cache);
+my $trigger_select = $dbh->prepare("SELECT * FROM triggers");
+$trigger_select->execute();
+while (my $ref = $trigger_select->fetchrow_hashref()) {
+    $trigger_cache{$ref->{'id'}} = $ref->{'pattern'};
+}
+#while( my ($k, $v) = each %trigger_cache ) {
+#print STDOUT "key: $k, value: $v.\n";
+#}
+sub triggerMail {
+    my $id = shift;
+    my $msg = shift;
+    #$dbh->{TraceLevel} = 4;
+    my ($dbid, $pattern, $to, $from, $subject, $body, $numvars) = $dbh->selectrow_array("SELECT * FROM triggers WHERE id=$id");
+    my ($mailhost, $port, $user, $pass) = $dbh->selectrow_array("
+        SELECT value FROM settings WHERE name like 'MAILHOST%'
+        ");
+    my @vars = ($msg =~ /$pattern/); 
+    foreach my $var (@vars) {
+        $subject =~ s/\{\d+\}/$var/;
+        $body =~ s/\{\d+\}/$var/;
+    }
+    #print STDOUT "Pattern = $pattern\n";
+    #print STDOUT "To = $to\n";
+    #print STDOUT "From = $from\n";
+    #print STDOUT "Subject = $subject\n";
+    #print STDOUT "Body = $body\n";
+    #print STDOUT "Message = $msg\n";
+    my $msg = MIME::Lite->new(
+        From    =>"$from",
+        To      =>"$to",
+        Subject =>"$subject",
+        Type    =>'TEXT',
+        Data    =>"$body"
+    );
+    if ($verbose) {
+        if ($user) {
+            $msg->send('smtp',"$mailhost",
+                AuthUser=>$user, 
+                AuthPass=>$pass,
+                Debug=>1
+            );
+        } else {
+            $msg->send('smtp',"$mailhost", Debug=>1 );
+        }
+    } else {
+        if ($user) {
+            $msg->send('smtp',"$mailhost",
+                AuthUser=>$user, 
+                AuthPass=>$pass
+            );
+        } else {
+            $msg->send('smtp',"$mailhost");
+        }
+    }
+}
+# End Alert Triggers
 while (my $msg = <STDIN>) {
     # Sleep option is only used for development purposes (it's used to throttle incoming message rates)
     if ($sleep) {
@@ -567,6 +628,19 @@ sub do_msg {
         $msg =~ s/\\//; # Some messages come in with a trailing slash
         $msg =~ s/\t/ /g; # remove any TABs (gotta love windows...)
         $msg =~ s/\177/ /g; # Fix for NT Events Logs (they send 0x7f with the message)
+        # Mail Trigger
+        #my @triggers = keys %trigger_cache;
+        #print STDOUT "TRIGGERS:\n@triggers\n";
+        while( my ($key, $value) = each %trigger_cache ) {
+            my $id = $key;
+            my $re = qr/$value/;
+            #print STDOUT "Looking for Pattern: \"$value\" in message \"$msg\"\n";
+            if ($msg =~ /$re/) {
+                #print STDOUT "FOUND PATTERN:\n$value\nIn message:\n$msg\n";
+                &triggerMail($id, $msg);
+            }
+        }
+        exit;
         if ($msg =~ m/$re_mne/) {
             $mne = $1;
             $prg = "Cisco Syslog";
