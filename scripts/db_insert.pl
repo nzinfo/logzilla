@@ -640,7 +640,6 @@ sub do_msg {
                 &triggerMail($id, $msg);
             }
         }
-        exit;
         if ($msg =~ m/$re_mne/) {
             $mne = $1;
             $prg = "Cisco Syslog";

@@ -1,5 +1,10 @@
 CHANGELOG
 
+3.1.126 - Bugfix: bugs in install.pl and db_insert.pl
+TH:
+ - was too fast for the 125
+ - also fixed the db_insert.pl bug (removed the extra "exit;") 
+
 3.1.125 - Enhancment: Prototype of arhive tool
 TH:
  - first archive Prototype; it export automaticly and bz2 it

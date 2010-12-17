@@ -39,7 +39,7 @@ sub p {
 }
 
 my $version = "3.1";
-my $subversion = ".125";
+my $subversion = ".126";
 
 # Grab the base path
 my $lzbase = getcwd;
@@ -507,11 +507,15 @@ if ($ok =~ /[Yy]/) {
 
     # TH: adding export procedure (a fragment)
     my $event = qq{
-        DECLARE export CHAR(32) DEFAULT CONCAT ('dumpfile_', DATE_FORMAT(CURDATE()-1, '%Y%m%d'),'.txt');
+        CREATE PROCEDURE export()
+	SQL SECURITY DEFINER
+        COMMENT 'Export yesterdays data to a file'
+        BEGIN
+	DECLARE export CHAR(32) DEFAULT CONCAT ('dumpfile_', DATE_FORMAT(CURDATE()-1, '%Y%m%d'),'.txt');
         DECLARE max_day INTEGER DEFAULT TO_DAYS(NOW()) +1;
-        SET @s = 
+        SET \@s = 
              CONCAT('select * into outfile "/var/www/logzilla/exports/',export,'" from logs where TO_DAYS( lo )=',max_day-2);
-             PREPARE stmt FROM @s;
+             PREPARE stmt FROM \@s;
              EXECUTE stmt;
              DEALLOCATE PREPARE stmt;
         END 
@@ -629,6 +633,10 @@ if ($ok =~ /[Yy]/) {
 } else {
     print "Skipped config generation\n";
 }
+
+#Modifies the exports dir to he correct user
+   system "chown mysql.mysql ../exports" and warn "Could not modify archive directory";   
+
 
 #Create log files for later use by the server
 my $logfile = "$logpath/logzilla.log";
