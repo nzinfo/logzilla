@@ -39,7 +39,7 @@ sub p {
 }
 
 my $version = "3.1";
-my $subversion = ".123";
+my $subversion = ".125";
 
 # Grab the base path
 my $lzbase = getcwd;
@@ -504,6 +504,23 @@ if ($ok =~ /[Yy]/) {
         $event
         ") or die "Could not create updateCache Procedure: $DBI::errstr";
     $sth->execute;
+
+    # TH: adding export procedure (a fragment)
+    my $event = qq{
+        DECLARE export CHAR(32) DEFAULT CONCAT ('dumpfile_', DATE_FORMAT(CURDATE()-1, '%Y%m%d'),'.txt');
+        DECLARE max_day INTEGER DEFAULT TO_DAYS(NOW()) +1;
+        SET @s = 
+             CONCAT('select * into outfile "/var/www/logzilla/exports/',export,'" from logs where TO_DAYS( lo )=',max_day-2);
+             PREPARE stmt FROM @s;
+             EXECUTE stmt;
+             DEALLOCATE PREPARE stmt;
+        END 
+    };
+    my $sth = $dbh->prepare("
+        $event
+        ") or die "Could not create export Procedure: $DBI::errstr";
+    $sth->execute;
+
 
 # Turn the event scheduler on
 
