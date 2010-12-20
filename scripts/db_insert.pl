@@ -132,7 +132,7 @@ if (!$db){
     print "Error: Unable to read $db config variables from $config\n";
     exit;
 }
-$dbh = DBI->connect( "DBI:mysql:$db:$dbhost", $dbuser, $dbpass );
+$dbh = DBI->connect( "DBI:mysql:$db:$dbhost;mysql_read_default_group=logzilla;", $dbuser, $dbpass );
 if (!$dbh) {
     print LOG "Can't connect to $db database: ", $DBI::errstr, "\n";
     print STDOUT "Can't connect to $db database: ", $DBI::errstr, "\n";
