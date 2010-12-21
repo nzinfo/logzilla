@@ -2,7 +2,6 @@
 
 #
 # install.pl
-# Last updated on 2010-06-15
 #
 # Developed by Clayton Dukes <cdukes@cdukes.com>
 # Copyright (c) 2010 LogZilla, LLC
@@ -12,7 +11,7 @@
 # 2009-11-15 - created
 # 2010-10-10 - Modified to work with LogZilla v3.0
 # 2010-06-07 - Modified partitioning and events
-#
+# 2010-12-20 - Added support for mysql my.cnf file
 
 use strict;
 
@@ -39,7 +38,7 @@ sub p {
 }
 
 my $version = "3.1";
-my $subversion = ".127";
+my $subversion = ".128";
 
 # Grab the base path
 my $lzbase = getcwd;
@@ -52,24 +51,21 @@ print("\n\033[1m========================================\n\n\033[0m\n\n");
 
 my $dbroot = &p("Enter the MySQL root username", "root");
 $dbroot = qq{$dbroot};
-print "\nNote: Mysql passwords with a ' in them may not work\n";
 my $dbrootpass = &p("Enter the password for $dbroot", "mysql");
 $dbrootpass = qq{$dbrootpass};
 my $dbname = &p("Database to install to", "syslog");
-#my $dbtable = &p("Database table to install to", "logs");
 my $dbtable =  "logs";
 my $dbhost  = &p("Enter the name of the MySQL server", "127.0.0.1");
 my $dbport  = &p("Enter the port of the MySQL server", "3306");
 my $dbadmin  = &p("Enter the name to create as the owner of the $dbname database", "syslogadmin");
 $dbadmin = qq{$dbadmin};
-print "Note that a password containing ' may not work.\n";
 my $dbadminpw = &p("Enter the password for the $dbadmin user", "$dbadmin");
 $dbadminpw = qq{$dbadminpw};
 my $siteadmin  = &p("Enter the name to create as the WEBSITE owner", "admin");
 $siteadmin = qq{$siteadmin};
 my $siteadminpw = &p("Enter the password for $siteadmin", "$siteadmin");
 $siteadminpw = qq{$siteadminpw};
-my $email  = &p("Enter your email address", 'cdukes@cdukes.com');
+my $email  = &p("Enter your email address", 'info@logzilla.pro');
 my $sitename  = &p("Enter a name for your website", 'The home of LogZilla');
 my $url  = &p("Enter the base url for your site (include trailing slash)", '/logs/');
 my $logpath  = &p("Where should log files be stored?", '/var/log/logzilla');
@@ -80,6 +76,19 @@ if (! -d "$logpath") {
     mkdir "$logpath";
 }
 
+# Create mysql .cnf file
+if (! -f "$lzbase/scripts/sql/lzmy.cnf") {
+    open(CNF,">$lzbase/scripts/sql/lzmy.cnf") || die("Cannot Open $lzbase/scripts/sql/lzmy.cnf: $!"); 
+    print CNF "[logzilla]\n";
+    print CNF "user = $dbadmin\n";
+    print CNF "password = $dbadminpw\n";
+    print CNF "host = $dbhost\n";
+    print CNF "port = $dbport\n";
+    print CNF "database = $dbname\n";
+    close(CNF); 
+    chmod 0400, "$lzbase/scripts/sql/lzmy.cnf";
+}
+
 print("\n\033[1m\n\n========================================\033[0m\n");
 print("\n\033[1m\tPath Updates\n\033[0m");
 print("\n\033[1m========================================\n\n\033[0m\n\n");
@@ -88,7 +97,6 @@ my $ok  = &p("Ok to continue?", "y");
 if ($ok =~ /[Yy]/) {
     my $search = "/path_to_logzilla";
     print "Updating file paths\n";
-    # foreach my $file (qx(grep -Rl $search ../* | egrep -v "install.pl|.svn|.sql|CHANGELOG")) {
     foreach my $file (qx(grep -Rl $search ../* | egrep -v "install.pl|\\.svn|\\.sql|license.txt|CHANGELOG|html/includes/index.php|\\.logtest|sphinx/src|sphinx/bin|html/ioncube")) {
         chomp $file;
         print "Modifying $file\n";
@@ -112,16 +120,15 @@ print("\n\033[1m========================================\n\n\033[0m\n\n");
 print "All data will be installed into the $dbname database\n";
 my $ok  = &p("Ok to continue?", "y");
 if ($ok =~ /[Yy]/) {
-# First, create the mysql database and create the $dbname
-    my $dbh;
-    $dbh = DBI->connect( "DBI:mysql:mysql:$dbhost:$dbport", $dbroot, $dbrootpass );
-    if (!$dbh) {
+# First, connect to the mysql database and create the $dbname
+    my $mydbh = DBI->connect( "DBI:mysql:mysql:$dbhost:$dbport", $dbroot, $dbrootpass );
+    if (!$mydbh) {
         print "Can't connect to the mysql database: ", $DBI::errstr, "\n";
         exit;
     }
 
     # Check version of MySQL
-    my $sth = $dbh->prepare("SELECT version()") or die "Could not create the $dbname database: $DBI::errstr";
+    my $sth = $mydbh->prepare("SELECT version()") or die "Could not create the $dbname database: $DBI::errstr";
     $sth->execute;
     while (my @data = $sth->fetchrow_array()) {
         my $ver = $data[0];
@@ -134,18 +141,21 @@ if ($ok =~ /[Yy]/) {
         }
     }
 
-    my $sth = $dbh->prepare("create database $dbname");
+    my $sth = $mydbh->prepare("create database $dbname");
     $sth->execute;
-    if ($dbh->err) {
+    if ($mydbh->err) {
         print("\n\033[1m\tERROR!\n\033[0m");
         print "Database \"$dbname\" already exists!\nPlease delete it and re-run $0\n";
         exit;
     }
-    $dbh->disconnect();
+    $mydbh->disconnect();
 
 
 # Now that we have the DB created, re-connect and create the tables
-    $dbh = DBI->connect( "DBI:mysql:$dbname:$dbhost:$dbport", $dbroot, $dbrootpass );
+my $dsn = "DBI:mysql:$dbname:;mysql_read_default_group=logzilla;"
+. "mysql_read_default_file=$lzbase/scripts/sql/lzmy.cnf";
+    #$dbh = DBI->connect( "DBI:mysql:$dbname:$dbhost:$dbport", $dbroot, $dbrootpass );
+    my $dbh = DBI->connect($dsn, $dbroot, $dbrootpass);
     if (!$dbh) {
         print "Can't connect to $dbname database: ", $DBI::errstr, "\n";
         exit;
@@ -507,18 +517,18 @@ if ($ok =~ /[Yy]/) {
 
     # TH: adding export procedure (a fragment)
     my $event = qq{
-        CREATE PROCEDURE export()
-	SQL SECURITY DEFINER
-        COMMENT 'Export yesterdays data to a file'
-        BEGIN
-	DECLARE export CHAR(32) DEFAULT CONCAT ('dumpfile_', DATE_FORMAT(CURDATE()-1, '%Y%m%d'),'.txt');
-        DECLARE max_day INTEGER DEFAULT TO_DAYS(NOW()) +1;
-        SET \@s = 
-             CONCAT('select * into outfile "/var/www/logzilla/exports/',export,'" from logs where TO_DAYS( lo )=',max_day-2);
-             PREPARE stmt FROM \@s;
-             EXECUTE stmt;
-             DEALLOCATE PREPARE stmt;
-        END 
+    CREATE PROCEDURE export()
+    SQL SECURITY DEFINER
+    COMMENT 'Export yesterdays data to a file'
+    BEGIN
+    DECLARE export CHAR(32) DEFAULT CONCAT ('dumpfile_', DATE_FORMAT(CURDATE()-1, '%Y%m%d'),'.txt');
+    DECLARE max_day INTEGER DEFAULT TO_DAYS(NOW()) +1;
+    SET \@s = 
+    CONCAT('select * into outfile "/var/www/logzilla/exports/',export,'" from logs where TO_DAYS( lo )=',max_day-2);
+    PREPARE stmt FROM \@s;
+    EXECUTE stmt;
+    DEALLOCATE PREPARE stmt;
+    END 
     };
     my $sth = $dbh->prepare("
         $event
@@ -635,7 +645,7 @@ if ($ok =~ /[Yy]/) {
 }
 
 #Modifies the exports dir to he correct user
-   system "chown mysql.mysql ../exports" and warn "Could not modify archive directory";   
+system "chown mysql.mysql ../exports" and warn "Could not modify archive directory";   
 
 
 #Create log files for later use by the server
