@@ -38,7 +38,7 @@ sub p {
 }
 
 my $version = "3.1";
-my $subversion = ".128";
+my $subversion = ".129";
 
 # Grab the base path
 my $lzbase = getcwd;
@@ -152,8 +152,8 @@ if ($ok =~ /[Yy]/) {
 
 
 # Now that we have the DB created, re-connect and create the tables
-my $dsn = "DBI:mysql:$dbname:;mysql_read_default_group=logzilla;"
-. "mysql_read_default_file=$lzbase/scripts/sql/lzmy.cnf";
+    my $dsn = "DBI:mysql:$dbname:;mysql_read_default_group=logzilla;"
+    . "mysql_read_default_file=$lzbase/scripts/sql/lzmy.cnf";
     #$dbh = DBI->connect( "DBI:mysql:$dbname:$dbhost:$dbport", $dbroot, $dbrootpass );
     my $dbh = DBI->connect($dsn, $dbroot, $dbrootpass);
     if (!$dbh) {
@@ -624,10 +624,17 @@ if ($ok =~ /[Yy]/) {
     DEFINE('DBNAME', '$dbname');
     DEFINE('DBHOST', '$dbhost');
     DEFINE('DBPORT', '$dbport');
-    DEFINE('LOG_QUERIES', 'FALSE');
     DEFINE('LOG_PATH', '$logpath');
     DEFINE('MYSQL_QUERY_LOG', '$logpath/mysql_query.log');
+    # Enabling query logging will degrade performance.
+    DEFINE('LOG_QUERIES', 'FALSE');
     };
+    if (! -f "$logpath/mysql_query.log") {
+        open(F,">$logpath/mysql_query.log") || die("Cannot Open $logpath/mysql_query.log: $!"); 
+        print F "\n";
+        close(F);
+    }
+    chmod 0666, "$logpath/mysql_query.log";
     my $file="$lzbase/html/config/config.php";
     open(CNF,">$file") || die("Cannot Open $file: $!"); 
     print CNF "$config"; 
