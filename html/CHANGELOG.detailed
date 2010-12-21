@@ -1,5 +1,11 @@
 CHANGELOG
 
+
+3.1.128 - Enhancment: db_insert.pl looks into my.cnf
+CD:
+ - #75: Added lzmy.cnf file creation to the install.pl
+ - Changed the mysql read from db_insert.pl to point to $lzbase/scripts/lzmy.cnf
+
 3.1.127 - Enhancment: db_insert.pl looks into my.cnf
 TH:
  - logzilla looks into a [logzilla] section in my.cnf for db_insert.pl

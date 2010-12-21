@@ -121,21 +121,24 @@ close( CONFIG );
 
 my($dbtable,$dbuser,$dbpass,$db,$dbhost,$dbport,$DEBUG,$dedup,$dedup_window,$dedup_dist,$log_path,$bulk_ins,$insert_string,@msgs, $q_time, $q_limit);
 foreach my $var (@config) {
-    next unless $var =~ /DEFINE/; # read only def's
-    $dbuser = $1 if ($var =~ /'DBADMIN', '(\w+)'/);
-    $dbpass = $1 if ($var =~ /'DBADMINPW', '(\w+)'/);
-    $db = $1 if ($var =~ /'DBNAME', '(\w+)'/);
-    $dbhost = $1 if ($var =~ /'DBHOST', '(\w+.*|\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})'/);
-    $dbport = $1 if ($var =~ /'DBPORT', '(\w+)'/);
+next unless $var =~ /DEFINE/; # read only def's
+#$dbuser = $1 if ($var =~ /'DBADMIN', '(\w+)'/);
+#$dbpass = $1 if ($var =~ /'DBADMINPW', '(\w+)'/);
+$db = $1 if ($var =~ /'DBNAME', '(\w+)'/);
+#$dbhost = $1 if ($var =~ /'DBHOST', '(\w+.*|\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})'/);
+#$dbport = $1 if ($var =~ /'DBPORT', '(\w+)'/);
 }
 if (!$db){
-    print "Error: Unable to read $db config variables from $config\n";
-    exit;
+print "Error: Unable to read $db config variables from $config\n";
+exit;
 }
-$dbh = DBI->connect( "DBI:mysql:$db:$dbhost;mysql_read_default_group=logzilla;", $dbuser, $dbpass );
+my $dsn = "DBI:mysql:$db:;mysql_read_default_group=logzilla;"
+. "mysql_read_default_file=/path_to_logzilla/scripts/sql/lzmy.cnf";
+$dbh = DBI->connect($dsn, $dbuser, $dbpass);
+#$dbh = DBI->connect( "DBI:mysql:$db:$dbhost;mysql_read_default_group=logzilla;", $dbuser, $dbpass );
 if (!$dbh) {
-    print LOG "Can't connect to $db database: ", $DBI::errstr, "\n";
-    print STDOUT "Can't connect to $db database: ", $DBI::errstr, "\n";
+    print LOG "Can't connect to database: ", $DBI::errstr, "\n";
+    print STDOUT "Can't connect to database: ", $DBI::errstr, "\n";
     exit;
 }
 my $sth = $dbh->prepare("SELECT name,value FROM settings");
@@ -163,7 +166,6 @@ while (my @settings = $sth->fetchrow_array()) {
 if ($DEBUG > "0") {
     $debug = $debug + $DEBUG;
 }
-
 
 # Initialize some vars for later use
 my $insert = 1;
@@ -223,7 +225,8 @@ my $re_mne = qr/\%([A-Z\-\d\_]+?\-\d+\-[A-Z\-\_\d]+?)(?:\:|\s)/;
 my $re_mne_prg = qr/%(\w+-\d+-\S+):?/; # Attempt to capture Cisco Firewall Mnemonics (they send the mne's as a program)
 
 $dbh->disconnect();
-$dbh = DBI->connect( "DBI:mysql:$db:$dbhost", $dbuser, $dbpass );
+$dbh = DBI->connect($dsn, $dbuser, $dbpass);
+#$dbh = DBI->connect( "DBI:mysql:$db:$dbhost", $dbuser, $dbpass );
 if (!$dbh) {
     print LOG "Can't connect to $db database: ", $DBI::errstr, "\n";
     print STDOUT "Can't connect to $db database: ", $DBI::errstr, "\n";
