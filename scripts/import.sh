@@ -22,4 +22,6 @@ mv -f $1 logs
 echo "loading into the database"
 mysqlimport -i -C -u root --password=mysql syslog /tmp/logs
 rm -f /tmp/logs
-echo "all done"
+echo "reindex sphinx"
+/var/www/logzilla/sphinx/indexer.sh full
+echo "***all done***"
