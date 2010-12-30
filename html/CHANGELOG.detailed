@@ -1,5 +1,9 @@
 CHANGELOG
 
+3.1.132 - Bugfix: imported Data not in the sphinx dataspace
+TH:
+ - have to indexer.sh full after import
+
 3.1.131 - Enhancment: views uses REGEXP for msg
 TH:
  - #59: ready for further work
