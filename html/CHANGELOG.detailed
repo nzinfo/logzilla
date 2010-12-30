@@ -1,5 +1,9 @@
 CHANGELOG
 
+3.1.130 - Enhancment: Shell Script for importing archives
+TH:
+ - found in scripts/contrib/import_shell
+ 
 3.1.129 - Enhancment: db_insert.pl looks into my.cnf
 CD:
  - #75: Testing scripts/sql/lzmy.cnf
