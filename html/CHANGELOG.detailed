@@ -1,5 +1,9 @@
 CHANGELOG
 
+3.1.131 - Enhancment: views uses REGEXP for msg
+TH:
+ - #59: ready for further work
+ 
 3.1.130 - Enhancment: Shell Script for importing archives
 TH:
  - found in scripts/contrib/import_shell
