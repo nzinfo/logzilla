@@ -1,5 +1,10 @@
 CHANGELOG
 
+3.1.135 - Minor enhancement
+CD:
+ - Added check for syslog-ng PID to the install.pl
+   - if PID exists, ask to send a HUP to syslog-ng (so that the new config gets loaded).
+
 3.1.134 - Alerts Enhancement
 CD:
  - #62: forgot to add navmenu to web interface for "Event Triggers"

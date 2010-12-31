@@ -38,7 +38,7 @@ sub p {
 }
 
 my $version = "3.1";
-my $subversion = ".136";
+my $subversion = ".137";
 
 # Grab the base path
 my $lzbase = getcwd;
@@ -711,6 +711,7 @@ if ($paths_updated >0) {
         print "You will need to manually copy:\n";
         print "cp contrib/system_configs/logzilla.logrotate /etc/logrotate.d/logzilla\n";
     }
+
     print "\n\nAdding LogZilla to syslog-ng\n";
     my $ok  = &p("Ok to continue?", "y");
     if ($ok =~ /[Yy]/) {
@@ -759,6 +760,22 @@ if ($paths_updated >0) {
         print "Unable to locate your syslog-ng.conf file\n";
         print "You will need to manually merge contrib/system_configs/syslog-ng.conf with yours.\n";
     }
+    my $checkprocess = `ps -C syslog-ng -o pid=`;
+    if ($checkprocess) {
+        print "\n\nSyslog-ng MUST be restarted, would you like to send a HUP signal to the process?\n";
+        my $ok  = &p("Ok to HUP syslog-ng?", "y");
+        if ($ok =~ /[Yy]/) {
+            if ($checkprocess =~ /(\d+)/) {
+                my $pid = $1;
+                print STDOUT "HUPing syslog-ng PID $pid\n";
+                my $r = `kill -HUP $pid`;
+            } else {
+                print STDOUT "Unable to find PID for syslog-ng\n";
+            }
+        }
+    } else {
+        print("\033[1m\n\tPlease be sure to restart syslog-ng..\n\033[0m");
+    }
 } else {
     print "Since you chose not to update paths, you will need to manually merge contrib/system_configs/syslog-ng.conf with your syslog-ng.conf.\n";
 }
@@ -766,4 +783,3 @@ print("\n\033[1m\tLogZilla installation complete!\n\033[0m");
 #print("\033[1mNote: you may need to enable the MySQL Event Scheduler in your /etc/my.cnf file.\n\033[0m");
 #print("\033[1mPlease visit http://forum.logzilla.info/index.php/topic,71.0.html for more information.\n\033[0m");
 #print("\033[1m\nAlso, please visit http://nms.gdd.net/index.php/Install_Guide_for_LogZilla_v3.0#UDP_Buffers to learn how to increase your UDP buffer size (otherwise you may drop messages).\n\033[0m");
-print("\033[1m\n\tPlease be sure to restart syslog-ng..\n\033[0m");
