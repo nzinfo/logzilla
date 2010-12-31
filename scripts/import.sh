@@ -1,5 +1,5 @@
 #!/bin/bash
-export=/var/www/logzilla/exports/$1
+export=/path_to_logzilla/exports/$1
 if [ -s "$export" ]; then
   echo "file found in the online store";
 else
@@ -23,5 +23,5 @@ echo "loading into the database"
 mysqlimport -i -C -u root --password=mysql syslog /tmp/logs
 rm -f /tmp/logs
 echo "reindex sphinx"
-/var/www/logzilla/sphinx/indexer.sh full
+/path_to_logzilla/sphinx/indexer.sh full
 echo "***all done***"

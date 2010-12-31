@@ -1,5 +1,11 @@
 CHANGELOG
 
+3.1.135 - Bugfixes e.t.c.
+TH:
+ - commented out the old archive stuff
+ - changed database location to localhost - we use socket then
+ - some parametering of the "hardcoded" /var/www/logzilla
+ 
 3.1.134 - Alerts Enhancement
 CD:
  - #62: Triggers ready for testing

@@ -38,7 +38,7 @@ sub p {
 }
 
 my $version = "3.1";
-my $subversion = ".134";
+my $subversion = ".135";
 
 # Grab the base path
 my $lzbase = getcwd;
@@ -55,7 +55,7 @@ my $dbrootpass = &p("Enter the password for $dbroot", "mysql");
 $dbrootpass = qq{$dbrootpass};
 my $dbname = &p("Database to install to", "syslog");
 my $dbtable =  "logs";
-my $dbhost  = &p("Enter the name of the MySQL server", "127.0.0.1");
+my $dbhost  = &p("Enter the name of the MySQL server", "localhost");
 my $dbport  = &p("Enter the port of the MySQL server", "3306");
 my $dbadmin  = &p("Enter the name to create as the owner of the $dbname database", "syslogadmin");
 $dbadmin = qq{$dbadmin};
@@ -132,7 +132,7 @@ if ($ok =~ /[Yy]/) {
     $sth->execute;
     while (my @data = $sth->fetchrow_array()) {
         my $ver = $data[0];
-        if ($ver !~ /5\.1/) {
+        if ($ver !~ /5\.[15]/) {
             print("\n\033[1m\tERROR!\n\033[0m");
             print "LogZilla requires MySQL v5.1 or better.\n";
             print "Your version is $ver\n";
@@ -224,9 +224,10 @@ if ($ok =~ /[Yy]/) {
     my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/banned_ips.sql`;
     print $res;
 
-# Create archive table
-    my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/logs_archive.sql`;
-    print $res;
+#  TH: use the new archive feature!
+## Create archive table
+#    my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/logs_archive.sql`;
+#    print $res;
 
 # Create triggers table
     my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/triggers.sql`;
@@ -414,13 +415,14 @@ if ($ok =~ /[Yy]/) {
     #") or die "Could not create partition events: $DBI::errstr";
     #$sth->execute;
 
-    my $event = qq{
-    CREATE EVENT logs_add_archive ON SCHEDULE EVERY 1 DAY STARTS '$dateTomorrow 00:10:00' ON COMPLETION NOT PRESERVE ENABLE DO CALL logs_add_archive_proc();
-    };
-    my $sth = $dbh->prepare("
-        $event
-        ") or die "Could not create archive events: $DBI::errstr";
-    $sth->execute;
+#  TH: use the new archive feature!
+#    my $event = qq{
+#    CREATE EVENT logs_add_archive ON SCHEDULE EVERY 1 DAY STARTS '$dateTomorrow 00:10:00' ON COMPLETION NOT PRESERVE ENABLE DO CALL logs_add_archive_proc();
+#    };
+#    my $sth = $dbh->prepare("
+#        $event
+#        ") or die "Could not create archive events: $DBI::errstr";
+#    $sth->execute;
 
     my $event = qq{
     CREATE EVENT logs_del_partition ON SCHEDULE EVERY 1 DAY STARTS '$dateTomorrow 00:15:00' ON COMPLETION NOT PRESERVE ENABLE DO CALL logs_delete_part_proc();
@@ -487,19 +489,20 @@ if ($ok =~ /[Yy]/) {
         ") or die "Could not create partition events: $DBI::errstr";
     $sth->execute;
 
-    my $event = qq{
-    CREATE PROCEDURE logs_add_archive_proc()
-    SQL SECURITY DEFINER
-    COMMENT 'Creates archive for old messages' 
-    BEGIN    
-    INSERT INTO `logs_archive` SELECT * FROM `$dbtable` 
-    WHERE `$dbtable`.`lo` < DATE_SUB(CURDATE(), INTERVAL (SELECT value from settings WHERE name='RETENTION') DAY);
-    END 
-    };
-    my $sth = $dbh->prepare("
-        $event
-        ") or die "Could not create partition events: $DBI::errstr";
-    $sth->execute;
+#  TH: use the new archive feature!
+#    my $event = qq{
+#    CREATE PROCEDURE logs_add_archive_proc()
+#    SQL SECURITY DEFINER
+#    COMMENT 'Creates archive for old messages' 
+#    BEGIN    
+#    INSERT INTO `logs_archive` SELECT * FROM `$dbtable` 
+#    WHERE `$dbtable`.`lo` < DATE_SUB(CURDATE(), INTERVAL (SELECT value from settings WHERE name='RETENTION') DAY);
+#    END 
+#    };
+#    my $sth = $dbh->prepare("
+#        $event
+#        ") or die "Could not create partition events: $DBI::errstr";
+#    $sth->execute;
 
     # CDUKES: [[ticket:17]]
     my $event = qq{
@@ -524,7 +527,7 @@ if ($ok =~ /[Yy]/) {
     DECLARE export CHAR(32) DEFAULT CONCAT ('dumpfile_', DATE_FORMAT(CURDATE()-1, '%Y%m%d'),'.txt');
     DECLARE max_day INTEGER DEFAULT TO_DAYS(NOW()) +1;
     SET \@s = 
-    CONCAT('select * into outfile "/var/www/logzilla/exports/',export,'" from logs where TO_DAYS( lo )=',max_day-2);
+    CONCAT('select * into outfile "$lzbase/exports/',export,'" from logs where TO_DAYS( lo )=',max_day-2);
     PREPARE stmt FROM \@s;
     EXECUTE stmt;
     DEALLOCATE PREPARE stmt;
