@@ -1,6 +1,10 @@
 CHANGELOG
 
-3.1.133 - Enhancement
+3.1.134 - Alerts Enhancement
+CD:
+ - #62: Triggers ready for testing
+
+3.1.133 - Alerts Enhancement
 CD:
  - #62: Initial build of Admin Interface for triggers (not completed yet)
 
