@@ -121,16 +121,16 @@ close( CONFIG );
 
 my($dbtable,$dbuser,$dbpass,$db,$dbhost,$dbport,$DEBUG,$dedup,$dedup_window,$dedup_dist,$log_path,$bulk_ins,$insert_string,@msgs, $q_time, $q_limit);
 foreach my $var (@config) {
-next unless $var =~ /DEFINE/; # read only def's
+    next unless $var =~ /DEFINE/; # read only def's
 #$dbuser = $1 if ($var =~ /'DBADMIN', '(\w+)'/);
 #$dbpass = $1 if ($var =~ /'DBADMINPW', '(\w+)'/);
-$db = $1 if ($var =~ /'DBNAME', '(\w+)'/);
+    $db = $1 if ($var =~ /'DBNAME', '(\w+)'/);
 #$dbhost = $1 if ($var =~ /'DBHOST', '(\w+.*|\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})'/);
 #$dbport = $1 if ($var =~ /'DBPORT', '(\w+)'/);
 }
 if (!$db){
-print "Error: Unable to read $db config variables from $config\n";
-exit;
+    print "Error: Unable to read $db config variables from $config\n";
+    exit;
 }
 my $dsn = "DBI:mysql:$db:;mysql_read_default_group=logzilla;"
 . "mysql_read_default_file=/path_to_logzilla/scripts/sql/lzmy.cnf";
@@ -288,9 +288,11 @@ while (my $ref = $mne_select->fetchrow_hashref()) {
 
 # Begin Alert Triggers
 my ($from, $to, $subj, %trigger_cache);
-my $trigger_select = $dbh->prepare("SELECT * FROM triggers");
+my $trigger_select = $dbh->prepare("SELECT * FROM triggers WHERE disabled='No'");
 $trigger_select->execute();
 while (my $ref = $trigger_select->fetchrow_hashref()) {
+    # stripslashes from stored patterns
+    $ref->{'pattern'} =~ s/\\(\'|\"|\\)/$1/g;
     $trigger_cache{$ref->{'id'}} = $ref->{'pattern'};
 }
 #while( my ($k, $v) = each %trigger_cache ) {
@@ -299,8 +301,9 @@ while (my $ref = $trigger_select->fetchrow_hashref()) {
 sub triggerMail {
     my $id = shift;
     my $msg = shift;
-    #$dbh->{TraceLevel} = 4;
-    my ($dbid, $pattern, $to, $from, $subject, $body, $numvars) = $dbh->selectrow_array("SELECT * FROM triggers WHERE id=$id");
+    my ($dbid, $description, $pattern, $to, $from, $subject, $body, undef) = $dbh->selectrow_array("SELECT * FROM triggers WHERE id=$id");
+    # stripslashes from pattern
+    $pattern =~ s/\\(\'|\"|\\)/$1/g;
     my ($mailhost, $port, $user, $pass) = $dbh->selectrow_array("
         SELECT value FROM settings WHERE name like 'MAILHOST%'
         ");
@@ -309,12 +312,16 @@ sub triggerMail {
         $subject =~ s/\{\d+\}/$var/;
         $body =~ s/\{\d+\}/$var/;
     }
-    #print STDOUT "Pattern = $pattern\n";
-    #print STDOUT "To = $to\n";
-    #print STDOUT "From = $from\n";
-    #print STDOUT "Subject = $subject\n";
-    #print STDOUT "Body = $body\n";
-    #print STDOUT "Message = $msg\n";
+    if ($verbose) {
+        print STDOUT "Verbose logging enabled - Mail Trigger found:\n";
+        print STDOUT "Pattern = $pattern\n";
+        print STDOUT "To = $to\n";
+        print STDOUT "From = $from\n";
+        print STDOUT "Subject = $subject\n";
+        print STDOUT "Body = $body\n";
+        print STDOUT "Message = $msg\n";
+        print STDOUT "\n";
+    }
     my $msg = MIME::Lite->new(
         From    =>"$from",
         To      =>"$to",
@@ -634,12 +641,13 @@ sub do_msg {
         # Mail Trigger
         #my @triggers = keys %trigger_cache;
         #print STDOUT "TRIGGERS:\n@triggers\n";
-        while( my ($key, $value) = each %trigger_cache ) {
-            my $id = $key;
-            my $re = qr/$value/;
-            #print STDOUT "Looking for Pattern: \"$value\" in message \"$msg\"\n";
+        while( my ($id, $pattern) = each %trigger_cache ) {
+            my $re = qr/$pattern/;
+            print STDOUT "-----START EVENT TRIGGERS-----\nLooking for Pattern: \"$pattern\" in message \"$msg\"\n" if ($verbose);
+            print LOG "-----START EVENT TRIGGERS-----\nLooking for Pattern: \"$pattern\" in message \"$msg\"\n" if ($debug > 1);
             if ($msg =~ /$re/) {
-                #print STDOUT "FOUND PATTERN:\n$value\nIn message:\n$msg\n";
+                print STDOUT "FOUND PATTERN '$pattern' in message: '$msg'\nSENDING EMAIL!\n-----END EVENT TRIGGERS-----\n\n" if ($verbose);
+                print LOG "FOUND PATTERN '$pattern' in message: '$msg'\nSENDING EMAIL!\n-----END EVENT TRIGGERS-----\n\n" if ($debug > 1);
                 &triggerMail($id, $msg);
             }
         }
