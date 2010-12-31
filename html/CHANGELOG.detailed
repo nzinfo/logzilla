@@ -1,5 +1,9 @@
 CHANGELOG
 
+3.1.133 - Enhancement
+CD:
+ - #62: Initial build of Admin Interface for triggers (not completed yet)
+
 3.1.132 - Bugfix: imported Data not in the sphinx dataspace
 TH:
  - have to indexer.sh full after import
