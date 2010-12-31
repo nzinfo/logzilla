@@ -43,6 +43,7 @@ session_start();
             if ((has_portlet_access($_SESSION['username'], 'Server Settings') == TRUE) || ($_SESSION['AUTHTYPE'] == "none")) { 
             ?>
             <li><a href="<?php echo $_SESSION['SITE_URL']?>?page=Admin">Server Admin</a></li>
+            <li><a href="<?php echo $_SESSION['SITE_URL']?>?page=Triggers">Event Triggers</a></li>
             <?php } ?>
             <?php 
             if ((has_portlet_access($_SESSION['username'], 'Portlet Group Permissions') == TRUE) && ($_SESSION['AUTHTYPE'] != "none")) { 

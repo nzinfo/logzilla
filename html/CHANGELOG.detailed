@@ -1,6 +1,11 @@
 CHANGELOG
 
-3.1.135 - Bugfixes e.t.c.
+3.1.134 - Alerts Enhancement
+CD:
+ - #62: forgot to add navmenu to web interface for "Event Triggers"
+ - #62: Added stripslashes to pattern recall in db_insert.pl (since it gets inserted from the web interface with mysql_real_escape)
+
+3.1.135 - Bugfixes etc.
 TH:
  - commented out the old archive stuff
  - changed database location to localhost - we use socket then
