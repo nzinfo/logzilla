@@ -62,13 +62,25 @@ $order = (!empty($order)) ? $order : "ASC";
       ?>
           <tr>
           <td class="s_td"><a href="#" onclick="edit(<?php echo $row['id']?>);return false;" id="<?php echo $row['id']?>"><img style="border-style: none; width: 30px; height: 30px;" src="<?php echo $_SESSION['SITE_URL']?>images/edit_sm.png" /></a></td>
-          <td class="s_td"><?php echo $row['description']?></td>
-          <td class="s_td"><?php echo $row['pattern']?></td>
-          <td class="s_td"><?php echo $row['to']?></td>
-          <td class="s_td"><?php echo $row['from']?></td>
-          <td class="s_td"><?php echo $row['subject']?></td>
-          <td class="s_td"><?php echo $row['body']?></td>
-          <td class="s_td"><?php if ($row['disable'] == "Yes") echo "Yes"; ?></td>
+          <?php
+          $d = stripslashes($row['description']);
+          $p = stripslashes($row['pattern']);
+          $t = stripslashes($row['mailto']);
+          $f = stripslashes($row['mailfrom']);
+          $s = stripslashes($row['subject']);
+          $b = stripslashes($row['body']);
+          $di = stripslashes($row['disabled']);
+          // Replace carriage returns for better display
+          $desc_html = preg_replace ('/\r|\n/m', '<br />', $d);
+          $body_html = preg_replace ('/\r|\n/m', '<br />', $b);
+          ?>
+          <td class="s_td"><?php echo $desc_html?></td>
+          <td class="s_td"><?php echo $p?></td>
+          <td class="s_td"><?php echo $t?></td>
+          <td class="s_td"><?php echo $f?></td>
+          <td class="s_td"><?php echo $s?></td>
+          <td class="s_td"><?php echo $body_html?></td>
+          <td class="s_td"><?php if ($row['disabled'] == "Yes") echo "Yes"; ?></td>
           </tr>
           <?php
     }
@@ -96,41 +108,32 @@ function edit(dbid){
                         success: function(data) {
                         var description = data.description
                         var pattern = data.pattern
-                        var to = data.to
-                        var from = data.from
+                        var mailto = data.mailto
+                        var mailfrom = data.mailfrom
                         var subject = data.subject
                         var body = data.body
-                        var disable = data.disable
+                        var disabled = data.disabled
                         /*
                         alert (description);
                         alert (pattern);
-                        alert (to);
-                        alert (from);
+                        alert (mailto);
+                        alert (mailfrom);
                         alert (subject);
                         alert (body);
-                        alert (disable);
+                        alert (disabled);
                         */
                         $("#name").html('Trigger Pattern Editor');
-                        $("#description").html('<input type="text" value="'+ description +'" id="description" class="text ui-widget-content ui-corner-all">');
-                        $("#pattern").html('<input type="text" value="'+ pattern +'" id="pattern" class="text ui-widget-content ui-corner-all">');
-                        $("#to").html('<input type="text" value="'+ to +'" id="to" class="text ui-widget-content ui-corner-all">');
-                        $("#from").html('<input type="text" value="'+ from +'" id="from" class="text ui-widget-content ui-corner-all">');
-                        $("#subject").html('<input type="text" value="'+ subject +'" id="subject" class="text ui-widget-content ui-corner-all">');
-                        $("#body").html('<input type="text" value="'+ body +'" id="body" class="text ui-widget-content ui-corner-all">');
-                        var temp = new Array();
-                        temp = disable.split(',');
-                        var val = '<select id="disable">';
-                        var opts = '';
-                        $.each( temp, function(i, option){
-                                if (option == value) {
-                                opts = opts +'<option selected>'+ option;
-                                } else {
-                                opts = opts +'<option>'+ option;
-                                }
-                                });
-                        val = val + opts + '</select>';
-                         alert(val);
-                            $("#disable").html(val + '<input type="hidden" value="'+ value +'" id="select_val" class="text ui-widget-content ui-corner-all">');
+                        $("#description").html('<input type="text" value="'+ description +'" id="description_val" class="text ui-widget-content ui-corner-all">');
+                        $("#pattern").html('<input type="text" value="'+ pattern +'" id="pattern_val" class="text ui-widget-content ui-corner-all">');
+                        $("#mailto").html('<input type="text" value="'+ mailto +'" id="mailto_val" class="text ui-widget-content ui-corner-all">');
+                        $("#mailfrom").html('<input type="text" value="'+ mailfrom +'" id="mailfrom_val" class="text ui-widget-content ui-corner-all">');
+                        $("#subject").html('<input type="text" value="'+ subject +'" id="subject_val" class="text ui-widget-content ui-corner-all">');
+                        $("#body").html('<textarea id="body_val" class="text ui-widget-content ui-corner-all" cols="68" rows="5">' + body + '</textarea>');
+                        if (disabled == "Yes") {
+                        $("#disabled").html('<select id="disabled_val" class="ui-corner-all"><option selected value="Yes">Yes<option value="No">No</select>');
+                        } else {
+                        $("#disabled").html('<select id="disabled_val" class="ui-corner-all"><option value="Yes">Yes<option selected value="No">No</select>');
+                        };
                         }
                         });
                          },
@@ -141,12 +144,32 @@ function edit(dbid){
                         buttons: {
                                      'Save to Database': function() {
                                         $(this).dialog('close');
-                                        var name = $('#name_val').val();
-                                        var value = $('#value_val').val();
-                                        if (!value) {
-                                            var value = $('#select_val').val();
-                                        }
-                                        $.get("includes/ajax/json.triggers.php?action=save&dbid="+dbid+"&value="+value+"&name="+name, function(data){
+// Hafta pass the URL string as encoded data because of the regex patterns, etc.
+function urlEncodeCharacter (c)
+{
+    return '%' + c.charCodeAt(0).toString(16);
+};
+
+function urlEncode(s){
+      return encodeURIComponent( s ).replace( /\%20/g, '+' ).replace( /[!'()*~]/g, urlEncodeCharacter );
+};
+                                        var description = urlEncode($('#description_val').val());
+                                        var pattern = urlEncode($('#pattern_val').val());
+                                        var mailto = urlEncode($('#mailto_val').val());
+                                        var mailfrom = urlEncode($('#mailfrom_val').val());
+                                        var subject = urlEncode($('#subject_val').val());
+                                        var body = urlEncode($('#body_val').val());
+                                        var disabled = urlEncode($('#disabled_val').val());
+                        /*
+                        alert (description);
+                        alert (pattern);
+                        alert (mailto);
+                        alert (mailfrom);
+                        alert (subject);
+                        alert (body);
+                        alert (disabled);
+                        */
+                                        $.get("includes/ajax/json.triggers.php?action=save&dbid="+dbid+"&description="+description+"&pattern="+pattern+"&mailto="+mailto+"&mailfrom="+mailfrom+"&subject="+subject+"&body="+body+"&disabled="+disabled, function(data){
                                         $('#msgbox_br').jGrowl(data);
                                            });
                                 },
@@ -163,7 +186,7 @@ function edit(dbid){
 <div class="dialog_hide">
     <div id="edit_dialog" title="Edit Settings">
         <form>
-<table id="tbl_edit_triggers" cellpadding="0" cellspacing="0" width="100%" border="1">
+<table id="tbl_edit_triggers" cellpadding="0" cellspacing="0" width="100%" border="0">
     <thead class="ui-widget-header">
         <tr>
             <th width="10%"></th>
@@ -182,11 +205,11 @@ function edit(dbid){
         </tr>
         <tr>
             <td>Mail To: </td>
-            <td><div style="text-align:left;" id="to" class="portlet-content"></div></td>
+            <td><div style="text-align:left;" id="mailto" class="portlet-content"></div></td>
         </tr>
         <tr>
             <td>Mail From: </td>
-            <td><div style="text-align:left;" id="from" class="portlet-content"></div></td>
+            <td><div style="text-align:left;" id="mailfrom" class="portlet-content"></div></td>
         </tr>
         <tr>
             <td>Subject: </td>
@@ -198,7 +221,7 @@ function edit(dbid){
         </tr>
         <tr>
             <td>Disable Pattern?</td>
-            <td><div style="text-align:left;" id="disable" class="portlet-content"></div></td>
+            <td><div style="text-align:left;" id="disabled" class="portlet-content"></div></td>
         </tr>
 <input type="hidden" name="dbid" id="dbid" value="">
 </tbody>

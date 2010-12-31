@@ -24,13 +24,15 @@ DROP TABLE IF EXISTS `triggers`;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `triggers` (
   `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `description` varchar(255) NOT NULL,
   `pattern` varchar(255) NOT NULL,
-  `to` varchar(255) NOT NULL DEFAULT 'root@localhost',
-  `from` varchar(255) NOT NULL DEFAULT 'root@localhost',
+  `mailto` varchar(255) NOT NULL DEFAULT 'root@localhost',
+  `mailfrom` varchar(255) NOT NULL DEFAULT 'root@localhost',
   `subject` varchar(255) NOT NULL,
   `body` text CHARACTER SET utf8 NOT NULL,
+  `disabled` enum('Yes','No') NOT NULL DEFAULT 'No',
   PRIMARY KEY (`id`)
-) ENGINE=MyISAM AUTO_INCREMENT=2 DEFAULT CHARSET=latin1;
+) ENGINE=MyISAM AUTO_INCREMENT=3 DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -39,7 +41,7 @@ CREATE TABLE `triggers` (
 
 LOCK TABLES `triggers` WRITE;
 /*!40000 ALTER TABLE `triggers` DISABLE KEYS */;
-INSERT INTO `triggers` VALUES (1,'interface (\\S+) (\\S+) on (\\S+)','root@localhost','root@localhost','LogZilla Alert for {1}','Hello,\r\nInterface {1} is {2} on {3}.');
+INSERT INTO `triggers` VALUES (1,'Sample Disabled Pattern','Mary had a little (\\\\S+)','root@localhost','root@localhost','New alert about {1} from Mary','Mary had a little {1}','Yes'),(2,'Sample Pattern','interface (\\\\S+) on (\\\\S+) is (\\\\S+)','root@localhost','root@localhost','LogZilla Alert for {1}','Hello,\nInterface {1} on {2} is{3}.\nHave a nice day :-)\n','Yes');
 /*!40000 ALTER TABLE `triggers` ENABLE KEYS */;
 UNLOCK TABLES;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
@@ -52,4 +54,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2010-12-04 22:38:36
+-- Dump completed on 2010-12-30 23:56:45
