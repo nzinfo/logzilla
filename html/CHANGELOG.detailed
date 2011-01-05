@@ -1,5 +1,12 @@
 CHANGELOG
 
+3.1.136 - Updates/New Host Portlet feature
+CD:
+ - Added 'seen' and 'lastseen' columns to the hosts table (also updated db_insert.pl to inject the datetime)
+ - Made home page "Hosts" portlet show only the last X hosts (change X using admin>settings>PORTLET_HOSTS_LIMIT
+   - Users can now click on the small '+' in the hosts portlet to get a much more scalable host selector with search, export, etc.
+ - Removed warning about Internet Explorer when version is = 8 or better (LZ works ok with that version...YAY!).
+
 3.1.135 - Minor enhancement
 CD:
  - Added check for syslog-ng PID to the install.pl

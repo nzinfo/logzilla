@@ -30,15 +30,10 @@ This file contains any custom css that I've written
 <link type="text/css" rel="stylesheet" href="includes/js/jquery/plugins/daterangepicker.css" />
 <!-- END Date Range Selector -->
 
-<!-- BEGIN Multiselect -->
-<link type="text/css" rel="stylesheet" href="includes/js/jquery/plugins/ui.multiselect.css" />
-<!-- END Multiselect -->
-
 <!-- BEGIN JqGrid CSS -->
 <!-- grid layout -->
 <link rel="stylesheet" type="text/css" media="screen" href="includes/js/jquery/plugins/ui.jqgrid.css" />
-<!-- search filter -->
-<link rel="stylesheet" type="text/css" media="screen" href="includes/js/jquery/plugins/grid.searchFilter.css" />
+<link rel="stylesheet" type="text/css" media="screen" href="includes/js/jquery/plugins/ui.multiselect.css" />
 <!-- END JqGrid CSS -->
 
 <!-- BEGIN Top Menu -->

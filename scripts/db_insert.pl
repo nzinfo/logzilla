@@ -239,7 +239,7 @@ my $db_del = $dbh->prepare("DELETE FROM $dbtable WHERE id=?");
 my $db_insert = $dbh->prepare("INSERT INTO $dbtable (host,facility,severity,program,msg,mne,fo,lo) VALUES (?,?,?,?,?,?,?,?)");
 my $db_insert_prg = $dbh->prepare("INSERT IGNORE INTO programs (name,crc) VALUES (?,?) ");
 my $db_insert_mne = $dbh->prepare("INSERT IGNORE INTO mne (name,crc) VALUES (?,?) ");
-my $db_insert_host = $dbh->prepare("INSERT IGNORE INTO hosts (host) VALUES (?) ");
+my $db_insert_host = $dbh->prepare("INSERT INTO hosts (host, lastseen) VALUES (?,?) ON DUPLICATE KEY UPDATE seen=seen + 1, lastseen=? ");
 #my $dumpfile = "/dev/shm/infile.txt";
 my $dumpfile = "/tmp/logzilla_import.txt";
 #my $sql = qq{LOAD DATA LOCAL INFILE '$dumpfile' INTO TABLE logs FIELDS TERMINATED BY "\\t" LINES TERMINATED BY "\\n" (host,facility,severity,program,msg,mne,fo,lo)};
@@ -380,8 +380,9 @@ while (my $msg = <STDIN>) {
         }
         # 2010-08-29: Added to insert cached hosts, progs and mnes upon exit
         my @hosts = keys %host_cache;
+        $now = strftime("%Y-%m-%d %H:%M:%S", localtime);
         foreach my $h (@hosts) {
-            $db_insert_host->execute($h);
+            $db_insert_host->execute($h, $now, $now);
         }
         my @prgs = keys %program_cache;
         foreach my $p (@prgs) {
@@ -496,8 +497,9 @@ while (my $msg = <STDIN>) {
             $mpm = 0;
             @mps = ();
             my @hosts = keys %host_cache;
+            $now = strftime("%Y-%m-%d %H:%M:%S", localtime);
             foreach my $h (@hosts) {
-                $db_insert_host->execute($h);
+                $db_insert_host->execute($h, $now, $now);
             }
             my @prgs = keys %program_cache;
             foreach my $p (@prgs) {
