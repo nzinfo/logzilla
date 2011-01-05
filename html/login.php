@@ -134,7 +134,7 @@ if ($_POST) {
             unset($_SESSION['error']);
         }
         ?>
-        <!--[if IE]>
+        <!--[if lt IE 8]>
             <div style='align: left; text-align: left; border: 2px dotted red;'>LogZilla has not been certified to work with the browser you are using. You may continue, but the application might not behave as expected.</div>
         <![endif]-->
 	   	<td align="right" valign="middle">

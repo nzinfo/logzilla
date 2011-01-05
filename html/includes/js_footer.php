@@ -21,11 +21,6 @@
 //------------------------------------------------------------------------------
 
 ?>
-<!-- BEGIN JqGrid -->
-<script src="includes/js/jquery/plugins/grid.i18n/grid.locale-en.js" type="text/javascript"></script>
-<script src="includes/js/jquery/plugins/jquery.jqGrid.min.js" type="text/javascript"></script>
-<!-- END JqGrid -->
-
 <!-- BEGIN Table Sorter -->
 <script src="includes/js/tablesort.js" type="text/javascript"></script>
 <script src="includes/js/paginate.js" type="text/javascript"></script>
@@ -200,8 +195,14 @@ if( !tm_done ) {
 <!-- END Time Range Selector -->
 
 <!-- BEGIN Multiselect -->
-<script type="text/javascript" src="includes/js/jquery/plugins/ui.multiselect.js"></script>
+<!-- <script type="text/javascript" src="includes/js/jquery/plugins/ui.multiselect.js"></script>-->
+<script type="text/javascript" src="includes/js/jquery/plugins/quasipartikel.multiselect.js"></script>
 <!-- END Multiselect -->
+
+<!-- BEGIN JQuery Multiselect Filter -->
+<!-- <script src="includes/js/jquery/plugins/jquery.multiselect.js" type="text/javascript"></script>
+<script src="includes/js/jquery/plugins/jquery.multiselect.filter.js" type="text/javascript"></script> -->
+<!-- END JQuery Multiselect Filter -->
 
 <!-- BEGIN menu -->
 <script type="text/javascript" src="includes/js/jquery/menu.js"></script>
@@ -218,6 +219,10 @@ if( !tm_done ) {
 <!-- BEGIN Selectbox -->
 <script type="text/javascript" src="includes/js/jquery/plugins/jquery.selectbox-1.2.js"></script>
 <!-- END Selectbox -->
+
+<!-- BEGIN Timeago -->
+<script type="text/javascript" src="includes/js/jquery/plugins/jquery.timeago.js"></script>
+<!-- END Timeago -->
 
 <!-- BEGIN Top Menu -->
 <script type="text/javascript">
@@ -714,174 +719,6 @@ $(document).ready(function(){
 <!-- END Time Picker Functions -->
 
 
-<!-- BEGIN GRIDS -->
-
-<!-- BEGIN Hosts Grid (called from portlet-hosts.php) -->
-<script type="text/javascript">
-function resize_hosts_grid()
-{
-    $('#hostsTable').fluidGrid({base:'#portlet_Hosts', offset:-1});
-}
-function getWidthInPct(percent){
-        screen_res = ($(document).width())*0.99;
-        col = parseInt((percent*(screen_res/100)));
-            return col;
-    } 
-
-// Hosts Grid on main page
-var hostgrid = jQuery("#hostsTable").jqGrid({
-url:'includes/ajax/json.hostgrid.php',
-datatype: "json",
-height:'auto',
-// autowidth: true, 
-width: getWidthInPct(30),
-rownumbers: false, 
-colNames:[''], // Hide the column name since it's listed in the portlet
-colModel:[
-{name:'host',index:'host', width:50, editable:false, sortable:true}
-],
-	gridview: true, 
-    emptyrecords: "<font color='red'><b>No Results Found</font></b>",
-    forceFit: true,
-   	rowNum:10,
-   	rowList:[10,20,30,40,50,100,500],
-   	sortname: 'host',
-   	mtype: "POST",
-   	viewrecords: true,
-   	sortorder: "desc",
-    multiselect: true, 
-   	pager: '#hostsPager',
-    recordtext: "{0} - {1} of {2} hosts",
-    pgtext: "",
-    });
-// resize_hosts_grid();
-$(window).resize(resize_hosts_grid);
-// Append host filter text box to portlet header
-$('#portlet-header_Hosts').append('&nbsp;&nbsp;<input value="Host Filter" class="rounded_gridfilter watermark ui-widget ui-corner-all" type="text" id="hostsFilter" onkeydown="hostSearch(arguments[0]||event)" />');
-
-// Set pager options
-jQuery("#hostsTable").jqGrid('navGrid','#hostsPager',{add:false,edit:false,del:false,search:false,refresh:true}); 
-// Remove rollup icon
-$('.ui-jqgrid-titlebar-close','#gview_hostsTable').remove();
-
-// Live search
-var timeoutHnd;
-function hostSearch(ev){
-   	if(timeoutHnd) {
-	   	clearTimeout(timeoutHnd); }
-   	timeoutHnd = setTimeout(hostGridReload,500);
-}
-
-// Send the data and refresh the grid
-function hostGridReload(){
-   	var host_mask = jQuery("#hostsFilter").val();
-   	jQuery("#hostsTable").setGridParam({url:"includes/ajax/json.hostgrid.php?host_mask="+host_mask,page:1}).trigger("reloadGrid");
-}
-// **Special** - this will append to the search form on the main page for any checkboxes clicked on the hosts grid
-jQuery("#btnSearch").click( function() { 
-        var hosts = jQuery("#hostsTable").jqGrid('getGridParam','selarrrow'); 
-        $("#results").append("<input type='hidden' name='hosts' value='"+hosts+"'>");
-        $("#results").append("<input type='hidden' name='page' value='Results'>");
-        }); 
-jQuery("#btnGraph").click( function() { 
-        var hosts = jQuery("#hostsTable").jqGrid('getGridParam','selarrrow'); 
-        $("#results").append("<input type='hidden' name='hosts' value='"+hosts+"'>");
-        $("#results").append("<input type='hidden' name='page' value='Graph'>");
-        }); 
-$(function(){
-        $('input').keydown(function(e){
-            if (e.keyCode == 13) {
-            if ($("#hostsFilter").val() == "" || $("#hostsFilter").val() == 'Host Filter') {
-            $("#results").append("<input type='hidden' name='page' value='Results'>");
-            $(this).parents('#results').submit();
-            return false;
-            };
-            };
-            });
-        });
-</script>
-<!-- END Hosts Grid -->
-
-<script type="text/javascript">
-function resize_sadmin_grid()
-{
-    $('#sadmin_table').fluidGrid({base:'#portlet_Server_Settings', offset:-1});
-}
-function getWidthInPct(percent){
-        screen_res = ($(document).width())*0.99;
-        col = parseInt((percent*(screen_res/100)));
-            return col;
-    } 
-
-// Admin table
-var lastsel; 
-var admingrid = jQuery("#sadmin_table").jqGrid({
-url:'includes/ajax/json.sadmin.php',
-datatype: "json",
-height:'auto',
-width: getWidthInPct(99),
-rownumbers: false, 
- colNames:['Name','Value', 'Type', 'Options','Default','Description'], 
-    colModel:[ 
-        {name:'name',index:'name', width:40, editrules:{edithidden:false, required:true}, editable:false}, 
-        {name:'value',index:'value', width:30, editable:true}, 
-        {name:'type',index:'type', width:20,editable:true, edittype:"select",editoptions:{value:"enum:enum;int:int;varchar:varchar"}
-}, 
-        {name:'options',index:'options', width:20, editable:false}, 
-        {name:'default',index:'default', width:30, editable:false}, 
-        {name:'description',index:'description', width:280,editable:true,edittype:"textarea", editoptions:{rows:"10",cols:"40"}}
-    ], 
-	gridview: true, 
-    emptyrecords: "No Results Found",
-    forceFit: true,
-   	rowNum:10,
-   	rowList:[10,20,30,40,50],
-   	sortname: 'name',
-   	viewrecords: true,
-   	sortorder: "asc",
-    cellEdit: true,
-    cellurl: 'includes/ajax/json.sadmin.php',
-   	pager: '#sadmin_pager',
-    recordtext: "{0} - {1} of {2}",
-    pgtext: "",
-    });
-    jQuery("#sadmin_table").saveRow("rowid", true);
-// resize_sadmin_grid();
-$(window).resize(resize_sadmin_grid);
-
-// Set pager options
-jQuery("#sadmin_table").jqGrid('navGrid','#sadmin_pager',{add:false,edit:false,del:false,search:false,refresh:false}); 
-// Remove rollup icon
-$('.ui-jqgrid-titlebar-close','#gview_sadmin_table').remove();
-
-// Live search
-/*
-var timeoutHnd;
-function adminSearch(ev){
-   	if(timeoutHnd) {
-	   	clearTimeout(timeoutHnd); }
-   	timeoutHnd = setTimeout(adminGridReload,500);
-}
-
-// Send the data and refresh the grid
-function adminGridReload(){
-   	var host_mask = jQuery("#search_host").val();
-   	var facility_mask = jQuery("#search_facility").val();
-   	var priority_mask = jQuery("#search_priority").val();
-   	var program_mask = jQuery("#search_program").val();
-   	var msg_mask = jQuery("#search_msg").val();
-   	var fo_mask = jQuery("#search_fo").val();
-   	var lo_mask = jQuery("#search_lo").val();
-   	var counter_mask = jQuery("#search_counter").val();
-   	var notes_mask = jQuery("#search_notes").val();
-   	jQuery("#searchtable").setGridParam({url:"includes/ajax/json.grid.php?host_mask="+host_mask+"&facility_mask="+facility_mask+"&priority_mask="+priority_mask+"&program_mask="+program_mask+"&msg_mask="+msg_mask+"&counter_mask="+counter_mask+"&fo_mask="+fo_mask+"&lo_mask="+lo_mask+"&notes_mask="+notes_mask,page:1}).trigger("adminGridReload");
-}
-*/
-</script>
-<!-- END Admin Table Grid -->
-
-<!-- END GRIDS -->
-
 <!-- BEGIN Select All Checkboxes -->
 <script type="text/javascript">
 function toggleCheck(status) {
@@ -977,7 +814,7 @@ function watermark(target, value) {
 }
 // Apply watermarks to various text fields
 $(document).ready(function() {
-watermark("#hostsFilter","Host Filter");
+// watermark("#hostsFilter","Host Filter");
 });
 </script>
 <!-- END Watermark Function -->
@@ -1027,6 +864,8 @@ $(document).ready(function() {
             $("#portlet-header_Facilities").prepend(commify(count)+" ");
         var count = $("#severities option").size()
             $("#portlet-header_Severities").prepend(commify(count)+" ");
+        var count = <?php echo $_SESSION['PORTLET_HOSTS_LIMIT'];?>;
+            $("#portlet-header_Hosts").prepend("Last "+commify(count)+" ");
         }
             watermark("#dupcount","0");
 });
@@ -1136,6 +975,24 @@ $(".portlet-header .ui-icon-disk").click(function() {
 // END: Save URL function
 //---------------------------------------------------------------
 
+//---------------------------------------------------------------
+// BEGIN: Hosts Portlet Expander
+//---------------------------------------------------------------
+$("#portlet-header_Hosts").prepend('<a href="#"><span class="ui-icon ui-icon-plus"></span></a>');
+// **Special** - this will append to the search form on the main page for any checkboxes clicked on the hosts grid
+jQuery("#btnSearch").click( function() { 
+        var hosts = jQuery("#hostsgrid").jqGrid('getGridParam','selarrrow'); 
+        $("#results").append("<input type='hidden' name='hosts' value='"+hosts+"'>");
+        $("#results").append("<input type='hidden' name='page' value='Results'>");
+        }); 
+jQuery("#btnGraph").click( function() { 
+        var hosts = jQuery("#hostsgrid").jqGrid('getGridParam','selarrrow'); 
+        $("#results").append("<input type='hidden' name='hosts' value='"+hosts+"'>");
+        $("#results").append("<input type='hidden' name='page' value='Graph'>");
+        }); 
+//---------------------------------------------------------------
+// END: Hosts Portlet Expander
+//---------------------------------------------------------------
 //---------------------------------------------------------------
 // BEGIN: Get URL function
 // Places the output in the menu under "Favorites"
@@ -1396,3 +1253,13 @@ $(function(){
 });
 </script>
 <!-- END Search Param Text -->
+
+
+<!-- BEGIN Load DOM with timeago converter -->
+<script type="text/javascript">
+jQuery(document).ready(function() {
+  jQuery("abbr.timeago").timeago();
+});
+</script>
+<!-- END Load DOM with timeago converter -->
+
