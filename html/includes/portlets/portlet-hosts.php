@@ -57,6 +57,14 @@ if( $count >0 ) {
 
 } 
 ?>
+
+<script type="text/javascript">
+jQuery(document).ready(function() {
+var count = <?php echo $i;?>;
+$("#portlet-header_Hosts").prepend("Last "+commify(count)+" ");
+});
+</script>
+
 <!-- BEGIN Large Host Selector Modal -->
 <div class="dialog_hide">
     <div id="host_dialog" title="Host Selector">

@@ -1,10 +1,6 @@
 <?php
-// Copyright (C) 2006 Clayton Dukes, cdukes@cdukes.com
+// Copyright (C) 2011 LogZilla, LLC - Clayton Dukes, cdukes@logzilla.info
 
-header("Last-Modified: " . gmdate("D, d M Y H:i:s") . " GMT");
-header("Cache-Control: no-store, no-cache, must-revalidate");
-header("Cache-Control: post-check=0, pre-check=0", false);
-header("Pragma: no-cache");
 $basePath = dirname( __FILE__ );
 require_once ($basePath . "/common_funcs.php");
 require_once ($basePath . "/ofc/php/open-flash-chart.php");
@@ -13,21 +9,19 @@ require_once ($basePath . "/ofc/php/open-flash-chart.php");
 getsettings();
 
 ?>
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" 
-"http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
-
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
 <head>
-<!-- BEGIN favicon -->
 <link rel="shortcut icon" type="image/x-icon" href="images/favicon.ico" />
-<!-- END favicon -->
-
-<meta http-equiv="Pragma" content="no-cache" />
-<meta http-equiv="Expires" content="-1" />
-<meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
-<?php 
-echo "<title>".$addTitle.": ".$_SESSION['PROGNAME']." ".$_SESSION['VERSION']."</title>\n"; 
-?>
+<?php echo "<title>".$addTitle.": ".$_SESSION['PROGNAME']." ".$_SESSION['VERSION']."</title>\n"; ?>
+<meta name="Description" "<?php echo $_SESSION['PROGNAME']?>">
+<meta name="Keywords" 'LogZilla', 'Syslog', 'Syslog Tool', 'Syslog Analysis', 'Syslog Analyzer'>
+<meta name="Copyright" 'LogZilla, LLC'>
+<meta name="Author" 'Clayton Dukes - cdukes@logzilla.info'>
+<meta http-equiv="Content-Language" content="EN">
+<meta name="ROBOTS" content="NOINDEX, NOFOLLOW" />
+<meta http-equiv="content-type" content="application/xhtml+xml; charset=UTF-8" />
+<meta http-equiv="X-UA-Compatible" content="chrome=1">
 
 <!-- BEGIN Import CSS -->
 <?php include ("css.php");?>
