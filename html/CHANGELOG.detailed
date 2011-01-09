@@ -1,5 +1,11 @@
 CHANGELOG
 
+3.1.140 - Updates/various changes
+CD:
+ - Adding/changing a few things for cosmetic and scaling reasons
+ - Added 'SPARKLINES' setting in admin>settings to disable the main page sparklines (on large systems, users may opt to disable it to avoid constant data refreshes).
+ - Modified html_header for better (hopefully) meta tags and refresh settings.
+
 3.1.136 - Updates/New Host Portlet feature
 CD:
  - Added 'seen' and 'lastseen' columns to the hosts table (also updated db_insert.pl to inject the datetime)

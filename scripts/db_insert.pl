@@ -240,6 +240,7 @@ my $db_insert = $dbh->prepare("INSERT INTO $dbtable (host,facility,severity,prog
 my $db_insert_prg = $dbh->prepare("INSERT IGNORE INTO programs (name,crc) VALUES (?,?) ");
 my $db_insert_mne = $dbh->prepare("INSERT IGNORE INTO mne (name,crc) VALUES (?,?) ");
 my $db_insert_host = $dbh->prepare("INSERT INTO hosts (host, lastseen) VALUES (?,?) ON DUPLICATE KEY UPDATE seen=seen + 1, lastseen=? ");
+$db_insert_host->{TraceLevel} = 4 if (($debug > 4) and ($verbose));
 #my $dumpfile = "/dev/shm/infile.txt";
 my $dumpfile = "/tmp/logzilla_import.txt";
 #my $sql = qq{LOAD DATA LOCAL INFILE '$dumpfile' INTO TABLE logs FIELDS TERMINATED BY "\\t" LINES TERMINATED BY "\\n" (host,facility,severity,program,msg,mne,fo,lo)};
@@ -275,11 +276,14 @@ $prg_select->execute();
 while (my $ref = $prg_select->fetchrow_hashref()) {
     $program_cache{$ref->{'name'}} = $ref->{'crc'};
 }
-my $host_select = $dbh->prepare("SELECT * FROM hosts");
-$host_select->execute();
-while (my $ref = $host_select->fetchrow_hashref()) {
-    $host_cache{$ref->{'host'}} = $ref->{'host'};
-}
+
+# Had to remove pre-reading hosts from the DB into the cache table since we started tracking hostcount and lastseen
+# If we pull them in, they will get counted as being seen again.
+#my $host_select = $dbh->prepare("SELECT * FROM hosts");
+#$host_select->execute();
+#while (my $ref = $host_select->fetchrow_hashref()) {
+#$host_cache{$ref->{'host'}} = $ref->{'host'};
+#}
 my $mne_select = $dbh->prepare("SELECT * FROM mne");
 $mne_select->execute();
 while (my $ref = $mne_select->fetchrow_hashref()) {
@@ -380,8 +384,8 @@ while (my $msg = <STDIN>) {
         }
         # 2010-08-29: Added to insert cached hosts, progs and mnes upon exit
         my @hosts = keys %host_cache;
-        $now = strftime("%Y-%m-%d %H:%M:%S", localtime);
         foreach my $h (@hosts) {
+            $now = strftime("%Y-%m-%d %H:%M:%S", localtime);
             $db_insert_host->execute($h, $now, $now);
         }
         my @prgs = keys %program_cache;
@@ -497,9 +501,10 @@ while (my $msg = <STDIN>) {
             $mpm = 0;
             @mps = ();
             my @hosts = keys %host_cache;
-            $now = strftime("%Y-%m-%d %H:%M:%S", localtime);
             foreach my $h (@hosts) {
+                $now = strftime("%Y-%m-%d %H:%M:%S", localtime);
                 $db_insert_host->execute($h, $now, $now);
+                %host_cache = ();
             }
             my @prgs = keys %program_cache;
             foreach my $p (@prgs) {
@@ -519,6 +524,7 @@ while (my $msg = <STDIN>) {
         #exit;
         #}
         if ($#mpm == 60) {
+            $now = strftime("%Y-%m-%d %H:%M:%S", localtime);
             push(@mph, "chart_mph_$hr,$mph,$now");
             $db_insert_mpX->execute("chart_mph_$hr", "$mph", "$now");
             print STDOUT "Messages Per Hour = $mph\n" if ($debug > 1);
@@ -528,6 +534,7 @@ while (my $msg = <STDIN>) {
             @mpm = ();
         }
         if ($#mph == 24) {
+            $now = strftime("%Y-%m-%d %H:%M:%S", localtime);
             push(@mpd, "chart_mpd_$day,$mpd,$now");
             $db_insert_mpX->execute("chart_mpd_$day", "$mpd", "$now");
             print STDOUT "Messages Per Day = $mpd\n" if ($debug > 1);
@@ -682,10 +689,6 @@ sub do_msg {
         if ($prg =~ /\//) { 
             $prg = fileparse($prg);
         }
-        # Catch-all for junk streams...
-        if ($prg !~ /[A-Za-z]/) {
-            $prg = "Unknown";
-        }
         # Add filter for Juniper boxes - invalid mnemonics were being picked up.
         if ($prg =~ /Juniper/) { 
             $mne = "None";
@@ -701,6 +704,14 @@ sub do_msg {
         #if ($seq !~ /\d/) {
         #	$seq = 0;
         #}
+        # Special fix (urldecode) for any urlencoded strings coming in from VmWare or Apache
+        $prg =~ s/\%([A-Fa-f0-9]{2})/pack('C', hex($1))/seg;
+        $msg =~ s/\%([A-Fa-f0-9]{2})/pack('C', hex($1))/seg;
+        # Catch-all for junk streams...
+        # This won't work well in non-english environments...
+        if ($prg !~ /^[a-zA-Z0-9]+/) {
+            $prg = "Unknown";
+        }
         $prg32 = crc32("$prg");
         $mne32 = crc32("$mne");
         unless ($host_cache{$host}){

@@ -25,7 +25,7 @@ $conn->query("SET NAMES utf8");
 // Create the jqGrid instance
 $grid = new jqGridRender($conn);
 // Write the SQL Query
-$grid->SelectCommand = 'SELECT host as Host, seen as Seen, lastseen as LastSeen FROM syslog.hosts';
+$grid->SelectCommand = 'SELECT host as Host, seen as Seen, lastseen as LastSeen FROM hosts';
 // set the ouput format to json
 $grid->dataType = 'json';
 // Let the grid create the model
@@ -96,7 +96,7 @@ $(".portlet-header .ui-icon-plus").click(function() {
                 }
         });
         $("#host_dialog").dialog('open');     
-        // Some magic to set the proper width of the grid innside a Modal window
+        // Some magic to set the proper width of the grid inside a Modal window
         var modalWidth = $("#ui-dialog-title-host_dialog").width() -1;
         $('#hostsgrid').fluidGrid({base:'#ui-dialog-title-host_dialog', offset:-25});
         $('#hostsgrid').jqGrid('setGridWidth',setWidth(modalWidth));
@@ -120,6 +120,6 @@ CUSTOM;
 $grid->setJSCode($custom);
 
 // Enjoy
-$grid->renderGrid('#hostsgrid','#pager',true, null, null, true,true);
+$grid->renderGrid('#hostsgrid','#hostspager',true, null, null, true,true);
 $conn = null;
 ?>

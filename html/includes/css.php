@@ -59,3 +59,7 @@ This file contains any custom css that I've written
 <!-- BEGIN Select Boxes -->
 <link rel="stylesheet" type="text/css" media="screen" href="css/selectbox.css" />
 <!-- END Select Boxes -->
+
+<!-- BEGIN Error Dialogs -->
+<link rel="stylesheet" type="text/css" media="screen" href="css/errordialog.css" />
+<!-- END Error Dialogs -->

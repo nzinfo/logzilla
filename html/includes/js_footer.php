@@ -377,16 +377,18 @@ function reloadIE(id, display, url) {
 <!-- BEGIN Sparklines -->
 <script type="text/javascript" src="includes/js/jquery/plugins/jquery.sparkline.min.js"></script>
 <script type="text/javascript">
+$(document).ready(function(){
+/** 
+ ** Draws the Messages per second sparkline
+ **/
+var enabled = <?php echo ($_SESSION['SPARKLINES'])?>;
+if (enabled == 1) {
 average = function(a){
     var r = {mean: 0, variance: 0, deviation: 0}, t = a.length;
     for(var m, s = 0, l = t; l--; s += a[l]);
     for(m = r.mean = s / t, l = t, s = 0; l--; s += Math.pow(a[l] - m, 2));
     return r.deviation = Math.sqrt(r.variance = s / t), r;
 }
-$(document).ready(function(){
-/** 
- ** Draws the Messages per second sparkline
- **/
 var average = function(a){
     var r = {mean: 0, variance: 0, deviation: 0}, t = a.length;
     for(var m, s = 0, l = t; l--; s += a[l]);
@@ -437,6 +439,10 @@ mdraw = function() {
 }
 var mtimer = setTimeout(mdraw, refreshinterval); 
 $.sparkline_display_visible(); 
+} else {
+    $('.dynamicsparkline').text("");
+}
+
 // $('#sparkbox').draggable();
 });
 </script>
@@ -864,8 +870,6 @@ $(document).ready(function() {
             $("#portlet-header_Facilities").prepend(commify(count)+" ");
         var count = $("#severities option").size()
             $("#portlet-header_Severities").prepend(commify(count)+" ");
-        var count = <?php echo $_SESSION['PORTLET_HOSTS_LIMIT'];?>;
-            $("#portlet-header_Hosts").prepend("Last "+commify(count)+" ");
         }
             watermark("#dupcount","0");
 });
