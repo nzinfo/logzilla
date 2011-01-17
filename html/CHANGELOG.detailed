@@ -1,5 +1,14 @@
 CHANGELOG
 
+3.1.141 - Updates/various changes
+CD:
+ - Moved favicon from images/ to the root so apache would stop complaining.
+ - Changed g_redirect call from $_SERVER['HTTP_HOST'] to $_SERVER['SERVER_NAME'] as it causes proxied web redirects to break.
+ - Fixed username/password in export.sh script
+ - Added note about Apparmor blocking MySQL read/writes 
+   (see http://nms.gdd.net/index.php/Install_Guide_for_LogZilla_v3.x#Apparmor_Blocking)
+ - More work on the Triggers grid (can now perform CRUD operations)
+
 3.1.140 - Updates/various changes
 CD:
  - Adding/changing a few things for cosmetic and scaling reasons
