@@ -280,9 +280,15 @@ function g_redirect($url,$mode)
       if (!isset($_SERVER["HTTPS"])) {
           $_SERVER["HTTPS"] = "undefine";
       }  
+          /* CDUKES: 01-15-11 - Change to use server_name only as http_host 
+            //  messes up proxies that with apache directive "UseCanonicalName On"
       $starturl = ($_SERVER["HTTPS"] == 'on' ? 'https' : 'http') . '://'.
                  (empty($_SERVER['HTTP_HOST'])? $_SERVER['SERVER_NAME'] :
                  $_SERVER['HTTP_HOST']);
+                 */
+      $starturl = ($_SERVER["HTTPS"] == 'on' ? 'https' : 'http') . '://'.
+                 (empty($_SERVER['HTTP_HOST'])? $_SERVER['SERVER_NAME'] :
+                 $_SERVER['SERVER_NAME']);
 
      if ($url[0] != '/') $starturl .= dirname($_SERVER['PHP_SELF']).'/';
 

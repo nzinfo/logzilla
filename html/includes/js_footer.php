@@ -870,6 +870,9 @@ $(document).ready(function() {
             $("#portlet-header_Facilities").prepend(commify(count)+" ");
         var count = $("#severities option").size()
             $("#portlet-header_Severities").prepend(commify(count)+" ");
+        var count = <?php echo $_SESSION['PORTLET_HOSTS_LIMIT'];?>;
+        $("#portlet-header_Hosts").prepend("Last "+commify(count)+" ");
+
         }
             watermark("#dupcount","0");
 });

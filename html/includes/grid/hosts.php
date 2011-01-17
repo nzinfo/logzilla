@@ -69,7 +69,6 @@ function setHeight(percent){
 };
 
 
-$(document).ready(function() {
 //---------------------------------------------------------------
 // BEGIN: Host Select Dialog
 //---------------------------------------------------------------
@@ -82,8 +81,6 @@ $(".portlet-header .ui-icon-plus").click(function() {
                 position: [100,100],
                 autoOpen:false,
                 modal: false,
-                show: "slide",
-                hide: "clip",
                 title: "Host Selector",
                 overlay: {
                         backgroundColor: '#000',
@@ -96,12 +93,20 @@ $(".portlet-header .ui-icon-plus").click(function() {
                 }
         });
         $("#host_dialog").dialog('open');     
-        // Some magic to set the proper width of the grid inside a Modal window
-        var modalWidth = $("#ui-dialog-title-host_dialog").width() -1;
-        $('#hostsgrid').fluidGrid({base:'#ui-dialog-title-host_dialog', offset:-25});
-        $('#hostsgrid').jqGrid('setGridWidth',setWidth(modalWidth));
-        $('#hostsgrid').jqGrid('setGridHeight',setHeight(57));
-});
+        $("#host_dialog").ready(function(){
+        //code here
+    // Some magic to set the proper width of the grid inside a Modal window
+    var modalWidth = $("#ui-dialog-title-host_dialog").width() -1;
+    $('#hostsgrid').fluidGrid({base:'#ui-dialog-title-host_dialog', offset:-25});
+    $('#hostsgrid').jqGrid('setGridWidth',setWidth(modalWidth));
+    $('#hostsgrid').jqGrid('setGridHeight',setHeight(57));
+    if(1<$("#hostsgrid tr.ui-search-toolbar").length){
+        $("#hostsgrid tr.ui-search-toolbar:first").remove();
+    }
+    if(1<$("#hostsgrid table.navtable").length){
+        $("#hostsgrid table.navtable:first").remove();
+    }
+    });
 //---------------------------------------------------------------
 // END: Host Select Dialog
 //---------------------------------------------------------------
