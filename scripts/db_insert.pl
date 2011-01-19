@@ -378,6 +378,9 @@ while (my $msg = <STDIN>) {
             # This will auto-create a new partition if it is missing.
             if ($db_load_infile->errstr() =~ /Table has no partition for value (\d+)/) {
                 makepart($1);
+                $db_load_infile->execute();
+                if ($db_load_infile->errstr() =~ /Table has no partition for value (\d+)/) {
+                	print STDOUT "FATAL: Unable to execute SQL statement: ", $db_load_infile->errstr(), " even after Partition creation!\n"; }	
             } else {
                 print STDOUT "FATAL: Unable to execute SQL statement: ", $db_load_infile->errstr(), "\n";
             }
