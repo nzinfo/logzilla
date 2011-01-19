@@ -38,7 +38,7 @@ sub p {
 }
 
 my $version = "3.1";
-my $subversion = ".143";
+my $subversion = ".144";
 
 # Grab the base path
 my $lzbase = getcwd;
@@ -324,6 +324,10 @@ if ($ok =~ /[Yy]/) {
 # Insert history table
     my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/history.sql`;
     print $res;
+    
+# Insert archives table
+    my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/archives.sql`;
+    print $res;
 
 # Create Views
     my $sth = $dbh->prepare("
@@ -524,13 +528,15 @@ if ($ok =~ /[Yy]/) {
     SQL SECURITY DEFINER
     COMMENT 'Export yesterdays data to a file'
     BEGIN
+    set \@p = ("SELECT value from settings WHERE name=`ARCHIVE_PATH`");
     DECLARE export CHAR(32) DEFAULT CONCAT ('dumpfile_', DATE_FORMAT(CURDATE()-1, '%Y%m%d'),'.txt');
     DECLARE max_day INTEGER DEFAULT TO_DAYS(NOW()) +1;
     SET \@s = 
-    CONCAT('select * into outfile "$lzbase/exports/',export,'" from logs where TO_DAYS( lo )=',max_day-2);
+    CONCAT('select * into outfile ",'\@p',/',export,'" from logs where TO_DAYS( lo )=',max_day-2);
     PREPARE stmt FROM \@s;
     EXECUTE stmt;
     DEALLOCATE PREPARE stmt;
+    INSERT INTO archives (archive) VALUES (export);
     END 
     };
     my $sth = $dbh->prepare("
