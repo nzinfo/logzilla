@@ -1,5 +1,11 @@
 CHANGELOG
 
+3.1.143 - archive changes
+ - Cleanup up import and export shell files a bit.
+   Changed from using /tmp to the exports/ directory because of Apparmor blocking
+   Changed to gzip instead of bunzip (wider range of OS support)
+
+
 3.1.142 - archive changes
 TH:
  - exports path now in the table settings (archive_path)

@@ -11,5 +11,5 @@ o=`cat /path_to_logzilla/scripts/sql/lzmy.cnf | grep port | sed 's/port[[:space:
 mysql -h $h -P $o --user $u --password=$p -e "call export;" $d
 for i in $( ls /path_to_logzilla/exports/*.txt );
 do 
-	bzip2 $i
+	gzip $i
 done 

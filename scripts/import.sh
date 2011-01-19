@@ -4,19 +4,10 @@ export=/path_to_logzilla/exports/$1
 if [ -s "$export" ]; then
   echo "file found in the online store";
 else
-  echo "file not in the online store"
-
-#  echo "try to restore from backup"  
-#  echo "doing restore *brumm* *brumm*"
-#  if [ $? ]; then 
-#      echo "cant restore from backup"
-     exit  ;
-#  fi
-
+    echo "file not in the online store"
+    exit  ;
 fi
-echo "Copying file to temp space"
-cp  -f $export /tmp/$1.bz2
-cd /tmp
+cd $lzhome/exports
 echo "unzipping..."
 bunzip2 $1.bz2
 echo "splitting into partions..."
@@ -39,5 +30,5 @@ rm -rf $temp
 rm -rf /tmp/$1
 
 echo "reindex sphinx"
-/path_to_logzilla/sphinx/indexer.sh full
+$lzhome/sphinx/indexer.sh full
 echo "***all done***"
