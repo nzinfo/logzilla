@@ -655,11 +655,11 @@ sub do_msg {
         #print STDOUT "TRIGGERS:\n@triggers\n";
         while( my ($id, $pattern) = each %trigger_cache ) {
             my $re = qr/$pattern/;
-            print STDOUT "-----START EVENT TRIGGERS-----\nLooking for Pattern: \"$pattern\" in message \"$msg\"\n" if ($verbose);
-            print LOG "-----START EVENT TRIGGERS-----\nLooking for Pattern: \"$pattern\" in message \"$msg\"\n" if ($debug > 1);
+            print STDOUT "-----START EVENT TRIGGERS-----\nLooking for Pattern: \"$pattern\" in message \"$msg\"\n" if ($debug >4);
+            print LOG "-----START EVENT TRIGGERS-----\nLooking for Pattern: \"$pattern\" in message \"$msg\"\n" if ($debug > 4);
             if ($msg =~ /$re/) {
-                print STDOUT "FOUND PATTERN '$pattern' in message: '$msg'\nSENDING EMAIL!\n-----END EVENT TRIGGERS-----\n\n" if ($verbose);
-                print LOG "FOUND PATTERN '$pattern' in message: '$msg'\nSENDING EMAIL!\n-----END EVENT TRIGGERS-----\n\n" if ($debug > 1);
+                print STDOUT "FOUND PATTERN '$pattern' in message: '$msg'\nSENDING EMAIL!\n-----END EVENT TRIGGERS-----\n\n" if ($debug > 4);
+                print LOG "FOUND PATTERN '$pattern' in message: '$msg'\nSENDING EMAIL!\n-----END EVENT TRIGGERS-----\n\n" if ($debug > 4);
                 &triggerMail($id, $msg);
             }
         }
