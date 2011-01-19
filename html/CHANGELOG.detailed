@@ -1,5 +1,10 @@
 CHANGELOG
 
+3.1.142 - archive changes
+TH:
+ - Fixed more parameter in the export.sh and import.sh script
+ - split the dumpfile for import in 100000 lines parts - so the lock on the logs table isn't too long 
+
 3.1.141 - Updates/various changes
 CD:
  - Moved favicon from images/ to the root so apache would stop complaining.
