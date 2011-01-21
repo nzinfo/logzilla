@@ -26,8 +26,8 @@
 <!-- END JQUERY -->
 
 <!-- BEGIN JqGrid -->
-<script src="includes/js/jquery/plugins/grid.i18n/grid.locale-en.js" type="text/javascript"></script>
-<script src="includes/js/jquery/plugins/jquery.jqGrid.min.js" type="text/javascript"></script>
+<script src="includes/grid/js/i18n/grid.locale-en.js" type="text/javascript"></script>
+<script src="includes/grid/js/jquery.jqGrid.min.js" type="text/javascript"></script>
 <!-- END JqGrid -->
 
 <!-- BEGIN JQuery UI -->
