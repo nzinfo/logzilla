@@ -11,8 +11,11 @@
  * 2011-01-03 - created
  *
  */
-
-require_once 'jq-config.php';
+define('ABSPATH', dirname(__FILE__).'/');
+require_once (ABSPATH . "../common_funcs.php");
+define('DB_DSN',"mysql:host=".DBHOST.";dbname=".DBNAME);
+define('DB_USER', DBADMIN);    
+define('DB_PASSWORD', DBADMINPW); 
 // include the jqGrid Class
 require_once ABSPATH."php/jqGrid.php";
 // include the driver class
@@ -45,16 +48,16 @@ $grid->setGridOptions(array(
 $grid->setColProperty('Seen', array('width'=>'10'));
 $grid->setColProperty('LastSeen', array('formatter'=>'js:easyDate'));
 
-$grid->navigator = true; 
-$grid->setNavOptions('navigator', array("excel"=>true,"add"=>false,"edit"=>false,"del"=>false,"view"=>false, "search"=>true)); 
+$grid->navigator = true;
+$grid->setNavOptions('navigator', array("excel"=>true,"add"=>false,"edit"=>false,"del"=>false,"view"=>false, "search"=>true));
 
 $custom = <<<CUSTOM
 
-function easyDate (cellValue, options, rowdata) 
+function easyDate (cellValue, options, rowdata)
 {
     var t = jQuery.timeago(cellValue);
     var cellHtml = "<span>" + t + "</span>";
-    return cellHtml; 
+    return cellHtml;
 }
 
 function setWidth(percent){
@@ -67,8 +70,6 @@ function setHeight(percent){
         col = parseInt((percent*(screen_res/100)));
         return col;
 };
-
-
 //---------------------------------------------------------------
 // BEGIN: Host Select Dialog
 //---------------------------------------------------------------
@@ -85,28 +86,20 @@ $(".portlet-header .ui-icon-plus").click(function() {
                 overlay: {
                         backgroundColor: '#000',
                         opacity: 0.5
-                },
+                },     
                 buttons: {
                         'Add Selected Hosts': function() {
                                 $(this).dialog('close');
                         },
-                }
-        });
-        $("#host_dialog").dialog('open');     
+                }               
+        });             
+        $("#host_dialog").dialog('open');
         $("#host_dialog").ready(function(){
-        //code here
-    // Some magic to set the proper width of the grid inside a Modal window
-    var modalWidth = $("#ui-dialog-title-host_dialog").width() -1;
-    $('#hostsgrid').fluidGrid({base:'#ui-dialog-title-host_dialog', offset:-25});
-    $('#hostsgrid').jqGrid('setGridWidth',setWidth(modalWidth));
-    $('#hostsgrid').jqGrid('setGridHeight',setHeight(57));
-    if(1<$("#hostsgrid tr.ui-search-toolbar").length){
-        $("#hostsgrid tr.ui-search-toolbar:first").remove();
-    }
-    if(1<$("#hostsgrid table.navtable").length){
-        $("#hostsgrid table.navtable:first").remove();
-    }
-    });
+        // Some magic to set the proper width of the grid inside a Modal window
+        var modalWidth = $("#ui-dialog-title-host_dialog").width() +5;
+        $('#hostsgrid').jqGrid('setGridWidth',setWidth(modalWidth));
+        $('#hostsgrid').jqGrid('setGridHeight',setHeight(57));
+        });
 //---------------------------------------------------------------
 // END: Host Select Dialog
 //---------------------------------------------------------------
@@ -123,6 +116,7 @@ $(window).resize(function()
 CUSTOM;
 
 $grid->setJSCode($custom);
+
 
 // Enjoy
 $grid->renderGrid('#hostsgrid','#hostspager',true, null, null, true,true);
