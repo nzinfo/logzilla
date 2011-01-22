@@ -11,8 +11,11 @@
  * 2011-01-03 - created
  *
  */
-
-require_once 'jq-config.php';
+define('ABSPATH', dirname(__FILE__).'/');
+require_once (ABSPATH . "../common_funcs.php");
+define('DB_DSN',"mysql:host=".DBHOST.";dbname=".DBNAME);
+define('DB_USER', DBADMIN);    
+define('DB_PASSWORD', DBADMINPW); 
 // include the jqGrid Class
 require_once ABSPATH."php/jqGrid.php";
 // include the driver class
@@ -25,16 +28,19 @@ $conn->query("SET NAMES utf8");
 // Create the jqGrid instance
 $grid = new jqGridRender($conn);
 // Write the SQL Query
-$grid->SelectCommand = 'SELECT * FROM triggers';
+$grid->SelectCommand = 'SELECT description,pattern,mailto,mailfrom,subject,body,disabled FROM triggers';
 // set the ouput format to json
 $grid->dataType = 'json';
 $grid->table = 'triggers';
 
 
-$labels = array("id"=>"Id", "description"=>"Description", "pattern"=>"Regex Pattern", "mailto"=>"Mail Recipient", "mailfrom"=>"Mail Originator", "subject"=>"Mail Subject", "body"=>"Mail Body", "disabled"=>"Trigger Disabled?");
+$labels = array("description"=>"Description", "pattern"=>"Regex Pattern", "mailto"=>"Mail Recipient", "mailfrom"=>"Mail Originator", "subject"=>"Mail Subject", "body"=>"Mail Body", "disabled"=>"Disabled?");
 
 // Let the grid create the model
 $grid->setColModel(null, null, $labels);
+
+$grid->setColProperty('disabled', array('width'=>'50',"edittype"=>"select"));
+
 // Set the url from where we obtain the data
 $grid->setUrl('includes/grid/triggers.php');
 
@@ -60,9 +66,7 @@ $grid->setGridOptions(array(
     ));
 
 
-$grid->setColProperty('id', array('width'=>'0','editable'=>false));
 $grid->setPrimaryKeyId('id');
-$grid->toolbarfilter = true;
 
 
 
@@ -74,9 +78,15 @@ $grid->setSelect("disabled", $choices , false, false, true, array(""=>"All"));
 $grid->navigator = true; 
 $grid->setNavOptions('navigator', array("excel"=>true,"add"=>true,"edit"=>false,"del"=>false,"view"=>false, "search"=>true)); 
 $grid->setNavOptions('edit', array("height"=>"auto","dataheight"=>"auto")); 
-$grid->setNavOptions('add', array("height"=>"auto","dataheight"=>"auto")); 
+$grid->setNavOptions('add', array("height"=>"auto","dataheight"=>"auto","top"=>200,"left"=>400)); 
 
 $custom = <<<CUSTOM
+function easyDate (cellValue, options, rowdata)
+{
+    var t = jQuery.timeago(cellValue);
+    var cellHtml = "<span>" + t + "</span>";
+    return cellHtml;
+}
 
 function setWidth(percent){
         screen_res = ($(document).width())*0.99;
@@ -92,13 +102,13 @@ function setHeight(percent){
 
 $(document).ready(function() {
 
-        $('#triggergrid').fluidGrid({base:'#ui-dialog-title-host_dialog', offset:-15});
+        $('#triggergrid').fluidGrid({base:'#portlet-header_Event_Triggers', offset:-15});
         $('#triggergrid').jqGrid('setGridHeight',setHeight(57));
 });
 
 $(window).resize(function()
 {
-        $('#triggergrid').fluidGrid({base:'#ui-dialog-title-host_dialog', offset:-15});
+        $('#triggergrid').fluidGrid({base:'#portlet-header_Event_Triggers', offset:-15});
 });
 
 
