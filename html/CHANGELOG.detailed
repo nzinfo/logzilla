@@ -1,6 +1,11 @@
 CHANGELOG
 
 
+3.1.147 - install.pl blocker
+TH:
+ - fixed the export procedure
+ - speedup the import.sh
+
 3.1.146 - Grids
 CD:
  - Worked on the Hosts grid - fixed duplicate icon bug

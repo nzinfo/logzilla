@@ -38,7 +38,7 @@ sub p {
 }
 
 my $version = "3.1";
-my $subversion = ".146";
+my $subversion = ".147";
 
 # Grab the base path
 my $lzbase = getcwd;
@@ -528,16 +528,16 @@ if ($ok =~ /[Yy]/) {
     SQL SECURITY DEFINER
     COMMENT 'Export yesterdays data to a file'
     BEGIN
-    set \@p = ("SELECT value from settings WHERE name=`ARCHIVE_PATH`");
-    DECLARE export CHAR(32) DEFAULT CONCAT ('dumpfile_', DATE_FORMAT(CURDATE()-1, '%Y%m%d'),'.txt');
-    DECLARE max_day INTEGER DEFAULT TO_DAYS(NOW()) +1;
-    SET \@s = 
-    CONCAT('select * into outfile ",'\@p',/',export,'" from logs where TO_DAYS( lo )=',max_day-2);
-    PREPARE stmt FROM \@s;
-    EXECUTE stmt;
-    DEALLOCATE PREPARE stmt;
-    INSERT INTO archives (archive) VALUES (export);
-    END 
+     DECLARE export CHAR(32) DEFAULT CONCAT ('dumpfile_', DATE_FORMAT(CURDATE()-1, '%Y%m%d'),'.txt');
+	 DECLARE export_path CHAR(127);
+	 SELECT value into export_path from settings WHERE name="ARCHIVE_PATH";
+     SET \@s =
+        CONCAT('select * into outfile "',export_path, '/' , export,'" from logs  where TO_DAYS( lo )=',TO_DAYS(NOW())-1);
+	 PREPARE stmt FROM \@s;
+     EXECUTE stmt;
+     DEALLOCATE PREPARE stmt;
+	 INSERT INTO archives (archive) VALUES (export);
+     END 
     };
     my $sth = $dbh->prepare("
         $event
