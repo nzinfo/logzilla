@@ -1,5 +1,11 @@
 CHANGELOG
 
+3.1.149 - Various
+CD:
+ - Added EULA to appease the lawyer guys...
+ - Fixed most grid bugs - only one left (yay)
+ - Renamed "Triggers" to "Email Alerts" 
+
 3.1.148 - Grids
 CD:
  - More work on the hosts grid and event triggers grid

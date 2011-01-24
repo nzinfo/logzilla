@@ -22,6 +22,7 @@ use Cwd;
 use DBI;
 use Date::Calc;
 use Term::ReadLine;
+use Term::Pager;
 use File::Copy;
 
 # not needed here, but might as well warn the user to install it now since db_insert will need them
@@ -38,7 +39,7 @@ sub p {
 }
 
 my $version = "3.1";
-my $subversion = ".148";
+my $subversion = ".149";
 
 # Grab the base path
 my $lzbase = getcwd;
@@ -46,9 +47,24 @@ $lzbase =~ s/\/scripts//g;
 my $paths_updated = 0;
 
 print("\n\033[1m\n\n========================================\033[0m\n");
-print("\n\033[1m\tLogZilla Installation\n\033[0m");
+print("\n\033[1m\tLogZilla End User License\n\033[0m");
 print("\n\033[1m========================================\n\n\033[0m\n\n");
 
+my $ok  = &p("You must read and accept the End User License Agreement to continue.\nContinue? (yes/no)", "n");
+if ($ok =~ /[Nn]/) {
+    print "Please try again when you are ready to accept.\n";
+    exit 1;
+} else {
+    &show_EULA;
+}
+my $ok  = &p("Do you accept? (yes/no)", "n");
+if ($ok =~ /[Nn]/) {
+    print "Please try again when you are ready to accept.\n";
+    exit 1;
+}
+print("\n\033[1m\n\n========================================\033[0m\n");
+print("\n\033[1m\tInstallation\n\033[0m");
+print("\n\033[1m========================================\n\n\033[0m\n\n");
 my $dbroot = &p("Enter the MySQL root username", "root");
 $dbroot = qq{$dbroot};
 my $dbrootpass = &p("Enter the password for $dbroot", "mysql");
@@ -324,7 +340,7 @@ if ($ok =~ /[Yy]/) {
 # Insert history table
     my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/history.sql`;
     print $res;
-    
+
 # Insert archives table
     my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/archives.sql`;
     print $res;
@@ -528,16 +544,16 @@ if ($ok =~ /[Yy]/) {
     SQL SECURITY DEFINER
     COMMENT 'Export yesterdays data to a file'
     BEGIN
-     DECLARE export CHAR(32) DEFAULT CONCAT ('dumpfile_', DATE_FORMAT(CURDATE()-1, '%Y%m%d'),'.txt');
-	 DECLARE export_path CHAR(127);
-	 SELECT value into export_path from settings WHERE name="ARCHIVE_PATH";
-     SET \@s =
-        CONCAT('select * into outfile "',export_path, '/' , export,'" from logs  where TO_DAYS( lo )=',TO_DAYS(NOW())-1);
-	 PREPARE stmt FROM \@s;
-     EXECUTE stmt;
-     DEALLOCATE PREPARE stmt;
-	 INSERT INTO archives (archive) VALUES (export);
-     END 
+    DECLARE export CHAR(32) DEFAULT CONCAT ('dumpfile_', DATE_FORMAT(CURDATE()-1, '%Y%m%d'),'.txt');
+    DECLARE export_path CHAR(127);
+    SELECT value into export_path from settings WHERE name="ARCHIVE_PATH";
+    SET \@s =
+    CONCAT('select * into outfile "',export_path, '/' , export,'" from logs  where TO_DAYS( lo )=',TO_DAYS(NOW())-1);
+    PREPARE stmt FROM \@s;
+    EXECUTE stmt;
+    DEALLOCATE PREPARE stmt;
+    INSERT INTO archives (archive) VALUES (export);
+    END 
     };
     my $sth = $dbh->prepare("
         $event
@@ -786,6 +802,84 @@ if ($paths_updated >0) {
     print "Since you chose not to update paths, you will need to manually merge contrib/system_configs/syslog-ng.conf with your syslog-ng.conf.\n";
 }
 print("\n\033[1m\tLogZilla installation complete!\n\033[0m");
-#print("\033[1mNote: you may need to enable the MySQL Event Scheduler in your /etc/my.cnf file.\n\033[0m");
-#print("\033[1mPlease visit http://forum.logzilla.info/index.php/topic,71.0.html for more information.\n\033[0m");
-#print("\033[1m\nAlso, please visit http://nms.gdd.net/index.php/Install_Guide_for_LogZilla_v3.0#UDP_Buffers to learn how to increase your UDP buffer size (otherwise you may drop messages).\n\033[0m");
+
+my $cTerminalLineSize = 79;
+# Wordwrap system: deal with the next character
+sub wrap_one_char {
+    my $output = shift;
+    my $pos = shift;
+    my $word = shift;
+    my $char = shift;
+    my $reserved = shift;
+    my $length;
+
+    if (not (($char eq "\n") || ($char eq ' ') || ($char eq ''))) {
+        $word .= $char;
+
+        return ($output, $pos, $word);
+    }
+
+    # We found a separator.  Process the last word
+
+    $length = length($word) + $reserved;
+    if (($pos + $length) > $cTerminalLineSize) {
+        # The last word doesn't fit in the end of the line. Break the line before
+        # it
+        $output .= "\n";
+        $pos = 0;
+    }
+    ($output, $pos) = append_output($output, $pos, $word);
+    $word = ''; 
+
+    if ($char eq "\n") {
+        $output .= "\n";
+        $pos = 0;
+    } elsif ($char eq ' ') {
+        if ($pos) {
+            ($output, $pos) = append_output($output, $pos, ' ');
+        }
+    }
+
+    return ($output, $pos, $word);
+}
+
+# Wordwrap system: word-wrap a string plus some reserved trailing space
+sub wrap {
+    my $input = shift;
+    my $reserved = shift;
+    my $output;
+    my $pos;
+    my $word;
+    my $i;
+
+    if (!defined($reserved)) {
+        $reserved = 0;
+    }
+
+    $output = '';
+    $pos = 0;
+    $word = '';
+    for ($i = 0; $i < length($input); $i++) {
+        ($output, $pos, $word) = wrap_one_char($output, $pos, $word,
+            substr($input, $i, 1), 0);
+    }
+    # Use an artifical last '' separator to process the last word
+    ($output, $pos, $word) = wrap_one_char($output, $pos, $word, '', $reserved);
+
+    return $output;
+}
+
+# Print an error message and exit
+sub error {
+    my $msg = shift;
+
+    print STDERR $msg . "Installation aborted.\n";
+    exit 1;
+}
+
+# Display the end-user license agreement
+sub show_EULA {
+    my $pager = $ENV{PAGER} || 'less' || 'more';
+    system($pager, './EULA.txt') == 0 or die "$pager call failed: $?";
+    print "\n\n";
+}
