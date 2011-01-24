@@ -12,15 +12,15 @@
 
 $basePath = dirname( __FILE__ );
 require_once ($basePath . "/../common_funcs.php");
-if ((has_portlet_access($_SESSION['username'], 'Event Triggers') == TRUE) || ($_SESSION['AUTHTYPE'] == "none")) { 
+if ((has_portlet_access($_SESSION['username'], 'Email Alerts') == TRUE) || ($_SESSION['AUTHTYPE'] == "none")) { 
 ?>
 
-<div id="trigger_wrapper">
-    <?php require ($basePath . "/../grid/triggers.php");?> 
+<div id="email_alerts_wrapper">
+    <?php require ($basePath . "/../grid/email_alerts.php");?> 
 </div>
 
 <?php } else { ?>
 <script type="text/javascript">
-$('#portlet_Event_Triggers').remove()
+$('#portlet_Email_Alerts').remove()
 </script>
 <?php } ?>

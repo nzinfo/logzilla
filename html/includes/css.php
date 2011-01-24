@@ -32,8 +32,8 @@ This file contains any custom css that I've written
 
 <!-- BEGIN JqGrid CSS -->
 <!-- grid layout -->
-<link rel="stylesheet" type="text/css" media="screen" href="includes/js/jquery/plugins/ui.jqgrid.css" />
-<link rel="stylesheet" type="text/css" media="screen" href="includes/js/jquery/plugins/ui.multiselect.css" />
+<link rel="stylesheet" type="text/css" media="screen" href="includes/grid/js/ui.jqgrid.css" />
+<link rel="stylesheet" type="text/css" media="screen" href="includes/grid/js/ui.multiselect.css" />
 <!-- END JqGrid CSS -->
 
 <!-- BEGIN Top Menu -->

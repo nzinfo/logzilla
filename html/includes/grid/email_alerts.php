@@ -1,7 +1,7 @@
 <?php
 
 /*
- * grid/triggers.php
+ * grid/email_alerts.php
  *
  * Developed by Clayton Dukes <cdukes@cdukes.com>
  * Copyright (c) 2011 LogZilla, LLC
@@ -42,10 +42,10 @@ $grid->setColModel(null, null, $labels);
 $grid->setColProperty('disabled', array('width'=>'50',"edittype"=>"select"));
 
 // Set the url from where we obtain the data
-$grid->setUrl('includes/grid/triggers.php');
+$grid->setUrl('includes/grid/email_alerts.php');
 
 $grid->addCol(array(
-    "name"=>"actions",
+    "name"=>"Actions",
     "formatter"=>"actions",
     "editable"=>false,
     "sortable"=>false,
@@ -63,6 +63,7 @@ $grid->setGridOptions(array(
     "sortorder"=>"asc",
     "altRows"=>true,
     "rowList"=>array(20,40,60,75,100),
+    "forceFit" => true
     ));
 
 
@@ -71,14 +72,15 @@ $grid->setPrimaryKeyId('id');
 
 
 $choices = array("Yes"=>"Yes", "No"=>"No");
-$grid->setSelect("disabled", $choices , false, false, true, array(""=>"All"));
+// $grid->setSelect("disabled", $choices , false, false, true, array(""=>"All"));
+$grid->setSelect("disabled", $choices , false, true, true, array(""=>"All"));
 
 
 
 $grid->navigator = true; 
 $grid->setNavOptions('navigator', array("excel"=>true,"add"=>true,"edit"=>false,"del"=>false,"view"=>false, "search"=>true)); 
-$grid->setNavOptions('edit', array("height"=>"auto","dataheight"=>"auto")); 
-$grid->setNavOptions('add', array("height"=>"auto","dataheight"=>"auto","top"=>200,"left"=>400)); 
+$grid->setNavOptions('edit', array("height"=>"auto","dataheight"=>"auto","top"=>200,"left"=>200)); 
+$grid->setNavOptions('add', array("height"=>"auto","dataheight"=>"auto","top"=>200,"left"=>200)); 
 
 $custom = <<<CUSTOM
 function easyDate (cellValue, options, rowdata)
@@ -102,13 +104,13 @@ function setHeight(percent){
 
 $(document).ready(function() {
 
-        $('#triggergrid').fluidGrid({base:'#portlet-header_Event_Triggers', offset:-15});
+        $('#triggergrid').fluidGrid({base:'#portlet-header_Email_alerts', offset:-15});
         $('#triggergrid').jqGrid('setGridHeight',setHeight(57));
 });
 
 $(window).resize(function()
 {
-        $('#triggergrid').fluidGrid({base:'#portlet-header_Event_Triggers', offset:-15});
+        $('#triggergrid').fluidGrid({base:'#portlet-header_Email_alerts', offset:-15});
 });
 
 
