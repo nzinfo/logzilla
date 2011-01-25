@@ -22,7 +22,6 @@ use Cwd;
 use DBI;
 use Date::Calc;
 use Term::ReadLine;
-use Term::Pager;
 use File::Copy;
 
 # not needed here, but might as well warn the user to install it now since db_insert will need them
