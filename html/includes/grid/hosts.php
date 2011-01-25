@@ -20,6 +20,8 @@ define('DB_PASSWORD', DBADMINPW);
 require_once ABSPATH."php/jqGrid.php";
 // include the driver class
 require_once ABSPATH."php/jqGridPdo.php";
+// include pdf
+require_once(ABSPATH.'/php/tcpdf/config/lang/eng.php'); 
 // Connection to the server
 $conn = new PDO(DB_DSN,DB_USER,DB_PASSWORD);
 // Tell the db that we use utf-8
@@ -45,11 +47,11 @@ $grid->setGridOptions(array(
     "rowList"=>array(20,40,60,75,100,500,750,1000),
     ));
 
-$grid->setColProperty('Seen', array('width'=>'10'));
+$grid->setColProperty('Seen', array('width'=>'15'));
 $grid->setColProperty('LastSeen', array('formatter'=>'js:easyDate'));
 
 $grid->navigator = true;
-$grid->setNavOptions('navigator', array("excel"=>true,"add"=>false,"edit"=>false,"del"=>false,"view"=>false, "search"=>true));
+$grid->setNavOptions('navigator', array("pdf"=>true,"excel"=>true,"add"=>false,"edit"=>false,"del"=>false,"view"=>false, "search"=>true));
 
 $custom = <<<CUSTOM
 
@@ -118,7 +120,22 @@ CUSTOM;
 $grid->setJSCode($custom);
 
 
+$oper = jqGridUtils::GetParam("oper");
+if($oper == "pdf") {
+    $grid->setPdfOptions(array(
+        "header"=>true,
+        "margin_top"=>25,
+        "page_orientation"=>"P",
+        "header_logo"=>"letterhead.png",
+        // set logo image width
+        "header_logo_width"=>45,
+        //header title
+        "header_title"=>"                         Hosts Report"
+    ));
+} 
+
 // Enjoy
-$grid->renderGrid('#hostsgrid','#hostspager',true, null, null, true,true);
+$summaryrows=array("Seen"=>array("Seen"=>"SUM")); 
+$grid->renderGrid('#hostsgrid','#hostspager',true, $summaryrows, null, true,true);
 $conn = null;
 ?>
