@@ -20,6 +20,8 @@ define('DB_PASSWORD', DBADMINPW);
 require_once ABSPATH."php/jqGrid.php";
 // include the driver class
 require_once ABSPATH."php/jqGridPdo.php";
+// include pdf
+require_once(ABSPATH.'/php/tcpdf/config/lang/eng.php'); 
 // Connection to the server
 $conn = new PDO(DB_DSN,DB_USER,DB_PASSWORD);
 // Tell the db that we use utf-8
@@ -78,7 +80,7 @@ $grid->setSelect("disabled", $choices , false, true, true, array(""=>"All"));
 
 
 $grid->navigator = true; 
-$grid->setNavOptions('navigator', array("excel"=>true,"add"=>true,"edit"=>false,"del"=>false,"view"=>false, "search"=>true)); 
+$grid->setNavOptions('navigator', array("pdf"=>true,"excel"=>true,"add"=>true,"edit"=>false,"del"=>false,"view"=>false, "search"=>true)); 
 $grid->setNavOptions('edit', array("height"=>"auto","dataheight"=>"auto","top"=>200,"left"=>200)); 
 $grid->setNavOptions('add', array("height"=>"auto","dataheight"=>"auto","top"=>200,"left"=>200)); 
 
@@ -117,6 +119,20 @@ $(window).resize(function()
 CUSTOM;
 
 $grid->setJSCode($custom);
+
+$oper = jqGridUtils::GetParam("oper");
+if($oper == "pdf") {
+    $grid->setPdfOptions(array(
+        "header"=>true,
+        "margin_top"=>25,
+        "page_orientation"=>"P",
+        "header_logo"=>"letterhead.png",
+        // set logo image width
+        "header_logo_width"=>45,
+        //header title
+        "header_title"=>"                         Alerts Report"
+    ));
+} 
 
 // Enjoy
 $grid->renderGrid('#triggergrid','#triggerpager',true, null, null, true,true);
