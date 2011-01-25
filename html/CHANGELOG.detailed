@@ -1,6 +1,11 @@
 CHANGELOG
 
-3.1.150 - Missing files
+3.1.152 - patch for bug #44
+TH:
+ - if a search fail cause there is a (un-)suppressed filter it try to tail for the records
+ - it should also work if there are records in the database, but sphinx search did not catch them yet
+
+3.1.151 - Missing files
 CD:
  - letterhead
  - eula
