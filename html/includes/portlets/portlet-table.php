@@ -552,7 +552,10 @@ endswitch;
       </script>
           <?php
   } else {
-      $info = "<font color=\"red\">No results match your search criteria</font>";
+      $info = "<font color=\"red\">No results match your search criteria ... starting a deeper inspect (tail)</font>";
+      $tail = '1000';
+  	  $qstring = str_replace('&tail=off', '',$qstring );
+  	  $qstring .= "&tail=$tail";
       ?>
           <script type="text/javascript">
           $("#theTable").html('<?php echo "$info"?>');
