@@ -98,8 +98,8 @@ if ($_POST['dbid']){
    	$objPHPExcel->getActiveSheet()->SetCellValue('D1', 'Priority');
    	$objPHPExcel->getActiveSheet()->SetCellValue('E1', 'Program');
    	$objPHPExcel->getActiveSheet()->SetCellValue('F1', 'Mnemonic');
-   	$objPHPExcel->getActiveSheet()->SetCellValue('G1', 'First Occurence');
-   	$objPHPExcel->getActiveSheet()->SetCellValue('H1', 'Last Occurence');
+   	$objPHPExcel->getActiveSheet()->SetCellValue('G1', 'First Occurrence');
+   	$objPHPExcel->getActiveSheet()->SetCellValue('H1', 'Last Occurrence');
    	$objPHPExcel->getActiveSheet()->SetCellValue('I1', 'Count');
     $objPHPExcel->getActiveSheet()->SetCellValue('J1', 'Message');
 
