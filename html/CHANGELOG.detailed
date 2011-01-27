@@ -1,5 +1,10 @@
 CHANGELOG
 
+3.1.153 - 1st view on trap handling
+TH:
+ - easy made trap import
+
+
 3.1.152 - patch for bug #44
 TH:
  - if a search fail cause there is a (un-)suppressed filter it try to tail for the records
