@@ -41,7 +41,7 @@ CREATE TABLE `triggers` (
 
 LOCK TABLES `triggers` WRITE;
 /*!40000 ALTER TABLE `triggers` DISABLE KEYS */;
-INSERT INTO `triggers` VALUES (1,'Sample Disabled Pattern','Mary had a little (\\\\S+)','root@localhost','root@localhost','New alert about {1} from Mary','Mary had a little {1}','Yes'),(2,'Sample Pattern','interface (\\\\S+) on (\\\\S+) is (\\\\S+)','root@localhost','root@localhost','LogZilla Alert for {1}','Hello,\nInterface {1} on {2} is{3}.\nHave a nice day :-)\n','Yes');
+INSERT INTO `triggers` VALUES (1,'Sample Disabled Pattern','Mary had a little (\\\\S+)','root@localhost','root@localhost','New alert about {1} from Mary','Mary had a little {1}','Yes'),(2,'Sample Pattern','interface (\\\\S+) on (\\\\S+) is (\\\\S+)','root@localhost','root@localhost','LogZilla Alert for {1}','Hello,\nInterface {1} on {2} is{3}.\nHave a nice day :-)\n','Yes'),(3,'Sample Trap Pattern','TRAP!: (\\\\S+)','root@localhost','root@localhost','Trap recieved {1}','{1}','Yes');
 /*!40000 ALTER TABLE `triggers` ENABLE KEYS */;
 UNLOCK TABLES;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
