@@ -11,4 +11,4 @@ do
 done
 
 # send it into the database with a traditional db_insert.pl
-echo -e "$host\t$1\t$var1\t$var2"|/path_to_logzilla/scripts/db_insert.pl
+echo -e "$host\t$1\t$var1\tTRAP!: $var2"|/path_to_logzilla/scripts/db_insert.pl
