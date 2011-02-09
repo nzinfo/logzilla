@@ -1,5 +1,9 @@
 CHANGELOG
 
+3.1.156 - Litte bug in the export procedure
+TH:
+ - export file not calulated right in 1st of every month
+
 3.1.155 - more work in traps
 TH:
  - a trap now sends a email (via Email Alerts)

@@ -38,7 +38,7 @@ sub p {
 }
 
 my $version = "3.1";
-my $subversion = ".155";
+my $subversion = ".156";
 
 # Grab the base path
 my $lzbase = getcwd;
@@ -543,7 +543,7 @@ if ($ok =~ /[Yy]/) {
     SQL SECURITY DEFINER
     COMMENT 'Export yesterdays data to a file'
     BEGIN
-    DECLARE export CHAR(32) DEFAULT CONCAT ('dumpfile_', DATE_FORMAT(CURDATE()-1, '%Y%m%d'),'.txt');
+    DECLARE export CHAR(32) DEFAULT CONCAT ('dumpfile_', DATE_FORMAT(DATE_SUB(CURDATE(), INTERVAL 1 day), '%Y%m%d'),'.txt');
     DECLARE export_path CHAR(127);
     SELECT value into export_path from settings WHERE name="ARCHIVE_PATH";
     SET \@s =
