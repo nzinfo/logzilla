@@ -627,24 +627,30 @@ endswitch;
             }
         }
         // Link to LZECS if info is available
-            if($_SESSION['MSG_EXPLODE'] == "1") {
-                   // echo "<td class=\"s_td wide\"><a onclick=\"lzecs(this); return false\" id='$msg' href=\"javascript:void(0);\">[LZECS]&nbsp;&nbsp;</a>$explode_url</td>\n";
-                   echo "<td class=\"s_td wide\">$explode_url</td>\n";
+        if($_SESSION['MSG_EXPLODE'] == "1") {
+            if($_SESSION['LZECS'] == "1") {
+                echo "<td class=\"s_td wide\"><a onclick=\"lzecs(this); return false\" id='$msg' href=\"javascript:void(0);\">[LZECS]&nbsp;&nbsp;</a>$explode_url</td>\n";
             } else {
-                  //  echo "<td class=\"s_td wide\"><a onclick=\"lzecs(this); return false\" id='$msg' href=\"javascript:void(0);\">[LZECS]&nbsp;&nbsp;</a>$msg</td>\n";
-                 echo "<td class=\"s_td wide\">$msg</td>\n";
+                echo "<td class=\"s_td wide\">$explode_url</td>\n";
             }
-            if ($_SESSION['DEDUP'] == 1) { 
-                echo "<td class=\"s_td\">$row[fo]</td>\n";
-                echo "<td class=\"s_td\">$row[lo]</td>\n";
-                echo "<td class=\"s_td\"><a href=$_SESSION[SITE_URL]$qstring&dupop=eq&dupcount=$row[counter]>$row[counter]</a></td>\n";
+        } else {
+            if($_SESSION['LZECS'] == "1") {
+                echo "<td class=\"s_td wide\"><a onclick=\"lzecs(this); return false\" id='$msg' href=\"javascript:void(0);\">[LZECS]&nbsp;&nbsp;</a>$msg</td>\n";
             } else {
-                echo "<td class=\"s_td\">$row[lo]</td>\n";
+                echo "<td class=\"s_td wide\">$msg</td>\n";
             }
+        }
+        if ($_SESSION['DEDUP'] == 1) { 
+            echo "<td class=\"s_td\">$row[fo]</td>\n";
+            echo "<td class=\"s_td\">$row[lo]</td>\n";
+            echo "<td class=\"s_td\"><a href=$_SESSION[SITE_URL]$qstring&dupop=eq&dupcount=$row[counter]>$row[counter]</a></td>\n";
+        } else {
+            echo "<td class=\"s_td\">$row[lo]</td>\n";
+        }
         echo "<td class=\"s_td\"><a href=$_SESSION[SITE_URL]$qstring&notes_mask=$row[notes]>$row[notes]</a></td>\n";
         echo "</tr>\n";
-    }
-  ?>
+  }
+?>
   </tbody>
   </table>
 </div> <!-- end div for "refresh_content"-->

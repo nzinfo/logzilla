@@ -32,8 +32,10 @@ switch ($action) {
         $preg = $row['preg_name'];
         $name = preg_replace("/$preg/", '$1', $msg);
          // echo "Loop PREG = $preg\n";
+        // logmsg("PREG = $preg");
         $query = "SELECT * FROM lzecs WHERE name = '$name'";
         // echo "$query\n";
+        // logmsg("QRY = $query");
         $res = perform_query($query, $dbLink, $_SERVER['PHP_SELF']);
         if(mysql_affected_rows() == 1) {
             $line = fetch_array($res);

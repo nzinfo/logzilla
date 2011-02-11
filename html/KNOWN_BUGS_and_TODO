@@ -1,20 +1,10 @@
 Known Bugs:
 * Search filters (on the hosts grid) do not allow for negative searching (not or !)
 * Can't set height on chart portlets to 100% so I have to set a hard number - this results in being unable to resize vertically.
-* Time picker doesn't recognize a date flip (i.e. if you select from 23:00 to 01:00 the next day, the timepicker does not update the datepicker to the next day)
 * Can't drag a scroll bar down - it tries to move the portal - you have to use the mouse scroll. 
-* Doesn't work well with Internet Explorer
 
 
 Wish List/To do's:
 
-Add support for my.cnf to db_insert.pl: http://forum.logzilla.info/index.php/topic,261.0.html
 add quick charts (dropdown menu for common charts such as Top 10 hosts, etc.)
 add graph for mps per device?
-Add detection for missing partitions (if server is shutdown when events are supposed to fire, the partitions aren't created)
-Add nightly count verifications - ensure that the msg totals match what's in the db
-Figure out a *fast* way to show total found rows for search results
-
-
-
-
