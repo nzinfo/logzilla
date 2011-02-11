@@ -38,7 +38,7 @@ sub p {
 }
 
 my $version = "3.1";
-my $subversion = ".156";
+my $subversion = ".157";
 
 # Grab the base path
 my $lzbase = getcwd;
@@ -659,6 +659,12 @@ if ($ok =~ /[Yy]/) {
         close(F);
     }
     chmod 0666, "$logpath/mysql_query.log";
+    if (! -f "$logpath/logzilla.log") {
+        open(F,">$logpath/logzilla.log") || die("Cannot Open $logpath/logzilla.log: $!"); 
+        print F "\n";
+        close(F);
+    }
+    chmod 0666, "$logpath/logzilla.log";
     my $file="$lzbase/html/config/config.php";
     open(CNF,">$file") || die("Cannot Open $file: $!"); 
     print CNF "$config"; 

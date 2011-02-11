@@ -1,5 +1,10 @@
 CHANGELOG
 
+3.1.156 - Backend updates
+CD:
+ - added a touch to the install for $logdir/logzilla.log so thet errors don't occur when using the common function 'logmsg'
+ - Cleanup up some backend future code for the LZECS project
+
 3.1.156 - Litte bug in the export procedure
 TH:
  - export file not calulated right in 1st of every month
