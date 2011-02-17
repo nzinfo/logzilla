@@ -36,9 +36,9 @@
 /* STYLING UP THE LINKS */
 #menu a {
     display:block;
-    border-right:1px solid #fff;
-    background:#AEC245;
-    color:#3B3B3B;
+    border-right:1px solid #385F6A;
+    background:#385F6A;
+    color:#FFFFFF;
     text-decoration:none;
     padding:0 10px;
 }
@@ -54,7 +54,7 @@
     border-right:1px solid #fff;
     border-bottom:1px solid #fff;
     border-left:1px solid #fff;
-    background:#AEC245;
+    background:#385F6A;
 }
 
 /* ******************************************************************* */

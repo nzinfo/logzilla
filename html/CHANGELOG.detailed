@@ -1,6 +1,12 @@
 CHANGELOG
 
-3.1.157 - Backend updates
+3.1.159 - Backend updates
+CD:
+ - Changed the home page gradient and menu colors
+ - set default ui_layout for template user and admin for better initial layout
+ - Added multiselect to main page top 10 hosts.
+
+3.1.158 - Backend updates
 CD:
  - Left a setting out from last update
 

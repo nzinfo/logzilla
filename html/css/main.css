@@ -10,7 +10,7 @@ body {
 .gradient {
   height: 100px;
   padding: 4px;
-  background: url(../images/gradient.gif) 0% 0% repeat-x;
+  background: url(../images/lz_kuler_grad.gif) 0% 0% repeat-x;
   background-color: #FFFFFF;
 }
 /* wrapper is for the grid display on search results */

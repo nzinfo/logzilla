@@ -22,9 +22,10 @@ $total = mysql_fetch_row($result);
 $count = $total[0];
 if( $count >0 ) { 
 ?>
-<table id="tbl_hosts" cellpadding="0" cellspacing="0" width="100%" border="0">
+<table id="tbl_hosts" cellpadding="0" cellspacing="0" width="100%" border="1">
 <thead class="ui-widget-header">
   <tr>
+    <th width="5%" style="text-align:left">Select</th>
     <th width="45%" style="text-align:left">Host</th>
     <th width="25%" style="text-align:left">Seen</th>
     <th width="30%" style="text-align:left">Last Seen</th>
@@ -37,6 +38,9 @@ if( $count >0 ) {
         $i=0; 
         while($row = fetch_array($result)) { 
         echo "<tr>";
+        echo "<td id='host_sel'>";
+          echo "<input type=\"checkbox\" name=\"sel_hosts\" value=\"$row[host]\"";
+        echo "</td>";
         echo "<td id='host'>";
           echo "$row[host]";
         echo "</td>";
