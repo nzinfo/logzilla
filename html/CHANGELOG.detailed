@@ -1,5 +1,9 @@
 CHANGELOG
 
+3.1.160 - Backend updates
+CD:
+ - Forgot to remove the border from the hosts gris (for testing only)
+
 3.1.159 - Backend updates
 CD:
  - Changed the home page gradient and menu colors

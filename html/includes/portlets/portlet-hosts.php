@@ -22,7 +22,7 @@ $total = mysql_fetch_row($result);
 $count = $total[0];
 if( $count >0 ) { 
 ?>
-<table id="tbl_hosts" cellpadding="0" cellspacing="0" width="100%" border="1">
+<table id="tbl_hosts" cellpadding="0" cellspacing="0" width="100%" border="0">
 <thead class="ui-widget-header">
   <tr>
     <th width="5%" style="text-align:left">Select</th>
