@@ -42,6 +42,8 @@ $labels = array("description"=>"Description", "pattern"=>"Regex Pattern", "mailt
 $grid->setColModel(null, null, $labels);
 
 $grid->setColProperty('disabled', array('width'=>'50',"edittype"=>"select"));
+$grid->setColProperty('body',array("edittype"=>"textarea","editoptions"=>array("rows"=>2, "cols"=> 40),"width"=>200));
+$grid->setColProperty('pattern',array("edittype"=>"textarea","editoptions"=>array("rows"=>1, "cols"=> 40),"width"=>200));
 
 // Set the url from where we obtain the data
 $grid->setUrl('includes/grid/email_alerts.php');
@@ -81,8 +83,8 @@ $grid->setSelect("disabled", $choices , false, true, true, array(""=>"All"));
 
 $grid->navigator = true; 
 $grid->setNavOptions('navigator', array("pdf"=>true,"excel"=>true,"add"=>true,"edit"=>false,"del"=>false,"view"=>false, "search"=>true)); 
-$grid->setNavOptions('edit', array("height"=>"auto","dataheight"=>"auto","top"=>200,"left"=>200)); 
-$grid->setNavOptions('add', array("height"=>"auto","dataheight"=>"auto","top"=>200,"left"=>200)); 
+$grid->setNavOptions('edit', array("width"=>"auto","height"=>"auto","dataheight"=>"auto","top"=>200,"left"=>200)); 
+$grid->setNavOptions('add', array("width"=>"auto","height"=>"auto","dataheight"=>"auto","top"=>200,"left"=>200)); 
 
 $custom = <<<CUSTOM
 function easyDate (cellValue, options, rowdata)

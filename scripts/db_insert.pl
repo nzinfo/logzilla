@@ -304,6 +304,7 @@ while (my $ref = $trigger_select->fetchrow_hashref()) {
 #}
 sub triggerMail {
     my $id = shift;
+    my $host = shift;
     my $msg = shift;
     my ($dbid, $description, $pattern, $to, $from, $subject, $body, undef) = $dbh->selectrow_array("SELECT * FROM triggers WHERE id=$id");
     # stripslashes from pattern
@@ -316,6 +317,7 @@ sub triggerMail {
         $subject =~ s/\{\d+\}/$var/;
         $body =~ s/\{\d+\}/$var/;
     }
+    $subject = "[LogZilla Host $host]: $subject";
     if ($verbose) {
         print STDOUT "Verbose logging enabled - Mail Trigger found:\n";
         print STDOUT "Pattern = $pattern\n";
@@ -660,7 +662,7 @@ sub do_msg {
             if ($msg =~ /$re/) {
                 print STDOUT "FOUND PATTERN '$pattern' in message: '$msg'\nSENDING EMAIL!\n-----END EVENT TRIGGERS-----\n\n" if ($debug > 4);
                 print LOG "FOUND PATTERN '$pattern' in message: '$msg'\nSENDING EMAIL!\n-----END EVENT TRIGGERS-----\n\n" if ($debug > 4);
-                &triggerMail($id, $msg);
+                &triggerMail($id, $host, $msg);
             }
         }
         if ($msg =~ m/$re_mne/) {
