@@ -75,12 +75,12 @@ session_start();
             <li><a href="#">Online</a>
                 <ul>
                     <li><a href="http://nms.gdd.net/index.php/LogZilla_Installation_Guide" target="_blank">Installation Guide</a></li>
-                    <li><a href="http://code.google.com/p/php-syslog-ng" target="_blank">Google Code Site</a></li>
-                    <li><a href="http://php-syslog-ng.gdd.net/login.php" target="_blank">Demo Site</a></li>
+                    <li><a href="http://demo.logzilla.pro/login.php" target="_blank">Demo Site</a></li>
                     <li><a href="http://nms.gdd.net" target="_blank">NMS Wiki</a></li>
-                    <li><a href="http://forum.logzilla.info" target="_blank">LogZilla Forum</a></li>
-                    <li><a href="http://www.logzilla.info" target="_blank">Get Licenses</a></li>
-                    <li><a href="http://www.cisco.com/en/US/technologies/collateral/tk869/tk769/white_paper_c11-557812.html" target="_blank">Whitepaper</a></li>
+                    <li><a href="http://forum.logzilla.pro" target="_blank">LogZilla Forum</a></li>
+                    <li><a href="http://www.logzilla.pro/licensing" target="_blank">Get Licenses</a></li>
+                    <li><a href="http://www.logzilla.pro/packs" target="_blank">Upgrades</a></li>
+                    <li><a href="http://www.cisco.com/en/US/technologies/collateral/tk869/tk769/white_paper_c11-557812.html" target="_blank">Syslog LP</a></li>
                 </ul>
             </li>
             <!-- END 2nd Level with 3nd Level -->

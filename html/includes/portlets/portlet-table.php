@@ -114,8 +114,12 @@ if (!$tail) { $tail = "off"; }
 $qstring .= "&tail=$tail";
 
 // Special - this gets posted via javascript since it comes from the hosts grid
-// Form code is somewhere near line 843 of js_footer.php
+// Form code is somewhere near line 992 of js_footer.php
 $hosts = get_input('hosts');
+// sel_hosts comes from the main page <select>, whereas 'hosts' above this line comes from the grid select voa javascript.
+$sel_hosts = get_input('sel_hosts');
+$both = $hosts .",". $sel_hosts;
+$hosts = ltrim($both, ",");
 $qstring .= "&hosts=$hosts";
 if ($hosts) {
     $pieces = explode(",", $hosts);
