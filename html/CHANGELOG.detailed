@@ -1,5 +1,17 @@
 CHANGELOG
 
+3.1.162 - Email Alerts
+CD:
+ - Finished up with Email Trigger interface
+ - Added a small "disk" icon that must be clicked when editing/adding patterns. This will ask you if you want to restart
+   syslog-ng. And it will send a HUP signal if you click yes.
+ - Added help to the Email Alert portlet's context-sensitive help area.
+
+3.1.161 - Backend updates
+CD:
+ - Aligned the frot page hosts table a bit better
+ - Added a subject line to the email alerts which includes the host that generated the trigger.
+
 3.1.160 - Backend updates
 CD:
  - Forgot to remove the border from the hosts gris (for testing only)

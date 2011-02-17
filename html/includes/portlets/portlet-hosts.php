@@ -25,9 +25,9 @@ if( $count >0 ) {
 <table id="tbl_hosts" cellpadding="0" cellspacing="0" width="100%" border="0">
 <thead class="ui-widget-header">
   <tr>
-    <th width="5%" style="text-align:left">Select</th>
-    <th width="45%" style="text-align:left">Host</th>
-    <th width="25%" style="text-align:left">Seen</th>
+    <th width="5%" style="text-align:left"></th>
+    <th width="50%" style="text-align:left">Host</th>
+    <th width="15%" style="text-align:left">Seen</th>
     <th width="30%" style="text-align:left">Last Seen</th>
   </tr>
 </thead>
