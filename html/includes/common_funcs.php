@@ -749,22 +749,4 @@ function getRelativeTime($date) {
     return "on " . date("F j, Y", strtotime($date));
 }
 
-// ----------------------------------------------------------------------
-// PID Functions to allow restarting of syslog-ng daemon
-// Usage: getpid("syslog-ng" 
-// I only allow syslog-ng here for security reasons
-// ----------------------------------------------------------------------
-function getpid($prog = 'syslog-ng') {
-    $prog = "syslog-ng"; // remove or comment out to pass a program
-    exec("ps ax | grep $prog | grep -v grep 2>&1", $output);
-    // exec("ps -C $prog -o pid= 2>&1", $output); 
-    // echo $output[0];
-    $pieces = explode(" ", $output[0]);
-    // echo $pieces[1];
-    return $pieces[1];
-}
-function huppid($pid, $prog = 'syslog-ng') { 
-    exec("kill -HUP $pid");
-    return "$prog, $pid";
-}
 ?>

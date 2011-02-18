@@ -32,7 +32,7 @@ CREATE TABLE `triggers` (
   `body` text CHARACTER SET utf8 NOT NULL,
   `disabled` enum('Yes','No') NOT NULL DEFAULT 'No',
   PRIMARY KEY (`id`)
-) ENGINE=MyISAM AUTO_INCREMENT=5 DEFAULT CHARSET=latin1;
+) ENGINE=MyISAM AUTO_INCREMENT=3 DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -41,7 +41,7 @@ CREATE TABLE `triggers` (
 
 LOCK TABLES `triggers` WRITE;
 /*!40000 ALTER TABLE `triggers` DISABLE KEYS */;
-INSERT INTO `triggers` VALUES (3,'Sample Trap Pattern','TRAP!: (\\\\S+)','root@localhost','root@localhost','Trap recieved {1}','{1}','Yes'),(4,'Line Protocol','.*Line protocol on Interface (\\S+) changed state to (\\S+)','root@localhost','root@localhost','Interface {1}','Link {1} Changed to {2}','Yes');
+INSERT INTO `triggers` VALUES (1,'Sample Trap Pattern','TRAP!: (\\S+)','root@localhost','root@localhost','Trap recieved {1}','{1}','Yes'),(2,'Line Protocol','.*Line protocol on Interface (\\S+) changed state to (\\S+)','root@localhost','root@localhost','Interface {1}','Link {1} Changed to {2}','Yes');
 /*!40000 ALTER TABLE `triggers` ENABLE KEYS */;
 UNLOCK TABLES;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
