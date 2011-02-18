@@ -16,9 +16,9 @@ if (strlen($chk_config) < 300) {
 // Check to see if  a license exists.
 $chk_lic = file_get_contents("../license.txt");
 if (strlen($chk_lic) < 300) {
-    echo "<center><h2>\n";
-    echo "Invalid license file or license.txt missing<br>Please visit <a href=\"http://www.logzilla.info\" target=\"_new\">http://www.logzilla.info</a> to obtain a free or commercial license.\n";
-    echo "</center></h2>\n";
+    $destination = $_SESSION['SITE_URL']."lhelp.php";
+    $destination .= '?err=license';
+    g_redirect($destination, "JS"); 
     exit;
 }
 
