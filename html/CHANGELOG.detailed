@@ -1,5 +1,9 @@
 CHANGELOG
 
+3.1.163 - Email Alerts and Syslog HUP
+CD:
+ - Added code to use sudoers for signal HUP
+
 3.1.163 - License Helper
 CD:
  - wrote some new stuff to help people with licensing
@@ -30,7 +34,7 @@ CD:
 CD:
  - Left a setting out from last update
 
-3.1.156 - Backend updates
+3.1.157 - Backend updates
 CD:
  - added a touch to the install for $logdir/logzilla.log so thet errors don't occur when using the common function 'logmsg'
  - Cleanup up some backend future code for the LZECS project

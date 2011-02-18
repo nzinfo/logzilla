@@ -43,7 +43,7 @@ $(".portlet-header .ui-icon-disk").click(function() {
                                 'Yes, I\'m sure': function() {
                                         $(this).dialog('close');
                                         $.get("includes/ajax/sighup.php", function(data){
-                                            $('#msgbox_br').jGrowl(data);
+                                            $('#msgbox_br').jGrowl(data, { sticky: true });
                                            });
                                 },
                                 Cancel: function() {

@@ -120,7 +120,7 @@ $(function() {
             $( this ).dialog( "close" );
             var text = $("#licdata").val();
             text = text.replace(/\+/g, "PLUS");
-alert(text);
+// alert(text);
             text = escape(text);
             $.get("includes/ajax/lpost.php?txt="+text, function(data){
             $('#message_box').replaceWith('<div id="message_box">'+ data + '</div>');
