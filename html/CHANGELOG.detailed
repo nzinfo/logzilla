@@ -1,5 +1,10 @@
 CHANGELOG
 
+3.1.166 - Various
+CD:
+ - #97 Small addition to the chart generation page to indicate sort order - default is LO, not count.
+ - #14 Added menu items for 20 chart types to the main menu bar.
+
 3.1.165 - SNMP
 CD:
  - Initial look at snmp, noticed thatatraps.sh needed the new TS format included.
