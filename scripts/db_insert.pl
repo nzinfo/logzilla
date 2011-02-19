@@ -213,10 +213,10 @@ if (($debug > 0) or ($verbose)) {
     print STDOUT "Printing results to screen (STDOUT)\n" if (($debug > 0) and ($verbose));
 }
 
-my ($host, %host_cache, $facility, $pri, $prg, %program_cache, $prg32, $msg, $mne, %mne_cache, $mne32, $severity); 
+my ($ts, $host, %host_cache, $facility, $pri, $prg, %program_cache, $prg32, $msg, $mne, %mne_cache, $mne32, $severity); 
 # my $re_pipe = qr/(\S+)\t(\d+)\t(\S+)?\t(.*)/;
-my $re_pipe = qr/(\S+)\t(\d+)\t(\S+).*\t(.*)/;
-# v3.0 Fields are: Host, PRI, Program,  and MSG
+my $re_pipe = qr/(\S+ \S+)\t(\S+)\t(\d+)\t(\S+).*\t(.*)/;
+# v3.2 Fields are: TS, Host, PRI, Program,  and MSG
 # the $severity and $facility fields are split from the $pri coming in so that they can be stored as integers into 2 separate db columns
 # re_mne is used to capture Cisco Mnemonics
 # my $re_mne = qr/%(\w+-.*\d-\w+)\s?:?/;
@@ -590,13 +590,14 @@ sub do_msg {
 
     # Get incoming variables from PIPE
     if ($msg =~ m/$re_pipe/) {
-        # v3.0 Fields are: Host, PRI, Program,  and MSG
-        $host = $1;
-        $pri = $2;
+        # v3.2 Fields are: TS, Host, PRI, Program,  and MSG
+        $ts = $1;
+        $host = $2;
+        $pri = $3;
         $facility = int($pri/8);
         $severity =  $pri - ($facility * 8 );
-        $prg = $3;
-        $msg = $4;
+        $prg = $4;
+        $msg = $5;
         $prg = "Cisco ASA" if ($msg =~ /^%PIX/);
         # Handle Snare Format
         if ($prg =~ m/MSWinEventLog\\011.*\\011(.*)\\011.*\\011.*/) {
@@ -788,7 +789,7 @@ sub do_msg {
                 $counter = $ref->{'counter'};
                 $fo = $ref->{'fo'};
                 ## If FO doesn't exist, then set the current datetime instead.
-                if (!$fo) { $fo = $datetime_now }
+                if (!$fo) { $fo = $ts }
                 #push (@fos, $fo);
             }
         }
@@ -828,7 +829,7 @@ sub do_msg {
     # Now that the distance test is over we need to insert any new records that either didn't previously exist or because we had the dedup feature disabled
     if ($insert != 0) {
         if ($host ne "")  {
-            $queue = "$host\t$facility\t$severity\t$prg32\t$msg\t$mne32\t$datetime_now\t$datetime_now\t\n";
+            $queue = "$host\t$facility\t$severity\t$prg32\t$msg\t$mne32\t$ts\t$ts\t\n";
         } else {
             $do_msg_mps++;
             print LOG "Error inserting record $msg\n" if ($debug > 3); 

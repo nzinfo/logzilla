@@ -1,5 +1,10 @@
 CHANGELOG
 
+3.1.164 - Email Alerts and Syslog
+CD:
+ - Added SUDO (/etc/sudoers) setup to install.pl
+ - Added Timestamps based on syslog message itself instead of server time.
+
 3.1.163 - Email Alerts and Syslog HUP
 CD:
  - Added code to use sudoers for signal HUP
