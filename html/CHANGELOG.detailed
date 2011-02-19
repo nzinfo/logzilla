@@ -1,5 +1,10 @@
 CHANGELOG
 
+3.1.165 - SNMP
+CD:
+ - Initial look at snmp, noticed thatatraps.sh needed the new TS format included.
+ - Also note that traps.sh was not set to executable
+
 3.1.164 - Email Alerts and Syslog
 CD:
  - Added SUDO (/etc/sudoers) setup to install.pl
