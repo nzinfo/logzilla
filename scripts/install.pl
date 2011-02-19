@@ -38,7 +38,7 @@ sub p {
 }
 
 my $version = "3.1";
-my $subversion = ".163";
+my $subversion = ".164";
 
 # Grab the base path
 my $lzbase = getcwd;
@@ -636,50 +636,35 @@ if ($ok =~ /[Yy]/) {
 } else {
     print "Skipped database creation\n";
 }
-print("\n\033[1m\n\n========================================\033[0m\n");
-print("\n\033[1m\tConfig.php generation\n\033[0m");
-print("\n\033[1m========================================\n\n\033[0m\n\n");
 print "Generating $lzbase/html/config/config.php\n";
-my $ok  = &p("Ok to continue?", "y");
-if ($ok =~ /[Yy]/) {
-    my $config =qq{<?php
-    DEFINE('DBADMIN', '$dbadmin');
-    DEFINE('DBADMINPW', '$dbadminpw');
-    DEFINE('DBNAME', '$dbname');
-    DEFINE('DBHOST', '$dbhost');
-    DEFINE('DBPORT', '$dbport');
-    DEFINE('LOG_PATH', '$logpath');
-    DEFINE('MYSQL_QUERY_LOG', '$logpath/mysql_query.log');
-    # Enabling query logging will degrade performance.
-    DEFINE('LOG_QUERIES', 'FALSE');
-    };
-    if (! -f "$logpath/mysql_query.log") {
-        open(F,">$logpath/mysql_query.log") || die("Cannot Open $logpath/mysql_query.log: $!"); 
-        print F "\n";
-        close(F);
-    }
-    chmod 0666, "$logpath/mysql_query.log";
-    if (! -f "$logpath/logzilla.log") {
-        open(F,">$logpath/logzilla.log") || die("Cannot Open $logpath/logzilla.log: $!"); 
-        print F "\n";
-        close(F);
-    }
-    chmod 0666, "$logpath/logzilla.log";
-    my $file="$lzbase/html/config/config.php";
-    open(CNF,">$file") || die("Cannot Open $file: $!"); 
-    print CNF "$config"; 
-    my $rfile="$lzbase/scripts/sql/regexp.txt";
-    open(FILE,$rfile) || die("Cannot Open file: $!"); 
-    my @data = <FILE>;
-    foreach my $line (@data) {
-        print CNF "$line";
-    }
-    print CNF "?>\n"; 
-    close(CNF); 
-    close(FILE); 
-} else {
-    print "Skipped config generation\n";
+#my $ok  = &p("Ok to continue?", "y");
+#if ($ok =~ /[Yy]/) {
+my $config =qq{<?php
+DEFINE('DBADMIN', '$dbadmin');
+DEFINE('DBADMINPW', '$dbadminpw');
+DEFINE('DBNAME', '$dbname');
+DEFINE('DBHOST', '$dbhost');
+DEFINE('DBPORT', '$dbport');
+DEFINE('LOG_PATH', '$logpath');
+DEFINE('MYSQL_QUERY_LOG', '$logpath/mysql_query.log');
+# Enabling query logging will degrade performance.
+DEFINE('LOG_QUERIES', 'FALSE');
+};
+my $file="$lzbase/html/config/config.php";
+open(CNF,">$file") || die("Cannot Open $file: $!"); 
+print CNF "$config"; 
+my $rfile="$lzbase/scripts/sql/regexp.txt";
+open(FILE,$rfile) || die("Cannot Open file: $!"); 
+my @data = <FILE>;
+foreach my $line (@data) {
+    print CNF "$line";
 }
+print CNF "?>\n"; 
+close(CNF); 
+close(FILE); 
+#} else {
+#print "Skipped config generation\n";
+#}
 
 #Modifies the exports dir to he correct user
 system "chown mysql.mysql ../exports" and warn "Could not modify archive directory";   
@@ -692,6 +677,7 @@ if (! -f $logfile) {
     print STDOUT "Unable to open log file \"$logfile\" for writing...$!\n";
     exit;
 }
+chmod 0666, "$logpath/logzilla.log";
 close(LOG);
 my $logfile = "$logpath/mysql_query.log";
 open(LOG,">>$logfile");
@@ -700,29 +686,12 @@ if (! -f $logfile) {
     exit;
 }
 close(LOG);
+chmod 0666, "$logpath/mysql_query.log";
 
 if ($paths_updated >0) {
     print("\n\033[1m\n\n========================================\033[0m\n");
     print("\n\033[1m\tSystem files\n\033[0m");
     print("\n\033[1m========================================\n\n\033[0m\n\n");
-    #if ( -d "/etc/init.d") {
-    #print "Adding LogZilla init file to /etc/init.d\n";
-    #my $ok  = &p("Ok to continue?", "y");
-    #my $test = `uname -a | awk '{print \$4}'`;
-    #if ($test =~ /Ubuntu/) {
-    #if ($ok =~ /[Yy]/) {
-    #system("cp contrib/system_configs/logzilla.initd /etc/init.d/logzilla");
-    #chmod 0755, '/etc/init.d/logzilla';
-    #} else {
-    #print "Skipped init.d file, you will need to manually copy:\n";
-    #print "cp contrib/system_configs/logzilla.initd /etc/init.d/logzilla\n";
-    #}
-    #} else {
-    #print("\n\033[1m\tWARNING!\n\033[0m");
-    #print "Non-Ubuntu system found, you'll need to manually copy the\n";
-    #print "appropriate init.d file from the contrib/system_confgs directory.\n";
-    #}
-    #}
     if ( -d "/etc/logrotate.d") {
         print "Adding LogZilla logrotate.d file to /etc/logrotate.d\n";
         my $ok  = &p("Ok to continue?", "y");
@@ -787,6 +756,55 @@ if ($paths_updated >0) {
         print "Unable to locate your syslog-ng.conf file\n";
         print "You will need to manually merge contrib/system_configs/syslog-ng.conf with yours.\n";
     }
+
+    # Sudo Access Setup
+    print("\n\033[1m\n\n========================================\033[0m\n");
+    print("\n\033[1m\tSUDO Setup\n\033[0m");
+    print("\n\033[1m========================================\n\n\033[0m\n\n");
+    print "\n";
+    print "In order for the Apache user to be able to apply changes to syslog-ng, sudo access needs to be provided in /etc/sudoers\n";
+    my $ok  = &p("Ok to continue?", "y");
+    if ($ok =~ /[Yy]/) {
+        my $file  = &p("Please provide the location of your sudoers file", "/etc/sudoers");
+        if (-f "$file") {
+            # Try to get current web user
+            my $PROGRAM = qr/apache|httpd/;
+            my @ps = `ps axu`;
+            @ps = map { m/^(\S+)/; $1 } grep { /$PROGRAM/ } @ps;
+            my $webuser = $ps[$#ps];
+            my $webuser  = &p("Please provide the username that Apache runs as", "$webuser");
+            # Check to see if entry already exists
+            my $find = qr/.*ALL=NOPASSWD:$lzbase\/scripts\/hup\.pl/;
+            open SFILE, "<$file";
+            my @lines = <SFILE>;
+            close SFILE;
+            if (grep(/$find/, @lines)) {
+                print "Line already exists in $file, skipping add...\n";
+            } else {
+                my $now = localtime;
+                open SFILE, ">>$file" or die "cannot open $file for append: $!";
+                print SFILE "\n";
+                print SFILE "# Below added by LogZilla installation on $now\n";
+                print SFILE "# Allows Apache user to HUP the syslog-ng process\n";
+                print SFILE "$webuser ALL=NOPASSWD:$lzbase/scripts/hup.pl\n";
+                close SFILE;
+                print "Appended sudoer access for $webuser to $file\n";
+            }
+        } else {
+            print "$file does not exist\nUnable to continue!";
+            exit;
+        }
+
+    } else {
+        print "Skipping SUDO setup.\n";
+        print "You will need to add the following to your sudoers so that LogZilla has permission to apply changes from the web interface\n";
+        print "Note: You should change \"www-data\" below to match the user that runs Apache\n";
+        print "# Allows Apache user to HUP the syslog-ng process\n";
+        print "www-data ALL=NOPASSWD:$lzbase/scripts/hup.pl\n";
+    }
+
+# syslog-ng HUP
+    print "\n\n";
     my $checkprocess = `ps -C syslog-ng -o pid=`;
     if ($checkprocess) {
         print "\n\nSyslog-ng MUST be restarted, would you like to send a HUP signal to the process?\n";
