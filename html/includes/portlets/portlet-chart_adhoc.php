@@ -228,6 +228,12 @@ if ($mnemonics) {
             $where.= " AND fo BETWEEN '$start' AND '$end'";
         }
     }
+    // If url is pasted without a date/time, assume today.
+    if (!in_array('fo_checkbox', $_GET)) {
+        $start = date("Y-m-d") . " 00:00:00";
+        $end = date("Y-m-d") . " 23:59:59";
+        $where.= " AND fo BETWEEN '$start' AND '$end'";
+    }
     // LO
     $start = "";
     $end = "";
@@ -282,6 +288,26 @@ if ($mnemonics) {
     }
     $orderby = get_input('orderby');
     $orderby_orig = $orderby;
+    switch ($orderby_orig) {
+        case "id":
+            $sortname = "Database ID";
+        break;
+        case "counter":
+            $sortname = "Count";
+        break;
+        case "facility":
+            $sortname = "Facility";
+        break;
+        case "severity":
+            $sortname = "Severity";
+        break;
+        case "fo":
+            $sortname = "First Occurrence";
+        break;
+        case "lo":
+            $sortname = "Last Occurrence";
+        break;
+    }
     $qstring .= "&orderby=$orderby";
     if ($orderby) {
         if ($orderby == "counter") { $orderby = "count"; }
@@ -466,9 +492,9 @@ if ($mnemonics) {
         default:
         $pievalues = array();
         if ($start) {
-            $title = new title( "$ucTopx $limit $propername Report\nGenerated on " .date("D M d Y")."\n<br>(Date Range: $start - $end)" );
+            $title = new title( "$ucTopx $limit $propername (by $sortname) Report\nGenerated on " .date("D M d Y")."\n<br>(Date Range: $start - $end)" );
         } else {
-            $title = new title( "$ucTopx $limit $propername Report\nGenerated on " .date("D M d Y")."\n" );
+            $title = new title( "$ucTopx $limit $propername (by $sortname) Report\nGenerated on " .date("D M d Y")."\n" );
         }
         $ctype = new pie();
         if(num_rows($result) >= 1) {

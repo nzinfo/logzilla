@@ -55,9 +55,53 @@ session_start();
     </li>
     <!-- END Top Level with 2nd Level -->
 
-    <!-- BEGIN Top Level Menu -->
-            <li><a href="<?php echo $_SESSION['SITE_URL']?>?page=Charts">MPx Charts</a></li>
-    <!-- END Top Level Menu -->
+    <!-- BEGIN Top Level with 2nd Level -->
+     <li><a href="#">Charts</a>
+        <ul>
+        <li><a href="#">Top 10's</a>
+            <ul>
+            <li><a href="#">By Count</a>
+                <ul>
+                <li><a href="<?php echo $_SESSION['SITE_URL']?>?page=Graph&show_suppressed=all&limit=10&orderby=counter&order=DESC&groupby=host&chart_type=pie">Hosts</a></li>
+                <li><a href="<?php echo $_SESSION['SITE_URL']?>?page=Graph&show_suppressed=all&limit=10&orderby=counter&order=DESC&groupby=program&chart_type=pie">Programs</a></li>
+                <li><a href="<?php echo $_SESSION['SITE_URL']?>?page=Graph&show_suppressed=all&limit=10&orderby=counter&order=DESC&groupby=severity&chart_type=pie">Severities</a></li>
+                <li><a href="<?php echo $_SESSION['SITE_URL']?>?page=Graph&show_suppressed=all&limit=10&orderby=counter&order=DESC&groupby=facility&chart_type=pie">Facilities</a></li>
+                <li><a href="<?php echo $_SESSION['SITE_URL']?>?page=Graph&show_suppressed=all&limit=10&orderby=counter&order=DESC&groupby=mne&chart_type=pie">Cisco Mnemonics</a></li>
+                </ul>
+            </li>
+            <li><a href="#">By LO</a>
+                <ul>
+                <li><a href="<?php echo $_SESSION['SITE_URL']?>?page=Graph&show_suppressed=all&limit=10&orderby=lo&order=DESC&groupby=host&chart_type=pie">Hosts</a></li>
+                <li><a href="<?php echo $_SESSION['SITE_URL']?>?page=Graph&show_suppressed=all&limit=10&orderby=lo&order=DESC&groupby=program&chart_type=pie">Programs</a></li>
+                <li><a href="<?php echo $_SESSION['SITE_URL']?>?page=Graph&show_suppressed=all&limit=10&orderby=lo&order=DESC&groupby=severity&chart_type=pie">Severities</a></li>
+                <li><a href="<?php echo $_SESSION['SITE_URL']?>?page=Graph&show_suppressed=all&limit=10&orderby=lo&order=DESC&groupby=facility&chart_type=pie">Facilities</a></li>
+                <li><a href="<?php echo $_SESSION['SITE_URL']?>?page=Graph&show_suppressed=all&limit=10&orderby=lo&order=DESC&groupby=mne&chart_type=pie">Cisco Mnemonics</a></li>
+                </ul>
+            </li>
+            <li><a href="#">By Facility</a>
+                <ul>
+                <li><a href="<?php echo $_SESSION['SITE_URL']?>?page=Graph&show_suppressed=all&limit=10&orderby=facility&order=DESC&groupby=host&chart_type=pie">Hosts</a></li>
+                <li><a href="<?php echo $_SESSION['SITE_URL']?>?page=Graph&show_suppressed=all&limit=10&orderby=facility&order=DESC&groupby=program&chart_type=pie">Programs</a></li>
+                <li><a href="<?php echo $_SESSION['SITE_URL']?>?page=Graph&show_suppressed=all&limit=10&orderby=facility&order=DESC&groupby=severity&chart_type=pie">Severities</a></li>
+                <li><a href="<?php echo $_SESSION['SITE_URL']?>?page=Graph&show_suppressed=all&limit=10&orderby=facility&order=DESC&groupby=facility&chart_type=pie">Facilities</a></li>
+                <li><a href="<?php echo $_SESSION['SITE_URL']?>?page=Graph&show_suppressed=all&limit=10&orderby=facility&order=DESC&groupby=mne&chart_type=pie">Cisco Mnemonics</a></li>
+                </ul>
+            </li>
+            <li><a href="#">By Severity</a>
+                <ul>
+                <li><a href="<?php echo $_SESSION['SITE_URL']?>?page=Graph&show_suppressed=all&limit=10&orderby=severity&order=DESC&groupby=host&chart_type=pie">Hosts</a></li>
+                <li><a href="<?php echo $_SESSION['SITE_URL']?>?page=Graph&show_suppressed=all&limit=10&orderby=severity&order=DESC&groupby=program&chart_type=pie">Programs</a></li>
+                <li><a href="<?php echo $_SESSION['SITE_URL']?>?page=Graph&show_suppressed=all&limit=10&orderby=severity&order=DESC&groupby=severity&chart_type=pie">Severities</a></li>
+                <li><a href="<?php echo $_SESSION['SITE_URL']?>?page=Graph&show_suppressed=all&limit=10&orderby=severity&order=DESC&groupby=facility&chart_type=pie">Facilities</a></li>
+                <li><a href="<?php echo $_SESSION['SITE_URL']?>?page=Graph&show_suppressed=all&limit=10&orderby=severity&order=DESC&groupby=mne&chart_type=pie">Cisco Mnemonics</a></li>
+                </ul>
+            </li>
+            </ul>
+        </li>
+                <li><a href="<?php echo $_SESSION['SITE_URL']?>?page=Charts">MPx Charts</a></li>
+        </ul>
+    </li>
+    <!-- END Top Level with 2nd Level -->
 
     <!-- BEGIN Top Level with 2nd Level -->
      <li><a href="#">Help</a>
