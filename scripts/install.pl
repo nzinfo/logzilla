@@ -38,7 +38,7 @@ sub p {
 }
 
 my $version = "3.1";
-my $subversion = ".170";
+my $subversion = ".171";
 
 # Grab the base path
 my $lzbase = getcwd;
@@ -530,6 +530,7 @@ if ($ok =~ /[Yy]/) {
     COMMENT 'Verifies cache totals every night' 
     BEGIN    
     REPLACE INTO cache (name,value,updatetime) VALUES ('msg_sum', (SELECT SUM(counter) FROM `$dbtable`),NOW());
+    REPLACE INTO cache (name,value,updatetime) VALUES (CONCAT('chart_mpd_',DATE_FORMAT(NOW() - INTERVAL 0 DAY, '%Y-%m-%d_%a')), (SELECT SUM(counter) FROM `$dbtable`),NOW());
     END 
     };
     my $sth = $dbh->prepare("

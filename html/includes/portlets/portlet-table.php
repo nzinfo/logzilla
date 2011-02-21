@@ -733,7 +733,10 @@ function edit_note(link){
                                         var sup_date = $('#inp_suppress_date').val();
                                         var sup_time = $('#inp_suppress_time').val();
                                         var sup_field = $('#sel_suppress_field').val();
-                                        $.get("includes/ajax/json.db_update.php?action=save&dbid="+dbid+"&note="+text+"&sup_date="+sup_date+"&sup_time="+sup_time+"&sup_field="+sup_field, function(data){
+                                        var sup_msg = $('#suppress_regex').val();
+                                        sup_msg = sup_msg.replace(/\+/g, 'LZLZPLUS');
+                                        sup_msg = escape(sup_msg);
+                                        $.get("includes/ajax/json.db_update.php?action=save&dbid="+dbid+"&note="+text+"&sup_date="+sup_date+"&sup_time="+sup_time+"&sup_field="+sup_field+"&sup_msg="+sup_msg, function(data){
                                         $('#msgbox_br').jGrowl(data);
                                            });
                                 },
@@ -975,9 +978,10 @@ function lzecs(msg){
             <table id="tbl_suppress" cellpadding="0" cellspacing="0" border="0" width="100%">
             <thead class="ui-widget-header">
             <tr>
-            <th width="33%">Date</th>
-            <th width="33%">Time</th>
-            <th width="33%">Match</th>
+            <th width="25%">Date</th>
+            <th width="25%">Time</th>
+            <th width="25%">Match</th>
+            <th width="25%">Pattern</th>
             </tr>
             </thead>
             <tbody>
@@ -998,7 +1002,11 @@ function lzecs(msg){
             <option value="program">All Matching Programs</option>
             <option value="mne">All Matching Mnemonics</option>
             <option value="notes">All Matching Notes</option>
+            <option value="msg">Message Pattern</option>
             </select>
+            </td>
+            <td>
+            <input type="text" id="suppress_regex">
             </td>
             </tr>
             </tbody>

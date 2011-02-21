@@ -428,7 +428,7 @@ mdraw = function() {
                 };
                 var avg = Math.round(total / (data.length - 1));
                 if (isNumber(avg)){
-                    $('#sparktext').text(avg+" MPS (avg))");
+                    $('#sparktext').text(avg+" MPS (avg)");
                 } else {
                     $('#sparktext').text("No Incoming Messages");
                     };
