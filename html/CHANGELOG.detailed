@@ -1,5 +1,9 @@
 CHANGELOG
 
+3.1.169 - Notes update
+CD:
+ - #33 Notes now searchable using @notes
+
 3.1.168 - Work on license add and email alerts
 CD:
  - Added script to apply licenses either from web interface or command line.

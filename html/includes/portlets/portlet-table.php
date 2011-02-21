@@ -211,6 +211,7 @@ $qstring .= "&limit=$limit";
 // portlet-sphinxquery
 $msg_mask_get = get_input('msg_mask');
 $msg_mask_get = preg_replace ('/^Search through .*\sMessages/m', '', $msg_mask_get);
+
 $msg_mask_oper = get_input('msg_mask_oper');
 $qstring .= "&msg_mask=$msg_mask_get&msg_mask_oper=$msg_mask_oper";
 
@@ -270,9 +271,15 @@ if ($_SESSION['SPX_ENABLE'] == "1") {
         $escaped = $cl->EscapeString ("$msg_mask_get");
 	$escaped = str_replace("\|","|",$escaped);
 	$escaped = str_replace("\!","!",$escaped);
-//      $escaped = str_replace("@","\@",$escaped);
+    // #33 CDUKES: Added notes below so that users can search notes via @NOTES keyword
+    if (preg_match('/^@notes\s+/i', $msg_mask_get)) {
+          $escaped = str_ireplace("\@notes","",$escaped);
+        $msg_mask = "$sph_msg_mask @NOTES $escaped";
+    } else {
         $msg_mask = "$sph_msg_mask @MSG $escaped";
+    }
         }
+    // #33 CDUKES - END
                 else $msg_mask = "$sph_msg_mask";
 
         $hostip = $_SESSION['SPX_SRV'];

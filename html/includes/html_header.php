@@ -12,6 +12,7 @@ getsettings();
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
 <html>
 <head>
+<meta http-equiv="X-UA-Compatible" content="chrome=1">
 <link rel="shortcut icon" type="image/x-icon" href="favicon.ico" />
 <?php echo "<title>".$addTitle.": ".$_SESSION['PROGNAME']." ".$_SESSION['VERSION']."</title>\n"; ?>
 <meta name="Description" "<?php echo $_SESSION['PROGNAME']?>">
@@ -19,9 +20,7 @@ getsettings();
 <meta name="Copyright" 'LogZilla, LLC'>
 <meta name="Author" 'Clayton Dukes - cdukes@logzilla.info'>
 <meta http-equiv="Content-Language" content="EN">
-<meta name="ROBOTS" content="NOINDEX, NOFOLLOW" />
 <meta http-equiv="content-type" content="application/xhtml+xml; charset=UTF-8" />
-<meta http-equiv="X-UA-Compatible" content="chrome=1">
 
 <!-- BEGIN Import CSS -->
 <?php include ("css.php");?>
