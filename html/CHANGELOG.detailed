@@ -1,5 +1,10 @@
 CHANGELOG
 
+3.1.171 - MPD Average
+CD:
+ - #83 Made calculations an average instead of a hard set limit.
+ - #59 Initial work on regex suppression
+
 3.1.170 - Various
 CD:
  - Fixed regex for usernames to allow a number in the name.
