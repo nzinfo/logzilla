@@ -19,10 +19,12 @@ $dbLink = db_connect_syslog(DBADMIN, DBADMINPW);
 // -------------------------
 // Get Messages Per Second and return to JSON
 // -------------------------
-$sql = "SELECT value as count FROM cache WHERE name LIKE 'chart_mps_%' AND updatetime BETWEEN NOW() - INTERVAL 59 SECOND and NOW() -  INTERVAL 0 SECOND ORDER BY updatetime ASC";
+$sql = "SELECT value as count FROM cache WHERE name LIKE 'chart_mps_%' AND updatetime >= NOW() - INTERVAL 59 SECOND";
 $queryresult = perform_query($sql, $dbLink, $_SERVER['PHP_SELF']);
 while ($line = fetch_array($queryresult)) {
-    $num[] = $line['count'];
+    $num[] = intval($line['count']);
 }
-echo json_encode($num);
+if ($num[0] > 0) {
+    echo json_encode($num);
+}
 ?>

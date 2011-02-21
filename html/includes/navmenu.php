@@ -150,17 +150,25 @@ session_start();
                  <span id="chart_history"></span>
                 </ul>
               </li>
+            <?php 
+            if ((has_portlet_access($_SESSION['username'], 'Edit Favorites') == TRUE) || ($_SESSION['AUTHTYPE'] == "none")) { 
+            ?>
+            <li><a href="<?php echo $_SESSION['SITE_URL']?>?page=Favorites">Favorites Admin</a></li>
+            <?php } ?>
          </ul>
             <!-- END 2nd Level with 3nd Level -->
     <?php 
     if($_SESSION['AUTHTYPE'] != 'none')  { 
     echo "<li><a href=$_SERVER[SITE_URL]?pageId=logout>Logout</a></li>";
-    } ?>
+    } else {
+    echo "<li></li>";
+    }
+        ?>
     <!-- END Top Level with 2nd Level -->
 <!-- BEGIN Sparkline -->
 <div id='div_sparkline'>
-    <span class="dynamicsparkline sparkbox">Loading MPS Chart - will update every <?php echo $_SESSION['Q_TIME']?> second(s)</span>
-    <span class="sparkbox" id="spark_mps"></span>
+    <span class="sparkbox" id="sparktext"></span>
+    <span class="sparkline" id="ticker"></span>
 </div>
 <!-- END Sparkline -->
 
