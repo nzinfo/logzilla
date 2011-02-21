@@ -378,6 +378,9 @@ function reloadIE(id, display, url) {
 <script type="text/javascript" src="includes/js/jquery/plugins/jquery.sparkline.min.js"></script>
 <script type="text/javascript">
 $(document).ready(function(){
+function isNumber(n) {
+    return !isNaN(parseFloat(n)) && isFinite(n);
+}
 /** 
  ** Draws the Messages per second sparkline
  **/
@@ -411,9 +414,10 @@ mdraw = function() {
 	   	travel = 0;
         $.getJSON('includes/ajax/json.sparkline.mps.php', function(data) {
         // $('.dynamicsparkline').sparkline(data, {width: points.length*20, height: '45px'});
+            $('#sparktext').text("");
             if(data) {
                 // Add sparkline:
-                $('.dynamicsparkline').sparkline(data, {width: ((data.length - 1) * 2), height: '30px', type: 'line'});
+                $('#ticker').sparkline(data, {width: ((data.length - 1) * 2), height: '30px', type: 'line'});
                 // Added average MPS text if data exists:
                 var total = 0;
                     for(var i = 0; i < data.length; i++){
@@ -423,14 +427,13 @@ mdraw = function() {
                     };
                 };
                 var avg = Math.round(total / (data.length - 1));
-                if(!isNaN(avg)){
-                    $('#spark_mps').text("Average MPS = " + avg);
+                if (isNumber(avg)){
+                    $('#sparktext').text(avg+" MPS (avg))");
                 } else {
-                    $('#spark_mps').text("NaN");
+                    $('#sparktext').text("No Incoming Messages");
                     };
             } else {
-            $('.dynamicsparkline').text("No Incoming Messages");
-            $('#spark_mps').text("");
+            $('#sparktext').text("No Incoming Messages");
             };
         });
    	}
@@ -440,10 +443,10 @@ mdraw = function() {
 var mtimer = setTimeout(mdraw, refreshinterval); 
 $.sparkline_display_visible(); 
 } else {
-    $('.dynamicsparkline').text("");
+    $('#sparktext').text("");
 }
 
-// $('#sparkbox').draggable();
+// $('#sparktext').draggable();
 });
 </script>
 <!-- END Sparklines -->

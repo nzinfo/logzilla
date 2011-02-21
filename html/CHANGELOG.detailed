@@ -1,5 +1,12 @@
 CHANGELOG
 
+3.1.170 - Various
+CD:
+ - Fixed regex for usernames to allow a number in the name.
+ - Fixed "Infinity" error in sparklines
+ - Found bug in noauth user and fixed
+ - Added a "Favorites" editor for admins (appears on the favorites menu).
+
 3.1.169 - Notes update
 CD:
  - #33 Notes now searchable using @notes

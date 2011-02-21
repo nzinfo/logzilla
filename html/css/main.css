@@ -26,6 +26,14 @@ body {
   font-family:Trebuchet MS; 
   color: white;
   position: relative;
+  top: 12px;
+  left: 0px;
+}
+.sparkline {
+  font-size:10px; 
+  font-family:Trebuchet MS; 
+  color: white;
+  position: relative;
   top: 0px;
   left: 0px;
 }

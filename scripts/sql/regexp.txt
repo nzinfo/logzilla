@@ -1,5 +1,5 @@
 $regExpArray = array(
-            "username" => "(^[A-Za-z_.@]{1,}\$)",
+            "username" => "(^[A-Za-z_.@0-9]{1,}\$)",
             "password"=>"(^.{1,}\$)",
             "pageId"=>"(^\w+$)",
             "sessionId"=>"(^\w{32}\$)",
