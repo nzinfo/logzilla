@@ -1,5 +1,9 @@
 CHANGELOG
 
+3.1.168 - Work on license add and email alerts
+CD:
+ - Added script to apply licenses either from web interface or command line.
+
 3.1.167 - More investigation on SNMP
 CD:
  - #31 Small chages to traps.sh so that it didn't truncate.
