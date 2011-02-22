@@ -733,8 +733,7 @@ function edit_note(link){
                                         var sup_date = $('#inp_suppress_date').val();
                                         var sup_time = $('#inp_suppress_time').val();
                                         var sup_field = $('#sel_suppress_field').val();
-                                        var sup_msg = $('#suppress_regex').val();
-                                        sup_msg = sup_msg.replace(/\+/g, 'LZLZPLUS');
+                                        var sup_msg = $('#suppress_msg_text').val();
                                         sup_msg = escape(sup_msg);
                                         $.get("includes/ajax/json.db_update.php?action=save&dbid="+dbid+"&note="+text+"&sup_date="+sup_date+"&sup_time="+sup_time+"&sup_field="+sup_field+"&sup_msg="+sup_msg, function(data){
                                         $('#msgbox_br').jGrowl(data);
@@ -978,10 +977,10 @@ function lzecs(msg){
             <table id="tbl_suppress" cellpadding="0" cellspacing="0" border="0" width="100%">
             <thead class="ui-widget-header">
             <tr>
-            <th width="25%">Date</th>
-            <th width="25%">Time</th>
-            <th width="25%">Match</th>
-            <th width="25%">Pattern</th>
+            <th id="suppress_date" width="25%">Date</th>
+            <th id="suppress_time" width="25%">Time</th>
+            <th id="suppress_match" width="25%">Match</th>
+            <th id="suppress_msg_header" width="25%">Message Text</th>
             </tr>
             </thead>
             <tbody>
@@ -993,6 +992,7 @@ function lzecs(msg){
             <input style="width: 98%" type="text" id="inp_suppress_time" size="10" value='<?php echo date("G:H:s")?>' /> 
             </td>
             <td>
+            <div class="selectContainer">
             <select style="width: 98%" id="sel_suppress_field">
             <option selected value=""></option>
             <option value="this single event">This Event Only</option>
@@ -1002,12 +1002,15 @@ function lzecs(msg){
             <option value="program">All Matching Programs</option>
             <option value="mne">All Matching Mnemonics</option>
             <option value="notes">All Matching Notes</option>
-            <option value="msg">Message Pattern</option>
+            <option value="msg">All Matching Message</option>
             </select>
+            </div>
             </td>
+       <div class="divContainer">
             <td>
-            <input type="text" id="suppress_regex">
+            <input type="text" id="suppress_msg_text">
             </td>
+        </div>
             </tr>
             </tbody>
             </table>
@@ -1105,6 +1108,28 @@ function refresh(source, delay)
 //------------------------------------
 // END Tail
 //------------------------------------
+
+$(document).ready(function(){
+    $("#suppress_msg_text").hide();
+    $("#suppress_msg_header").hide();
+    var d = $("#suppress_date").width();
+    var t = $("#suppress_time").width();
+    var w = $("#suppress_match").width();
+    $("#sel_suppress_field").change(function(){
+        var selected = $("#sel_suppress_field option:selected").val();
+        if (selected == "msg") {
+            $("#suppress_msg_header").toggle();
+            $("#suppress_msg_text").show(300);
+        } else {
+            $("#suppress_msg_text").hide();
+            $("#suppress_msg_header").hide();
+            $("#suppress_date").width(d);
+            $("#suppress_time").width(t);
+            $("#suppress_match").width(w);
+        }
+    });
+});
+
 </script>
 <?php } else { ?>
 <script type="text/javascript">
