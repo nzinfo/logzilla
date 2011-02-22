@@ -1,5 +1,10 @@
 CHANGELOG
 
+3.1.171 - Bugfix
+CD:
+ - Fix for #83
+ - Added missing javascript plugin (fluidgrid)
+
 3.1.171 - MPD Average
 CD:
  - #83 Made calculations an average instead of a hard set limit.

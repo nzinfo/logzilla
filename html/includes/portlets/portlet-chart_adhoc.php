@@ -229,10 +229,12 @@ if ($mnemonics) {
         }
     }
     // If url is pasted without a date/time, assume today.
-    if (!in_array('fo_checkbox', $_GET)) {
-        $start = date("Y-m-d") . " 00:00:00";
-        $end = date("Y-m-d") . " 23:59:59";
-        $where.= " AND fo BETWEEN '$start' AND '$end'";
+    if($_GET) {
+        if (!in_array('fo_checkbox', $_GET)) {
+            $start = date("Y-m-d") . " 00:00:00";
+            $end = date("Y-m-d") . " 23:59:59";
+            $where.= " AND fo BETWEEN '$start' AND '$end'";
+        }
     }
     // LO
     $start = "";
