@@ -38,7 +38,7 @@ sub p {
 }
 
 my $version = "3.1";
-my $subversion = ".173";
+my $subversion = ".174";
 
 # Grab the base path
 my $lzbase = getcwd;
@@ -758,6 +758,39 @@ if ($paths_updated >0) {
         print "You will need to manually merge contrib/system_configs/syslog-ng.conf with yours.\n";
     }
 
+    # Cronjob  Setup
+    print("\n\033[1m\n\n========================================\033[0m\n");
+    print("\n\033[1m\tCronjob Setup\n\033[0m");
+    print("\n\033[1m========================================\n\n\033[0m\n\n");
+    print "\n";
+    print "For database querying and archiving you need a Cronjob in /etc/cron.d\n";
+    my $ok  = &p("Ok to continue?", "y");
+    if ($ok =~ /[Yy]/) {
+        my $crondir  = &p("Please provide the location of your cronjobs", "/etc/cron.d");
+        if (-d "$crondir") {
+        		my $filetobecopied = "$lzbase/scripts/contrib/system_configs/logzilla.crontab";
+				my $newfile = "$crondir/logzilla";
+        		copy($filetobecopied, $newfile) or warn "File cannot be copied.";
+        		
+                print "Cronfile added to $crondir\n";
+            }
+        } else {
+            print "Directory does not exist\n";
+            print "You will need insert the file $lzbase/scripts/contrib/system_configs/logzilla.crontab as crontab\n";
+            print "either in the /etc/cron.d directory\n";
+            print "or as personal crontab for root\n";
+            print "in second case you have to remove the 'root' entries in the crontab file\n";
+        }
+
+    } else {
+        print "Skipping Crontab setup.\n";
+        print "You will need insert the file $lzbase/scripts/contrib/system_configs/logzilla.crontab as crontab\n";
+        print "either in the /etc/cron.d directory\n";
+        print "or as personal crontab for root\n";
+        print "in second case you have to remove the 'root' entries in the crontab file\n";
+    }
+
+
     # Sudo Access Setup
     print("\n\033[1m\n\n========================================\033[0m\n");
     print("\n\033[1m\tSUDO Setup\n\033[0m");
@@ -788,6 +821,7 @@ if ($paths_updated >0) {
                 print SFILE "# Below added by LogZilla installation on $now\n";
                 print SFILE "# Allows Apache user to HUP the syslog-ng process\n";
                 print SFILE "$webuser ALL=NOPASSWD:$lzbase/scripts/hup.pl\n";
+                print SFILE "$webuser ALL=NOPASSWD:$lzbase/scripts/licadd.pl\n";
                 close SFILE;
                 print "Appended sudoer access for $webuser to $file\n";
             }
@@ -818,13 +852,18 @@ if ($paths_updated >0) {
             } else {
                 print STDOUT "Unable to find PID for syslog-ng\n";
             }
-        }
-    } else {
+	} 
+        
+   else {
         print("\033[1m\n\tPlease be sure to restart syslog-ng..\n\033[0m");
     }
 } else {
     print "Since you chose not to update paths, you will need to manually merge contrib/system_configs/syslog-ng.conf with your syslog-ng.conf.\n";
 }
+
+ 
+
+
 print("\n\033[1m\tLogZilla installation complete!\n\033[0m");
 
 my $cTerminalLineSize = 79;
