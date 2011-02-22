@@ -38,7 +38,7 @@ sub p {
 }
 
 my $version = "3.1";
-my $subversion = ".174";
+my $subversion = ".175";
 
 # Grab the base path
 my $lzbase = getcwd;
@@ -821,6 +821,7 @@ if ($paths_updated >0) {
                 print SFILE "# Below added by LogZilla installation on $now\n";
                 print SFILE "# Allows Apache user to HUP the syslog-ng process\n";
                 print SFILE "$webuser ALL=NOPASSWD:$lzbase/scripts/hup.pl\n";
+                print SFILE "# Allows Apache user to apply new licenses from the web interface\n";
                 print SFILE "$webuser ALL=NOPASSWD:$lzbase/scripts/licadd.pl\n";
                 close SFILE;
                 print "Appended sudoer access for $webuser to $file\n";
@@ -836,6 +837,7 @@ if ($paths_updated >0) {
         print "Note: You should change \"www-data\" below to match the user that runs Apache\n";
         print "# Allows Apache user to HUP the syslog-ng process\n";
         print "www-data ALL=NOPASSWD:$lzbase/scripts/hup.pl\n";
+        print "www-data ALL=NOPASSWD:$lzbase/scripts/licadd.pl\n";
     }
 
 # syslog-ng HUP
