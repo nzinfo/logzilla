@@ -1,5 +1,9 @@
 CHANGELOG
 
+3.1.181 - Bugfix
+TH:
+ - updateCache() fills in wrong date
+
 3.1.180 - Bugfix
 TH:
  - in cron.d/logzilla the 6th parameter must be the user who run the job
