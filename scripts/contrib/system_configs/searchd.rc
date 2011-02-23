@@ -11,23 +11,23 @@ DESC="Sphinx indexer (searchd) for Logzilla"
 
 # Edit the following two variables to match your
 # Sphinx installation for Logzilla
-SEARCHDBIN="/var/www/logzilla/sphinx/bin/searchd"
-CONFFILE="/var/www/logzilla/sphinx/sphinx.conf"
+SEARCHDBIN="/path_to_logzilla/sphinx/bin/searchd"
+CONFFILE="/path_to_logzilla/sphinx/sphinx.conf"
 
 OPTIONS="-c ${CONFFILE}"
 
 . /lib/lsb/init-functions
 case "$1" in
-start)
-log_action_begin_msg "Starting searchd"
-${SEARCHDBIN} ${OPTIONS}
-;;
-stop)
-log_action_begin_msg "Stoping searchd"
-kill -s QUIT $(cat /var/run/sphinx_searchd.pid)
-;;
-restart)
-$0 stop;
-$0 start;
-;;
+    start)
+        log_action_begin_msg "Starting searchd"
+        ${SEARCHDBIN} ${OPTIONS}
+        ;;
+    stop)
+        log_action_begin_msg "Stoping searchd"
+        kill -s QUIT $(cat /var/run/sphinx_searchd.pid)
+        ;;
+    restart)
+        $0 stop;
+        $0 start;
+        ;;
 esac

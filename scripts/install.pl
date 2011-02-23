@@ -38,26 +38,27 @@ sub p {
 }
 
 my $version = "3.1";
-my $subversion = ".176";
+my $subversion = ".179";
 
 # Grab the base path
 my $lzbase = getcwd;
 $lzbase =~ s/\/scripts//g;
 my $paths_updated = 0;
+my $now = localtime;
 
 print("\n\033[1m\n\n========================================\033[0m\n");
 print("\n\033[1m\tLogZilla End User License\n\033[0m");
 print("\n\033[1m========================================\n\n\033[0m\n\n");
 
 my $ok  = &p("You must read and accept the End User License Agreement to continue.\nContinue? (yes/no)", "n");
-if ($ok =~ /[Nn]/) {
+if ($ok !~ /[Yy]/) {
     print "Please try again when you are ready to accept.\n";
     exit 1;
 } else {
     &show_EULA;
 }
 my $ok  = &p("Do you accept? (yes/no)", "n");
-if ($ok =~ /[Nn]/) {
+if ($ok !~ /[Yy]/) {
     print "Please try again when you are ready to accept.\n";
     exit 1;
 }
@@ -108,26 +109,26 @@ print("\n\033[1m\n\n========================================\033[0m\n");
 print("\n\033[1m\tPath Updates\n\033[0m");
 print("\n\033[1m========================================\n\n\033[0m\n\n");
 print "Getting ready to replace paths in all files with \"$lzbase\"\n";
-my $ok  = &p("Ok to continue?", "y");
-if ($ok =~ /[Yy]/) {
-    my $search = "/path_to_logzilla";
-    print "Updating file paths\n";
-    foreach my $file (qx(grep -Rl $search ../* | egrep -v "install.pl|\\.svn|\\.sql|license.txt|CHANGELOG|html/includes/index.php|\\.logtest|sphinx/src|sphinx/bin|html/ioncube")) {
-        chomp $file;
-        print "Modifying $file\n";
-        system "perl -i -pe 's|$search|$lzbase|g' $file" and warn "Could not modify $file $!\n";
-    }
-    my $search = "/path_to_logs";
-    print "Updating log paths\n";
-    foreach my $file (qx(grep -Rl $search ../* | egrep -v "install.pl|.svn|.sql|CHANGELOG")) {
-        chomp $file;
-        print "Modifying $file\n";
-        system "perl -i -pe 's|$search|$logpath|g' $file" and warn "Could not modify $file $!\n";
-    }
-    $paths_updated++;
-} else {
-    print "Skipping path updates\n";
+#my $ok  = &p("Ok to continue?", "y");
+#if ($ok =~ /[Yy]/) {
+my $search = "/path_to_logzilla";
+print "Updating file paths\n";
+foreach my $file (qx(grep -Rl $search ../* | egrep -v "install.pl|\\.svn|\\.sql|license.txt|CHANGELOG|html/includes/index.php|\\.logtest|sphinx/src|sphinx/bin|html/ioncube")) {
+    chomp $file;
+    print "Modifying $file\n";
+    system "perl -i -pe 's|$search|$lzbase|g' $file" and warn "Could not modify $file $!\n";
 }
+my $search = "/path_to_logs";
+print "Updating log paths\n";
+foreach my $file (qx(grep -Rl $search ../* | egrep -v "install.pl|.svn|.sql|CHANGELOG")) {
+    chomp $file;
+    print "Modifying $file\n";
+    system "perl -i -pe 's|$search|$logpath|g' $file" and warn "Could not modify $file $!\n";
+}
+$paths_updated++;
+#} else {
+#print "Skipping path updates\n";
+#}
 
 print("\n\033[1m\n\n========================================\033[0m\n");
 print("\n\033[1m\tDatabase Installation\n\033[0m");
@@ -706,9 +707,8 @@ if ($paths_updated >0) {
         print("\n\033[1m\tWARNING!\n\033[0m");
         print "Unable to locate your /etc/logrotate.d directory\n";
         print "You will need to manually copy:\n";
-        print "cp contrib/system_configs/logzilla.logrotate /etc/logrotate.d/logzilla\n";
+        print "cp $lzbase/scripts/contrib/system_configs/logzilla.logrotate /etc/logrotate.d/logzilla\n";
     }
-
     print "\n\nAdding LogZilla to syslog-ng\n";
     my $ok  = &p("Ok to continue?", "y");
     if ($ok =~ /[Yy]/) {
@@ -750,53 +750,101 @@ if ($paths_updated >0) {
             close(CNF); 
             close(FILE); 
         } else {
-            print "Skipped syslog-ng merge\n";
+            print "Unable to locate your syslog-ng.conf file\n";
             print "You will need to manually merge contrib/system_configs/syslog-ng.conf with yours.\n";
         }
     } else {
-        print "Unable to locate your syslog-ng.conf file\n";
+        print "Skipped syslog-ng merge\n";
         print "You will need to manually merge contrib/system_configs/syslog-ng.conf with yours.\n";
     }
 
     # Cronjob  Setup
     print("\n\033[1m\n\n========================================\033[0m\n");
-    print("\n\033[1m\tCronjob Setup\n\033[0m");
-    print("\n\033[1m========================================\n\n\033[0m\n\n");
+    print("\n\033[1m\tCron Setup\n\033[0m");
+    print("\n\033[1m========================================\n\n\033[0m\n");
     print "\n";
-    print "For database querying and archiving you need a Cronjob in /etc/cron.d\n";
+    print "Cron is used to run backend indexing and data exports.\n";
+    print "Install will attempt to do this automatically for you by adding it to /etc/cron.d\n";
+    print "In the event that something fails or you skip this step, \n";
+    print "You MUST create it manually or create the entries in your root's crontab file.\n";
+    my $crondir;
     my $ok  = &p("Ok to continue?", "y");
     if ($ok =~ /[Yy]/) {
-        my $crondir  = &p("Please provide the location of your cronjobs", "/etc/cron.d");
-        if (-d "$crondir") {
-        		my $filetobecopied = "$lzbase/scripts/contrib/system_configs/logzilla.crontab";
-				my $newfile = "$crondir/logzilla";
-        		copy($filetobecopied, $newfile) or warn "File cannot be copied.";
-        		
-                print "Cronfile added to $crondir\n";
-            }
+        my $minute;
+        my $sml  = &p("\n\nWill this copy of LogZilla be used to process more than 1 Million messages per day?\nNote: Your answer here only determines how often to run indexing.", "n");
+        if ($sml =~ /[Yy]/) {
+            $minute = 5;
         } else {
-            print "Directory does not exist\n";
-            print "You will need insert the file $lzbase/scripts/contrib/system_configs/logzilla.crontab as crontab\n";
-            print "either in the /etc/cron.d directory\n";
-            print "or as personal crontab for root\n";
-            print "in second case you have to remove the 'root' entries in the crontab file\n";
+            $minute = 1;
         }
+        my $cron = qq{
+        #####################################################
+        # BEGIN LogZilla Cron Entries
+        #####################################################
+        # http://www.logzilla.pro
+        # Sphinx indexer cron times
+        # Note: Your setup may require some tweaking depending on expected message rates!
+        # Install date: $now
+        #####################################################
 
+        #####################################################
+        # Run Sphinx "full" scan 30 minutes after midnight
+        # in order to create a new index for today.
+        #####################################################
+        30 0 1 * * /$lzbase/sphinx/indexer.sh full >> /$logpath/sphinx_indexer.log 2>&1
+
+        #####################################################
+        # Run Sphinx "delta" scans every 5 minutes throughout 
+        # the day.  
+        # Delta indexing should be very fast but you may need
+        # to adjust these times on very large systems.
+        #####################################################
+        */$minute * * * * /$lzbase/sphinx/indexer.sh delta >> /$logpath/sphinx_indexer.log 2>&1
+
+        #####################################################
+        # Run Sphinx "merge" scans every day at midnight
+        # Merging is much faster than a full scan.
+        # You may need to adjust these times on very large systems.
+        #####################################################
+        0 0 * * * /$lzbase/sphinx/indexer.sh merge >> /$logpath/sphinx_indexer.log 2>&1
+
+        #####################################################
+        # Daily export archives
+        #####################################################
+        0 1 * * * root sh /var/www/svn/logzilla/scripts/export.sh
+
+        #####################################################
+        # END LogZilla Cron Entries
+        #####################################################
+        };
+        $crondir  = &p("What is the correct path to your cron.d?", "/etc/cron.d");
+        if (-d "$crondir") {
+            my $file = "$crondir/logzilla";
+            open FILE, ">$file" or die "cannot open $file: $!";
+            print FILE $cron;
+            close FILE;
+            print "Cronfile added to $crondir\n";
+        } else {
+            print "$crondir does not exist\n";
+            print "You will need to manually copy $lzbase/scripts/contrib/system_configs/logzilla.crontab to /etc/cron.d\n";
+            print "or use 'crontab -e' as root and paste the contents of $lzbase/scripts/contrib/system_configs/logzilla.crontab into it.\n";
+            print "If you add it manually as root's personal crontab, then be sure to remove the \"root\" username from the last entry.\n";
+        }
     } else {
         print "Skipping Crontab setup.\n";
-        print "You will need insert the file $lzbase/scripts/contrib/system_configs/logzilla.crontab as crontab\n";
-        print "either in the /etc/cron.d directory\n";
-        print "or as personal crontab for root\n";
-        print "in second case you have to remove the 'root' entries in the crontab file\n";
+        print "You will need to manually copy $lzbase/scripts/contrib/system_configs/logzilla.crontab to /etc/cron.d\n";
+        print "or use 'crontab -e' as root and paste the contents of $lzbase/scripts/contrib/system_configs/logzilla.crontab into it.\n";
+        print "If you add it manually as root's personal crontab, then be sure to remove the \"root\" username from the last entry.\n";
+        sleep 1;
     }
 
-
-    # Sudo Access Setup
+# Sudo Access Setup
     print("\n\033[1m\n\n========================================\033[0m\n");
     print("\n\033[1m\tSUDO Setup\n\033[0m");
     print("\n\033[1m========================================\n\n\033[0m\n\n");
-    print "\n";
     print "In order for the Apache user to be able to apply changes to syslog-ng, sudo access needs to be provided in /etc/sudoers\n";
+    print "Note that you do not HAVE to do this, but it will make things much easier on your for both licensing and Email Alert editing.\n";
+    print "If you choose not to install the sudo commands, then you must manually SIGHUP syslog-ng each time an Email Alert is added, changed or removed.\n";
     my $ok  = &p("Ok to continue?", "y");
     if ($ok =~ /[Yy]/) {
         my $file  = &p("Please provide the location of your sudoers file", "/etc/sudoers");
@@ -854,16 +902,15 @@ if ($paths_updated >0) {
             } else {
                 print STDOUT "Unable to find PID for syslog-ng\n";
             }
-	} 
-        
-   else {
-        print("\033[1m\n\tPlease be sure to restart syslog-ng..\n\033[0m");
+        } else {
+            print("\033[1m\n\tPlease be sure to restart syslog-ng..\n\033[0m");
+        }
     }
 } else {
     print "Since you chose not to update paths, you will need to manually merge contrib/system_configs/syslog-ng.conf with your syslog-ng.conf.\n";
 }
 
- 
+
 
 
 print("\n\033[1m\tLogZilla installation complete!\n\033[0m");
