@@ -1,8 +1,16 @@
 CHANGELOG
 
-3.1.177 - rc script for searchd
+3.1.179 - Minor
+CD:
+ - Modified install for path updates and cron.d
+
+3.1.177 - Sphinx
+CD:
+ - Modified paths in new LSB script.
+
+3.1.176 - Sphinx
 AW:
- - added a Linux Standard Base (LSB) compliant rc script for sphinx searchd
+ - Added LSB compliant script for startinup of searchd
 
 3.1.176 - bugfix
 TH:
