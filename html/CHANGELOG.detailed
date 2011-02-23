@@ -1,5 +1,10 @@
 CHANGELOG
 
+3.1.180 - Bugfix
+TH:
+ - in cron.d/logzilla the 6th parameter must be the user who run the job
+ - minor path bug in the crontab file
+ 
 3.1.179 - Minor
 CD:
  - Modified install for path updates and cron.d
