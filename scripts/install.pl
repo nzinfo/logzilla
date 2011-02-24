@@ -38,7 +38,7 @@ sub p {
 }
 
 my $version = "3.1";
-my $subversion = ".182";
+my $subversion = ".183";
 
 # Grab the base path
 my $lzbase = getcwd;
@@ -847,7 +847,10 @@ if ($paths_updated >0) {
     print "If you choose not to install the sudo commands, then you must manually SIGHUP syslog-ng each time an Email Alert is added, changed or removed.\n";
     my $ok  = &p("Ok to continue?", "y");
     if ($ok =~ /[Yy]/) {
-        my $file  = &p("Please provide the location of your sudoers file", "/etc/sudoers");
+        my $file = "/etc/sudoers";
+        unless (-e $file) {
+            $file  = &p("Please provide the location of your sudoers file", "/etc/sudoers");
+        }
         if (-f "$file") {
             # Try to get current web user
             my $PROGRAM = qr/apache|httpd/;
@@ -863,6 +866,8 @@ if ($paths_updated >0) {
             if (grep(/$find/, @lines)) {
                 print "Line already exists in $file, skipping add...\n";
             } else {
+                my $os = `uname -a`;
+                $os =~ s/.*(ubuntu).*/$1/i;
                 my $now = localtime;
                 open SFILE, ">>$file" or die "cannot open $file for append: $!";
                 print SFILE "\n";
@@ -873,6 +878,10 @@ if ($paths_updated >0) {
                 print SFILE "$webuser ALL=NOPASSWD:$lzbase/scripts/licadd.pl\n";
                 close SFILE;
                 print "Appended sudoer access for $webuser to $file\n";
+                if ($os !~ /Ubuntu/i) {
+                    print "Non-ubuntu OS's may also require the following line to be added to $file\n";
+                    print "Defaults    requiretty\n";
+                }
             }
         } else {
             print "$file does not exist\nUnable to continue!";

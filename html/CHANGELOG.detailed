@@ -1,5 +1,9 @@
 CHANGELOG
 
+3.1.183 - Work on sudoers
+CD:
+ - #94 Added check for tty during sudoers install on non-ubuntu OS's
+
 3.1.182 - Bugfix
 CD:
  - #99 - Fixed bug in chart generation for non-cisco mnemonics that included mne='none'
