@@ -30,7 +30,7 @@
 }
 /* SHOW SUBMENU  2 */
 #menu ul li:hover ul, #menu ul li.over ul {
-    display:block;
+    display:none;
 }
 /* ******************************************************************* */
 /* STYLING UP THE LINKS */

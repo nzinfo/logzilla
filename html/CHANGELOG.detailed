@@ -1,5 +1,10 @@
 CHANGELOG
 
+3.1.184 - Menus
+CD:
+ - Fixed mis-aligned submenus
+ - Added fade to clicked menu items (user request to know they clicked)
+
 3.1.183 - Work on sudoers
 CD:
  - #94 Added check for tty during sudoers install on non-ubuntu OS's
