@@ -1,7 +1,7 @@
 <?php
 
 /*
- * grid/hostgrid.php
+ * grid/mne.php
  *
  * Developed by Clayton Dukes <cdukes@cdukes.com>
  * Copyright (c) 2011 LogZilla, LLC
@@ -30,25 +30,26 @@ $conn->query("SET NAMES utf8");
 // Create the jqGrid instance
 $grid = new jqGridRender($conn);
 // Write the SQL Query
-$grid->SelectCommand = 'SELECT host as Host, seen as Seen, lastseen as LastSeen FROM hosts';
+$grid->SelectCommand = 'SELECT name, seen, lastseen FROM mne';
 // set the ouput format to json
 $grid->dataType = 'json';
-// Let the grid create the model
-$grid->setColModel();
 // Set the url from where we obtain the data
-$grid->setUrl('includes/grid/hosts.php');
+$grid->setUrl('includes/grid/mne.php');
 // Set some grid options
 $grid->setGridOptions(array(
     "rowNum"=>18,
-    "sortname"=>"LastSeen",
+    "sortname"=>"lastseen",
     "sortorder"=>"desc",
     "altRows"=>true,
     "multiselect"=>true,
     "rowList"=>array(20,40,60,75,100,500,750,1000),
     ));
 
-$grid->setColProperty('Seen', array('width'=>'15'));
-$grid->setColProperty('LastSeen', array('formatter'=>'js:easyDate'));
+$labels = array("name"=>"Mnemonic", "seen"=>"Seen", "lastseen"=>"Last Seen");
+
+$grid->setColModel(null, null, $labels);
+$grid->setColProperty('seen', array('width'=>'15'));
+$grid->setColProperty('lastseen', array('width'=>'25', 'formatter'=>'js:easyDate'));
 
 $grid->navigator = true;
 $grid->setNavOptions('navigator', array("pdf"=>true,"excel"=>true,"add"=>false,"edit"=>false,"del"=>false,"view"=>false, "search"=>true));
@@ -73,10 +74,10 @@ function setHeight(percent){
         return col;
 };
 //---------------------------------------------------------------
-// BEGIN: Host Select Dialog
+// BEGIN: Mnemonic Select Dialog
 //---------------------------------------------------------------
-$("#portlet-header_Hosts .ui-icon-plus").click(function() {
-    $("#host_dialog").dialog({
+$("#portlet-header_Mnemonics .ui-icon-plus").click(function() {
+    $("#mne_dialog").dialog({
                 bgiframe: true,
                 resizable: false,
                 height: '600',
@@ -84,26 +85,26 @@ $("#portlet-header_Hosts .ui-icon-plus").click(function() {
                 position: [100,100],
                 autoOpen:false,
                 modal: false,
-                title: "Host Selector",
+                title: "Mnemonic Selector",
                 overlay: {
                         backgroundColor: '#000',
                         opacity: 0.5
                 },     
                 buttons: {
-                        'Add Selected Hosts': function() {
+                        'Add Selected Mnemonics': function() {
                                 $(this).dialog('close');
                         },
                 }               
         });             
-        $("#host_dialog").dialog('open');
-        $("#host_dialog").ready(function(){
+        $("#mne_dialog").dialog('open');
+        $("#mne_dialog").ready(function(){
         // Some magic to set the proper width of the grid inside a Modal window
-        var modalWidth = $("#ui-dialog-title-host_dialog").width() +5;
-        $('#hostsgrid').jqGrid('setGridWidth',setWidth(modalWidth));
-        $('#hostsgrid').jqGrid('setGridHeight',setHeight(57));
+        var modalWidth = $("#ui-dialog-title-mne_dialog").width() +5;
+        $('#mnegrid').jqGrid('setGridWidth',setWidth(modalWidth));
+        $('#mnegrid').jqGrid('setGridHeight',setHeight(57));
         });
 //---------------------------------------------------------------
-// END: Host Select Dialog
+// END: Mnemonic Select Dialog
 //---------------------------------------------------------------
 
 
@@ -111,7 +112,7 @@ $("#portlet-header_Hosts .ui-icon-plus").click(function() {
 
 $(window).resize(function()
 {
-        $('#hostsgrid').fluidGrid({base:'#ui-dialog-title-host_dialog', offset:-25});
+        $('#mnegrid').fluidGrid({base:'#ui-dialog-title-mne_dialog', offset:-25});
 });
 
 
@@ -130,12 +131,12 @@ if($oper == "pdf") {
         // set logo image width
         "header_logo_width"=>45,
         //header title
-        "header_title"=>"                         Hosts Report"
+        "header_title"=>"                         Mnemonics Report"
     ));
 } 
 
 // Enjoy
 $summaryrows=array("Seen"=>array("Seen"=>"SUM")); 
-$grid->renderGrid('#hostsgrid','#hostspager',true, $summaryrows, null, true,true);
+$grid->renderGrid('#mnegrid','#mnepager',true, $summaryrows, null, true,true);
 $conn = null;
 ?>

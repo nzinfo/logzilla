@@ -38,7 +38,7 @@ sub p {
 }
 
 my $version = "3.1";
-my $subversion = ".185";
+my $subversion = ".186";
 
 # Grab the base path
 my $lzbase = getcwd;
@@ -778,58 +778,61 @@ if ($paths_updated >0) {
             $minute = 1;
         }
         my $cron = qq{
-        #####################################################
-        # BEGIN LogZilla Cron Entries
-        #####################################################
-        # http://www.logzilla.pro
-        # Sphinx indexer cron times
-        # Note: Your setup may require some tweaking depending on expected message rates!
-        # Install date: $now
-        #####################################################
+#####################################################
+# BEGIN LogZilla Cron Entries
+#####################################################
+# http://www.logzilla.pro
+# Sphinx indexer cron times
+# Note: Your setup may require some tweaking depending on expected message rates!
+# Install date: $now
+#####################################################
 
-        #####################################################
-        # Run Sphinx "full" scan 30 minutes after midnight
-        # in order to create a new index for today.
-        #####################################################
-        30 0 1 * * root /$lzbase/sphinx/indexer.sh full >> /$logpath/sphinx_indexer.log 2>&1
+#####################################################
+# Run Sphinx "full" scan 30 minutes after midnight
+# in order to create a new index for today.
+#####################################################
+30 0 1 * * root /$lzbase/sphinx/indexer.sh full >> /$logpath/sphinx_indexer.log 2>&1
 
-        #####################################################
-        # Run Sphinx "delta" scans every 5 minutes throughout 
-        # the day.  
-        # Delta indexing should be very fast but you may need
-        # to adjust these times on very large systems.
-        #####################################################
-        */$minute * * * * root /$lzbase/sphinx/indexer.sh delta >> /$logpath/sphinx_indexer.log 2>&1
+#####################################################
+# Run Sphinx "delta" scans every 5 minutes throughout 
+# the day.  
+# Delta indexing should be very fast but you may need
+# to adjust these times on very large systems.
+#####################################################
+*/$minute * * * * root /$lzbase/sphinx/indexer.sh delta >> /$logpath/sphinx_indexer.log 2>&1
 
-        #####################################################
-        # Run Sphinx "merge" scans every day at midnight
-        # Merging is much faster than a full scan.
-        # You may need to adjust these times on very large systems.
-        #####################################################
-        0 0 * * * root /$lzbase/sphinx/indexer.sh merge >> /$logpath/sphinx_indexer.log 2>&1
+#####################################################
+# Run Sphinx "merge" scans every day at midnight
+# Merging is much faster than a full scan.
+# You may need to adjust these times on very large systems.
+#####################################################
+0 0 * * * root /$lzbase/sphinx/indexer.sh merge >> /$logpath/sphinx_indexer.log 2>&1
 
-        #####################################################
-        # Daily export archives
-        #####################################################
-        0 1 * * * root sh /$lzbase/scripts/export.sh
+#####################################################
+# Daily export archives
+#####################################################
+0 1 * * * root sh /$lzbase/scripts/export.sh
 
-        #####################################################
-        # END LogZilla Cron Entries
-        #####################################################
-        };
-        $crondir  = &p("What is the correct path to your cron.d?", "/etc/cron.d");
-        if (-d "$crondir") {
-            my $file = "$crondir/logzilla";
-            open FILE, ">$file" or die "cannot open $file: $!";
-            print FILE $cron;
-            close FILE;
-            print "Cronfile added to $crondir\n";
-        } else {
-            print "$crondir does not exist\n";
-            print "You will need to manually copy $lzbase/scripts/contrib/system_configs/logzilla.crontab to /etc/cron.d\n";
-            print "or use 'crontab -e' as root and paste the contents of $lzbase/scripts/contrib/system_configs/logzilla.crontab into it.\n";
-            print "If you add it manually as root's personal crontab, then be sure to remove the \"root\" username from the last entry.\n";
-        }
+#####################################################
+# END LogZilla Cron Entries
+#####################################################
+};
+$crondir = "/etc/cron.d";
+unless ( -d "$crondir") {
+    $crondir  = &p("What is the correct path to your cron.d?", "/etc/cron.d");
+}
+if (-d "$crondir") {
+    my $file = "$crondir/logzilla";
+    open FILE, ">$file" or die "cannot open $file: $!";
+    print FILE $cron;
+    close FILE;
+    print "Cronfile added to $crondir\n";
+} else {
+    print "$crondir does not exist\n";
+    print "You will need to manually copy $lzbase/scripts/contrib/system_configs/logzilla.crontab to /etc/cron.d\n";
+    print "or use 'crontab -e' as root and paste the contents of $lzbase/scripts/contrib/system_configs/logzilla.crontab into it.\n";
+    print "If you add it manually as root's personal crontab, then be sure to remove the \"root\" username from the last entry.\n";
+}
     } else {
         print "Skipping Crontab setup.\n";
         print "You will need to manually copy $lzbase/scripts/contrib/system_configs/logzilla.crontab to /etc/cron.d\n";

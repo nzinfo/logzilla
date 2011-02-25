@@ -238,7 +238,7 @@ my $db_update = $dbh->prepare("UPDATE $dbtable SET counter=?, fo=?, lo=? WHERE i
 my $db_del = $dbh->prepare("DELETE FROM $dbtable WHERE id=?");
 my $db_insert = $dbh->prepare("INSERT INTO $dbtable (host,facility,severity,program,msg,mne,fo,lo) VALUES (?,?,?,?,?,?,?,?)");
 my $db_insert_prg = $dbh->prepare("INSERT IGNORE INTO programs (name,crc) VALUES (?,?) ");
-my $db_insert_mne = $dbh->prepare("INSERT IGNORE INTO mne (name,crc) VALUES (?,?) ");
+my $db_insert_mne = $dbh->prepare("INSERT INTO mne (name, crc, lastseen) VALUES (?,?,?) ON DUPLICATE KEY UPDATE seen=seen + 1, lastseen=? ");
 my $db_insert_host = $dbh->prepare("INSERT INTO hosts (host, lastseen) VALUES (?,?) ON DUPLICATE KEY UPDATE seen=seen + 1, lastseen=? ");
 $db_insert_host->{TraceLevel} = 4 if (($debug > 4) and ($verbose));
 #my $dumpfile = "/dev/shm/infile.txt";
@@ -284,11 +284,12 @@ while (my $ref = $prg_select->fetchrow_hashref()) {
 #while (my $ref = $host_select->fetchrow_hashref()) {
 #$host_cache{$ref->{'host'}} = $ref->{'host'};
 #}
-my $mne_select = $dbh->prepare("SELECT * FROM mne");
-$mne_select->execute();
-while (my $ref = $mne_select->fetchrow_hashref()) {
-    $mne_cache{$ref->{'name'}} = $ref->{'crc'};
-}
+# same with mne's
+#my $mne_select = $dbh->prepare("SELECT * FROM mne");
+#$mne_select->execute();
+#while (my $ref = $mne_select->fetchrow_hashref()) {
+#$mne_cache{$ref->{'name'}} = $ref->{'crc'};
+#}
 
 # Begin Alert Triggers
 my ($from, $to, $subj, %trigger_cache);
@@ -382,15 +383,15 @@ while (my $msg = <STDIN>) {
                 makepart($1);
                 $db_load_infile->execute();
                 if ($db_load_infile->errstr() =~ /Table has no partition for value (\d+)/) {
-                	print STDOUT "FATAL: Unable to execute SQL statement: ", $db_load_infile->errstr(), " even after Partition creation!\n"; }	
+                    print STDOUT "FATAL: Unable to execute SQL statement: ", $db_load_infile->errstr(), " even after Partition creation!\n"; }	
             } else {
                 print STDOUT "FATAL: Unable to execute SQL statement: ", $db_load_infile->errstr(), "\n";
             }
         }
         # 2010-08-29: Added to insert cached hosts, progs and mnes upon exit
         my @hosts = keys %host_cache;
+        $now = strftime("%Y-%m-%d %H:%M:%S", localtime);
         foreach my $h (@hosts) {
-            $now = strftime("%Y-%m-%d %H:%M:%S", localtime);
             $db_insert_host->execute($h, $now, $now);
         }
         my @prgs = keys %program_cache;
@@ -399,9 +400,8 @@ while (my $msg = <STDIN>) {
         }
         my @mnes = keys %mne_cache;
         foreach my $m (@mnes) {
-            $db_insert_mne->execute($m, $mne_cache{$m});
+            $db_insert_mne->execute($m, $mne_cache{$m}, $now, $now);
         }
-        $now = strftime("%Y-%m-%d %H:%M:%S", localtime);
         $sec = strftime("%S", localtime);
         $mps = $mps + $do_msg_mps;
         push(@mps, "chart_mps_$sec,$mps,$now");
@@ -506,8 +506,8 @@ while (my $msg = <STDIN>) {
             $mpm = 0;
             @mps = ();
             my @hosts = keys %host_cache;
+            $now = strftime("%Y-%m-%d %H:%M:%S", localtime);
             foreach my $h (@hosts) {
-                $now = strftime("%Y-%m-%d %H:%M:%S", localtime);
                 $db_insert_host->execute($h, $now, $now);
                 %host_cache = ();
             }
@@ -517,7 +517,7 @@ while (my $msg = <STDIN>) {
             }
             my @mnes = keys %mne_cache;
             foreach my $m (@mnes) {
-                $db_insert_mne->execute($m, $mne_cache{$m});
+                $db_insert_mne->execute($m, $mne_cache{$m}, $now, $now);
             }
             %host_cache = ();
             %program_cache = ();
