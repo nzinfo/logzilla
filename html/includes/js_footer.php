@@ -865,17 +865,12 @@ $(document).ready(function() {
                 });
                 */
         // At some point, it occurred to me that I can simply count the <select> element options and use that number rather than querying the DB, duh!
-        var count = $("#mnemonics option").size()
-            $("#portlet-header_Mnemonics").prepend(commify(count)+" ");
         var count = $("#programs option").size()
             $("#portlet-header_Programs").prepend(commify(count)+" ");
         var count = $("#facilities option").size()
             $("#portlet-header_Facilities").prepend(commify(count)+" ");
         var count = $("#severities option").size()
             $("#portlet-header_Severities").prepend(commify(count)+" ");
-        var count = <?php echo $_SESSION['PORTLET_HOSTS_LIMIT'];?>;
-        $("#portlet-header_Hosts").prepend("Last "+commify(count)+" ");
-
         }
             watermark("#dupcount","0");
 });
@@ -1002,6 +997,24 @@ jQuery("#btnGraph").click( function() {
         }); 
 //---------------------------------------------------------------
 // END: Hosts Portlet Expander
+//---------------------------------------------------------------
+//---------------------------------------------------------------
+// BEGIN: Mnemonics Portlet Expander
+//---------------------------------------------------------------
+$("#portlet-header_Mnemonics").prepend('<a href="#"><span class="ui-icon ui-icon-plus"></span></a>');
+// **Special** - this will append to the search form on the main page for any checkboxes clicked on the mnemonics grid
+jQuery("#btnSearch").click( function() { 
+        var mne = jQuery("#mnegrid").jqGrid('getGridParam','selarrrow'); 
+        $("#results").append("<input type='hidden' name='mnemonics[]' value='"+mne+"'>");
+        $("#results").append("<input type='hidden' name='page' value='Results'>");
+        }); 
+jQuery("#btnGraph").click( function() { 
+        var mne = jQuery("#mnegrid").jqGrid('getGridParam','selarrrow'); 
+        $("#results").append("<input type='hidden' name='mnemonics[]' value='"+mne+"'>");
+        $("#results").append("<input type='hidden' name='page' value='Graph'>");
+        }); 
+//---------------------------------------------------------------
+// END: Mnemonics Portlet Expander
 //---------------------------------------------------------------
 //---------------------------------------------------------------
 // BEGIN: Get URL function

@@ -22,6 +22,9 @@ $total = mysql_fetch_row($result);
 $count = $total[0];
 if( $count >0 ) { 
 ?>
+<script type="text/javascript">
+$('#portlet-header_Hosts').append(" (<?php echo commify($count)?> total)")
+</script>
 <table id="tbl_hosts" cellpadding="0" cellspacing="0" width="100%" border="0">
 <thead class="ui-widget-header">
   <tr>

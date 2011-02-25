@@ -1,5 +1,10 @@
 CHANGELOG
 
+3.1.186 - Mnemonics Portlet
+CD:
+ - Modified Mnemonics portlet to act the same as the hosts grid.
+ - In organizations with a large amount of devices, this portlet will need to scale.
+
 3.1.185 - Sphinx results in portlet-table
 CD:
  - #44 Added error checking to see if Sphinx indexes are running.
