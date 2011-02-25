@@ -1273,3 +1273,25 @@ jQuery(document).ready(function() {
 </script>
 <!-- END Load DOM with timeago converter -->
 
+<!-- BEGIN Grid Width/Height functions -->
+<script type="text/javascript">
+function easyDate (cellValue, options, rowdata)
+{
+    var t = jQuery.timeago(cellValue);
+    var cellHtml = "<span>" + t + "</span>";
+    return cellHtml;
+}
+
+function setWidth(percent){
+        screen_res = ($(document).width())*0.99;
+        col = parseInt((percent*(screen_res/100)));
+        return col;
+};
+function setHeight(percent){
+        screen_res = ($(document).height())*0.99;
+        col = parseInt((percent*(screen_res/100)));
+        return col;
+};
+</script>
+<!-- END Grid Width/Height functions -->
+

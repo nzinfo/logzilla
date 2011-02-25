@@ -23,7 +23,13 @@ $count = $total[0];
 if( $count >0 ) { 
 ?>
 <script type="text/javascript">
-$('#portlet-header_Hosts').append(" (<?php echo commify($count)?> total)")
+var cnt = <?php echo $count?>;
+if (cnt < 11) {
+    $('#portlet-header_Hosts').prepend("Last " + cnt + " ");
+    } else {
+    $('#portlet-header_Hosts').prepend("Last 10 ");
+    $('#portlet-header_Hosts').append(" (<?php echo commify($count)?> total)")
+};
 </script>
 <table id="tbl_hosts" cellpadding="0" cellspacing="0" width="100%" border="0">
 <thead class="ui-widget-header">
