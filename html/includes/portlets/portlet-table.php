@@ -34,10 +34,11 @@ $total = 'unknown';
 $qstring = '';
 $page = get_input('page');
 $qstring .= "?page=$page";
-
 $show_suppressed = get_input('show_suppressed');
 $qstring .= "&show_suppressed=$show_suppressed";
-
+$spx_max = get_input('spx_max');
+$spx_max = (!empty($spx_max)) ? $spx_max : $_SESSION['SPX_MAX_MATCHES'];
+$qstring .= "&spx_max=$spx_max";
 
 //------------------------------------------------------------
 // START date/time
@@ -346,7 +347,8 @@ if ($_SESSION['SPX_ENABLE'] == "1") {
 	if ($lo_checkbox == "on")  $cl->SetFilterRange ( 'lo', $filter_lo_min,  $filter_lo_max );
         $cl->SetFilterRange ( 'counter', intval($filter_dup_min), intval($filter_dup_max) );
 
-        $cl->SetLimits(0, intval($_SESSION['SPX_MAX_MATCHES']));
+        // $cl->SetLimits(0, intval($_SESSION['SPX_MAX_MATCHES']));
+        $cl->SetLimits(0, intval($spx_max));
 
 	$sphinx_results = $cl->Query ($msg_mask, $index);
      
@@ -563,13 +565,29 @@ endswitch;
       </script>
           <?php
   } else {
-      $info = "<font color=\"red\">No results match your search criteria ... starting a deeper inspect (tail)</font>";
-      $tail = '1000';
-  	  $qstring = str_replace('&tail=off', '',$qstring );
-  	  $qstring .= "&tail=$tail";
+      // CDUKES: Added error check to see if Sphinx is working
+      $helpurl="<button class=\"ui-button ui-button-text-only ui-widget ui-state-default ui-corner-all\"><a href=\"http://nms.gdd.net/index.php/Install_Guide_for_LogZilla_v3.0#Installing_Sphinx\" target=_new>HELP</a></button>";
+      $file = $_SESSION['PATH_LOGS'] . "/sphinx_indexer.log";
+      if (is_file($file)) {
+          $line = `tail $file | grep Finished`;
+          $spx_lastupdate = getRelativeTime(preg_replace('/.*: (\d+-\d+-\d+ \d+:\d+:\d+).*/', '$1', $line));
+          if (preg_match("/1969/", "$spx_lastupdate")) {
+              $info = "$helpurl Your Sphinx indexes have not been set up, please verify that CRON is running properly!";
+          } elseif (!preg_match("/minutes/i", "$spx_lastupdate")) {
+              $info = "$helpurl Your Sphinx indexes were last updated $spx_lastupdate, please verify that CRON is running properly!";
+          }
+      } else {
+          $info = "$helpurl Your Sphinx indexes have not been set up, please verify that CRON is running properly and that $file exists!";
+      }
+      if (!$info) {
+          $info = "No results within the first $spx_max records. Please try refining your search.";
+      }
+      //$tail = '1000';
+  	  //$qstring = str_replace('&tail=off', '',$qstring );
+  	  //$qstring .= "&tail=$tail";
       ?>
           <script type="text/javascript">
-          $("#theTable").html('<?php echo "$info"?>');
+          $("#theTable").replaceWith('<br /><br /><font color="red"><?php echo "<br />$info"?></font>');
       </script>
           <?php
   }

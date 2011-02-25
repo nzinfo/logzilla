@@ -748,5 +748,4 @@ function getRelativeTime($date) {
         return $diff . " week" . plural($diff) . " ago";
     return "on " . date("F j, Y", strtotime($date));
 }
-
 ?>
