@@ -42,7 +42,7 @@ $('#portlet-header_Hosts').append(" (<?php echo commify($count)?> total)")
         while($row = fetch_array($result)) { 
         echo "<tr>";
         echo "<td id='host_sel'>";
-          echo "<input type=\"checkbox\" name=\"sel_hosts\" value=\"$row[host]\"";
+          echo "<input type=\"checkbox\" name=\"sel_hosts[]\" value=\"$row[host]\"";
         echo "</td>";
         echo "<td id='host'>";
           echo "$row[host]";

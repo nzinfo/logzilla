@@ -981,40 +981,27 @@ $(".portlet-header .ui-icon-disk").click(function() {
 //---------------------------------------------------------------
 
 //---------------------------------------------------------------
-// BEGIN: Hosts Portlet Expander
+// BEGIN: Submit Buttons
 //---------------------------------------------------------------
 $("#portlet-header_Hosts").prepend('<a href="#"><span class="ui-icon ui-icon-plus"></span></a>');
+$("#portlet-header_Mnemonics").prepend('<a href="#"><span class="ui-icon ui-icon-plus"></span></a>');
 // **Special** - this will append to the search form on the main page for any checkboxes clicked on the hosts grid
 jQuery("#btnSearch").click( function() { 
         var hosts = jQuery("#hostsgrid").jqGrid('getGridParam','selarrrow'); 
+        var mne = jQuery("#mnegrid").jqGrid('getGridParam','selarrrow'); 
         $("#results").append("<input type='hidden' name='hosts' value='"+hosts+"'>");
+        $("#results").append("<input type='hidden' name='mnemonics' value='"+mne+"'>");
         $("#results").append("<input type='hidden' name='page' value='Results'>");
         }); 
 jQuery("#btnGraph").click( function() { 
         var hosts = jQuery("#hostsgrid").jqGrid('getGridParam','selarrrow'); 
+        var mne = jQuery("#mnegrid").jqGrid('getGridParam','selarrrow'); 
         $("#results").append("<input type='hidden' name='hosts' value='"+hosts+"'>");
+        $("#results").append("<input type='hidden' name='mnemonics' value='"+mne+"'>");
         $("#results").append("<input type='hidden' name='page' value='Graph'>");
         }); 
 //---------------------------------------------------------------
-// END: Hosts Portlet Expander
-//---------------------------------------------------------------
-//---------------------------------------------------------------
-// BEGIN: Mnemonics Portlet Expander
-//---------------------------------------------------------------
-$("#portlet-header_Mnemonics").prepend('<a href="#"><span class="ui-icon ui-icon-plus"></span></a>');
-// **Special** - this will append to the search form on the main page for any checkboxes clicked on the mnemonics grid
-jQuery("#btnSearch").click( function() { 
-        var mne = jQuery("#mnegrid").jqGrid('getGridParam','selarrrow'); 
-        $("#results").append("<input type='hidden' name='mnemonics[]' value='"+mne+"'>");
-        $("#results").append("<input type='hidden' name='page' value='Results'>");
-        }); 
-jQuery("#btnGraph").click( function() { 
-        var mne = jQuery("#mnegrid").jqGrid('getGridParam','selarrrow'); 
-        $("#results").append("<input type='hidden' name='mnemonics[]' value='"+mne+"'>");
-        $("#results").append("<input type='hidden' name='page' value='Graph'>");
-        }); 
-//---------------------------------------------------------------
-// END: Mnemonics Portlet Expander
+// END: Submit Buttons
 //---------------------------------------------------------------
 //---------------------------------------------------------------
 // BEGIN: Get URL function
