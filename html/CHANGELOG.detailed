@@ -1,5 +1,10 @@
 CHANGELOG
-3.1.187 - Introduced bugs
+
+3.1.188 - Bugs
+CD:
+ - Fixed Mnemonics selector column width bug
+
+3.1.187 - Bugs
 CD:
  - Multiple host selected were not getting counted in the new grid format when main selections were made
  - Fixed same bug with mnemonics

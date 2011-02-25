@@ -160,6 +160,9 @@ if ($mnemonics) {
     $sph_msg_mask .= " @mne ";
     
     foreach ($mnemonics as $mne) {
+        if (!preg_match("/^\d+/m", $mne)) {
+            $mne = mne2crc($mne);
+        }
             $where.= "'$mne',";
             $sph_msg_mask .= "$mne|";
         $qstring .= "&sel_mne[]=$mne";

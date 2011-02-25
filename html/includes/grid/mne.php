@@ -39,7 +39,7 @@ $grid->setColModel();
 $grid->setUrl('includes/grid/mne.php');
 // Set some grid options
 $grid->setGridOptions(array(
-    "rowNum"=>18,
+    "rowNum"=>17,
     "sortname"=>"LastSeen",
     "sortorder"=>"desc",
     "altRows"=>true,
@@ -55,23 +55,6 @@ $grid->setNavOptions('navigator', array("pdf"=>true,"excel"=>true,"add"=>false,"
 
 $custom = <<<CUSTOM
 
-function easyDate (cellValue, options, rowdata)
-{
-    var t = jQuery.timeago(cellValue);
-    var cellHtml = "<span>" + t + "</span>";
-    return cellHtml;
-}
-
-function setWidth(percent){
-        screen_res = ($(document).width())*0.99;
-        col = parseInt((percent*(screen_res/100)));
-        return col;
-};
-function setHeight(percent){
-        screen_res = ($(document).height())*0.99;
-        col = parseInt((percent*(screen_res/100)));
-        return col;
-};
 //---------------------------------------------------------------
 // BEGIN: Mnemonic Select Dialog
 //---------------------------------------------------------------
@@ -100,6 +83,7 @@ $("#portlet-header_Mnemonics .ui-icon-plus").click(function() {
         // Some magic to set the proper width of the grid inside a Modal window
         var modalWidth = $("#ui-dialog-title-mne_dialog").width() +5;
         $('#mnegrid').jqGrid('setGridWidth',setWidth(modalWidth));
+        $('#mnegrid').fluidGrid({base:'#ui-dialog-title-mne_dialog', offset:-25});
         $('#mnegrid').jqGrid('setGridHeight',setHeight(57));
         });
 //---------------------------------------------------------------
