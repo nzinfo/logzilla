@@ -30,26 +30,25 @@ $conn->query("SET NAMES utf8");
 // Create the jqGrid instance
 $grid = new jqGridRender($conn);
 // Write the SQL Query
-$grid->SelectCommand = 'SELECT name, seen, lastseen FROM mne';
+$grid->SelectCommand = 'SELECT name as Mnemonic, seen as Seen, lastseen as LastSeen FROM mne';
 // set the ouput format to json
 $grid->dataType = 'json';
+// Let the grid create the model
+$grid->setColModel();
 // Set the url from where we obtain the data
 $grid->setUrl('includes/grid/mne.php');
 // Set some grid options
 $grid->setGridOptions(array(
     "rowNum"=>18,
-    "sortname"=>"lastseen",
+    "sortname"=>"LastSeen",
     "sortorder"=>"desc",
     "altRows"=>true,
     "multiselect"=>true,
     "rowList"=>array(20,40,60,75,100,500,750,1000),
     ));
 
-$labels = array("name"=>"Mnemonic", "seen"=>"Seen", "lastseen"=>"Last Seen");
-
-$grid->setColModel(null, null, $labels);
-$grid->setColProperty('seen', array('width'=>'15'));
-$grid->setColProperty('lastseen', array('width'=>'25', 'formatter'=>'js:easyDate'));
+$grid->setColProperty('Seen', array('width'=>'15'));
+$grid->setColProperty('LastSeen', array('formatter'=>'js:easyDate'));
 
 $grid->navigator = true;
 $grid->setNavOptions('navigator', array("pdf"=>true,"excel"=>true,"add"=>false,"edit"=>false,"del"=>false,"view"=>false, "search"=>true));
@@ -91,7 +90,7 @@ $("#portlet-header_Mnemonics .ui-icon-plus").click(function() {
                         opacity: 0.5
                 },     
                 buttons: {
-                        'Add Selected Mnemonics': function() {
+                        'Add Selected Mnemonic': function() {
                                 $(this).dialog('close');
                         },
                 }               

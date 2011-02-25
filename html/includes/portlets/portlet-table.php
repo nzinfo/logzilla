@@ -117,25 +117,59 @@ $qstring .= "&tail=$tail";
 // Special - this gets posted via javascript since it comes from the hosts grid
 // Form code is somewhere near line 992 of js_footer.php
 $hosts = get_input('hosts');
-// sel_hosts comes from the main page <select>, whereas 'hosts' above this line comes from the grid select voa javascript.
+// sel_hosts comes from the main page <select>, whereas 'hosts' above this line comes from the grid select via javascript.
 $sel_hosts = get_input('sel_hosts');
-$both = $hosts .",". $sel_hosts;
-$hosts = ltrim($both, ",");
-$qstring .= "&hosts=$hosts";
 if ($hosts) {
     $pieces = explode(",", $hosts);
-
+    foreach ($pieces as $host) {
+        $sel_hosts[] .= $host;
+        $qstring .= "&hosts[]=$host";
+    }
+}
+$hosts = $sel_hosts;
+if ($hosts) {
     $where .= " AND host IN (";
-    $sph_msg_mask .= "@host ";
-    foreach ($pieces as $mask) {
-        $where.= "'$mask',";  
-        $sph_msg_mask .= "$mask|";
+    $sph_msg_mask .= " @host ";
+    
+    foreach ($hosts as $host) {
+            $where.= "'$host',";
+            $sph_msg_mask .= "$host|";
+        $qstring .= "&sel_hosts[]=$host";
     }
     $where = rtrim($where, ",");
     $sph_msg_mask = rtrim($sph_msg_mask, "|");
     $where .= ")";
     $sph_msg_mask .= " ";
 }
+
+// Special - this gets posted via javascript since it comes from the mnemonics grid
+// Form code is somewhere near line 992 of js_footer.php
+$mnemonics = get_input('mnemonics');
+// sel_mne comes from the main page <select>, whereas 'mnemonics' above this line comes from the grid select via javascript.
+$sel_mne = get_input('sel_mne');
+if ($mnemonics) {
+    $pieces = explode(",", $mnemonics);
+    foreach ($pieces as $mne) {
+        $sel_mne[] .= $mne;
+        $qstring .= "&mnemonics[]=$mne";
+    }
+}
+$mnemonics = $sel_mne;
+if ($mnemonics) {
+    $where .= " AND mne IN (";
+    $sph_msg_mask .= " @mne ";
+    
+    foreach ($mnemonics as $mne) {
+            $where.= "'$mne',";
+            $sph_msg_mask .= "$mne|";
+        $qstring .= "&sel_mne[]=$mne";
+    }
+    $where = rtrim($where, ",");
+    $sph_msg_mask = rtrim($sph_msg_mask, "|");
+    $where .= ")";
+    $sph_msg_mask .= " ";
+}
+
 // portlet-programs
 $programs = get_input('programs');
 if ($programs) {
@@ -186,24 +220,6 @@ if ($facilities) {
     $where = rtrim($where, ",");
     $where .= ")";
 }
-$mnemonics = get_input('mnemonics');
-if ($mnemonics) {
-    $where .= " AND mne IN (";
-    $sph_msg_mask .= " @mne ";
-    foreach ($mnemonics as $mnemonic) {
-        if (!preg_match("/^\d+/m", $mnemonic)) {
-            $mnemonic = mne2crc($mnemonic);
-        }
-        $where.= "'$mnemonic',";
-         $sph_msg_mask .= "$mnemonic|";
-        $qstring .= "&mnemonics[]=$mnemonic";
-    }
-    $where = rtrim($where, ",");
-    $sph_msg_mask = rtrim($sph_msg_mask, "|");
-    $where .= ")";
-    $sph_msg_mask .= " ";    
-}
-
 
 $limit = get_input('limit');
 $limit = (!empty($limit)) ? $limit : "10";
@@ -357,7 +373,7 @@ if ($_SESSION['SPX_ENABLE'] == "1") {
         if ( !$sphinx_results )
         {
       $info = "<font size=\"3\" color=\"white\"><br><br>Sphinx - Error in query: ";
-            die ( "$info" . $cl->GetLastError() . ".\n</font>" );
+            echo ( "$info" . $cl->GetLastError() . ".\n</font>" );
         } else
         {
             if ($sphinx_results['total_found'] > 0) {
@@ -573,7 +589,7 @@ endswitch;
           $spx_lastupdate = getRelativeTime(preg_replace('/.*: (\d+-\d+-\d+ \d+:\d+:\d+).*/', '$1', $line));
           if (preg_match("/1969/", "$spx_lastupdate")) {
               $info = "$helpurl Your Sphinx indexes have not been set up, please verify that CRON is running properly!";
-          } elseif (!preg_match("/minutes/i", "$spx_lastupdate")) {
+          } elseif (!preg_match("/[minutes|seconds]/i", "$spx_lastupdate")) {
               $info = "$helpurl Your Sphinx indexes were last updated $spx_lastupdate, please verify that CRON is running properly!";
           }
       } else {
@@ -641,7 +657,7 @@ endswitch;
         echo "<td class=\"s_td\"><a href=$_SESSION[SITE_URL]$qstring&facilities[]=$row[facility]>".int2fac($row['facility'])."</a></td>\n";
         echo "<td class=\"s_td $sev\"><a href=$_SESSION[SITE_URL]$qstring&severities[]=$row[severity]>$sev_text</a></td>\n";
         echo "<td class=\"s_td\"><a href=$_SESSION[SITE_URL]$qstring&programs[]=$row[program]>".crc2prg($row['program'])."</a></td>\n";
-        echo "<td class=\"s_td\"><a href=$_SESSION[SITE_URL]$qstring&mnemonics[]=$row[mne]>".crc2mne($row['mne'])."</a></td>\n";
+        echo "<td class=\"s_td\"><a href=$_SESSION[SITE_URL]$qstring&mnemonics=$row[mne]>".crc2mne($row['mne'])."</a></td>\n";
         if ($_SESSION['CISCO_MNE_PARSE'] == "1" ) {
             // $msg = preg_replace('/\s:/', ':', $msg);
             $msg = preg_replace('/.*%(\w+-.*\d-\w+)\s?:/', '$1', $msg);
