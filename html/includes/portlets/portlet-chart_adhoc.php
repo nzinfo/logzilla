@@ -93,21 +93,34 @@ if ($facilities) {
     $where = rtrim($where, ",");
     $where .= ")";
 }
+// Special - this gets posted via javascript since it comes from the mnemonics grid
+// Form code is somewhere near line 992 of js_footer.php
 $mnemonics = get_input('mnemonics');
-// 2010-08-29 - Added below to only include Cisco Mnemonics in the charts
+// sel_mne comes from the main page <select>, whereas 'mnemonics' above this line comes from the grid select via javascript.
+$sel_mne = get_input('sel_mne');
+if ($mnemonics) {
+    $pieces = explode(",", $mnemonics);
+    foreach ($pieces as $mne) {
+        $sel_mne[] .= $mne;
+        $qstring .= "&mnemonics[]=$mne";
+    }
+}
+$mnemonics = $sel_mne;
 if ($mnemonics) {
     $where .= " AND mne !='".mne2crc('None')."'";
     $where .= " AND mne IN (";
-    foreach ($mnemonics as $mnemonic) {
-        if (!preg_match("/^\d+/m", $mnemonic)) {
-            $mnemonic = mne2crc($mnemonic);
+    
+    foreach ($mnemonics as $mne) {
+        if (!preg_match("/^\d+/m", $mne)) {
+            $mne = mne2crc($mne);
         }
-        $where.= "'$mnemonic',";
-        $qstring .= "&mnemonics[]=$mnemonic";
+            $where.= "'$mne',";
+        $qstring .= "&sel_mne[]=$mne";
     }
     $where = rtrim($where, ",");
     $where .= ")";
 }
+
 // portlet-sphinxquery
     // portlet-sphinxquery
     $msg_mask = get_input('msg_mask');
@@ -233,7 +246,7 @@ if ($mnemonics) {
         if (!in_array('fo_checkbox', $_GET)) {
             $start = date("Y-m-d") . " 00:00:00";
             $end = date("Y-m-d") . " 23:59:59";
-            $where.= " AND fo BETWEEN '$start' AND '$end'";
+            $where .= " AND fo BETWEEN '$start' AND '$end'";
         }
     }
     // LO
@@ -326,6 +339,9 @@ if ($mnemonics) {
         $topx = "top";
     }
     $groupby = get_input('groupby');
+    if ($groupby == "mne") {
+        $where .= " AND mne !='".mne2crc('None')."'";
+    }
     $qstring .= "&groupby=$groupby";
     $groupby = (!empty($groupby)) ? $groupby : "host";
     if ($groupby) {

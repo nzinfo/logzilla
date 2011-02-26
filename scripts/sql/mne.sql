@@ -1,8 +1,8 @@
--- MySQL dump 10.13  Distrib 5.1.31, for debian-linux-gnu (x86_64)
+-- MySQL dump 10.13  Distrib 5.1.41, for debian-linux-gnu (x86_64)
 --
 -- Host: localhost    Database: syslog
 -- ------------------------------------------------------
--- Server version	5.1.31-1ubuntu2-log
+-- Server version	5.1.41-3ubuntu12.9
 
 /*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
 /*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
@@ -20,17 +20,28 @@
 --
 
 DROP TABLE IF EXISTS `mne`;
-SET @saved_cs_client     = @@character_set_client;
-SET character_set_client = utf8;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `mne` (
   `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
   `name` varchar(255) NOT NULL,
   `crc` int(10) unsigned NOT NULL,
+  `seen` smallint(5) unsigned NOT NULL DEFAULT '1',
+  `lastseen` datetime NOT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `crc_id` (`crc`),
   KEY `name` (`name`)
-) ENGINE=MyISAM AUTO_INCREMENT=82 DEFAULT CHARSET=latin1;
-SET character_set_client = @saved_cs_client;
+) ENGINE=MyISAM DEFAULT CHARSET=latin1;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `mne`
+--
+
+LOCK TABLES `mne` WRITE;
+/*!40000 ALTER TABLE `mne` DISABLE KEYS */;
+/*!40000 ALTER TABLE `mne` ENABLE KEYS */;
+UNLOCK TABLES;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
 
 /*!40101 SET SQL_MODE=@OLD_SQL_MODE */;
@@ -41,4 +52,4 @@ SET character_set_client = @saved_cs_client;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2010-04-22 23:13:27
+-- Dump completed on 2011-02-25 19:03:34
