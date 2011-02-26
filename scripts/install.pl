@@ -38,7 +38,7 @@ sub p {
 }
 
 my $version = "3.1";
-my $subversion = ".189";
+my $subversion = ".190";
 
 # Grab the base path
 my $lzbase = getcwd;
@@ -791,7 +791,7 @@ if ($paths_updated >0) {
 # Run Sphinx "full" scan 30 minutes after midnight
 # in order to create a new index for today.
 #####################################################
-30 0 1 * * root /$lzbase/sphinx/indexer.sh full >> /$logpath/sphinx_indexer.log 2>&1
+30 0 1 * * root $lzbase/sphinx/indexer.sh full >> $logpath/sphinx_indexer.log 2>&1
 
 #####################################################
 # Run Sphinx "delta" scans every 5 minutes throughout 
@@ -799,19 +799,19 @@ if ($paths_updated >0) {
 # Delta indexing should be very fast but you may need
 # to adjust these times on very large systems.
 #####################################################
-*/$minute * * * * root /$lzbase/sphinx/indexer.sh delta >> /$logpath/sphinx_indexer.log 2>&1
+*/$minute * * * * root $lzbase/sphinx/indexer.sh delta >> $logpath/sphinx_indexer.log 2>&1
 
 #####################################################
 # Run Sphinx "merge" scans every day at midnight
 # Merging is much faster than a full scan.
 # You may need to adjust these times on very large systems.
 #####################################################
-0 0 * * * root /$lzbase/sphinx/indexer.sh merge >> /$logpath/sphinx_indexer.log 2>&1
+0 0 * * * root $lzbase/sphinx/indexer.sh merge >> $logpath/sphinx_indexer.log 2>&1
 
 #####################################################
 # Daily export archives
 #####################################################
-0 1 * * * root sh /$lzbase/scripts/export.sh
+0 1 * * * root sh $lzbase/scripts/export.sh
 
 #####################################################
 # END LogZilla Cron Entries
