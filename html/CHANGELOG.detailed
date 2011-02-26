@@ -1,5 +1,11 @@
 CHANGELOG
 
+3.1.189 - Various
+CD:
+ - Various UI improvements
+ - Applied better fix for issue #99 ('None' being calculated with Mnemonics
+ - Added sql file for mne table
+
 3.1.188 - Bugs
 CD:
  - Fixed Mnemonics selector column width bug

@@ -79,17 +79,16 @@ if (cnt < 11) {
 } else { 
     echo "<b><u>No Mnemonics</u></b><br>";
     echo "Either wait for caches to update, or restart your syslog daemon.\n<br>";
-
 } 
 ?>
 
-<!-- BEGIN Large Host Selector Modal -->
+<!-- BEGIN Mnemonics Selector Modal -->
 <div class="dialog_hide">
     <div id="mne_dialog" title="Mnemonic Selector">
           <?php require ($basePath . "/../grid/mne.php");?> 
     </div>
 </div>
-<!-- END Large Host Selector Modal -->
+<!-- END Mnemonics Selector Modal -->
 
 
 <?php
