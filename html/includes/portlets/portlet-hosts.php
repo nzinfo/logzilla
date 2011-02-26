@@ -31,7 +31,7 @@ if (cnt < 11) {
     $('#portlet-header_Hosts').append(" (<?php echo commify($count)?> total)")
 };
 </script>
-<table id="tbl_hosts" cellpadding="0" cellspacing="0" width="100%" border="0">
+<table class="hoverTable">
 <thead class="ui-widget-header">
   <tr>
     <th width="5%" style="text-align:left"></th>

@@ -1294,4 +1294,15 @@ function setHeight(percent){
 };
 </script>
 <!-- END Grid Width/Height functions -->
+<script type="text/javascript">
+$(document).ready(function(){
+    $(".hoverTable input").click(function() {
+        if ($(this).attr("checked") == true) {
+            $(this).parent().parent().addClass("ui-state-highlight");
+        } else {
+            $(this).parent().parent().removeClass("ui-state-highlight");
+        }
+    });
+});
+</script>
 

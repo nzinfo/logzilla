@@ -364,3 +364,13 @@ tr.invisibleRow
      font-family:Trebuchet MS;
      font-weight:bold;
 }
+.hoverTable {
+  border-collapse: collapse;
+  width: 100%;
+}
+.hoverTable th,
+.hoverTable td
+{
+ border: 0px solid #000;
+ padding: 0px;
+}
