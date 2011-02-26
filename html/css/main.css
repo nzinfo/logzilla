@@ -365,12 +365,6 @@ tr.invisibleRow
      font-weight:bold;
 }
 .hoverTable {
-  border-collapse: collapse;
-  width: 100%;
-}
-.hoverTable th,
-.hoverTable td
-{
- border: 0px solid #000;
- padding: 0px;
+     border-collapse: collapse;
+     width: 100%;
 }

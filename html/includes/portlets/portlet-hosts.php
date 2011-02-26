@@ -36,8 +36,8 @@ if (cnt < 11) {
   <tr>
     <th width="5%" style="text-align:left"></th>
     <th width="50%" style="text-align:left">Host</th>
-    <th width="15%" style="text-align:left">Seen</th>
-    <th width="30%" style="text-align:left">Last Seen</th>
+    <th width="20%" style="text-align:left">Seen</th>
+    <th width="25%" style="text-align:left">Last Seen</th>
   </tr>
 </thead>
   <tbody>
@@ -54,7 +54,7 @@ if (cnt < 11) {
           echo "$row[host]";
         echo "</td>";
         echo "<td id='seen'>";
-        echo $row['seen'] . " times\n";
+        echo humanReadable($row['seen']) . " times\n";
         echo "</td>";
         echo "<td id='lastseen'>";
         echo getRelativeTime($row['lastseen']) . "\n";
