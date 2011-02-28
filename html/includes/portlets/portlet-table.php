@@ -52,8 +52,8 @@ $fo_time_start = get_input('fo_time_start');
     $qstring .= "&fo_time_start=$fo_time_start";
 $fo_time_end = get_input('fo_time_end');
     $qstring .= "&fo_time_end=$fo_time_end";
-$date_andor = get_input('date_andor');
-    $qstring .= "&date_andor=$date_andor";
+// $date_andor = get_input('date_andor');
+    // $qstring .= "&date_andor=$date_andor";
 $lo_checkbox = get_input('lo_checkbox');
     $qstring .= "&lo_checkbox=$lo_checkbox";
 $lo_date = get_input('lo_date');
@@ -426,6 +426,7 @@ if ($_SESSION['SPX_ENABLE'] == "1") {
         }
     }
 
+/*
 $notes_mask = get_input('notes_mask');
 $notes_mask = preg_replace ('/^Search through .*\sNotes/m', '', $notes_mask);
 $notes_mask_oper = get_input('notes_mask_oper');
@@ -478,6 +479,7 @@ if($notes_mask) {
         }
     }
 }
+*/
 
 
 // Not implemented yet (for graph generation)
@@ -600,7 +602,7 @@ endswitch;
           $info = "$helpurl Your Sphinx indexes have not been set up, please verify that CRON is running properly and that $file exists!";
       }
       if (!$info) {
-          $info = "No results within the first $spx_max records. Please try refining your search.";
+          $info = "No results within the first $spx_max records. Please try refining your search.<br />Your indexes were last updated $spx_lastupdate";
       }
       //$tail = '1000';
   	  //$qstring = str_replace('&tail=off', '',$qstring );
@@ -667,7 +669,7 @@ endswitch;
             $msg = preg_replace('/.*%(\w+-.*\d-\w+)\s?:/', '$1', $msg);
         }
         # CDUKES: [[ticket:41]] - break long text so it doesn't scroll off the page
-        $msg = wordwrap($msg, 90, "<br />", true);
+        $msg = wordwrap($msg, 90, "<br>", true);
         if($_SESSION['MSG_EXPLODE'] == "1") {
             $explode_url = "";
             $pieces = explode(" ", $msg);

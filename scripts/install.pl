@@ -38,7 +38,7 @@ sub p {
 }
 
 my $version = "3.1";
-my $subversion = ".191";
+my $subversion = ".192";
 
 # Grab the base path
 my $lzbase = getcwd;
@@ -882,8 +882,14 @@ if (-d "$crondir") {
                 close SFILE;
                 print "Appended sudoer access for $webuser to $file\n";
                 if ($os !~ /Ubuntu/i) {
-                    print "Non-ubuntu OS's may also require the following line to be added to $file\n";
-                    print "Defaults    requiretty\n";
+                    my $find = qr/^Defaults.*requiretty/;
+                    open SFILE, "<$file";
+                    my @lines = <SFILE>;
+                    close SFILE;
+                    if (grep(/$find/, @lines)) {
+                        print "Non-ubuntu OS's will require removal (or comment out) of the following line from $file:\n";
+                        print "Defaults    requiretty\n";
+                    }
                 }
             }
         } else {

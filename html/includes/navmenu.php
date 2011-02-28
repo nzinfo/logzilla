@@ -50,7 +50,7 @@ session_start();
             ?>
             <li><a onclick="$(this).animate({ opacity: 0.3 }, 500 );" href="<?php echo $_SESSION['SITE_URL']?>?page=Portlet_Admin">Portlet Admin</a></li>
             <?php } ?>
-            <li><a onclick="$(this).animate({ opacity: 0.3 }, 500 );" href="#" onclick="reset_layout();return false;">Reset Layout</a></li>
+            <li><a onclick="$(this).animate({ opacity: 0.3 }, 500 ); reset_layout();return false;" href="#">Reset Layout</a></li>
         </ul>
     </li>
     <!-- END Top Level with 2nd Level -->
