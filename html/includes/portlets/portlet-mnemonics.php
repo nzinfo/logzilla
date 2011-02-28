@@ -46,7 +46,7 @@ if (cnt < 11) {
 </thead>
   <tbody>
 <?php
-        $sql = "SELECT * FROM (SELECT * FROM mne ORDER BY lastseen DESC) AS result LIMIT ". $_SESSION['PORTLET_HOSTS_LIMIT']; 
+        $sql = "SELECT * FROM (SELECT * FROM mne ORDER BY lastseen DESC) AS result LIMIT ". $_SESSION['PORTLET_MNE_LIMIT']; 
         $result = perform_query($sql, $dbLink, "portlet-mnemonics.php"); 
         $i=0; 
         while($row = fetch_array($result)) { 

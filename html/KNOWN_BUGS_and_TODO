@@ -1,10 +1,8 @@
 Known Bugs:
-* Search filters (on the hosts grid) do not allow for negative searching (not or !)
 * Can't set height on chart portlets to 100% so I have to set a hard number - this results in being unable to resize vertically.
 * Can't drag a scroll bar down - it tries to move the portal - you have to use the mouse scroll. 
 
 
 Wish List/To do's:
 
-add quick charts (dropdown menu for common charts such as Top 10 hosts, etc.)
 add graph for mps per device?

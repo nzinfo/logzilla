@@ -34,6 +34,7 @@ if ((has_portlet_access($_SESSION['username'], 'Date and Time') == TRUE) || ($_S
             </div>
         </TD>
     </TR>
+    <!--
 <tr id="trandor">
     <td id="tdandor" width="5%">
         <select name="date_andor" id="date_andor">
@@ -44,6 +45,7 @@ if ((has_portlet_access($_SESSION['username'], 'Date and Time') == TRUE) || ($_S
     <td width="95%">
     </td>
 </tr>
+-->
 
     <TR>
 <?php if ($_SESSION['DEDUP'] == "1") { ?>

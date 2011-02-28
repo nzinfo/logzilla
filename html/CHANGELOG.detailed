@@ -1,5 +1,13 @@
 CHANGELOG
 
+3.1.192 - Various
+CD:
+ - Fix for #101 - reset_layout
+ - Fix for #62 - Add note about requiretty for non-ubuntu OS's
+ - Fix for #7 - Extraneous /> in message column
+ - Fix for #103 - Allow set portlet limit of mne in admin>settings.
+ - Fix for #8 - Remove FO/LO AND/OR
+
 3.1.191 - UI
 CD:
  - Added row highlight when mne and hosts items are checked.
