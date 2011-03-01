@@ -224,21 +224,9 @@ if( !tm_done ) {
 <script type="text/javascript" src="includes/js/jquery/plugins/jquery.timeago.js"></script>
 <!-- END Timeago -->
 
-<!-- BEGIN Top Menu -->
-<script type="text/javascript">
-/*
-  var _gaq = _gaq || [];
-  _gaq.push(['_setAccount', 'UA-1754321-4']);
-  _gaq.push(['_trackPageview']);
-
-  (function() {
-    var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
-    ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
-    (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(ga);
-  })();
-  */
-</script>
-<!-- END Top Menu -->
+<!-- BEGIN News -->
+<script type="text/javascript" src="includes/js/jquery/plugins/highslide/highslide-full.packed.js"></script>
+<!-- END News -->
 
 <!-- BEGIN Tabs -->
 <script type="text/javascript">
@@ -1294,6 +1282,8 @@ function setHeight(percent){
 };
 </script>
 <!-- END Grid Width/Height functions -->
+
+<!-- BEGIN portlet table highlight -->
 <script type="text/javascript">
 $(document).ready(function(){
     $(".hoverTable input").click(function() {
@@ -1305,4 +1295,18 @@ $(document).ready(function(){
     });
 });
 </script>
+<!-- END portlet table highlight -->
+
+<!-- BEGIN News -->
+<script type="text/javascript">
+$(document).ready(function(){
+    hs.graphicsDir = 'includes/js/jquery/plugins/highslide/graphics/';
+    hs.showCredits = false;
+    hs.outlineType = 'rounded-white';
+    hs.wrapperClassName = 'draggable-header';
+    hs.align = 'center';
+    hs.outlineWhileAnimating = true;
+});
+</script>
+<!-- END News -->
 
