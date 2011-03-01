@@ -276,6 +276,8 @@ function g_redirect($url,$mode)
  *    JS:        Redirect via JavaScript command
  */
 {
+    // CDUKES - 2/28/2011: Removed - pretty sure I'm only using JS redirects everywhere now
+    /*
   if (strncmp('http:',$url,5) && strncmp('https:',$url,6)) {
       if (!isset($_SERVER["HTTPS"])) {
           $_SERVER["HTTPS"] = "undefine";
@@ -286,6 +288,7 @@ function g_redirect($url,$mode)
                  (empty($_SERVER['HTTP_HOST'])? $_SERVER['SERVER_NAME'] :
                  $_SERVER['HTTP_HOST']);
                  */
+    /*
       $starturl = ($_SERVER["HTTPS"] == 'on' ? 'https' : 'http') . '://'.
                  (empty($_SERVER['HTTP_HOST'])? $_SERVER['SERVER_NAME'] :
                  $_SERVER['SERVER_NAME']);
@@ -294,6 +297,7 @@ function g_redirect($url,$mode)
 
      $url = "$starturl$url";
   }
+  */
 
   switch($mode) {
 

@@ -63,3 +63,7 @@ This file contains any custom css that I've written
 <!-- BEGIN Error Dialogs -->
 <link rel="stylesheet" type="text/css" media="screen" href="css/errordialog.css" />
 <!-- END Error Dialogs -->
+
+<!-- BEGIN News -->
+<link rel="stylesheet" type="text/css" media="screen" href="includes/js/jquery/plugins/highslide/highslide.css" />
+<!-- END News -->
