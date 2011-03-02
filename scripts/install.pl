@@ -38,7 +38,7 @@ sub p {
 }
 
 my $version = "3.1";
-my $subversion = ".193";
+my $subversion = ".194";
 
 # Grab the base path
 my $lzbase = getcwd;
@@ -364,7 +364,7 @@ if ($ok =~ /[Yy]/) {
         (`suppress`.`expire` > now()))) or $dbtable.`mne` in
         (select `suppress`.`name` from `suppress` where
         ((`suppress`.`col` = 'mnemonic') and
-        (`suppress`.`expire` > now()))) or $dbtable.`msg` REGEXP
+        (`suppress`.`expire` > now()))) or $dbtable.`msg` in
         (select `suppress`.`name` from `suppress` where
         ((`suppress`.`col` = 'msg') and (`suppress`.`expire` >
         now()))) or $dbtable.`counter` in (select
@@ -396,7 +396,7 @@ if ($ok =~ /[Yy]/) {
         (not($dbtable.`mne` in (select `suppress`.`name` from
         `suppress` where ((`suppress`.`col` = 'mnemonic') and
         (`suppress`.`expire` > now()))))) and
-        (not($dbtable.`msg` REGEXP (select `suppress`.`name` from
+        (not($dbtable.`msg` in (select `suppress`.`name` from
         `suppress` where ((`suppress`.`col` = 'msg') and
         (`suppress`.`expire` > now()))))) and
         (not($dbtable.`counter` in (select `suppress`.`name`
