@@ -1,5 +1,8 @@
 CHANGELOG
 
+3.1.197 - Various
+CD:
+ - Another fix for issue #99 ('None' being calculated with Mnemonics)
 
 3.1.196 - Various
 CD:
@@ -35,7 +38,7 @@ CD:
 3.1.189 - Various
 CD:
  - Various UI improvements
- - Applied better fix for issue #99 ('None' being calculated with Mnemonics
+ - Applied better fix for issue #99 ('None' being calculated with Mnemonics)
  - Added sql file for mne table
 
 3.1.188 - Bugs

@@ -36,18 +36,68 @@ $where = "WHERE 1=1";
 $qstring = '';
 
 // Special - this gets posted via javascript since it comes from the hosts grid
-// Form code is somewhere near line 843 of js_footer.php
+// Form code is somewhere near line 992 of js_footer.php
 $hosts = get_input('hosts');
-$qstring .= "&hosts=$hosts";
+// sel_hosts comes from the main page <select>, whereas 'hosts' above this line comes from the grid select via javascript.
+$sel_hosts = get_input('sel_hosts');
 if ($hosts) {
     $pieces = explode(",", $hosts);
+    foreach ($pieces as $host) {
+        $sel_hosts[] .= $host;
+        $qstring .= "&hosts[]=$host";
+    }
+}
+$hosts = $sel_hosts;
+if ($hosts) {
     $where .= " AND host IN (";
-    foreach ($pieces as $mask) {
-        $where.= "'$mask',";  
+    $sph_msg_mask .= " @host ";
+    
+    foreach ($hosts as $host) {
+            $where.= "'$host',";
+            $sph_msg_mask .= "$host|";
+        $qstring .= "&sel_hosts[]=$host";
     }
     $where = rtrim($where, ",");
+    $sph_msg_mask = rtrim($sph_msg_mask, "|");
     $where .= ")";
+    $sph_msg_mask .= " ";
 }
+
+// Special - this gets posted via javascript since it comes from the mnemonics grid
+// Form code is somewhere near line 992 of js_footer.php
+$mnemonics = get_input('mnemonics');
+// sel_mne comes from the main page <select>, whereas 'mnemonics' above this line comes from the grid select via javascript.
+$sel_mne = get_input('sel_mne');
+if ($mnemonics) {
+    $pieces = explode(",", $mnemonics);
+    foreach ($pieces as $mne) {
+        $sel_mne[] .= $mne;
+        $qstring .= "&mnemonics[]=$mne";
+    }
+}
+$mnemonics = $sel_mne;
+if ($mnemonics) {
+    if (!in_array(mne2crc('None'), $mnemonics)) {
+        $where .= " AND mne !='".mne2crc('None')."'";
+    }
+    $where .= " AND mne IN (";
+    $sph_msg_mask .= " @mne ";
+    
+    foreach ($mnemonics as $mne) {
+        if (!preg_match("/^\d+/m", $mne)) {
+            $mne = mne2crc($mne);
+        }
+            $where.= "'$mne',";
+            $sph_msg_mask .= "$mne|";
+        $qstring .= "&sel_mne[]=$mne";
+    }
+    $where = rtrim($where, ",");
+    $sph_msg_mask = rtrim($sph_msg_mask, "|");
+    $where .= ")";
+    $sph_msg_mask .= " ";
+}
+
+
 // portlet-programs
 $programs = get_input('programs');
 if ($programs) {

@@ -156,7 +156,9 @@ if ($mnemonics) {
 }
 $mnemonics = $sel_mne;
 if ($mnemonics) {
-    $where .= " AND mne !='".mne2crc('None')."'";
+    if (!in_array(mne2crc('None'), $mnemonics)) {
+        $where .= " AND mne !='".mne2crc('None')."'";
+    }
     $where .= " AND mne IN (";
     $sph_msg_mask .= " @mne ";
     
