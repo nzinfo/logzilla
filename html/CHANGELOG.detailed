@@ -1,5 +1,10 @@
 CHANGELOG
 
+3.1.198 - Various
+CD:
+ - Fix for #103 - Last 10 Hosts/Mne should be last N variable from settings
+ - Modified messaging for suppression changes (more readable)
+
 3.1.197 - Various
 CD:
  - Another fix for issue #99 ('None' being calculated with Mnemonics)

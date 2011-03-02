@@ -604,10 +604,11 @@ endswitch;
           $info = "$helpurl Your Sphinx indexes have not been set up, please verify that CRON is running properly and that $file exists!";
       }
       if (!$info) {
+          // same error below until I know what Tom wants here :-)
       		if( $show_suppressed == 'all' ) {
       			 $info = "No results found. Please try refining your search.<br />Your indexes were last updated $spx_lastupdate";
       		} else {
-         		 $info = "No results within the first $spx_max records. Please try refining your search.<br />Your indexes were last updated $spx_lastupdate";
+         		 $info = "No results found. Please try refining your search.<br />Your indexes were last updated $spx_lastupdate";
       		}
       }
     

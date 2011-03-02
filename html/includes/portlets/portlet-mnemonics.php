@@ -27,11 +27,12 @@ $count = $total[0];
 if( $count >0 ) { 
 ?>
 <script type="text/javascript">
+var limit = <?php echo ($_SESSION['PORTLET_MNE_LIMIT'])?>;
 var cnt = <?php echo $count?>;
 if (cnt < 11) {
     $('#portlet-header_Mnemonics').prepend("Last " + cnt + " ");
     } else {
-    $('#portlet-header_Mnemonics').prepend("Last 10 ");
+    $('#portlet-header_Mnemonics').prepend("Last "+limit+" ");
     $('#portlet-header_Mnemonics').append(" (<?php echo commify($count)?> total)")
 };
 </script>
