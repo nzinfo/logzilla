@@ -1,5 +1,12 @@
 CHANGELOG
 
+
+3.1.196 - Various
+CD:
+ - Added more to the what's new page - still need to add video links.
+ - Fix for #104 - Selected Hosts and Mnes not filtered in tail refresh
+ - Started on #47 - Remember main page selections
+
 3.1.195 - minor
 TH:
  - a more specific error message on zero searches

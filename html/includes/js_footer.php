@@ -228,6 +228,10 @@ if( !tm_done ) {
 <script type="text/javascript" src="includes/js/jquery/plugins/highslide/highslide-full.packed.js"></script>
 <!-- END News -->
 
+<!-- BEGIN Cookies -->
+<script type="text/javascript" src="includes/js/jquery/plugins/jquery.cookie.js"></script>
+<!-- END Cookies -->
+
 <!-- BEGIN Tabs -->
 <script type="text/javascript">
 $(document).ready(function(){
