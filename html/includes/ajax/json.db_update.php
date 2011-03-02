@@ -57,7 +57,11 @@ if ($sup_field) {
                 $column = crc2prg($column);
                 break;
         }
-        $success .= "Set event suppression for $sup_field ($column) ";
+        if ($sup_field == "msg") {
+            $success .= "Set event suppression for $sup_field to '$msg_text'<br>";
+        } else {
+            $success .= "Set event suppression for $sup_field to '$column'<br>";
+        }
     }
 } else {
     $where = "WHERE id IN ('$dbid')";
@@ -74,7 +78,7 @@ switch ($action) {
     if ($note) {
         $success .= "Updated note to:<br>$note";
     } else {
-        $success .= "Removed note<br>";
+        $success .= " and clear the note<br>";
     }
     if ($success) {
         echo $success;
