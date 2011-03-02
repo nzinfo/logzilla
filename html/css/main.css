@@ -368,36 +368,3 @@ tr.invisibleRow
      border-collapse: collapse;
      width: 100%;
 }
-#jqnewsVert
-{
-	overflow: hidden; 
-    height: 500px; 
-    width: 160px; 
-    border: solid 1px #000; 
-    margin:auto;
-    position: absolute;
-    top: 10%; 
-    left: 0px;
-}
-
-#jqnewsVert div
-{
-	display: block; overflow: hidden; background-color: #def; height: 118px; width: 150px; margin: 5px;
-}
-
-#jqnewsOriz
-{
-	border: solid 1px #000;	
-    height: 130px; 
-    width: 650px; 
-    overflow: hidden; 
-    margin:auto;
-    position: absolute;
-    bottom: -5%;
-    left: 0px;
-}
-
-#jqnewsOriz div
-{
-	float:left;	border: solid 1px #000;	background: #def; height: 118px; width: 150px; margin: 5px;	display:block;
-}
