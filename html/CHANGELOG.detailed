@@ -1,5 +1,9 @@
 CHANGELOG
 
+3.1.199 - Various
+TH:
+ - Modified messaging for suppression changes (more readable)
+ 
 3.1.198 - Various
 CD:
  - Fix for #103 - Last 10 Hosts/Mne should be last N variable from settings
