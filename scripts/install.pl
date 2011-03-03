@@ -38,7 +38,7 @@ sub p {
 }
 
 my $version = "3.1";
-my $subversion = ".202";
+my $subversion = ".203";
 
 # Grab the base path
 my $lzbase = getcwd;
@@ -539,7 +539,7 @@ if ($ok =~ /[Yy]/) {
         ") or die "Could not create updateCache Procedure: $DBI::errstr";
     $sth->execute;
 
-    # TH: adding export procedure (a fragment)
+    # TH: adding export procedure
     my $event = qq{
     CREATE PROCEDURE export()
     SQL SECURITY DEFINER
@@ -549,11 +549,11 @@ if ($ok =~ /[Yy]/) {
     DECLARE export_path CHAR(127);
     SELECT value into export_path from settings WHERE name="ARCHIVE_PATH";
     SET \@s =
-    CONCAT('select * into outfile "',export_path, '/' , export,'" from logs  where TO_DAYS( lo )=',TO_DAYS(NOW())-1);
+    CONCAT('select * into outfile "',export_path, '/' , export,'" from `$dbtable` where TO_DAYS( lo )=',TO_DAYS(NOW())-1);
     PREPARE stmt FROM \@s;
     EXECUTE stmt;
     DEALLOCATE PREPARE stmt;
-    INSERT INTO archives (archive) VALUES (export);
+    INSERT INTO archives (archive, records) VALUES (export,(SELECT COUNT(*) FROM `$dbtable` WHERE lo BETWEEN DATE_SUB(CONCAT(CURDATE(), ' 00:00:00'), INTERVAL 1 DAY) AND DATE_SUB(CONCAT(CURDATE(), ' 23:59:59'), INTERVAL  1 DAY)));
     END 
     };
     my $sth = $dbh->prepare("
