@@ -26,9 +26,9 @@ if( $count >0 ) {
 var limit = <?php echo ($_SESSION['PORTLET_HOSTS_LIMIT'])?>;
 var cnt = <?php echo $count?>;
 if (cnt < 11) {
-    $('#portlet-header_Hosts').prepend("Last " + cnt + " ");
+    $('#portlet-header_Hosts').text("Last " + cnt + " Hosts");
     } else {
-    $('#portlet-header_Hosts').prepend("Last "+limit+" ");
+    $('#portlet-header_Hosts').text("Last " + limit + " Hosts");
     $('#portlet-header_Hosts').append(" (<?php echo commify($count)?> total)")
 };
 </script>

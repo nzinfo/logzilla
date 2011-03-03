@@ -1,5 +1,10 @@
 CHANGELOG
 
+3.1.201 - Fixes/Enhancements
+CD:
+ - #33 Added @hosts capability to msg_mask
+ - Fixed #103 - Duplicate count on mne/hosts header when moving portlet
+
 3.1.200 - enchancment
 TH:
  - Started import portlet

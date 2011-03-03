@@ -284,121 +284,146 @@ if (($dupop) && ($dupop != 'undefined')) {
 }
     
 if ($_SESSION['SPX_ENABLE'] == "1") {
-        $qtype = get_input('q_type');
-        //---------------BEGIN SPHINX
-        require_once ($basePath . "/../SPHINX.class.php");
-        $index = "idx_logs idx_delta_logs";
-        $cl = new SphinxClient ();
-	
-	if($msg_mask_get !== '') {
+    $qtype = get_input('q_type');
+    //---------------BEGIN SPHINX
+    require_once ($basePath . "/../SPHINX.class.php");
+    $index = "idx_logs idx_delta_logs";
+    $cl = new SphinxClient ();
+
+    if($msg_mask_get !== '') {
         $escaped = $cl->EscapeString ("$msg_mask_get");
-	$escaped = str_replace("\|","|",$escaped);
-	$escaped = str_replace("\!","!",$escaped);
-    // #33 CDUKES: Added notes below so that users can search notes via @NOTES keyword
-    if (preg_match('/^@notes\s+/i', $msg_mask_get)) {
-          $escaped = str_ireplace("\@notes","",$escaped);
-        $msg_mask = "$sph_msg_mask @NOTES $escaped";
-    } else {
-        $msg_mask = "$sph_msg_mask @MSG $escaped";
+        $escaped = str_replace("\|","|",$escaped);
+        $escaped = str_replace("\!","!",$escaped);
+        // #33 CDUKES: Added masks below so that users can search via @ keyword
+        $kwd = preg_replace ('/^@(notes|sev|fac|prg|mne|host).*/i', '$1', $msg_mask_get);
+        switch ($kwd) {
+            case "notes":
+                $escaped = str_ireplace("\@notes","",$escaped);
+                $msg_mask = "$sph_msg_mask @NOTES $escaped";
+            break;
+            /* out for now until I get time to convert to ints as stored in the db
+            case "sev":
+                $escaped = str_ireplace("\@sev","",$escaped);
+                $msg_mask = "$sph_msg_mask @SEVERITY $escaped";
+            break;
+            case "fac":
+                $escaped = str_ireplace("\@fac","",$escaped);
+                $msg_mask = "$sph_msg_mask @FACILITY $escaped";
+            break;
+            case "prg":
+                $escaped = str_ireplace("\@prg","",$escaped);
+                $msg_mask = "$sph_msg_mask @PROGRAM $escaped";
+            break;
+            case "mne":
+                $escaped = str_ireplace("\@mne","",$escaped);
+                $msg_mask = "$sph_msg_mask @MNE $escaped";
+            break;
+            */
+            case "host":
+                $escaped = str_ireplace("\@host","",$escaped);
+                $msg_mask = "$sph_msg_mask @HOST $escaped";
+            break;
+            default:
+            $msg_mask = "$sph_msg_mask @MSG $escaped";
+        }
     }
-        }
     // #33 CDUKES - END
-                else $msg_mask = "$sph_msg_mask";
+    else $msg_mask = "$sph_msg_mask";
 
-        $hostip = $_SESSION['SPX_SRV'];
-        $port = intval($_SESSION['SPX_PORT']);
-        $cl->SetServer ( $hostip, $port );
-        switch ($qtype) {
-            case "any":
-                $cl->SetMatchMode ( SPH_MATCH_ANY );
-            break;
-            case "phrase":
-                $cl->SetMatchMode ( SPH_MATCH_PHRASE );
-            break;
-            case "boolean":
-                $cl->SetMatchMode ( SPH_MATCH_BOOLEAN );
-            break;
-            case "extended":
-                $cl->SetMatchMode ( SPH_MATCH_EXTENDED2 );
-            break;
-            default:
-            $qtype = "boolean";
+    $hostip = $_SESSION['SPX_SRV'];
+    $port = intval($_SESSION['SPX_PORT']);
+    $cl->SetServer ( $hostip, $port );
+    switch ($qtype) {
+        case "any":
+            $cl->SetMatchMode ( SPH_MATCH_ANY );
+        break;
+        case "phrase":
+            $cl->SetMatchMode ( SPH_MATCH_PHRASE );
+        break;
+        case "boolean":
             $cl->SetMatchMode ( SPH_MATCH_BOOLEAN );
-        }
-	switch ($orderby) {
-	    case "id":
-		$sph_sort = "@id";
-            break;
-            case "counter":
-                $sph_sort = "counter";
-            break;
-            case "facility":
-                $sph_sort = "facility";
-            break; 
-            case "severity":
-                $sph_sort = "severity";
-            break;
-            case "fo":
-                $sph_sort = "fo";
-            break;
-            default:
-                $sph_sort = "lo";
-	}
-        if ($order == 'DESC') {
-            $sph_sort .= " DESC";
-        } else {
-            $sph_sort .= " ASC";
-        }
-	$cl->SetSortMode ( SPH_SORT_EXTENDED , $sph_sort );
-	if ($severities) {
-	$cl->SetFilter( 'severity', $severities ); }
-	if ($facilities) {
-	$cl->SetFilter( 'facility', $facilities ); } 
+        break;
+        case "extended":
+            $cl->SetMatchMode ( SPH_MATCH_EXTENDED2 );
+        break;
+        default:
+        $qtype = "boolean";
+        $cl->SetMatchMode ( SPH_MATCH_BOOLEAN );
+    }
+    switch ($orderby) {
+        case "id":
+            $sph_sort = "@id";
+        break;
+        case "counter":
+            $sph_sort = "counter";
+        break;
+        case "facility":
+            $sph_sort = "facility";
+        break; 
+        case "severity":
+            $sph_sort = "severity";
+        break;
+        case "fo":
+            $sph_sort = "fo";
+        break;
+        default:
+        $sph_sort = "lo";
+    }
+    if ($order == 'DESC') {
+        $sph_sort .= " DESC";
+    } else {
+        $sph_sort .= " ASC";
+    }
+    $cl->SetSortMode ( SPH_SORT_EXTENDED , $sph_sort );
+    if ($severities) {
+        $cl->SetFilter( 'severity', $severities ); }
+    if ($facilities) {
+        $cl->SetFilter( 'facility', $facilities ); }
 
-	// Convert datetime to timestamp
-	$timestamp_array = date_parse($filter_fo_start);
-	$filter_fo_min = mktime($timestamp_array['hour'],$timestamp_array['minute'],$timestamp_array['second'],$timestamp_array['month'],$timestamp_array['day'],$timestamp_array['year']);
-        $timestamp_array = date_parse($filter_fo_end);
-        $filter_fo_max = mktime($timestamp_array['hour'],$timestamp_array['minute'],$timestamp_array['second'],$timestamp_array['month'],$timestamp_array['day'],$timestamp_array['year']);
-        $timestamp_array = date_parse($filter_lo_start);
-        $filter_lo_min = mktime($timestamp_array['hour'],$timestamp_array['minute'],$timestamp_array['second'],$timestamp_array['month'],$timestamp_array['day'],$timestamp_array['year']);
-        $timestamp_array = date_parse($filter_lo_end);
-        $filter_lo_max = mktime($timestamp_array['hour'],$timestamp_array['minute'],$timestamp_array['second'],$timestamp_array['month'],$timestamp_array['day'],$timestamp_array['year']);
+    // Convert datetime to timestamp
+    $timestamp_array = date_parse($filter_fo_start);
+    $filter_fo_min = mktime($timestamp_array['hour'],$timestamp_array['minute'],$timestamp_array['second'],$timestamp_array['month'],$timestamp_array['day'],$timestamp_array['year']);
+    $timestamp_array = date_parse($filter_fo_end);
+    $filter_fo_max = mktime($timestamp_array['hour'],$timestamp_array['minute'],$timestamp_array['second'],$timestamp_array['month'],$timestamp_array['day'],$timestamp_array['year']);
+    $timestamp_array = date_parse($filter_lo_start);
+    $filter_lo_min = mktime($timestamp_array['hour'],$timestamp_array['minute'],$timestamp_array['second'],$timestamp_array['month'],$timestamp_array['day'],$timestamp_array['year']);
+    $timestamp_array = date_parse($filter_lo_end);
+    $filter_lo_max = mktime($timestamp_array['hour'],$timestamp_array['minute'],$timestamp_array['second'],$timestamp_array['month'],$timestamp_array['day'],$timestamp_array['year']);
 
-	if ($fo_checkbox == "on")  $cl->SetFilterRange ( 'fo', $filter_fo_min,  $filter_fo_max );
-	if ($lo_checkbox == "on")  $cl->SetFilterRange ( 'lo', $filter_lo_min,  $filter_lo_max );
-        $cl->SetFilterRange ( 'counter', intval($filter_dup_min), intval($filter_dup_max) );
+    if ($fo_checkbox == "on")  $cl->SetFilterRange ( 'fo', $filter_fo_min,  $filter_fo_max );
+    if ($lo_checkbox == "on")  $cl->SetFilterRange ( 'lo', $filter_lo_min,  $filter_lo_max );
+    $cl->SetFilterRange ( 'counter', intval($filter_dup_min), intval($filter_dup_max) );
 
-        // $cl->SetLimits(0, intval($_SESSION['SPX_MAX_MATCHES']));
-        $cl->SetLimits(0, intval($spx_max));
+    // $cl->SetLimits(0, intval($_SESSION['SPX_MAX_MATCHES']));
+    $cl->SetLimits(0, intval($spx_max));
 
-	$sphinx_results = $cl->Query ($msg_mask, $index);
-     
-	$total = $sphinx_results['total_found'];
-	
-        if ( !$sphinx_results )
-        {
-      $info = "<font size=\"3\" color=\"white\"><br><br>Sphinx - Error in query: ";
-            echo ( "$info" . $cl->GetLastError() . ".\n</font>" );
-        } else
-        {
-            if ($sphinx_results['total_found'] > 0) {
-               //  echo "<pre>\n";
-               //  die(print_r($sphinx_results));
-               //  echo "</pre>\n";
-                $where = " where id IN (";
-                foreach ( $sphinx_results["matches"] as $doc => $docinfo ) {
-                    $where .= "'$doc',";
-                }
-                $where = rtrim($where, ",");
-                $where .= ")";
-            } else {
-                // Negate search since sphinx returned 0 hits
-                $where = "WHERE 1<1";
-                //  die(print_r($sphinx_results));
+    $sphinx_results = $cl->Query ($msg_mask, $index);
+
+    $total = $sphinx_results['total_found'];
+
+    if ( !$sphinx_results )
+    {
+        $info = "<font size=\"3\" color=\"white\"><br><br>Sphinx - Error in query: ";
+        echo ( "$info" . $cl->GetLastError() . ".\n</font>" );
+    } else
+    {
+        if ($sphinx_results['total_found'] > 0) {
+            //  echo "<pre>\n";
+            //  die(print_r($sphinx_results));
+            //  echo "</pre>\n";
+            $where = " where id IN (";
+            foreach ( $sphinx_results["matches"] as $doc => $docinfo ) {
+                $where .= "'$doc',";
             }
+            $where = rtrim($where, ",");
+            $where .= ")";
+        } else {
+            // Negate search since sphinx returned 0 hits
+            $where = "WHERE 1<1";
+            //  die(print_r($sphinx_results));
         }
-        //---------------END SPHINX
+    }
+    //---------------END SPHINX
     } else {
         $msg_mask = mysql_real_escape_string($msg_mask_get);
         switch ($msg_mask_oper) {

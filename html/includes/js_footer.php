@@ -1314,3 +1314,22 @@ $(document).ready(function(){
 </script>
 <!-- END News -->
 
+<!-- C is for Cookie -->
+<script type="text/javascript">
+$(document).ready(function(){
+// event listener on all select drop downs with class of jTitle 
+$("#severities").select(function(){
+    //set the select value
+    var val = $(this).val();
+    // Sets a cookie with named after the title field's ID attribute 
+    $(this).cookify();
+});
+$("#severities").each(function(){
+  var $titleId = $(this).val();
+  var $cookieValue = $.cookies.get($titleId);
+// alert("val = "+$cookieValue);
+});
+});
+</script>
+<!-- That's good ebough for me :-) -->
+
