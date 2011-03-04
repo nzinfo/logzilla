@@ -39,16 +39,19 @@ $grid->setColModel();
 $grid->setUrl('includes/grid/mne.php');
 // Set some grid options
 $grid->setGridOptions(array(
-    "rowNum"=>17,
+    "rowNum"=>20,
     "sortname"=>"LastSeen",
     "sortorder"=>"desc",
     "altRows"=>true,
     "multiselect"=>true,
+    "scrollOffset"=>25,
+    "shrinkToFit"=>true,
+    "setGridHeight"=>"100%",
     "rowList"=>array(20,40,60,75,100,500,750,1000),
     ));
 
-$grid->setColProperty('Seen', array('width'=>'15'));
-$grid->setColProperty('LastSeen', array('formatter'=>'js:easyDate'));
+$grid->setColProperty('Seen', array('width'=>'10'));
+$grid->setColProperty('LastSeen', array('width'=>'35','formatter'=>'js:easyDate'));
 
 $grid->navigator = true;
 $grid->setNavOptions('navigator', array("pdf"=>true,"excel"=>true,"add"=>false,"edit"=>false,"del"=>false,"view"=>false, "search"=>true));
@@ -64,9 +67,9 @@ $("#portlet-header_Mnemonics .ui-icon-plus").click(function() {
                 resizable: false,
                 height: '600',
                 width: '90%',
-                position: [100,100],
+                position: "center",
                 autoOpen:false,
-                modal: false,
+                modal: true,
                 title: "Mnemonic Selector",
                 overlay: {
                         backgroundColor: '#000',
@@ -76,15 +79,23 @@ $("#portlet-header_Mnemonics .ui-icon-plus").click(function() {
                         'Add Selected Mnemonic': function() {
                                 $(this).dialog('close');
                         },
-                }               
+                },
+            open: function(event, ui) { $('#host_dialog').css('overflow','hidden');$('.ui-widget-overlay').css('width','99%') },
+            close: function(event, ui) { $('#host_dialog').css('overflow','auto') }
         });             
         $("#mne_dialog").dialog('open');
         $("#mne_dialog").ready(function(){
         // Some magic to set the proper width of the grid inside a Modal window
+        var browser = jQuery.uaMatch(navigator.userAgent).browser;
         var modalWidth = $("#ui-dialog-title-mne_dialog").width() +5;
         $('#mnegrid').jqGrid('setGridWidth',setWidth(modalWidth));
+        // I've no idea why FF doesn't use the same grid height, but this works...
+        if (browser == "mozilla") {
+            $('#mnegrid').jqGrid('setGridHeight',setHeight(39));
+        } else {
+            $('#mnegrid').jqGrid('setGridHeight',setHeight(56));
+        }
         $('#mnegrid').fluidGrid({base:'#ui-dialog-title-mne_dialog', offset:-25});
-        $('#mnegrid').jqGrid('setGridHeight',setHeight(57));
         });
 //---------------------------------------------------------------
 // END: Mnemonic Select Dialog

@@ -39,16 +39,19 @@ $grid->setColModel();
 $grid->setUrl('includes/grid/hosts.php');
 // Set some grid options
 $grid->setGridOptions(array(
-    "rowNum"=>17,
+    "rowNum"=>20,
     "sortname"=>"LastSeen",
     "sortorder"=>"desc",
     "altRows"=>true,
     "multiselect"=>true,
+    "scrollOffset"=>25,
+    "shrinkToFit"=>true,
+    "setGridHeight"=>"100%",
     "rowList"=>array(20,40,60,75,100,500,750,1000),
     ));
 
-$grid->setColProperty('Seen', array('width'=>'15'));
-$grid->setColProperty('LastSeen', array('formatter'=>'js:easyDate'));
+$grid->setColProperty('Seen', array('width'=>'10'));
+$grid->setColProperty('LastSeen', array('width'=>'35','formatter'=>'js:easyDate'));
 
 $grid->navigator = true;
 $grid->setNavOptions('navigator', array("pdf"=>true,"excel"=>true,"add"=>false,"edit"=>false,"del"=>false,"view"=>false, "search"=>true));
@@ -64,9 +67,9 @@ $("#portlet-header_Hosts .ui-icon-plus").click(function() {
                 resizable: false,
                 height: '600',
                 width: '90%',
-                position: [100,100],
+                position: "center",
                 autoOpen:false,
-                modal: false,
+                modal: true,
                 title: "Host Selector",
                 overlay: {
                         backgroundColor: '#000',
@@ -76,14 +79,23 @@ $("#portlet-header_Hosts .ui-icon-plus").click(function() {
                         'Add Selected Hosts': function() {
                                 $(this).dialog('close');
                         },
-                }               
+                },
+            open: function(event, ui) { $('#host_dialog').css('overflow','hidden');$('.ui-widget-overlay').css('width','99%') },
+            close: function(event, ui) { $('#host_dialog').css('overflow','auto') }
         });             
         $("#host_dialog").dialog('open');
         $("#host_dialog").ready(function(){
         // Some magic to set the proper width of the grid inside a Modal window
+        var browser = jQuery.uaMatch(navigator.userAgent).browser;
         var modalWidth = $("#ui-dialog-title-host_dialog").width() +5;
         $('#hostsgrid').jqGrid('setGridWidth',setWidth(modalWidth));
-        $('#hostsgrid').jqGrid('setGridHeight',setHeight(57));
+        // I've no idea why FF doesn't use the same grid height, but this works...
+        if (browser == "mozilla") {
+            $('#hostsgrid').jqGrid('setGridHeight',setHeight(40));
+        } else {
+            $('#hostsgrid').jqGrid('setGridHeight',setHeight(55));
+        }
+        $('#hostsgrid').fluidGrid({base:'#ui-dialog-title-host_dialog', offset:-25});
         });
 //---------------------------------------------------------------
 // END: Host Select Dialog
