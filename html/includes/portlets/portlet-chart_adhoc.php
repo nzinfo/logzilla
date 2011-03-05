@@ -96,6 +96,37 @@ if ($mnemonics) {
     $sph_msg_mask .= " ";
 }
 
+// Special - this gets posted via javascript since it comes from the Snare EID grid
+// Form code is somewhere near line 992 of js_footer.php
+$eids = get_input('eids');
+// sel_eid comes from the main page <select>, whereas 'eids' above this line comes from the grid select via javascript.
+$sel_eid = get_input('sel_eid');
+if ($eids) {
+    $pieces = explode(",", $eids);
+    foreach ($pieces as $eid) {
+        $sel_eid[] .= $eid;
+        $qstring .= "&eids[]=$eid";
+    }
+}
+$eids = $sel_eid;
+if ($eids) {
+    if (!in_array('0', $eids)) {
+        $where .= " AND eid > 0 ";
+    }
+    $where .= " AND eid IN (";
+    $sph_msg_mask .= " @eid ";
+    
+    foreach ($eids as $eid) {
+            $where.= "'$eid',";
+            $sph_msg_mask .= "$eid|";
+        $qstring .= "&sel_eid[]=$eid";
+    }
+    $where = rtrim($where, ",");
+    $sph_msg_mask = rtrim($sph_msg_mask, "|");
+    $where .= ")";
+    $sph_msg_mask .= " ";
+}
+
 // portlet-programs
 $programs = get_input('programs');
 if ($programs) {
@@ -360,6 +391,9 @@ if ($facilities) {
         $topx = "top";
     }
     $groupby = get_input('groupby');
+    if ($groupby === "eid") {
+        $where .= " AND eid > 0 ";
+    }
     $qstring .= "&groupby=$groupby";
     $groupby = (!empty($groupby)) ? $groupby : "host";
     if ($groupby) {
@@ -397,19 +431,22 @@ if ($facilities) {
         case "mne":
             $propername = "Mnemonics";
         break;
+        case "eid":
+            $propername = "EventId";
+        break;
     }
     $ucTopx = ucfirst($topx);
 
 
     switch ($show_suppressed):
         case "suppressed":
-                $sql = "SELECT id, host, facility, severity, program, msg, mne, fo, lo, SUM(counter) as count FROM ".$_SESSION['TBL_MAIN']."_suppressed $where $groupby $orderby $order LIMIT $limit";
+                $sql = "SELECT id, host, facility, severity, program, msg, mne, eid, fo, lo, SUM(counter) as count FROM ".$_SESSION['TBL_MAIN']."_suppressed $where $groupby $orderby $order LIMIT $limit";
         break;
         case "unsuppressed":
-                $sql = "SELECT id, host, facility, severity, program, msg, mne, fo, lo, SUM(counter) as count FROM ".$_SESSION['TBL_MAIN']."_unsuppressed  $where $groupby $orderby $order LIMIT $limit";
+                $sql = "SELECT id, host, facility, severity, program, msg, mne, eid, fo, lo, SUM(counter) as count FROM ".$_SESSION['TBL_MAIN']."_unsuppressed  $where $groupby $orderby $order LIMIT $limit";
         break;
         default:
-                $sql = "SELECT id, host, facility, severity, program, msg, mne, fo, lo, SUM(counter) as count FROM ".$_SESSION['TBL_MAIN'] ."  $where $groupby $orderby $order LIMIT $limit";
+                $sql = "SELECT id, host, facility, severity, program, msg, mne, eid, fo, lo, SUM(counter) as count FROM ".$_SESSION['TBL_MAIN'] ."  $where $groupby $orderby $order LIMIT $limit";
     endswitch;
 
     $result = perform_query($sql, $dbLink, "portlet-chart_adhoc");
@@ -590,6 +627,9 @@ if ($facilities) {
             case "Mnemonics":
                 $ctype->on_click('pclick_mne');
             break;
+            case "EventId":
+                $ctype->on_click('pclick_eid');
+            break;
         }
         $ctype->set_values( $pievalues );
         $chart = new open_flash_chart();
@@ -687,6 +727,17 @@ function pclick_mne(index)
     var postvars = $("#postvars").val();
     postvars = postvars.replace(/&mnemonics[]=/g, "");
     var url = (postvars + "&sel_mne[]=" + value);
+    url = url.replace(/Graph/g, "Results");
+    self.location=url;
+}
+function pclick_eid(index)
+{
+    var value = JSON.stringify(data['elements'][0]['values'][index]['label']);
+    // alert(JSON.stringify(data['elements'][0]['values'][index]['label']));
+    value = value.replace(/"/g, "");
+    var postvars = $("#postvars").val();
+    postvars = postvars.replace(/&eids=/g, "");
+    var url = (postvars + "&sel_eid[]=" + value);
     url = url.replace(/Graph/g, "Results");
     self.location=url;
 }

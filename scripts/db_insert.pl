@@ -119,14 +119,10 @@ open( CONFIG, $config );
 my @config = <CONFIG>; 
 close( CONFIG );
 
-my($dbtable,$dbuser,$dbpass,$db,$dbhost,$dbport,$DEBUG,$dedup,$dedup_window,$dedup_dist,$log_path,$bulk_ins,$insert_string,@msgs, $q_time, $q_limit);
+my($dbtable,$dbuser,$dbpass,$db,$dbhost,$dbport,$DEBUG,$dedup,$dedup_window,$dedup_dist,$log_path,$bulk_ins,$insert_string,@msgs, $q_time, $q_limit, $snare);
 foreach my $var (@config) {
     next unless $var =~ /DEFINE/; # read only def's
-#$dbuser = $1 if ($var =~ /'DBADMIN', '(\w+)'/);
-#$dbpass = $1 if ($var =~ /'DBADMINPW', '(\w+)'/);
     $db = $1 if ($var =~ /'DBNAME', '(\w+)'/);
-#$dbhost = $1 if ($var =~ /'DBHOST', '(\w+.*|\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})'/);
-#$dbport = $1 if ($var =~ /'DBPORT', '(\w+)'/);
 }
 if (!$db){
     print "Error: Unable to read $db config variables from $config\n";
@@ -157,7 +153,9 @@ while (my @settings = $sth->fetchrow_array()) {
     $log_path = $settings[1] if ($settings[0] =~ /^PATH_LOGS$/);
     $q_time = $settings[1] if ($settings[0] =~ /^Q_TIME$/);
     $q_limit = $settings[1] if ($settings[0] =~ /^Q_LIMIT$/);
+    $snare = $settings[1] if ($settings[0] =~ /^SNARE$/);
 }
+if ($snare != 1) { $snare = 0; }
 # cdukes: 2010-06-07: Manually set q_time and q_limit for testing
 #$q_time = 15;
 #$q_limit = 10;
@@ -197,6 +195,7 @@ print LOG "DB: $db\n";
 print LOG "DB Host: $dbhost\n";
 print LOG "DB Port: $dbport\n";
 print LOG "Deduplication Feature = $dedup\n";
+print LOG "Snare Enabled\n" if ($snare > 0);
 print STDOUT "\n$datetime\nStarting $logfile for $file_path at pid $$\n" if (($debug > 0) and ($verbose));
 print STDOUT "Using Database: $db\n" if (($debug > 0) and ($verbose));
 
@@ -211,9 +210,11 @@ if (($debug > 0) or ($verbose)) {
     print STDOUT "Deduplication Feature = $dedup\n";
     print STDOUT "Logging results to $logfile\n";
     print STDOUT "Printing results to screen (STDOUT)\n" if (($debug > 0) and ($verbose));
+    print STDOUT "Snare Enabled\n" if ($snare > 0);
+    print STDOUT "\n\n";
 }
 
-my ($ts, $host, %host_cache, $facility, $pri, $prg, %program_cache, $prg32, $msg, $mne, %mne_cache, $mne32, $severity); 
+my ($ts, $host, %host_cache, $facility, $pri, $prg, %program_cache, $prg32, $msg, $mne, %mne_cache, $mne32, $severity, $snare_eid, %snare_eid_cache); 
 # my $re_pipe = qr/(\S+)\t(\d+)\t(\S+)?\t(.*)/;
 my $re_pipe = qr/(\S+ \S+)\t(\S+)\t(\d+)\t(\S+).*\t(.*)/;
 # v3.2 Fields are: TS, Host, PRI, Program,  and MSG
@@ -236,15 +237,15 @@ my $db_select = $dbh->prepare("SELECT id,msg FROM $dbtable WHERE host=? AND faci
 my $db_select_id = $dbh->prepare("SELECT counter,fo,lo FROM $dbtable WHERE id=?");
 my $db_update = $dbh->prepare("UPDATE $dbtable SET counter=?, fo=?, lo=? WHERE id=?");
 my $db_del = $dbh->prepare("DELETE FROM $dbtable WHERE id=?");
-my $db_insert = $dbh->prepare("INSERT INTO $dbtable (host,facility,severity,program,msg,mne,fo,lo) VALUES (?,?,?,?,?,?,?,?)");
+my $db_insert = $dbh->prepare("INSERT INTO $dbtable (host,facility,severity,program,msg,mne,eid,fo,lo) VALUES (?,?,?,?,?,?,?,?,?)");
 my $db_insert_prg = $dbh->prepare("INSERT IGNORE INTO programs (name,crc) VALUES (?,?) ");
 my $db_insert_mne = $dbh->prepare("INSERT INTO mne (name, crc, lastseen) VALUES (?,?,?) ON DUPLICATE KEY UPDATE seen=seen + 1, lastseen=? ");
 my $db_insert_host = $dbh->prepare("INSERT INTO hosts (host, lastseen) VALUES (?,?) ON DUPLICATE KEY UPDATE seen=seen + 1, lastseen=? ");
-$db_insert_host->{TraceLevel} = 4 if (($debug > 4) and ($verbose));
+my $db_insert_snare_eid = $dbh->prepare("INSERT INTO snare_eid (eid, lastseen) VALUES (?,?) ON DUPLICATE KEY UPDATE seen=seen + 1, lastseen=? ");
 #my $dumpfile = "/dev/shm/infile.txt";
 my $dumpfile = "/tmp/logzilla_import.txt";
 #my $sql = qq{LOAD DATA LOCAL INFILE '$dumpfile' INTO TABLE logs FIELDS TERMINATED BY "\\t" LINES TERMINATED BY "\\n" (host,facility,severity,program,msg,mne,fo,lo)};
-my $infile_prep = qq{LOAD DATA INFILE '$dumpfile' INTO TABLE logs FIELDS TERMINATED BY "\\t" LINES TERMINATED BY "\\n" (host,facility,severity,program,msg,mne,fo,lo)};
+my $infile_prep = qq{LOAD DATA INFILE '$dumpfile' INTO TABLE logs FIELDS TERMINATED BY "\\t" LINES TERMINATED BY "\\n" (host,facility,severity,program,msg,mne,eid,fo,lo)};
 my $db_load_infile = $dbh->prepare("$infile_prep");
 my $db_insert_mpX = $dbh->prepare("REPLACE INTO cache (name,value,updatetime) VALUES (?,?,?)");
 my $db_insert_sum = $dbh->prepare("INSERT INTO cache (name,value,updatetime) VALUES ('msg_sum',?,?) ON DUPLICATE KEY UPDATE value=value + ?");
@@ -267,7 +268,6 @@ open (DUMP, ">$dumpfile") or die "can't open $dumpfile: $!\n";
 close (DUMP);
 my $mode = 0644;   chmod $mode, "$dumpfile";  
 
-$db_load_infile->{TraceLevel} = 4 if (($debug > 4) and ($verbose));
 $dbh->{RaiseError} = 1;
 $dbh->{PrintError} = 1;
 # Pre-populate cache's with db values
@@ -366,6 +366,10 @@ while (my $msg = <STDIN>) {
     }
     push(@dumparr, do_msg($msg));
     if (eof()) { # check for end of last file
+        $db_insert_host->{TraceLevel} = 4 if (($debug > 4) and ($verbose));
+        $db_insert_prg->{TraceLevel} = 4 if (($debug > 4) and ($verbose));
+        $db_insert_mne->{TraceLevel} = 4 if (($debug > 4) and ($verbose));
+        $db_insert_snare_eid->{TraceLevel} = 4 if (($debug > 4) and ($verbose));
         open (DUMP, ">$dumpfile") or die "can't open $dumpfile: $!\n";
         print LOG "EOF - Flushing buffer\n" if ($debug > 0);
         print STDOUT "EOF - Flushing buffer\n" if ($debug > 0);
@@ -375,6 +379,7 @@ while (my $msg = <STDIN>) {
         print DUMP @dumparr;
         undef (@dumparr);
         close (DUMP);
+        $db_load_infile->{TraceLevel} = 4 if (($debug > 4) and ($verbose));
         $db_load_infile->execute();
         if ($db_load_infile->errstr()) {
             # cdukes: Added to catch errors on missing partitions
@@ -402,6 +407,12 @@ while (my $msg = <STDIN>) {
         foreach my $m (@mnes) {
             $db_insert_mne->execute($m, $mne_cache{$m}, $now, $now);
         }
+        if ($snare > 0) {
+            my @snare_eids = keys %snare_eid_cache;
+            foreach my $s (@snare_eids) {
+                $db_insert_snare_eid->execute($s, $now, $now);
+            }
+        }
         $sec = strftime("%S", localtime);
         $mps = $mps + $do_msg_mps;
         push(@mps, "chart_mps_$sec,$mps,$now");
@@ -415,6 +426,7 @@ while (my $msg = <STDIN>) {
         %host_cache = ();
         %program_cache = ();
         %mne_cache = ();
+        %snare_eid_cache = ();
         # End add
         print LOG "Ending insert: " . strftime("%H:%M:%S", localtime) ."\n" if ($debug > 0);
         print STDOUT "Ending insert: " . strftime("%H:%M:%S", localtime) ."\n" if (($debug > 0) and ($verbose));
@@ -519,9 +531,16 @@ while (my $msg = <STDIN>) {
             foreach my $m (@mnes) {
                 $db_insert_mne->execute($m, $mne_cache{$m}, $now, $now);
             }
+            if ($snare > 0) {
+                my @snare_eids = keys %snare_eid_cache;
+                foreach my $s (@snare_eids) {
+                    $db_insert_snare_eid->execute($s, $now, $now);
+                }
+            }
             %host_cache = ();
             %program_cache = ();
             %mne_cache = ();
+            %snare_eid_cache = ();
         }
         # Temp: exit after 5 minutes for testing
         #if ($#mpm == 5) {
@@ -601,6 +620,11 @@ sub do_msg {
         $prg = "Cisco ASA" if ($msg =~ /^%PIX/);
         # Handle Snare Format
         if ($prg =~ m/MSWinEventLog\\011.*\\011(.*)\\011.*\\011.*/) {
+            if ($snare != 1) {
+                print LOG "!!!!!!!!!!\nSnare event detected but skipped! Please enable SNARE in the web interface: Admin>Settings>Snare\n!!!!!!!!!!\n\n";
+                print STDOUT "!!!!!!!!!!\nSnare event detected but skipped! Please enable SNARE in the web interface: Admin>Settings>Snare\n!!!!!!!!!!\n\n";
+                next;
+            }
             my $facilityname = $1;
             if ($facilityname =~ m/^Application/) {
                 $facility = 23;
@@ -643,6 +667,7 @@ sub do_msg {
                     print STDOUT "description: $description\n";
                 }
                 $prg = $source;
+                $snare_eid = $eventid;
                 $msg = "Log=".$facilityname.", Source=".$source.", Category=".$category.", Type=".$type.", EventID=".$eventid.", Username=".$username.", Usertype=".$usertype.", Computer=".$computer.", Description=".$description;
             }
         }
@@ -728,6 +753,11 @@ sub do_msg {
         }
         unless ($program_cache{$prg}){
             $program_cache{$prg} = ($prg32);
+        }
+        if ($snare > 0) {
+            unless ($snare_eid_cache{$snare_eid}){
+                $snare_eid_cache{$snare_eid} = ($snare_eid);
+            }
         }
         if ($debug > 0) { 
             print LOG "HOST: $host\n";
@@ -829,7 +859,7 @@ sub do_msg {
     # Now that the distance test is over we need to insert any new records that either didn't previously exist or because we had the dedup feature disabled
     if ($insert != 0) {
         if ($host ne "")  {
-            $queue = "$host\t$facility\t$severity\t$prg32\t$msg\t$mne32\t$ts\t$ts\t\n";
+            $queue = "$host\t$facility\t$severity\t$prg32\t$msg\t$mne32\t$snare_eid\t$ts\t$ts\t\n";
         } else {
             $do_msg_mps++;
             print LOG "Error inserting record $msg\n" if ($debug > 3); 

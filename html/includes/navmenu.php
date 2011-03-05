@@ -68,6 +68,9 @@ session_start();
                 <li><a onclick="$(this).animate({ opacity: 0.3 }, 500 );" href="<?php echo $_SESSION['SITE_URL']?>?page=Graph&show_suppressed=all&limit=10&orderby=counter&order=DESC&groupby=severity&chart_type=pie">Severities</a></li>
                 <li><a onclick="$(this).animate({ opacity: 0.3 }, 500 );" href="<?php echo $_SESSION['SITE_URL']?>?page=Graph&show_suppressed=all&limit=10&orderby=counter&order=DESC&groupby=facility&chart_type=pie">Facilities</a></li>
                 <li><a onclick="$(this).animate({ opacity: 0.3 }, 500 );" href="<?php echo $_SESSION['SITE_URL']?>?page=Graph&show_suppressed=all&limit=10&orderby=counter&order=DESC&groupby=mne&chart_type=pie">Cisco Mnemonics</a></li>
+        <?php if($_SESSION['SNARE'] == "1") {?>
+                <li><a onclick="$(this).animate({ opacity: 0.3 }, 500 );" href="<?php echo $_SESSION['SITE_URL']?>?page=Graph&show_suppressed=all&limit=10&orderby=counter&order=DESC&groupby=eid&chart_type=pie">Windows EventId</a></li>
+                    <?php } ?>
                 </ul>
             </li>
             <li><a href="#">By LO</a>
