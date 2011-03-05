@@ -176,6 +176,34 @@ if ($mnemonics) {
     $sph_msg_mask .= " ";
 }
 
+// Special - this gets posted via javascript since it comes from the Snare EID grid
+// Form code is somewhere near line 992 of js_footer.php
+$eids = get_input('eids');
+// sel_eid comes from the main page <select>, whereas 'eids' above this line comes from the grid select via javascript.
+$sel_eid = get_input('sel_eid');
+if ($eids) {
+    $pieces = explode(",", $eids);
+    foreach ($pieces as $eid) {
+        $sel_eid[] .= $eid;
+        $qstring .= "&eids[]=$eid";
+    }
+}
+$eids = $sel_eid;
+if ($eids) {
+    $where .= " AND eid IN (";
+    $sph_msg_mask .= " @eid ";
+    
+    foreach ($eids as $eid) {
+            $where.= "'$eid',";
+            $sph_msg_mask .= "$eid|";
+        $qstring .= "&sel_eid[]=$eid";
+    }
+    $where = rtrim($where, ",");
+    $sph_msg_mask = rtrim($sph_msg_mask, "|");
+    $where .= ")";
+    $sph_msg_mask .= " ";
+}
+
 // portlet-programs
 $programs = get_input('programs');
 if ($programs) {
@@ -295,7 +323,7 @@ if ($_SESSION['SPX_ENABLE'] == "1") {
         $escaped = str_replace("\|","|",$escaped);
         $escaped = str_replace("\!","!",$escaped);
         // #33 CDUKES: Added masks below so that users can search via @ keyword
-        $kwd = preg_replace ('/^@(notes|sev|fac|prg|mne|host).*/i', '$1', $msg_mask_get);
+        $kwd = preg_replace ('/^@(notes|sev|fac|prg|mne|host|eid).*/i', '$1', $msg_mask_get);
         switch ($kwd) {
             case "notes":
                 $escaped = str_ireplace("\@notes","",$escaped);
@@ -322,6 +350,10 @@ if ($_SESSION['SPX_ENABLE'] == "1") {
             case "host":
                 $escaped = str_ireplace("\@host","",$escaped);
                 $msg_mask = "$sph_msg_mask @HOST $escaped";
+            break;
+            case "eid":
+                $escaped = str_ireplace("\@eid","",$escaped);
+                $msg_mask = "$sph_msg_mask @EID $escaped";
             break;
             default:
             $msg_mask = "$sph_msg_mask @MSG $escaped";
@@ -551,6 +583,9 @@ if ($order) {
   <tr class='HeaderRow'>
     <th class="s_th">Edit</th>
     <th class="s_th"><input type="checkbox" onclick="toggleCheck(this.checked);"/></th>
+        <?php if($_SESSION['SNARE'] == "1") {
+            echo '<th class="s_th sortable-sortIPAddress">EventId</th>';
+        }?>
     <th class="s_th sortable-sortIPAddress">Host</th>
     <th class="s_th sortable-text">Facility</th>
     <th class="s_th sortable-text">Severity</th>
@@ -689,12 +724,18 @@ endswitch;
         echo "<a href=\"#\" onclick=\"edit_note(this);return false;\" id=\"edit_$row[id]\"><img style=\"border-style: none; width: 30px; height: 30px;\" src=\"$_SESSION[SITE_URL]images/edit_sm.png\" /></a>\n";
         echo "</td>\n";
         echo "<td class=\"s_td\"><input class=\"checkbox\" type='checkbox' name='dbid[]' value='$row[id]'></td>";
-        //$qstring = preg_replace ('/&hosts=(.*)&/', "$1", $qstring);
-        echo "<td class=\"s_td\"><a href=$_SESSION[SITE_URL]$qstring&hosts=$row[host]>$row[host]</a></td>\n";
+        if($_SESSION['SNARE'] == "1") {
+            if ($row['eid'] > 0) {
+            echo "<td class=\"s_td\"><a href=$_SESSION[SITE_URL]$qstring&eids[]=$row[eid]>$row[eid]</a></td>\n";
+            } else {
+            echo "<td class=\"s_td\">N/A</td>\n";
+            }
+        }
+        echo "<td class=\"s_td\"><a href=$_SESSION[SITE_URL]$qstring&hosts[]=$row[host]>$row[host]</a></td>\n";
         echo "<td class=\"s_td\"><a href=$_SESSION[SITE_URL]$qstring&facilities[]=$row[facility]>".int2fac($row['facility'])."</a></td>\n";
         echo "<td class=\"s_td $sev\"><a href=$_SESSION[SITE_URL]$qstring&severities[]=$row[severity]>$sev_text</a></td>\n";
         echo "<td class=\"s_td\"><a href=$_SESSION[SITE_URL]$qstring&programs[]=$row[program]>".crc2prg($row['program'])."</a></td>\n";
-        echo "<td class=\"s_td\"><a href=$_SESSION[SITE_URL]$qstring&mnemonics=$row[mne]>".crc2mne($row['mne'])."</a></td>\n";
+        echo "<td class=\"s_td\"><a href=$_SESSION[SITE_URL]$qstring&mnemonics[]=$row[mne]>".crc2mne($row['mne'])."</a></td>\n";
         if ($_SESSION['CISCO_MNE_PARSE'] == "1" ) {
             // $msg = preg_replace('/\s:/', ':', $msg);
             $msg = preg_replace('/.*%(\w+-.*\d-\w+)\s?:/', '$1', $msg);
@@ -1073,7 +1114,10 @@ function lzecs(msg){
             <option value="program">All Matching Programs</option>
             <option value="mne">All Matching Mnemonics</option>
             <option value="notes">All Matching Notes</option>
-            <option value="msg">All Matching Message</option>
+            <?php if($_SESSION['SNARE'] == "1") {
+                echo '<option value="eid">All Matching EventId\'s</option>';
+            }?>
+            <option value="msg">All Matching Messages</option>
             </select>
             </div>
             </td>
@@ -1120,6 +1164,9 @@ function lzecs(msg){
                         case 'program':
                             $name = crc2prg($name);
                             $col = "Program";
+                            break;
+                        case 'eid':
+                            $col = "EventId";
                             break;
                     }
                     echo "<tr>\n";

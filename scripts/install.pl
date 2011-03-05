@@ -38,7 +38,7 @@ sub p {
 }
 
 my $version = "3.1";
-my $subversion = ".204";
+my $subversion = ".205";
 
 # Grab the base path
 my $lzbase = getcwd;
@@ -86,6 +86,7 @@ my $sitename  = &p("Enter a name for your website", 'The home of LogZilla');
 my $url  = &p("Enter the base url for your site (include trailing slash)", '/logs/');
 my $logpath  = &p("Where should log files be stored?", '/var/log/logzilla');
 my $retention  = &p("How long before I archive old logs? (in days)", '7');
+my $snare  = &p("Do you plan to log Windows events from SNARE to this server?", 'n');
 
 
 if (! -d "$logpath") {
@@ -187,6 +188,7 @@ if ($ok =~ /[Yy]/) {
         program int(10) unsigned NOT NULL,
         msg varchar(2048) NOT NULL,
         mne int(10) unsigned NOT NULL,
+        eid int(10) unsigned NOT NULL DEFAULT '0',
         suppress datetime NOT NULL DEFAULT '2010-03-01 00:00:00',
         counter int(11) NOT NULL DEFAULT '1',
         fo datetime NOT NULL,
@@ -196,6 +198,7 @@ if ($ok =~ /[Yy]/) {
         KEY facility (facility),
         KEY severity (severity),
         KEY mne (mne),
+        KEY eid (eid),
         KEY program (program),
         KEY suppress (suppress),
         KEY lo (lo),
@@ -218,6 +221,10 @@ if ($ok =~ /[Yy]/) {
 
 # Create mnemonics table
     my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/mne.sql`;
+    print $res;
+
+# Create snare_eid table
+    my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/snare_eid.sql`;
     print $res;
 
 # Create programs table
@@ -293,6 +300,12 @@ if ($ok =~ /[Yy]/) {
         update settings set value='$retention' where name='RETENTION';
         ") or die "Could not update settings table: $DBI::errstr";
     $sth->execute;
+    if ($snare =~ /[Yy]/) {
+        my $sth = $dbh->prepare("
+            update settings set value=1 where name='SNARE';
+            ") or die "Could not update settings table: $DBI::errstr";
+        $sth->execute;
+    }
 
 
 

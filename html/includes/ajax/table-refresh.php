@@ -157,6 +157,36 @@ if ($mnemonics) {
     $sph_msg_mask .= " ";
 }
 
+// Special - this gets posted via javascript since it comes from the Snare EID grid
+// Form code is somewhere near line 992 of js_footer.php
+$eids = get_input('eids');
+// sel_eid comes from the main page <select>, whereas 'eids' above this line comes from the grid select via javascript.
+$sel_eid = get_input('sel_eid');
+if ($eids) {
+    $pieces = explode(",", $eids);
+    foreach ($pieces as $eid) {
+        $sel_eid[] .= $eid;
+        $qstring .= "&eids[]=$eid";
+    }
+}
+$eids = $sel_eid;
+if ($eids) {
+    if (!in_array('0', $eids)) {
+        $where .= " AND eid > 0";
+    }
+    $where .= " AND eid IN (";
+    $sph_msg_mask .= " @eid ";
+    
+    foreach ($eids as $eid) {
+            $where.= "'$eid',";
+            $sph_msg_mask .= "$eid|";
+        $qstring .= "&sel_eid[]=$eid";
+    }
+    $where = rtrim($where, ",");
+    $sph_msg_mask = rtrim($sph_msg_mask, "|");
+    $where .= ")";
+    $sph_msg_mask .= " ";
+}
 
 // portlet-programs
 $programs = get_input('programs');
@@ -225,6 +255,7 @@ if($msg_mask !== '') {
                 $where.= " AND msg like '%$msg_mask%'";  
 }
 
+/*
 $notes_mask = get_input('notes_mask');
 $notes_mask = preg_replace ('/^Search through .*\sNotes/m', '', $notes_mask);
 $notes_mask_oper = get_input('notes_mask_oper');
@@ -277,7 +308,7 @@ if($notes_mask) {
         }
     }
 }
-
+*/
 // portlet-search_options
 $dupop = get_input('dupop');
 $qstring .= "&dupop=$dupop";
@@ -333,6 +364,9 @@ $('.XLButtons').remove();
 <table style="float: center; margin-top: 1%;" id="theTable" cellpadding="0" cellspacing="0" class="no-arrow paginate-<?php echo $_SESSION['PAGINATE']?> max-pages-7 paginationcallback-callbackTest-calculateTotalRating paginationcallback-callbackTest-displayTextInfo sortcompletecallback-callbackTest-calculateTotalRating s_table">
 <thead class="ui-widget-header">
   <tr class='HeaderRow'>
+  <?php if($_SESSION['SNARE'] == "1") {
+      echo '<th class="s_th">EventId</th>';
+  }?>
     <th class="s_th">Host</th>
     <th class="s_th">Facility</th>
     <th class="s_th">Priority</th>
@@ -415,6 +449,13 @@ endswitch;
             default:
         }
         echo "<tr id=\"$sev\">\n";
+        if($_SESSION['SNARE'] == "1") {
+            if ($row['eid'] > 0) {
+            echo "<td class=\"s_td\"><a href=$_SESSION[SITE_URL]$qstring&eids[]=$row[eid]>$row[eid]</a></td>\n";
+            } else {
+            echo "<td class=\"s_td\">N/A</td>\n";
+            }
+        }
         echo "<td class=\"s_td\"><a href=$_SESSION[SITE_URL]$qstring&hosts=$row[host]>$row[host]</a></td>\n";
         echo "<td class=\"s_td\"><a href=$_SESSION[SITE_URL]$qstring&facilities[]=$row[facility]>".int2fac($row['facility'])."</a></td>\n";
         echo "<td class=\"s_td $sev\"><a href=$_SESSION[SITE_URL]$qstring&severities[]=$row[severity]>$sev_text</a></td>\n";
@@ -425,7 +466,7 @@ endswitch;
             $msg = preg_replace('/.*%(\w+-.*\d-\w+)\s?:/', '$1', $msg);
         }
         # CDUKES: [[ticket:41]] - break long text so it doesn't scroll off the page
-        $msg = wordwrap($msg, 90, "<br />", true);
+        $msg = wordwrap($msg, 90, "<br/>", true);
         if($_SESSION['MSG_EXPLODE'] == "1") {
             $explode_url = "";
             $pieces = explode(" ", $msg);

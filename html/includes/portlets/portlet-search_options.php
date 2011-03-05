@@ -141,6 +141,9 @@ if ($_SESSION['SHOWCOUNTS'] == "1") {
         <option value="facility">Facility</option>
         <option value="severity">Severity</option>
         <option value="mne">Mnemonic</option>
+        <?php if($_SESSION['SNARE'] == "1") {?>
+        <option value="eids">Windows EventId</option>
+        <?php } ?>
         </select>
         </td>
     </tr>
