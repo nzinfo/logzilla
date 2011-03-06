@@ -232,6 +232,10 @@ if( !tm_done ) {
 <script type="text/javascript" src="includes/js/jquery/plugins/jquery.cookie.js"></script>
 <!-- END Cookies -->
 
+<!-- BEGIN Sticky -->
+<script type="text/javascript" src="includes/js/jquery/plugins/jquery.stickyforms.js"></script>
+<!-- END Sticky -->
+
 <!-- BEGIN Tabs -->
 <script type="text/javascript">
 $(document).ready(function(){
@@ -1322,19 +1326,216 @@ $(document).ready(function(){
 <!-- C is for Cookie -->
 <script type="text/javascript">
 $(document).ready(function(){
-// event listener on all select drop downs with class of jTitle 
-$("#severities").select(function(){
-    //set the select value
+document.cookie = 'name=pagesel; path=<?php echo $_SESSION['SITE_URL']?>'
+$("#severities").change(function(){
     var val = $(this).val();
-    // Sets a cookie with named after the title field's ID attribute 
-    $(this).cookify();
-});
+    $.cookie("severities", val);
+    });
 $("#severities").each(function(){
-  var $titleId = $(this).val();
-  var $cookieValue = $.cookies.get($titleId);
-// alert("val = "+$cookieValue);
-});
+    var data = $.cookie("severities"); 
+    if (data) {
+    var i = data.split(',');
+    $.each(i, function() {
+        $("select#severities").val(i); 
+        });
+    };
+    });
+$("#facilities").change(function(){
+    var val = $(this).val();
+    $.cookie("facilities", val);
+    });
+$("#facilities").each(function(){
+    var data = $.cookie("facilities"); 
+    if (data) {
+    var i = data.split(',');
+    $.each(i, function() {
+        $("select#facilities").val(i); 
+        });
+    };
+    });
+$("#programs").change(function(){
+    var val = $(this).val();
+    $.cookie("programs", val);
+    });
+$("#programs").each(function(){
+    var data = $.cookie("programs"); 
+    if (data) {
+    var i = data.split(',');
+    $.each(i, function() {
+        $("select#programs").val(i); 
+        });
+    };
+    });
+$("#mnemonics").change(function(){
+    var val = $(this).val();
+    $.cookie("mnemonics", val);
+    });
+$("#mnemonics").each(function(){
+    var data = $.cookie("mnemonics"); 
+    if (data) {
+    var i = data.split(',');
+    $.each(i, function() {
+        $("select#mnemonics").val(i); 
+        });
+    };
+    });
+$("#hosts").change(function(){
+    var val = $(this).val();
+    $.cookie("hosts", val);
+    });
+$("#hosts").each(function(){
+    var data = $.cookie("hosts"); 
+    if (data) {
+    var i = data.split(',');
+    $.each(i, function() {
+        $("select#hosts").val(i); 
+        });
+    };
+    });
+$("#topx").change(function(){
+    var val = $(this).val();
+    $.cookie("topx", val);
+    });
+$("#topx").each(function(){
+    var data = $.cookie("topx"); 
+    if (data) {
+    var i = data.split(',');
+    $.each(i, function() {
+        $("select#topx").val(i); 
+        });
+    };
+    });
+$("#dupop").change(function(){
+    var val = $(this).val();
+    $.cookie("dupop", val);
+    });
+$("#dupop").each(function(){
+    var data = $.cookie("dupop"); 
+    if (data) {
+    var i = data.split(',');
+    $.each(i, function() {
+        $("select#dupop").val(i); 
+        });
+    };
+    });
+$("#dupcount").change(function(){
+    var val = $(this).val();
+    $.cookie("dupcount", val);
+    });
+$("#dupcount").each(function(){
+    var data = $.cookie("dupcount"); 
+    if (data) {
+    var i = data.split(',');
+    $.each(i, function() {
+        $("select#dupcount").val(i); 
+        });
+    };
+    });
+$("#orderby").change(function(){
+    var val = $(this).val();
+    $.cookie("orderby", val);
+    });
+$("#orderby").each(function(){
+    var data = $.cookie("orderby"); 
+    if (data) {
+    var i = data.split(',');
+    $.each(i, function() {
+        $("select#orderby").val(i); 
+        });
+    };
+    });
+$("#order").change(function(){
+    var val = $(this).val();
+    $.cookie("order", val);
+    });
+$("#order").each(function(){
+    var data = $.cookie("order"); 
+    if (data) {
+    var i = data.split(',');
+    $.each(i, function() {
+        $("select#order").val(i); 
+        });
+    };
+    });
+$("#limit").change(function(){
+    var val = $(this).val();
+    $.cookie("limit", val);
+    });
+$("#limit").each(function(){
+    var data = $.cookie("limit"); 
+    if (data) {
+    var i = data.split(',');
+    $.each(i, function() {
+        $("select#limit").val(i); 
+        });
+    };
+    });
+$("#groupby").change(function(){
+    var val = $(this).val();
+    $.cookie("groupby", val);
+    });
+$("#groupby").each(function(){
+    var data = $.cookie("groupby"); 
+    if (data) {
+    var i = data.split(',');
+    $.each(i, function() {
+        $("select#groupby").val(i); 
+        });
+    };
+    });
+$("#chart_type").change(function(){
+    var val = $(this).val();
+    $.cookie("chart_type", val);
+    });
+$("#chart_type").each(function(){
+    var data = $.cookie("chart_type"); 
+    if (data) {
+    var i = data.split(',');
+    $.each(i, function() {
+        $("select#chart_type").val(i); 
+        });
+    };
+    });
+$("#tail").change(function(){
+    var val = $(this).val();
+    $.cookie("tail", val);
+    });
+$("#tail").each(function(){
+    var data = $.cookie("tail"); 
+    if (data) {
+    var i = data.split(',');
+    $.each(i, function() {
+        $("select#tail").val(i); 
+        });
+    };
+    });
+$("#show_suppressed").change(function(){
+    var val = $(this).val();
+    $.cookie("show_suppressed", val);
+    });
+$("#show_suppressed").each(function(){
+    var data = $.cookie("show_suppressed"); 
+    if (data) {
+    var i = data.split(',');
+    $.each(i, function() {
+        $("select#show_suppressed").val(i); 
+        });
+    };
+    });
+$("#graphtype").change(function(){
+    var val = $(this).val();
+    $.cookie("graphtype", val);
+    });
+$("#graphtype").each(function(){
+    var data = $.cookie("graphtype"); 
+    if (data) {
+    var i = data.split(',');
+    $.each(i, function() {
+        $("select#graphtype").val(i); 
+        });
+    };
+    });
 });
 </script>
-<!-- That's good ebough for me :-) -->
+<!-- End Cookies -->
 
