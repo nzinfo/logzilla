@@ -39,7 +39,7 @@ $grid->setColModel();
 $grid->setUrl('includes/grid/hosts.php');
 // Set some grid options
 $grid->setGridOptions(array(
-    "rowNum"=>20,
+    "rowNum"=>19,
     "sortname"=>"LastSeen",
     "sortorder"=>"desc",
     "altRows"=>true,
@@ -86,16 +86,11 @@ $("#portlet-header_Hosts .ui-icon-plus").click(function() {
         $("#host_dialog").dialog('open');
         $("#host_dialog").ready(function(){
         // Some magic to set the proper width of the grid inside a Modal window
-        var browser = jQuery.uaMatch(navigator.userAgent).browser;
-        var modalWidth = $("#ui-dialog-title-host_dialog").width() +5;
-        $('#hostsgrid').jqGrid('setGridWidth',setWidth(modalWidth));
-        // I've no idea why FF doesn't use the same grid height, but this works...
-        if (browser == "mozilla") {
-            $('#hostsgrid').jqGrid('setGridHeight',setHeight(40));
-        } else {
-            $('#hostsgrid').jqGrid('setGridHeight',setHeight(55));
-        }
-        $('#hostsgrid').fluidGrid({base:'#ui-dialog-title-host_dialog', offset:-25});
+        var modalWidth = $("#host_dialog").width();
+        var modalHeight = $("#host_dialog").height() - 52;
+        $('#hostsgrid').jqGrid('setGridWidth',modalWidth);
+        $('#hostsgrid').jqGrid('setGridHeight',modalHeight);
+        $('#hostsgrid').fluidGrid({base:'#host_dialog', offset:-25});
         });
 //---------------------------------------------------------------
 // END: Host Select Dialog

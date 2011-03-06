@@ -1,7 +1,7 @@
 <?php
 
 /*
- * grid/mne.php
+ * grid/snare_eid.php
  *
  * Developed by Clayton Dukes <cdukes@cdukes.com>
  * Copyright (c) 2011 LogZilla, LLC
@@ -30,13 +30,13 @@ $conn->query("SET NAMES utf8");
 // Create the jqGrid instance
 $grid = new jqGridRender($conn);
 // Write the SQL Query
-$grid->SelectCommand = 'SELECT name as Mnemonic, seen as Seen, lastseen as LastSeen FROM mne';
+$grid->SelectCommand = 'SELECT eid as EventId, seen as Seen, lastseen as LastSeen FROM snare_eid';
 // set the ouput format to json
 $grid->dataType = 'json';
 // Let the grid create the model
 $grid->setColModel();
 // Set the url from where we obtain the data
-$grid->setUrl('includes/grid/mne.php');
+$grid->setUrl('includes/grid/snare_eid.php');
 // Set some grid options
 $grid->setGridOptions(array(
     "rowNum"=>19,
@@ -59,10 +59,10 @@ $grid->setNavOptions('navigator', array("pdf"=>true,"excel"=>true,"add"=>false,"
 $custom = <<<CUSTOM
 
 //---------------------------------------------------------------
-// BEGIN: Mnemonic Select Dialog
+// BEGIN: EventId Select Dialog
 //---------------------------------------------------------------
-$("#portlet-header_Mnemonics .ui-icon-plus").click(function() {
-    $("#mne_dialog").dialog({
+$("#portlet-header_Snare_EventId .ui-icon-plus").click(function() {
+    $("#eid_dialog").dialog({
                 bgiframe: true,
                 resizable: false,
                 height: '600',
@@ -70,30 +70,30 @@ $("#portlet-header_Mnemonics .ui-icon-plus").click(function() {
                 position: "center",
                 autoOpen:false,
                 modal: true,
-                title: "Mnemonic Selector",
+                title: "Windows Event ID Selector",
                 overlay: {
                         backgroundColor: '#000',
                         opacity: 0.5
                 },     
                 buttons: {
-                        'Add Selected Mnemonic': function() {
+                        'Add Selected Event ID': function() {
                                 $(this).dialog('close');
                         },
                 },
             open: function(event, ui) { $('#host_dialog').css('overflow','hidden');$('.ui-widget-overlay').css('width','99%') },
             close: function(event, ui) { $('#host_dialog').css('overflow','auto') }
         });             
-        $("#mne_dialog").dialog('open');
-        $("#mne_dialog").ready(function(){
+        $("#eid_dialog").dialog('open');
+        $("#eid_dialog").ready(function(){
         // Some magic to set the proper width of the grid inside a Modal window
-        var modalWidth = $("#mne_dialog").width();
-        var modalHeight = $("#mne_dialog").height() - 52;
-        $('#mnegrid').jqGrid('setGridWidth',modalWidth);
-        $('#mnegrid').jqGrid('setGridHeight',modalHeight);
-        $('#mnegrid').fluidGrid({base:'#mne_dialog', offset:-25});
+        var modalWidth = $("#eid_dialog").width();
+        var modalHeight = $("#eid_dialog").height() - 52;
+        $('#eidgrid').jqGrid('setGridWidth',modalWidth);
+        $('#eidgrid').jqGrid('setGridHeight',modalHeight);
+        $('#eidgrid').fluidGrid({base:'#eid_dialog', offset:-25});
         });
 //---------------------------------------------------------------
-// END: Mnemonic Select Dialog
+// END: EventId Select Dialog
 //---------------------------------------------------------------
 
 
@@ -101,7 +101,7 @@ $("#portlet-header_Mnemonics .ui-icon-plus").click(function() {
 
 $(window).resize(function()
 {
-        $('#mnegrid').fluidGrid({base:'#ui-dialog-title-mne_dialog', offset:-25});
+        $('#eidgrid').fluidGrid({base:'#ui-dialog-title-eid_dialog', offset:-25});
 });
 
 
@@ -120,12 +120,12 @@ if($oper == "pdf") {
         // set logo image width
         "header_logo_width"=>45,
         //header title
-        "header_title"=>"                         Mnemonics Report"
+        "header_title"=>"                         Snare/Windows Event ID Report"
     ));
 } 
 
 // Enjoy
 $summaryrows=array("Seen"=>array("Seen"=>"SUM")); 
-$grid->renderGrid('#mnegrid','#mnepager',true, $summaryrows, null, true,true);
+$grid->renderGrid('#eidgrid','#eidpager',true, $summaryrows, null, true,true);
 $conn = null;
 ?>

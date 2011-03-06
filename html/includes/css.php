@@ -19,51 +19,48 @@
 <!-- BEGIN Main css 
 This file contains any custom css that I've written
 -->
-<link rel="stylesheet" type="text/css" media="screen" href="css/main.css" />
+<link type="text/css" rel="stylesheet" href="<?php echo $_SESSION['SITE_URL']?>css/main.css" />
 <!-- END Main css -->
 
 <!-- BEGIN Set Default Theme for new visitors -->
-<link type="text/css" href="includes/js/jquery/themes/sunny/jquery-ui.css" rel="stylesheet" />
+<link type="text/css" rel="stylesheet" href="<?php echo $_SESSION['SITE_URL']?>includes/js/jquery/themes/sunny/jquery-ui.css" />
 <!-- END Set Default Theme for new visitors -->
 
 <!-- BEGIN Date Range Selector -->
-<link type="text/css" rel="stylesheet" href="includes/js/jquery/plugins/daterangepicker.css" />
+<link type="text/css" rel="stylesheet" href="<?php echo $_SESSION['SITE_URL']?>includes/js/jquery/plugins/daterangepicker.css" />
 <!-- END Date Range Selector -->
 
 <!-- BEGIN JqGrid CSS -->
 <!-- grid layout -->
-<link rel="stylesheet" type="text/css" media="screen" href="includes/grid/js/ui.jqgrid.css" />
-<link rel="stylesheet" type="text/css" media="screen" href="includes/grid/js/ui.multiselect.css" />
+<link type="text/css" rel="stylesheet" href="<?php echo $_SESSION['SITE_URL']?>includes/grid/js/ui.jqgrid.css" />
+<link type="text/css" rel="stylesheet" href="<?php echo $_SESSION['SITE_URL']?>includes/grid/js/ui.multiselect.css" />
 <!-- END JqGrid CSS -->
 
 <!-- BEGIN Top Menu -->
-<link type="text/css" rel="stylesheet" href="includes/js/jquery/plugins/fg.menu.css" />
+<link type="text/css" rel="stylesheet" href="<?php echo $_SESSION['SITE_URL']?>includes/js/jquery/plugins/fg.menu.css" />
 <!-- END Top Menu -->
 
 <!-- BEGIN JGrowl -->
-<link type="text/css" rel="stylesheet" href="includes/js/jquery/plugins/jgrowl/jquery.jgrowl.css" />
+<link type="text/css" rel="stylesheet" href="<?php echo $_SESSION['SITE_URL']?>includes/js/jquery/plugins/jgrowl/jquery.jgrowl.css" />
 <!-- END JGrowl -->
 
-<!-- BEGIN Facebox REMOVED - no longer used
-<link type="text/css" rel="stylesheet" href="includes/js/jquery/plugins/facebox/facebox.css" />
- END Facebox -->
-
 <!-- BEGIN Table Sorter -->
-<link rel="stylesheet" type="text/css" media="screen" href="css/table.css" />
+<link type="text/css" rel="stylesheet" href="<?php echo $_SESSION['SITE_URL']?>css/table.css" />
+<link type="text/css" rel="stylesheet" href="<?php echo $_SESSION['SITE_URL']?>css/main.css" />
 <!-- END Table Sorter -->
 
 <!-- BEGIN Menu -->
-<link rel="stylesheet" type="text/css" media="screen" href="css/menu.css" />
+<link type="text/css" rel="stylesheet" href="<?php echo $_SESSION['SITE_URL']?>css/menu.css" />
 <!-- END Menu -->
 
 <!-- BEGIN Select Boxes -->
-<link rel="stylesheet" type="text/css" media="screen" href="css/selectbox.css" />
+<link type="text/css" rel="stylesheet" href="<?php echo $_SESSION['SITE_URL']?>css/selectbox.css" />
 <!-- END Select Boxes -->
 
 <!-- BEGIN Error Dialogs -->
-<link rel="stylesheet" type="text/css" media="screen" href="css/errordialog.css" />
+<link type="text/css" rel="stylesheet" href="<?php echo $_SESSION['SITE_URL']?>css/errordialog.css" />
 <!-- END Error Dialogs -->
 
 <!-- BEGIN News -->
-<link rel="stylesheet" type="text/css" media="screen" href="includes/js/jquery/plugins/highslide/highslide.css" />
+<link type="text/css" rel="stylesheet" href="<?php echo $_SESSION['SITE_URL']?>includes/js/jquery/plugins/highslide/highslide.css" />
 <!-- END News -->

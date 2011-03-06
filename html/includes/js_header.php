@@ -22,16 +22,16 @@
 
 ?>
 <!-- BEGIN JQUERY This needs to be first -->
-<script type="text/javascript" src="includes/js/jquery/jquery-1.4.2.min.js"></script>
+<script type="text/javascript" src="<?php echo $_SESSION['SITE_URL']?>includes/js/jquery/jquery-1.4.2.min.js"></script>
 <!-- END JQUERY -->
 
 <!-- BEGIN JqGrid -->
-<script src="includes/grid/js/i18n/grid.locale-en.js" type="text/javascript"></script>
-<script src="includes/grid/js/jquery.jqGrid.min.js" type="text/javascript"></script>
+<script src="<?php echo $_SESSION['SITE_URL']?>includes/grid/js/i18n/grid.locale-en.js" type="text/javascript"></script>
+<script src="<?php echo $_SESSION['SITE_URL']?>includes/grid/js/jquery.jqGrid.min.js" type="text/javascript"></script>
 <!-- END JqGrid -->
 
 <!-- BEGIN JQuery UI -->
-<script src="includes/js/jquery/jquery-ui-1.8rc2.custom.min.js" type="text/javascript"></script>
+<script src="<?php echo $_SESSION['SITE_URL']?>includes/js/jquery/jquery-ui-1.8rc2.custom.min.js" type="text/javascript"></script>
 <!-- END JQuery UI -->
 
 <!-- BEGIN Prevent FOUC 
@@ -47,11 +47,11 @@ $('body').css('display','block');
 <!-- END Prevent FOUC -->
 
 <!-- BEGIN Flash Charts -->
-<script type="text/javascript" src="includes/js/swfobject.js"></script>
+<script type="text/javascript" src="<?php echo $_SESSION['SITE_URL']?>includes/js/swfobject.js"></script>
 <!-- END Flash Charts -->
 
 <!-- BEGIN Date Range Selector - moved to head to support event suppression dialog -->
-<script type="text/javascript" src="includes/js/jquery/plugins/daterangepicker.jQuery.js"></script>
+<script type="text/javascript" src="<?php echo $_SESSION['SITE_URL']?>includes/js/jquery/plugins/daterangepicker.jQuery.js"></script>
 <!-- END Date Range Selector -->
 
 
