@@ -191,17 +191,17 @@ if ($eids) {
 $eids = $sel_eid;
 if ($eids) {
     $where .= " AND eid IN (";
-    $sph_msg_mask .= " @eid ";
+//    $sph_msg_mask .= " @eid ";
     
     foreach ($eids as $eid) {
             $where.= "'$eid',";
-            $sph_msg_mask .= "$eid|";
+//          $sph_msg_mask .= "$eid|";
         $qstring .= "&sel_eid[]=$eid";
     }
     $where = rtrim($where, ",");
-    $sph_msg_mask = rtrim($sph_msg_mask, "|");
+//  $sph_msg_mask = rtrim($sph_msg_mask, "|");
     $where .= ")";
-    $sph_msg_mask .= " ";
+//  $sph_msg_mask .= " ";
 }
 
 // portlet-programs
@@ -323,7 +323,8 @@ if ($_SESSION['SPX_ENABLE'] == "1") {
         $escaped = str_replace("\|","|",$escaped);
         $escaped = str_replace("\!","!",$escaped);
         // #33 CDUKES: Added masks below so that users can search via @ keyword
-        $kwd = preg_replace ('/^@(notes|sev|fac|prg|mne|host|eid).*/i', '$1', $msg_mask_get);
+//      $kwd = preg_replace ('/^@(notes|sev|fac|prg|mne|host|eid).*/i', '$1', $msg_mask_get);
+        $kwd = preg_replace ('/^@(notes|host).*/i', '$1', $msg_mask_get);
         switch ($kwd) {
             case "notes":
                 $escaped = str_ireplace("\@notes","",$escaped);
@@ -351,10 +352,11 @@ if ($_SESSION['SPX_ENABLE'] == "1") {
                 $escaped = str_ireplace("\@host","",$escaped);
                 $msg_mask = "$sph_msg_mask @HOST $escaped";
             break;
-            case "eid":
+/*          case "eid":
                 $escaped = str_ireplace("\@eid","",$escaped);
                 $msg_mask = "$sph_msg_mask @EID $escaped";
             break;
+*/
             default:
             $msg_mask = "$sph_msg_mask @MSG $escaped";
         }
@@ -411,6 +413,8 @@ if ($_SESSION['SPX_ENABLE'] == "1") {
         $cl->SetFilter( 'severity', $severities ); }
     if ($facilities) {
         $cl->SetFilter( 'facility', $facilities ); }
+    if ($eids) {
+        $cl->SetFilter( 'eid', $eids ); }
 
     // Convert datetime to timestamp
     $timestamp_array = date_parse($filter_fo_start);
