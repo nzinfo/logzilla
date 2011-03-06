@@ -726,7 +726,7 @@ endswitch;
         echo "<td class=\"s_td\"><input class=\"checkbox\" type='checkbox' name='dbid[]' value='$row[id]'></td>";
         if($_SESSION['SNARE'] == "1") {
             if ($row['eid'] > 0) {
-            echo "<td class=\"s_td\"><a href=$_SESSION[SITE_URL]$qstring&eids[]=$row[eid]>$row[eid]</a></td>\n";
+            echo "<td class=\"s_td\"><a href=\"$_SESSION[SNARE_EID_URL]$row[eid]\" target=\"_new\"><span class=\"ui-icon ui-icon-search\"></span></a><a href=$_SESSION[SITE_URL]$qstring&eids[]=$row[eid]>$row[eid]</a></td>\n";
             } else {
             echo "<td class=\"s_td\">N/A</td>\n";
             }
