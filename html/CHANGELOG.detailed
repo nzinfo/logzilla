@@ -1,5 +1,9 @@
 CHANGELOG
 
+3.1.206 - Fix
+CD:
+ - Fixed #102 (again!) - Horizontal scroll bar should not appear on mne and hosts selector.
+
 3.1.205 - Fix/Enhancements
 CD:
  - #107 - Added Snare to LogZilla (db_insert, eventid tracking, charts, table display, etc.) Enable under Admin>Settings>Snare
