@@ -1,5 +1,9 @@
 CHANGELOG
 
+3.1.207 - Enhancement
+CD:
+ - Added small search icon to Snare/Windows EID's to allow evenid.net lookups on events.
+
 3.1.206 - Fix
 CD:
  - Fixed #102 (again!) - Horizontal scroll bar should not appear on mne and hosts selector.
