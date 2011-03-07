@@ -233,7 +233,7 @@ if( !tm_done ) {
 <!-- END Cookies -->
 
 <!-- BEGIN Sticky -->
-<script type="text/javascript" src="includes/js/jquery/plugins/jquery.stickyforms.js"></script>
+<script type="text/javascript" src="includes/js/jquery/plugins/jquery.StickyForms.js"></script>
 <!-- END Sticky -->
 
 <!-- BEGIN Tabs -->
@@ -1001,6 +1001,7 @@ jQuery("#btnGraph").click( function() {
         $("#results").append("<input type='hidden' name='eids' value='"+eid+"'>");
         $("#results").append("<input type='hidden' name='page' value='Graph'>");
         }); 
+
 //---------------------------------------------------------------
 // END: Submit Buttons
 //---------------------------------------------------------------
@@ -1326,6 +1327,22 @@ $(document).ready(function(){
 <!-- C is for Cookie -->
 <script type="text/javascript">
 $(document).ready(function(){
+function get_cookies_array() {
+
+    var cookies = { };
+
+    if (document.cookie && document.cookie != '') {
+        var split = document.cookie.split(';');
+        for (var i = 0; i < split.length; i++) {
+            var name_value = split[i].split("=");
+            name_value[0] = name_value[0].replace(/^ /, '');
+            cookies[decodeURIComponent(name_value[0])] = decodeURIComponent(name_value[1]);
+        }
+    }
+
+    return cookies;
+   
+}
 document.cookie = 'name=pagesel; path=<?php echo $_SESSION['SITE_URL']?>'
 $("#severities").change(function(){
     var val = $(this).val();
@@ -1535,7 +1552,19 @@ $("#graphtype").each(function(){
         });
     };
     });
-});
+
+function clearCookies() {
+    var cookies = get_cookies_array();
+    for(var name in cookies) {
+        if ((name !== "PHPSESSID") && (name !== "name")) {
+        $.cookie(name, null);
+        }
+    }
+}
+jQuery("input:reset").click( function() { 
+        clearCookies();
+        }); 
+}); // end doc ready
 </script>
 <!-- End Cookies -->
 

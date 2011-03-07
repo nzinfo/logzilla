@@ -1,5 +1,9 @@
 CHANGELOG
 
+3.1.210 - Enhancement
+CD:
+ - More work on #47 - Cookies (added clearCookies() for reset button)
+
 3.1.209 - Bugfix
 TH:
  - Use EID as number not as text
