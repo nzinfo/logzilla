@@ -788,6 +788,8 @@ $qstring = myURL().$qstring;
 if ($_SESSION['DEBUG'] > 0 ) {
     if (($_SESSION['SPX_ENABLE'] == "1") && ($msg_mask !== '')) {
         echo "<b><u>Sphinx Query</u></b><pre class=\"code\">$msg_mask</pre><br>\n";
+    }
+    if ($_SESSION['SPX_ENABLE'] == "1") {
         echo "<b><u>Query type</u></b><br>$qtype<br><br>\n";
         echo "<b><u>Results</u></b><br>\n";
         echo "Found ".$sphinx_results['total']." matching documents in ".$sphinx_results['time']." seconds<br>\n";
