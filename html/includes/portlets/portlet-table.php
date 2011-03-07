@@ -1118,8 +1118,9 @@ function lzecs(msg){
             <option value="facility">All Matching Facilities</option>
             <option value="severity">All Matching Severities</option>
             <option value="program">All Matching Programs</option>
+            <!-- Message and Notes deferred until 3.3 release 
             <option value="mne">All Matching Mnemonics</option>
-            <option value="notes">All Matching Notes</option>
+            <option value="notes">All Matching Notes</option> -->
             <?php if($_SESSION['SNARE'] == "1") {
                 echo '<option value="eid">All Matching EventId\'s</option>';
             }?>
