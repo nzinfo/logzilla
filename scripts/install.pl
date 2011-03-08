@@ -38,7 +38,7 @@ sub p {
 }
 
 my $version = "3.1";
-my $subversion = ".214";
+my $subversion = ".215";
 
 # Grab the base path
 my $lzbase = getcwd;
@@ -401,16 +401,10 @@ if ($ok =~ /[Yy]/) {
         (`suppress`.`expire` > now()))) or $dbtable.`mne` in
         (select `suppress`.`name` from `suppress` where
         ((`suppress`.`col` = 'mnemonic') and
-        (`suppress`.`expire` > now()))) or $dbtable.`msg` in
-        (select `suppress`.`name` from `suppress` where
-        ((`suppress`.`col` = 'msg') and (`suppress`.`expire` >
-        now()))) or $dbtable.`counter` in (select
+        (`suppress`.`expire` > now()))) or $dbtable.`counter` in (select
         `suppress`.`name` from `suppress` where
         ((`suppress`.`col` = 'counter') and
-        (`suppress`.`expire` > now()))) or $dbtable.`notes` in
-        (select `suppress`.`name` from `suppress` where
-        ((`suppress`.`col` = 'notes') and (`suppress`.`expire`
-        > now()))))
+        (`suppress`.`expire` > now()))))
         ") or die "Could not create $dbtable table: $DBI::errstr";
     $sth->execute;
 
@@ -433,15 +427,9 @@ if ($ok =~ /[Yy]/) {
         (not($dbtable.`mne` in (select `suppress`.`name` from
         `suppress` where ((`suppress`.`col` = 'mnemonic') and
         (`suppress`.`expire` > now()))))) and
-        (not($dbtable.`msg` in (select `suppress`.`name` from
-        `suppress` where ((`suppress`.`col` = 'msg') and
-        (`suppress`.`expire` > now()))))) and
         (not($dbtable.`counter` in (select `suppress`.`name`
         from `suppress` where ((`suppress`.`col` = 'counter')
-            and (`suppress`.`expire` > now()))))) and
-        (not($dbtable.`notes` in (select `suppress`.`name` from
-        `suppress` where ((`suppress`.`col` = 'notes') and
-        (`suppress`.`expire` > now()))))))
+            and (`suppress`.`expire` > now()))))))
         ") or die "Could not create $dbtable table: $DBI::errstr";
     $sth->execute;
 
