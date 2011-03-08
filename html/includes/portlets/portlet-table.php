@@ -745,12 +745,13 @@ endswitch;
             $msg = preg_replace('/.*%(\w+-.*\d-\w+)\s?:/', '$1', $msg);
         }
         # CDUKES: [[ticket:41]] - break long text so it doesn't scroll off the page
-        $msg = wordwrap($msg, 90, "<br>", true);
+        $msg = wordwrap($msg, 90, " <br> ", true);
         if($_SESSION['MSG_EXPLODE'] == "1") {
             $explode_url = "";
             $pieces = explode(" ", $msg);
             foreach($pieces as $value) {
-                $explode_url .= " <a href=\"$_SESSION[SITE_URL]$qstring&msg_mask=".urlencode($value)."\"> ".$value." </a> ";
+            	// url-encoding w/o quot makes sphinx happier
+                $explode_url .= " <a href=\"$_SESSION[SITE_URL]$qstring&msg_mask=".urlencode(trim($value, "\x22"))."\"> ".$value." </a> ";
             }
         }
         // Link to LZECS if info is available
@@ -1118,13 +1119,19 @@ function lzecs(msg){
             <option value="facility">All Matching Facilities</option>
             <option value="severity">All Matching Severities</option>
             <option value="program">All Matching Programs</option>
-            <!-- Message and Notes deferred until 3.3 release 
+       
             <option value="mne">All Matching Mnemonics</option>
+  
+       <!-- Message and Notes deferred until 3.3 release 
             <option value="notes">All Matching Notes</option> -->
+            
             <?php if($_SESSION['SNARE'] == "1") {
                 echo '<option value="eid">All Matching EventId\'s</option>';
             }?>
-            <option value="msg">All Matching Messages</option>
+            
+       <!-- Message and Notes deferred until 3.3 release 
+            <option value="msg">All Matching Messages</option> -->
+            
             </select>
             </div>
             </td>

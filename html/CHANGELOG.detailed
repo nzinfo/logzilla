@@ -1,5 +1,13 @@
 CHANGELOG
 
+3.1.215 - Minor
+TH:
+ - #59  comment out the right column in suppression (msg and notes)
+ - #59  adapt the views (delete msg and notes stuff)
+ - #107 Changed column definition for EID's in sphinx.conf
+ - #9   fixed "bound together"
+ - #9   fixed the '"' bug
+
 3.1.214 - Minor
 CD:
  - #107 Forgot to add portlet-snare_eid to svn :-)
