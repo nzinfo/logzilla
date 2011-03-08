@@ -61,7 +61,7 @@ $custom = <<<CUSTOM
 //---------------------------------------------------------------
 // BEGIN: Mnemonic Select Dialog
 //---------------------------------------------------------------
-$("#portlet-header_Mnemonics .ui-icon-plus").click(function() {
+$("#portlet-header_Mnemonics .ui-icon-search").click(function() {
     $("#mne_dialog").dialog({
                 bgiframe: true,
                 resizable: false,

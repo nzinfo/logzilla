@@ -1,5 +1,10 @@
 CHANGELOG
 
+3.1.217 - Enhancements
+CD:
+ - Changed + icon in hosts, mne, eid to a search icon.
+ - Added a "where eid>0" for Snare EID's (no point in listing non-snare events in the portlet)
+
 3.1.216 - Minor
 TH:
  - #9   fixed "bound together" in tail

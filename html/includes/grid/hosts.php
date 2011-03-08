@@ -61,7 +61,7 @@ $custom = <<<CUSTOM
 //---------------------------------------------------------------
 // BEGIN: Host Select Dialog
 //---------------------------------------------------------------
-$("#portlet-header_Hosts .ui-icon-plus").click(function() {
+$("#portlet-header_Hosts .ui-icon-search").click(function() {
     $("#host_dialog").dialog({
                 bgiframe: true,
                 resizable: false,

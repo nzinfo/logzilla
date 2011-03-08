@@ -20,7 +20,7 @@ $dbLink = db_connect_syslog(DBADMIN, DBADMINPW);
 // -------------------------
 // Get EventId
 // -------------------------
-$sql = "SELECT COUNT(*) FROM (SELECT eid FROM snare_eid) AS result";
+$sql = "SELECT COUNT(*) FROM (SELECT eid FROM snare_eid where eid>0) AS result";
 $result = perform_query($sql, $dbLink, $_REQUEST['pageId']);
 $total = mysql_fetch_row($result);
 $count = $total[0];
@@ -47,7 +47,7 @@ if (cnt < 11) {
 </thead>
   <tbody>
 <?php
-        $sql = "SELECT * FROM (SELECT * FROM snare_eid ORDER BY lastseen DESC) AS result LIMIT ". $_SESSION['PORTLET_EID_LIMIT']; 
+        $sql = "SELECT * FROM (SELECT * FROM snare_eid where eid>0 ORDER BY lastseen DESC) AS result LIMIT ". $_SESSION['PORTLET_EID_LIMIT']; 
         $result = perform_query($sql, $dbLink, "portlet-snare_eid.php"); 
         $i=0; 
         while($row = fetch_array($result)) { 
@@ -78,7 +78,7 @@ if (cnt < 11) {
         echo "</tbody>";
         echo "</table>";
 } else { 
-    echo "<b><u>No EventIds</u></b><br>";
+    echo "<b><u>No Windows Event ID's</u></b><br>";
     echo "Either wait for caches to update, or restart your syslog daemon.\n<br>";
 } 
 ?>

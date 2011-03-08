@@ -61,7 +61,7 @@ $custom = <<<CUSTOM
 //---------------------------------------------------------------
 // BEGIN: EventId Select Dialog
 //---------------------------------------------------------------
-$("#portlet-header_Snare_EventId .ui-icon-plus").click(function() {
+$("#portlet-header_Snare_EventId .ui-icon-search").click(function() {
     $("#eid_dialog").dialog({
                 bgiframe: true,
                 resizable: false,
