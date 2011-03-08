@@ -1346,10 +1346,10 @@ function get_cookies_array() {
 document.cookie = 'name=pagesel; path=<?php echo $_SESSION['SITE_URL']?>'
 $("#severities").change(function(){
     var val = $(this).val();
-    $.cookie("severities", val);
+    $.cookie("cookie_severities", val);
     });
 $("#severities").each(function(){
-    var data = $.cookie("severities"); 
+    var data = $.cookie("cookie_severities"); 
     if (data) {
     var i = data.split(',');
     $.each(i, function() {
@@ -1359,10 +1359,10 @@ $("#severities").each(function(){
     });
 $("#facilities").change(function(){
     var val = $(this).val();
-    $.cookie("facilities", val);
+    $.cookie("cookie_facilities", val);
     });
 $("#facilities").each(function(){
-    var data = $.cookie("facilities"); 
+    var data = $.cookie("cookie_facilities"); 
     if (data) {
     var i = data.split(',');
     $.each(i, function() {
@@ -1372,10 +1372,10 @@ $("#facilities").each(function(){
     });
 $("#programs").change(function(){
     var val = $(this).val();
-    $.cookie("programs", val);
+    $.cookie("cookie_programs", val);
     });
 $("#programs").each(function(){
-    var data = $.cookie("programs"); 
+    var data = $.cookie("cookie_programs"); 
     if (data) {
     var i = data.split(',');
     $.each(i, function() {
@@ -1385,10 +1385,10 @@ $("#programs").each(function(){
     });
 $("#mnemonics").change(function(){
     var val = $(this).val();
-    $.cookie("mnemonics", val);
+    $.cookie("cookie_mnemonics", val);
     });
 $("#mnemonics").each(function(){
-    var data = $.cookie("mnemonics"); 
+    var data = $.cookie("cookie_mnemonics"); 
     if (data) {
     var i = data.split(',');
     $.each(i, function() {
@@ -1398,10 +1398,10 @@ $("#mnemonics").each(function(){
     });
 $("#hosts").change(function(){
     var val = $(this).val();
-    $.cookie("hosts", val);
+    $.cookie("cookie_hosts", val);
     });
 $("#hosts").each(function(){
-    var data = $.cookie("hosts"); 
+    var data = $.cookie("cookie_hosts"); 
     if (data) {
     var i = data.split(',');
     $.each(i, function() {
@@ -1411,10 +1411,10 @@ $("#hosts").each(function(){
     });
 $("#topx").change(function(){
     var val = $(this).val();
-    $.cookie("topx", val);
+    $.cookie("cookie_topx", val);
     });
 $("#topx").each(function(){
-    var data = $.cookie("topx"); 
+    var data = $.cookie("cookie_topx"); 
     if (data) {
     var i = data.split(',');
     $.each(i, function() {
@@ -1424,10 +1424,10 @@ $("#topx").each(function(){
     });
 $("#dupop").change(function(){
     var val = $(this).val();
-    $.cookie("dupop", val);
+    $.cookie("cookie_dupop", val);
     });
 $("#dupop").each(function(){
-    var data = $.cookie("dupop"); 
+    var data = $.cookie("cookie_dupop"); 
     if (data) {
     var i = data.split(',');
     $.each(i, function() {
@@ -1435,25 +1435,12 @@ $("#dupop").each(function(){
         });
     };
     });
-$("#dupcount").change(function(){
-    var val = $(this).val();
-    $.cookie("dupcount", val);
-    });
-$("#dupcount").each(function(){
-    var data = $.cookie("dupcount"); 
-    if (data) {
-    var i = data.split(',');
-    $.each(i, function() {
-        $("select#dupcount").val(i); 
-        });
-    };
-    });
 $("#orderby").change(function(){
     var val = $(this).val();
-    $.cookie("orderby", val);
+    $.cookie("cookie_orderby", val);
     });
 $("#orderby").each(function(){
-    var data = $.cookie("orderby"); 
+    var data = $.cookie("cookie_orderby"); 
     if (data) {
     var i = data.split(',');
     $.each(i, function() {
@@ -1463,10 +1450,10 @@ $("#orderby").each(function(){
     });
 $("#order").change(function(){
     var val = $(this).val();
-    $.cookie("order", val);
+    $.cookie("cookie_order", val);
     });
 $("#order").each(function(){
-    var data = $.cookie("order"); 
+    var data = $.cookie("cookie_order"); 
     if (data) {
     var i = data.split(',');
     $.each(i, function() {
@@ -1476,10 +1463,10 @@ $("#order").each(function(){
     });
 $("#limit").change(function(){
     var val = $(this).val();
-    $.cookie("limit", val);
+    $.cookie("cookie_limit", val);
     });
 $("#limit").each(function(){
-    var data = $.cookie("limit"); 
+    var data = $.cookie("cookie_limit"); 
     if (data) {
     var i = data.split(',');
     $.each(i, function() {
@@ -1489,10 +1476,10 @@ $("#limit").each(function(){
     });
 $("#groupby").change(function(){
     var val = $(this).val();
-    $.cookie("groupby", val);
+    $.cookie("cookie_groupby", val);
     });
 $("#groupby").each(function(){
-    var data = $.cookie("groupby"); 
+    var data = $.cookie("cookie_groupby"); 
     if (data) {
     var i = data.split(',');
     $.each(i, function() {
@@ -1502,10 +1489,10 @@ $("#groupby").each(function(){
     });
 $("#chart_type").change(function(){
     var val = $(this).val();
-    $.cookie("chart_type", val);
+    $.cookie("cookie_chart_type", val);
     });
 $("#chart_type").each(function(){
-    var data = $.cookie("chart_type"); 
+    var data = $.cookie("cookie_chart_type"); 
     if (data) {
     var i = data.split(',');
     $.each(i, function() {
@@ -1515,10 +1502,10 @@ $("#chart_type").each(function(){
     });
 $("#tail").change(function(){
     var val = $(this).val();
-    $.cookie("tail", val);
+    $.cookie("cookie_tail", val);
     });
 $("#tail").each(function(){
-    var data = $.cookie("tail"); 
+    var data = $.cookie("cookie_tail"); 
     if (data) {
     var i = data.split(',');
     $.each(i, function() {
@@ -1528,10 +1515,10 @@ $("#tail").each(function(){
     });
 $("#show_suppressed").change(function(){
     var val = $(this).val();
-    $.cookie("show_suppressed", val);
+    $.cookie("cookie_show_suppressed", val);
     });
 $("#show_suppressed").each(function(){
-    var data = $.cookie("show_suppressed"); 
+    var data = $.cookie("cookie_show_suppressed"); 
     if (data) {
     var i = data.split(',');
     $.each(i, function() {
@@ -1541,10 +1528,10 @@ $("#show_suppressed").each(function(){
     });
 $("#graphtype").change(function(){
     var val = $(this).val();
-    $.cookie("graphtype", val);
+    $.cookie("cookie_graphtype", val);
     });
 $("#graphtype").each(function(){
-    var data = $.cookie("graphtype"); 
+    var data = $.cookie("cookie_graphtype"); 
     if (data) {
     var i = data.split(',');
     $.each(i, function() {
@@ -1567,4 +1554,16 @@ jQuery("input:reset").click( function() {
 }); // end doc ready
 </script>
 <!-- End Cookies -->
+
+<!-- Begin Feedback Button -->
+<?php if ($_SESSION['FEEDBACK'] == "1") { ?>
+<script type="text/javascript">
+(function() {
+ var uv = document.createElement('script'); uv.type = 'text/javascript'; uv.async = true;
+ uv.src = ('https:' == document.location.protocol ? 'https://' : 'http://') + 'widget.uservoice.com/F0qq3CXmGGHuLQx6tkjizQ.js';
+ var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(uv, s);
+ })();
+</script>
+<?php } ?>
+<!-- End Feedback Button -->
 
