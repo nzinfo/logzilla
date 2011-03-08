@@ -2,7 +2,7 @@
 --
 -- Host: localhost    Database: syslog
 -- ------------------------------------------------------
--- Server version	5.1.41-3ubuntu12.9
+-- Server version	5.1.41-3ubuntu12.9-log
 
 /*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
 /*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
@@ -24,12 +24,12 @@ DROP TABLE IF EXISTS `snare_eid`;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `snare_eid` (
   `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
-  `eid` int(10) unsigned NOT NULL DEFAULT '0',
+  `eid` smallint(5) unsigned NOT NULL DEFAULT '0',
   `lastseen` datetime NOT NULL,
   `seen` smallint(5) unsigned NOT NULL DEFAULT '1',
   PRIMARY KEY (`id`),
   UNIQUE KEY `eid` (`eid`)
-) ENGINE=MyISAM DEFAULT CHARSET=latin1;
+) ENGINE=MyISAM AUTO_INCREMENT=2 DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -50,4 +50,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2011-03-04 12:42:30
+-- Dump completed on 2011-03-08 11:06:11
