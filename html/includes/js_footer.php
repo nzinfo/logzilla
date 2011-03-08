@@ -82,6 +82,7 @@ $(document).ready(function(){
 	   	.find(".portlet-header")
 	   	.addClass("ui-widget-header ui-corner-all")
 	   	// .prepend('<span class="ui-icon ui-icon-plusthick"></span>')
+	   	// Future - for release 3.3: .prepend('<span class="ui-icon ui-icon-help"></span><span class="ui-icon ui-icon-carat-2-n-s"></span>')
 	   	.prepend('<span class="ui-icon ui-icon-help"></span>')
 	   	.end()
 	   	.find(".portlet-content");
@@ -127,12 +128,20 @@ $(document).ready(function(){
         //---------------------------------------------------------------
         // END: Context sensitive help
         //---------------------------------------------------------------
-		/*
-           $(".portlet-header .ui-icon").click(function() {
-		   	$(this).toggleClass("ui-icon-minusthick");
-		   	$(this).parents(".portlet:first").find(".portlet-content").toggle();
+           $(".portlet-header .ui-icon-carat-2-n-s").click(function() {
+                   $(this).toggleClass("ui-icon-carat-2-n-s");
+                   var id = $(this).parents(".portlet:first").find(".portlet-content").attr('id');
+                   var state = $.cookie( id +"ptoggle");
+                   // alert (state)
+                   if ((state == "up" ) || (state == "null")){
+                   $(this).parents(".portlet:first").find(".portlet-content").slideDown("fast");
+                    $.cookie( id +'ptoggle', 'down', { path: '/', expires: 365 });
+                   } else {
+                   $(this).parents(".portlet:first").find(".portlet-content").slideUp("fast");
+                    $.cookie( id +'ptoggle', 'up', { path: '/', expires: 365 });
+                   }
+                   // Above needs work - cookies aren't working :-(
 		   	});
-            */
 		$(".column").disableSelection();
 });
 function savelayout(){
@@ -979,9 +988,9 @@ $(".portlet-header .ui-icon-disk").click(function() {
 //---------------------------------------------------------------
 // BEGIN: Submit Buttons
 //---------------------------------------------------------------
-$("#portlet-header_Hosts").prepend('<a href="#"><span class="ui-icon ui-icon-plus"></span></a>');
-$("#portlet-header_Mnemonics").prepend('<a href="#"><span class="ui-icon ui-icon-plus"></span></a>');
-$("#portlet-header_Snare_EventId").prepend('<a href="#"><span class="ui-icon ui-icon-plus"></span></a>');
+$("#portlet-header_Hosts").prepend('<a href="#"><span class="ui-icon ui-icon-search"></span></a>');
+$("#portlet-header_Mnemonics").prepend('<a href="#"><span class="ui-icon ui-icon-search"></span></a>');
+$("#portlet-header_Snare_EventId").prepend('<a href="#"><span class="ui-icon ui-icon-search"></span></a>');
 // **Special** - this will append to the search form on the main page for any checkboxes clicked on the hosts grid
 jQuery("#btnSearch").click( function() { 
         var hosts = jQuery("#hostsgrid").jqGrid('getGridParam','selarrrow'); 
