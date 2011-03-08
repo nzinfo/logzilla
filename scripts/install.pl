@@ -38,7 +38,7 @@ sub p {
 }
 
 my $version = "3.1";
-my $subversion = ".211";
+my $subversion = ".212";
 
 # Grab the base path
 my $lzbase = getcwd;
@@ -306,6 +306,10 @@ if ($ok =~ /[Yy]/) {
             ") or die "Could not update settings table: $DBI::errstr";
         $sth->execute;
     }
+    my $sth = $dbh->prepare("
+        update triggers set mailto='$email', mailfrom='$email';
+        ") or die "Could not update triggers table: $DBI::errstr";
+    $sth->execute;
 
 
 
@@ -919,6 +923,32 @@ if (-d "$crondir") {
         print "www-data ALL=NOPASSWD:$lzbase/scripts/licadd.pl\n";
     }
 
+# Attempt to fix AppArmor
+    my $file = "/etc/apparmor.d/usr.sbin.mysqld";
+    if (-f "$file") {
+        open FILE, "<$file";
+        my @lines = <FILE>;
+        close FILE;
+        if (!grep(/logzilla_import/, @lines)) {
+            print("\n\033[1m\n\n========================================\033[0m\n");
+            print("\n\033[1m\tAppArmor Setup\n\033[0m");
+            print("\n\033[1m========================================\n\n\033[0m\n\n");
+            print "In order for MySQL to import and export data, you must take measures to allow it access from AppArmor.\n";
+            print "Install will attempt do do this for you, but please be sure to check /etc/apparmor.d/usr.sbin.mysqld and also to restart the AppArmor daemon once install completes.\n";
+            my $ok  = &p("Ok to continue?", "y");
+            if ($ok =~ /[Yy]/) {
+                print "Adding the following to lines to $file:\n";
+                print "/tmp/logzilla_import.txt r,\n$lzbase/exports/** rw,\n";
+                open my $config, '+<', "$file" or warn "FAILED: $!\n";
+                my @all = <$config>;
+                seek $config, 0, 0;
+                splice @all, -1, 0, "  /tmp/logzilla_import.txt r,\n  $lzbase/exports/** rw,\n";
+                print $config @all;
+                close $config;
+            }
+        }
+    }
+
 # syslog-ng HUP
     print "\n\n";
     my $checkprocess = `ps -C syslog-ng -o pid=`;
@@ -942,6 +972,21 @@ if (-d "$crondir") {
 }
 
 
+# Feedback button
+print("\n\033[1m\n\n========================================\033[0m\n");
+print("\n\033[1m\tFeedback and Support\n\033[0m");
+print("\n\033[1m========================================\n\n\033[0m\n\n");
+
+print "\nIf it's ok with you, install will include a small 'Feedback and Support' icon which will appear at the bottom right side of the web page\n";
+print "This non-intrusive button will allow you to instantly open support requests with us as well as make suggestions on how we can make LogZilla better.\n";
+print "You can always disable it by selecting 'Admin>Settings>FEEDBACK' from the main menu\n";
+my $ok  = &p("Ok to add support and feedback?", "y");
+if ($ok =~ /[Yy]/) {
+    my $sth = $dbh->prepare("
+        update settings set value='1' where name='FEEDBACK';
+        ") or die "Could not update settings table: $DBI::errstr";
+    $sth->execute;
+}
 
 
 print("\n\033[1m\tLogZilla installation complete!\n\033[0m");

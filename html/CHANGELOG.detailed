@@ -1,5 +1,11 @@
 CHANGELOG
 
+3.1.212 - Update
+CD:
+ - Added install.pl attempt to modify Apparmor profile when detected.
+ - Added feedback button (can be disabled via admin>settings>feedback.
+ - Fixed #109 - Cookies overriding post variables.
+
 3.1.211 - Update
 CD:
  - Updated enum(eid) column for event suppression table.
