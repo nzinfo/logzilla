@@ -1343,202 +1343,6 @@ function get_cookies_array() {
     return cookies;
    
 }
-document.cookie = 'name=pagesel; path=<?php echo $_SESSION['SITE_URL']?>'
-$("#severities").change(function(){
-    var val = $(this).val();
-    $.cookie("cookie_severities", val);
-    });
-$("#severities").each(function(){
-    var data = $.cookie("cookie_severities"); 
-    if (data) {
-    var i = data.split(',');
-    $.each(i, function() {
-        $("select#severities").val(i); 
-        });
-    };
-    });
-$("#facilities").change(function(){
-    var val = $(this).val();
-    $.cookie("cookie_facilities", val);
-    });
-$("#facilities").each(function(){
-    var data = $.cookie("cookie_facilities"); 
-    if (data) {
-    var i = data.split(',');
-    $.each(i, function() {
-        $("select#facilities").val(i); 
-        });
-    };
-    });
-$("#programs").change(function(){
-    var val = $(this).val();
-    $.cookie("cookie_programs", val);
-    });
-$("#programs").each(function(){
-    var data = $.cookie("cookie_programs"); 
-    if (data) {
-    var i = data.split(',');
-    $.each(i, function() {
-        $("select#programs").val(i); 
-        });
-    };
-    });
-$("#mnemonics").change(function(){
-    var val = $(this).val();
-    $.cookie("cookie_mnemonics", val);
-    });
-$("#mnemonics").each(function(){
-    var data = $.cookie("cookie_mnemonics"); 
-    if (data) {
-    var i = data.split(',');
-    $.each(i, function() {
-        $("select#mnemonics").val(i); 
-        });
-    };
-    });
-$("#hosts").change(function(){
-    var val = $(this).val();
-    $.cookie("cookie_hosts", val);
-    });
-$("#hosts").each(function(){
-    var data = $.cookie("cookie_hosts"); 
-    if (data) {
-    var i = data.split(',');
-    $.each(i, function() {
-        $("select#hosts").val(i); 
-        });
-    };
-    });
-$("#topx").change(function(){
-    var val = $(this).val();
-    $.cookie("cookie_topx", val);
-    });
-$("#topx").each(function(){
-    var data = $.cookie("cookie_topx"); 
-    if (data) {
-    var i = data.split(',');
-    $.each(i, function() {
-        $("select#topx").val(i); 
-        });
-    };
-    });
-$("#dupop").change(function(){
-    var val = $(this).val();
-    $.cookie("cookie_dupop", val);
-    });
-$("#dupop").each(function(){
-    var data = $.cookie("cookie_dupop"); 
-    if (data) {
-    var i = data.split(',');
-    $.each(i, function() {
-        $("select#dupop").val(i); 
-        });
-    };
-    });
-$("#orderby").change(function(){
-    var val = $(this).val();
-    $.cookie("cookie_orderby", val);
-    });
-$("#orderby").each(function(){
-    var data = $.cookie("cookie_orderby"); 
-    if (data) {
-    var i = data.split(',');
-    $.each(i, function() {
-        $("select#orderby").val(i); 
-        });
-    };
-    });
-$("#order").change(function(){
-    var val = $(this).val();
-    $.cookie("cookie_order", val);
-    });
-$("#order").each(function(){
-    var data = $.cookie("cookie_order"); 
-    if (data) {
-    var i = data.split(',');
-    $.each(i, function() {
-        $("select#order").val(i); 
-        });
-    };
-    });
-$("#limit").change(function(){
-    var val = $(this).val();
-    $.cookie("cookie_limit", val);
-    });
-$("#limit").each(function(){
-    var data = $.cookie("cookie_limit"); 
-    if (data) {
-    var i = data.split(',');
-    $.each(i, function() {
-        $("select#limit").val(i); 
-        });
-    };
-    });
-$("#groupby").change(function(){
-    var val = $(this).val();
-    $.cookie("cookie_groupby", val);
-    });
-$("#groupby").each(function(){
-    var data = $.cookie("cookie_groupby"); 
-    if (data) {
-    var i = data.split(',');
-    $.each(i, function() {
-        $("select#groupby").val(i); 
-        });
-    };
-    });
-$("#chart_type").change(function(){
-    var val = $(this).val();
-    $.cookie("cookie_chart_type", val);
-    });
-$("#chart_type").each(function(){
-    var data = $.cookie("cookie_chart_type"); 
-    if (data) {
-    var i = data.split(',');
-    $.each(i, function() {
-        $("select#chart_type").val(i); 
-        });
-    };
-    });
-$("#tail").change(function(){
-    var val = $(this).val();
-    $.cookie("cookie_tail", val);
-    });
-$("#tail").each(function(){
-    var data = $.cookie("cookie_tail"); 
-    if (data) {
-    var i = data.split(',');
-    $.each(i, function() {
-        $("select#tail").val(i); 
-        });
-    };
-    });
-$("#show_suppressed").change(function(){
-    var val = $(this).val();
-    $.cookie("cookie_show_suppressed", val);
-    });
-$("#show_suppressed").each(function(){
-    var data = $.cookie("cookie_show_suppressed"); 
-    if (data) {
-    var i = data.split(',');
-    $.each(i, function() {
-        $("select#show_suppressed").val(i); 
-        });
-    };
-    });
-$("#graphtype").change(function(){
-    var val = $(this).val();
-    $.cookie("cookie_graphtype", val);
-    });
-$("#graphtype").each(function(){
-    var data = $.cookie("cookie_graphtype"); 
-    if (data) {
-    var i = data.split(',');
-    $.each(i, function() {
-        $("select#graphtype").val(i); 
-        });
-    };
-    });
 
 function clearCookies() {
     var cookies = get_cookies_array();
@@ -1551,6 +1355,45 @@ function clearCookies() {
 jQuery("input:reset").click( function() { 
         clearCookies();
         }); 
+
+// Adapted from http://www.komodomedia.com/blog/2008/07/using-jquery-to-save-form-details/
+function remember( selector ){
+    $(selector).each(
+        function(){
+            //if this item has been cookied, restore it
+            var name = $(this).attr('id');
+            name = 'ck_' + name;
+            if( $.cookie( name ) ){
+                $(this).val( $.cookie(name) );
+            }
+            //assign a change function to the item to cookie it
+            $(this).change(
+                function(){
+                    $.cookie(name, $(this).val(), { path: '/', expires: 365 });
+// alert("saving cookie: " + name);
+                }
+            );
+        }
+    );
+};
+
+remember( '#severities' );
+remember( '#facilities' );
+remember( '#programs' );
+remember( '#topx' );
+remember( '#dupop' );
+remember( '#orderby' );
+remember( '#order' );
+remember( '#limit' );
+remember( '#groupby' );
+remember( '#chart_type' );
+remember( '#tail' );
+remember( '#show_suppressed' );
+remember( '#graphtype' );
+remember( '#mnemonics' );
+remember( '#hosts' );
+remember( '#eids' );
+
 }); // end doc ready
 </script>
 <!-- End Cookies -->
