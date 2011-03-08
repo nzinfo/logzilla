@@ -451,7 +451,7 @@ endswitch;
         echo "<tr id=\"$sev\">\n";
         if($_SESSION['SNARE'] == "1") {
             if ($row['eid'] > 0) {
-            echo "<td class=\"s_td\"><a href=$_SESSION[SITE_URL]$qstring&eids[]=$row[eid]>$row[eid]</a></td>\n";
+            echo "<td class=\"s_td\"><a href=$_SESSION[SITE_URL]$qstring&eids=$row[eid]>$row[eid]</a></td>\n";
             } else {
             echo "<td class=\"s_td\">N/A</td>\n";
             }
@@ -466,12 +466,13 @@ endswitch;
             $msg = preg_replace('/.*%(\w+-.*\d-\w+)\s?:/', '$1', $msg);
         }
         # CDUKES: [[ticket:41]] - break long text so it doesn't scroll off the page
-        $msg = wordwrap($msg, 90, "<br/>", true);
+        $msg = wordwrap($msg, 90, " <br> ", true);
         if($_SESSION['MSG_EXPLODE'] == "1") {
             $explode_url = "";
             $pieces = explode(" ", $msg);
             foreach($pieces as $value) {
-                $explode_url .= " <a href=\"$_SESSION[SITE_URL]$qstring&msg_mask=".urlencode($value)."\"> ".$value." </a> ";
+            	// url-encoding w/o quot makes sphinx happier
+                $explode_url .= " <a href=\"$_SESSION[SITE_URL]$qstring&msg_mask=".urlencode(trim($value, "\x22"))."\"> ".$value." </a> ";
             }
         }
         // Link to LZECS if info is available

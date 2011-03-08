@@ -1,5 +1,11 @@
 CHANGELOG
 
+3.1.216 - Minor
+TH:
+ - #9   fixed "bound together" in tail
+ - #9   fixed the '"' bug in tail
+ - fixed bug when clicking eid in the result page not filtering
+
 3.1.215 - Minor
 TH:
  - #59  comment out the right column in suppression (msg and notes)
