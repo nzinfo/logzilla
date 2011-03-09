@@ -38,7 +38,7 @@ sub p {
 }
 
 my $version = "3.1";
-my $subversion = ".217";
+my $subversion = ".218";
 
 # Grab the base path
 my $lzbase = getcwd;
@@ -256,6 +256,39 @@ if ($ok =~ /[Yy]/) {
     my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/triggers.sql`;
     print $res;
 
+# Groups
+    my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/groups.sql`;
+    print $res;
+
+# Insert totd data
+    my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/totd.sql`;
+    print $res;
+
+# Insert LZECS data
+    my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/lzecs.sql`;
+    print $res;
+
+# Insert Suppress data
+    my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/suppress.sql`;
+    print $res;
+
+# Insert ui_layout data
+    my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/ui_layout.sql`;
+    print $res;
+
+# Insert help data
+    my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/help.sql`;
+    print $res;
+
+# Insert history table
+    my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/history.sql`;
+    print $res;
+
+# Insert archives table
+    my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/archives.sql`;
+    print $res;
+
+
 
 # Insert settings data
     my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/settings.sql`;
@@ -305,6 +338,11 @@ if ($ok =~ /[Yy]/) {
             update settings set value=1 where name='SNARE';
             ") or die "Could not update settings table: $DBI::errstr";
         $sth->execute;
+    } else {
+        my $sth = $dbh->prepare("
+            delete from ui_layout where header='Snare EventId' and userid>0;
+            ") or die "Could not update ui layout for snare: $DBI::errstr";
+        $sth->execute;
     }
     if ($email ne "info\@logzilla.pro") {
         my $sth = $dbh->prepare("
@@ -312,26 +350,6 @@ if ($ok =~ /[Yy]/) {
             ") or die "Could not update triggers table: $DBI::errstr";
         $sth->execute;
     }
-
-# Feedback button
-    print("\n\033[1m\n\n========================================\033[0m\n");
-    print("\n\033[1m\tFeedback and Support\n\033[0m");
-    print("\n\033[1m========================================\n\n\033[0m\n\n");
-
-    print "\nIf it's ok with you, install will include a small 'Feedback and Support'\n";
-    print  "icon which will appear at the bottom right side of the web page\n";
-    print "This non-intrusive button will allow you to instantly open support \n";
-    print "requests with us as well as make suggestions on how we can make LogZilla better.\n";
-    print "You can always disable it by selecting 'Admin>Settings>FEEDBACK' from the main menu\n";
-    my $ok  = &p("Ok to add support and feedback?", "y");
-    if ($ok =~ /[Yy]/) {
-        my $sth = $dbh->prepare("
-            update settings set value='1' where name='FEEDBACK';
-            ") or die "Could not update settings table: $DBI::errstr";
-        $sth->execute;
-    }
-
-
 
 
 # Insert user data
@@ -349,38 +367,6 @@ if ($ok =~ /[Yy]/) {
         delete from users where username='guest';
         ") or die "Could not insert user data: $DBI::errstr";
     $sth->execute;
-
-# Groups
-    my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/groups.sql`;
-    print $res;
-
-# Insert totd data
-    my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/totd.sql`;
-    print $res;
-
-# Insert LZECS data
-    my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/lzecs.sql`;
-    print $res;
-
-# Insert Suppress data
-    my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/suppress.sql`;
-    print $res;
-
-# Insert ui_layout data
-    my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/ui_layout.sql`;
-    print $res;
-
-# Insert help data
-    my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/help.sql`;
-    print $res;
-
-# Insert history table
-    my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/history.sql`;
-    print $res;
-
-# Insert archives table
-    my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/archives.sql`;
-    print $res;
 
 # Create Views
     my $sth = $dbh->prepare("
@@ -432,6 +418,26 @@ if ($ok =~ /[Yy]/) {
             and (`suppress`.`expire` > now()))))))
         ") or die "Could not create $dbtable table: $DBI::errstr";
     $sth->execute;
+
+# Feedback button
+    print("\n\033[1m\n\n========================================\033[0m\n");
+    print("\n\033[1m\tFeedback and Support\n\033[0m");
+    print("\n\033[1m========================================\n\n\033[0m\n\n");
+
+    print "\nIf it's ok with you, install will include a small 'Feedback and Support'\n";
+    print  "icon which will appear at the bottom right side of the web page\n";
+    print "This non-intrusive button will allow you to instantly open support \n";
+    print "requests with us as well as make suggestions on how we can make LogZilla better.\n";
+    print "You can always disable it by selecting 'Admin>Settings>FEEDBACK' from the main menu\n";
+    my $ok  = &p("Ok to add support and feedback?", "y");
+    if ($ok =~ /[Yy]/) {
+        my $sth = $dbh->prepare("
+            update settings set value='1' where name='FEEDBACK';
+            ") or die "Could not update settings table: $DBI::errstr";
+        $sth->execute;
+    }
+
+
 
 
 

@@ -232,13 +232,14 @@ switch ($action) {
         $group = getgroup($user);
         if ($header !== "Assign Permissions") { // Button name comes through because it's an "input" type
             if ($value == 'true') {
+                logmsg("---\nHeader = $header\nValue = $value");
                 $sql = "UPDATE ui_layout SET group_access='$group' WHERE header='$header' and userid=(SELECT id FROM users WHERE username='$user')";
                 $result = perform_query($sql, $dbLink, $_SERVER['PHP_SELF']);
-                // echo "aff = " .mysql_affected_rows();
+                // logmsg("MySQL Affected Rows = " .mysql_affected_rows() . "\n");
                 if(mysql_affected_rows() != 1) {
                     // User doesn't have an entry (they are probably a new user who hasn't logged in yet)
                     // so we need to insert permissions for them.
-                    $sql = "REPLACE INTO ui_layout (userid, pagename, col, header, group_access, content) SELECT (SELECT id FROM users WHERE username='$user'),(SELECT DISTINCT pagename from ui_layout where header='$header'), (SELECT DISTINCT col from ui_layout where header='$header'), '$header', '$group', (SELECT DISTINCT content from ui_layout where header='$header')";
+                    $sql = "REPLACE INTO ui_layout (userid, pagename, col, header, group_access, content) SELECT (SELECT id FROM users WHERE username='$user'),(SELECT DISTINCT pagename from ui_layout where header='$header' AND userid=0), (SELECT DISTINCT col from ui_layout where header='$header' AND userid=0), '$header', '$group', (SELECT DISTINCT content from ui_layout where header='$header' and userid=0)";
                     perform_query($sql, $dbLink, $_SERVER['PHP_SELF']);
                 }
             } else {

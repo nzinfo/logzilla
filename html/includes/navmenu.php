@@ -20,7 +20,19 @@ session_start();
 <!-- Top Level -->
 <li><a onclick="$(this).animate({ opacity: 0.3 }, 500 );" href="<?php echo $_SESSION['SITE_URL']?>?page=Main"><img style='position: relative; left: 17%; text-align: center; vertical-align: middle; border: 0 none; width: 67px; height: 19px;' src='images/LogZilla_Letterhead_smoothfont_67x19_transparent.png' alt='Home'/></a></li>
 
+<?php
+if ($_SERVER["REQUEST_URI"] == $_SESSION['SITE_URL'] . "index.php") {
+    $today = intval(date("my")); 
+    if ($today < 911) { ?>
      <li><a href="includes/whatsnew.php" onclick="return hs.htmlExpand(this, { objectType: 'ajax', align: 'center', headingText: 'LogZilla v3.2 Features', width: 800} )">What's New?</a></li>
+         <?php } else { ?>
+     <li><a href="http://www.logzilla.pro" target="_new">Outdated Version</a></li>
+         <script type="text/javascript">
+         $(document).ready(function(){
+                 $('#msgbox_bl').jGrowl('Your version of LogZilla is outdated<br>Please visit <a href="http://www.logzilla.pro" target="_new">logzilla.pro</a> for the latest version.', { sticky: true });
+                 }); // end doc ready
+     </script>
+         <?php }} ?>
     <!-- BEGIN Top Level with 2nd Level -->
     <li><a href="#">
     <?php 

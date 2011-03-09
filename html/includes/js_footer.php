@@ -128,6 +128,7 @@ $(document).ready(function(){
         //---------------------------------------------------------------
         // END: Context sensitive help
         //---------------------------------------------------------------
+        /* below is for v3.3
            $(".portlet-header .ui-icon-carat-2-n-s").click(function() {
                    $(this).toggleClass("ui-icon-carat-2-n-s");
                    var id = $(this).parents(".portlet:first").find(".portlet-content").attr('id');
@@ -142,6 +143,7 @@ $(document).ready(function(){
                    }
                    // Above needs work - cookies aren't working :-(
 		   	});
+            */
 		$(".column").disableSelection();
 });
 function savelayout(){
@@ -996,18 +998,30 @@ jQuery("#btnSearch").click( function() {
         var hosts = jQuery("#hostsgrid").jqGrid('getGridParam','selarrrow'); 
         var mne = jQuery("#mnegrid").jqGrid('getGridParam','selarrrow'); 
         var eid = jQuery("#eidgrid").jqGrid('getGridParam','selarrrow'); 
+        if (hosts) {
         $("#results").append("<input type='hidden' name='hosts' value='"+hosts+"'>");
+        }
         $("#results").append("<input type='hidden' name='mnemonics' value='"+mne+"'>");
+        if (eid) {
         $("#results").append("<input type='hidden' name='eids' value='"+eid+"'>");
+        }
+        if (mne) {
         $("#results").append("<input type='hidden' name='page' value='Results'>");
+        }
         }); 
 jQuery("#btnGraph").click( function() { 
         var hosts = jQuery("#hostsgrid").jqGrid('getGridParam','selarrrow'); 
         var mne = jQuery("#mnegrid").jqGrid('getGridParam','selarrrow'); 
         var eid = jQuery("#eidgrid").jqGrid('getGridParam','selarrrow'); 
+        if (hosts) {
         $("#results").append("<input type='hidden' name='hosts' value='"+hosts+"'>");
+        }
+        if (mne) {
         $("#results").append("<input type='hidden' name='mnemonics' value='"+mne+"'>");
+        }
+        if (eid) {
         $("#results").append("<input type='hidden' name='eids' value='"+eid+"'>");
+        }
         $("#results").append("<input type='hidden' name='page' value='Graph'>");
         }); 
 
@@ -1367,6 +1381,28 @@ jQuery("input:reset").click( function() {
 
 // Adapted from http://www.komodomedia.com/blog/2008/07/using-jquery-to-save-form-details/
 function remember( selector ){
+    // if we have a checkbox
+    if($(this).attr("type") == "checkbox") {
+      // Get "checked" status and set name field
+      var isChecked = $(this).attr('checked');
+      var name = options['prefix'] + $(this).attr('id');
+
+      //if this item has been cookied, restore it
+      if($.cookie( name ) == "true") {
+        $(this).attr( 'checked', $.cookie( name ) );
+      }
+      //assign a change function to the item to cookie it
+      $(this).change(
+        function(){
+    if (selector == "#hosts") {
+    var v = $(this).attr(':checkbox');
+    var f = $(this).attr("type");
+    alert (v + " and " + f);
+    }
+          $.cookie( name, $(this).attr('checked'), { path: '/', expires: 365 });
+        }
+      );
+    } else {
     $(selector).each(
         function(){
             //if this item has been cookied, restore it
@@ -1384,7 +1420,9 @@ function remember( selector ){
             );
         }
     );
+    }
 };
+
 
 remember( '#severities' );
 remember( '#facilities' );
@@ -1404,6 +1442,27 @@ remember( '#hosts' );
 remember( '#eids' );
 
 }); // end doc ready
+$(document).ready(function(){
+
+ // Initialize checkboxes according to the value stored in cookies :
+ $("input[@type='checkbox']").each(function(){
+     this.checked=LireCookie(this.value);  // LireCookie returns true or null;
+    });
+
+  $(this).click(function(){
+    if (this.checked){
+        alert("THIS CASE NEVER OCCURS. WHY ?");
+        date=new Date;
+        date.setMonth(date.getMonth()+1);
+        EcrireCookie(this.value, this.checked, date);
+    } else {
+        alert("Erase the cookie");
+        EffacerCookie(this.value)   
+    }
+        
+    });
+    
+});
 </script>
 <!-- End Cookies -->
 
