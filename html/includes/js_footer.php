@@ -1369,9 +1369,9 @@ function get_cookies_array() {
 
 function clearCookies() {
     var cookies = get_cookies_array();
-    for(var name in cookies) {
-        if ((name !== "PHPSESSID") && (name !== "name")) {
-        $.cookie(name, null);
+    for(var cookiename in cookies) {
+        if ((cookiename !== "PHPSESSID") && (cookiename !== "cookiename")) {
+        $.cookie(cookiename, null);
         }
     }
 }
@@ -1383,13 +1383,13 @@ jQuery("input:reset").click( function() {
 function remember( selector ){
     // if we have a checkbox
     if($(this).attr("type") == "checkbox") {
-      // Get "checked" status and set name field
+      // Get "checked" status and set cookiename field
       var isChecked = $(this).attr('checked');
-      var name = options['prefix'] + $(this).attr('id');
+      var cookiename = options['prefix'] + $(this).attr('id');
 
       //if this item has been cookied, restore it
-      if($.cookie( name ) == "true") {
-        $(this).attr( 'checked', $.cookie( name ) );
+      if($.cookie( cookiename ) == "true") {
+        $(this).attr( 'checked', $.cookie( cookiename ) );
       }
       //assign a change function to the item to cookie it
       $(this).change(
@@ -1397,25 +1397,25 @@ function remember( selector ){
     if (selector == "#hosts") {
     var v = $(this).attr(':checkbox');
     var f = $(this).attr("type");
-    alert (v + " and " + f);
+    // alert (v + " and " + f);
     }
-          $.cookie( name, $(this).attr('checked'), { path: '/', expires: 365 });
+          $.cookie( cookiename, $(this).attr('checked'), { path: '/', expires: 365 });
         }
       );
     } else {
     $(selector).each(
         function(){
             //if this item has been cookied, restore it
-            var name = $(this).attr('id');
-            name = 'ck_' + name;
-            if( $.cookie( name ) ){
-                $(this).val( $.cookie(name) );
+            var cookiename = $(this).attr('id');
+            cookiename = 'ck_' + cookiename;
+            if( $.cookie( cookiename ) ){
+                $(this).val( $.cookie(cookiename) );
             }
             //assign a change function to the item to cookie it
             $(this).change(
                 function(){
-                    $.cookie(name, $(this).val(), { path: '/', expires: 365 });
-// alert("saving cookie: " + name);
+                    $.cookie(cookiename, $(this).val(), { path: '/', expires: 365 });
+// alert("saving cookie: " + cookiename);
                 }
             );
         }
@@ -1467,14 +1467,14 @@ $(document).ready(function(){
 <!-- End Cookies -->
 
 <!-- Begin Feedback Button -->
-<?php if ($_SESSION['FEEDBACK'] == "1") { ?>
-<script type="text/javascript">
-(function() {
- var uv = document.createElement('script'); uv.type = 'text/javascript'; uv.async = true;
- uv.src = ('https:' == document.location.protocol ? 'https://' : 'http://') + 'widget.uservoice.com/F0qq3CXmGGHuLQx6tkjizQ.js';
- var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(uv, s);
- })();
-</script>
-<?php } ?>
+<?php if ($_SESSION['FEEDBACK'] == "1") { 
+ echo '<script type="text/javascript">';
+ echo '(function() {';
+  echo 'var uv = document.createElement(\'script\'); uv.type = \'text/javascript\'; uv.async = true;';
+  echo 'uv.src = (\'https:\' == document.location.protocol ? \'https://\' : \'http://\') + \'widget.uservoice.com/F0qq3CXmGGHuLQx6tkjizQ.js\';';
+  echo 'var s = document.getElementsByTagName(\'script\')[0]; s.parentNode.insertBefore(uv, s);';
+  echo '})();';
+ echo '</script>';
+} ?>
 <!-- End Feedback Button -->
 
