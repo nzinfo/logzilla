@@ -6,6 +6,7 @@ CD:
  - Added WHERE clause for mne=None to the $_GET for Top 10 Mnemonics
  - Fixed bug causing mysql error on portlet access updates.
  - Fixed bug in ui_layout that was showing the EID even when the install choice=no during install
+ - #47 cookienames were colliding with portlet names.
 
 3.1.218 - Enhancements
 CD:
