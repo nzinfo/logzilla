@@ -20,6 +20,10 @@ $sql = "SELECT COUNT(*) FROM (SELECT host FROM hosts) AS result";
 $result = perform_query($sql, $dbLink, $_REQUEST['pageId']);
 $total = mysql_fetch_row($result);
 $count = $total[0];
+// echo "<pre>";
+// echo(print_r($_COOKIE));
+// echo "</pre>";
+// die();
 if( $count >0 ) { 
 ?>
 <script type="text/javascript">

@@ -298,6 +298,7 @@ if ($facilities) {
         if (!in_array('fo_checkbox', $_GET)) {
             $start = date("Y-m-d") . " 00:00:00";
             $end = date("Y-m-d") . " 23:59:59";
+            $where .= " AND mne !='".mne2crc('None')."'";
             $where .= " AND fo BETWEEN '$start' AND '$end'";
         }
     }
