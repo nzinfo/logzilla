@@ -1,5 +1,9 @@
 CHANGELOG
 
+3.1.222 - Typo
+TH:
+ - Typo in ui_layout.sql
+
 3.1.221 - Enhancements
 TH:
  - more work on archive import
