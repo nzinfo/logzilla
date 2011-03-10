@@ -1,5 +1,9 @@
 CHANGELOG
 
+3.1.220 - Enhancements
+TH:
+ - more work on archive import
+
 3.1.219 - Fixes
 CD:
  - js_footer:1002 Added check for undefined hosts, mnes and eids so that Sphinx would not throw an assertion error if the portlets are disabled
