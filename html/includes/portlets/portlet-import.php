@@ -1,21 +1,22 @@
 <?php
 /*
- * portlet-table.php
+ * portlet-import.php
  *
- * Developed by Clayton Dukes <cdukes@cdukes.com>
- * Copyright (c) 2010 LogZilla, LLC
+ * Developed by Thomas Honzik (thomas@honzik.at)
+ * Copyright (c) 2011 LogZilla, LLC
  * All rights reserved.
- * Last updated on 2010-06-15
+ * Last updated on 2011-03-10
  *
  * Pagination and table formatting created using 
  * http://www.frequency-decoder.com/2007/10/19/client-side-table-pagination-script/
  * Changelog:
- * 2010-02-28 - created
+ * 2011-02-28 - created
  *
  */
 
 $basePath = dirname( __FILE__ );
 require_once ($basePath . "/../common_funcs.php");
+require_once ($basePath ."/../grid/php/jqGrid.php");
 $dbLink = db_connect_syslog(DBADMIN, DBADMINPW);
 
 //---------------------------------------------------
@@ -25,7 +26,7 @@ $dbLink = db_connect_syslog(DBADMIN, DBADMINPW);
 //---------------------------------------------------
 
 
-if ((TRUE) || ($_SESSION['AUTHTYPE'] == "none")) { 
+if ((has_portlet_access($_SESSION['username'], 'Import') == TRUE) || ($_SESSION['AUTHTYPE'] == "none")) { 
 
 
 // which dates are online
@@ -50,23 +51,22 @@ if ($handle = opendir($archive_path['value'])) {
     closedir($handle);
 }
 
-// catch all non emty days from the cache table
+// catch all non emty days from the archives table
 
-$sql = "SELECT name, value FROM cache where name like 'chart_mpd%' and value>0 order by name";
+$sql = "SELECT archive, records FROM archives where records>0 order by archive";
 $result = perform_query($sql, $dbLink, $_SERVER['PHP_SELF']); 
 $count = mysql_num_rows($result);
 
 ?>
-
 <table summary="Import_Table" border="1" cellspacing="2" cellpadding="3">
    <colgroup>
       <col width="100" /><col width="100" />
-      <col width="200" />
+      <col width="200" /><col width="200" />
    </colgroup>
    <caption>Data location information of this system</caption>
    <thead>
       <tr>
-         <th colspan="4">Found <?php echo $count; ?> history days in the cache</th>
+         <th colspan="4">Found <?php echo $count; ?> history days in the backup log</th>
       </tr>
       <tr>
          <th>Date</th>
@@ -84,37 +84,42 @@ $count = mysql_num_rows($result);
 
   $onl_bool="0";
     // look at the date 
-    $date = substr($row['name'],10,4)."-".substr($row['name'],15,2)."-".substr($row['name'],18,2);
+    $date = substr($row['archive'],9,4)."-".substr($row['archive'],13,2)."-".substr($row['archive'],15,2);
     ?>
       <tr>
          <td style="text-align: center;"><?php echo $date; ?></td>
-         <td style="text-align: right;"><?php echo commify($row["value"]); ?></td>
+         <td style="text-align: right;"><?php echo commify($row["records"]); ?></td>
 
  <?php
       	if ( in_array($date,$online_array) ){  $onl_bool="1";  } elseif ( in_array($date,$file_array) ){  $onl_bool="2";  } 
 
 	switch ($onl_bool) {
 		case "2":  
-		 ?>         <td style="text-align: right;">Online (as archive file)</td> 
+		 ?>         <td style="text-align: right;">Online (as archive file)</td> <td> <input class='ui-state-default ui-corner-all' type="submit" onclick="doImport('<?php echo $date; ?>')" value="Import into Database"></td>
 <?php  		break;
 	 	case "1":  
 		 ?>         <td style="text-align: right;">Online (in database)</td> 
+		 		
 <?php  		break;
 	 	case "0": 
-		 ?>    	    <td style="text-align: right;">Offline</td> 
+		 ?>    	    <td style="text-align: right;">Offline</td> <td> <input class='ui-state-default ui-corner-all' type="submit" onclick="doImport('<?php echo $date; ?>')" value="Restore from Backup"></td>
 <?php  		break;  }
-?>
-         <td style="background: mistyrose;">... here some more to do... </td>
-      </tr>
-   <?php } ?>
+    		} ?>
    </tbody>
 </table>
-
 <?php
 
-
 }
+?>
+
+<script type="text/javascript">
+function doImport(test) { 
+      $('#msgbox_br').jGrowl("Not implemented yet: "+test); } ;
+</script>
+
+<?php
 /*
+
     //Run linux command in background and return the PID created by the OS
     function run_in_background($Command, $Priority = 0)
     {
@@ -148,4 +153,3 @@ echo "hello World\n";
 */
  
  ?>
-
