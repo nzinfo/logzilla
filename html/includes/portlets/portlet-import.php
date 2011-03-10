@@ -2,10 +2,10 @@
 /*
  * portlet-import.php
  *
- * Developed by Thomas Honzik (thomas@honzik.at)
- * Copyright (c) 2011 LogZilla, LLC
+ * Developed by Clayton Dukes <cdukes@cdukes.com>
+ * Copyright (c) 2010 LogZilla, LLC
  * All rights reserved.
- * Last updated on 2011-03-10
+ * Last updated on 2011-03-09
  *
  * Pagination and table formatting created using 
  * http://www.frequency-decoder.com/2007/10/19/client-side-table-pagination-script/
@@ -76,7 +76,7 @@ $count = mysql_num_rows($result);
    </thead>
    <tfoot>      
       <tr>    
-         <td colspan="4"> There are no jobs running for the import </td>   
+         <td colspan="4"> Dont use it, its still dangerous </td>   
       </tr>
    </tfoot>
    <tbody>
@@ -113,12 +113,18 @@ $count = mysql_num_rows($result);
 ?>
 
 <script type="text/javascript">
-function doImport(test) { 
-      $('#msgbox_br').jGrowl("Not implemented yet: "+test); } ;
+function doImport(impdate) { 
+  $.get("includes/ajax/import.php?&impdate="+impdate, function(data){
+    $('#msgbox_br').jGrowl(data, { sticky: false })});       
+ }
 </script>
 
 <?php
 /*
+
+# $.get("includes/ajax/import.php", function(data){
+#      $('#msgbox_br').jGrowl(data, { sticky: true });
+# } ]
 
     //Run linux command in background and return the PID created by the OS
     function run_in_background($Command, $Priority = 0)
