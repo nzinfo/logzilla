@@ -2,13 +2,11 @@
 /*
  * portlet-import.php
  *
- * Developed by Clayton Dukes <cdukes@cdukes.com>
- * Copyright (c) 2010 LogZilla, LLC
+ * Developed by Thomas Honzik (thomas@honzik.at)
+ * Copyright (c) 2011 LogZilla, LLC
  * All rights reserved.
  * Last updated on 2011-03-09
- *
- * Pagination and table formatting created using 
- * http://www.frequency-decoder.com/2007/10/19/client-side-table-pagination-script/
+
  * Changelog:
  * 2011-02-28 - created
  *
@@ -51,6 +49,9 @@ if ($handle = opendir($archive_path['value'])) {
     closedir($handle);
 }
 
+$restore_runfile = $archive_path['value'].'/import.running';
+$restore_running = is_file($restore_runfile);
+
 // catch all non emty days from the archives table
 
 $sql = "SELECT archive, records FROM archives where records>0 order by archive";
@@ -60,8 +61,8 @@ $count = mysql_num_rows($result);
 ?>
 <table summary="Import_Table" border="1" cellspacing="2" cellpadding="3">
    <colgroup>
-      <col width="100" /><col width="100" />
-      <col width="200" /><col width="200" />
+      <col width="150" /><col width="150" />
+      <col width="250" /><col width="250" />
    </colgroup>
    <caption>Data location information of this system</caption>
    <thead>
@@ -76,7 +77,17 @@ $count = mysql_num_rows($result);
    </thead>
    <tfoot>      
       <tr>    
-         <td colspan="4"> Dont use it, its still dangerous </td>   
+         <td colspan="4" style="text-align: left;"> <?php 
+         	if ($restore_running) {
+         			 $loghandle = fopen($restore_runfile, rb); 
+         			 	while (!feof($loghandle)) {
+  							echo fgets($loghandle, 8192)."<br>";
+         			 	}
+         			 fclose($loghandle);
+         	} 
+         	else 
+         		{ echo "no import running"; }        			 
+ ?> </td>   
       </tr>
    </tfoot>
    <tbody>
@@ -95,14 +106,15 @@ $count = mysql_num_rows($result);
 
 	switch ($onl_bool) {
 		case "2":  
+				if ($restore_running) { echo "<td style=\"text-align: right;\">Online (as archive file)</td> <td>  There is a import running </td>"; } else {
 		 ?>         <td style="text-align: right;">Online (as archive file)</td> <td> <input class='ui-state-default ui-corner-all' type="submit" onclick="doImport('<?php echo $date; ?>')" value="Import into Database"></td>
-<?php  		break;
+<?php  }	break;
 	 	case "1":  
 		 ?>         <td style="text-align: right;">Online (in database)</td> 
 		 		
 <?php  		break;
 	 	case "0": 
-		 ?>    	    <td style="text-align: right;">Offline</td> <td> <input class='ui-state-default ui-corner-all' type="submit" onclick="doImport('<?php echo $date; ?>')" value="Restore from Backup"></td>
+		 ?>    	    <td style="text-align: right;">Offline</td> <td> Restore not implemented yet </td>
 <?php  		break;  }
     		} ?>
    </tbody>
@@ -115,47 +127,8 @@ $count = mysql_num_rows($result);
 <script type="text/javascript">
 function doImport(impdate) { 
   $.get("includes/ajax/import.php?&impdate="+impdate, function(data){
-    $('#msgbox_br').jGrowl(data, { sticky: false })});       
+    $('#msgbox_br').jGrowl(data, { sticky: false })});     
+    setTimeout("location.reload(true);",3000);
  }
 </script>
 
-<?php
-/*
-
-# $.get("includes/ajax/import.php", function(data){
-#      $('#msgbox_br').jGrowl(data, { sticky: true });
-# } ]
-
-    //Run linux command in background and return the PID created by the OS
-    function run_in_background($Command, $Priority = 0)
-    {
-        if($Priority)
-           $PID = shell_exec("nohup nice -n $Priority $Command > /dev/null & echo $!");
-
-        else
-            $PID = shell_exec("nohup $Command > /dev/null & echo $!");
-        return($PID);
-    }
-
-    //Verifies if a process is running in linux
-    function is_process_running($PID)
-    {
-        exec("ps $PID", $ProcessState);
-        return(count($ProcessState) >= 2);
-    }
-echo "hello World\n";
-
-  $CopyTaskPid = run_in_background("sleep 10", "+20");
-	echo "hello World\n";
-
-    while(is_process_running($CopyTaskPid))
-    {
-	echo "hello World";
-        echo ".";
- 
-        sleep(2);
-    }
-
-*/
- 
- ?>
