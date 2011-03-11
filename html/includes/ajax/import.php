@@ -2,12 +2,12 @@
 
 /*
  *
- * Developed by Clayton Dukes <cdukes@cdukes.com>
- * Copyright (c) 2010 LogZilla, LLC
+ * Developed by Thomas Honzik (thomas@honzik.at)
+ * Copyright (c) 2011 LogZilla, LLC
  * All rights reserved.
  *
  * Changelog:
- * 2010-01-13 - created
+ * 2011-03-09 - created
  *
  */
 $basePath = dirname( __FILE__ );
@@ -15,7 +15,6 @@ $basePath = dirname( __FILE__ );
 require_once ($basePath . "/../common_funcs.php");
 $idate = get_input('impdate');
 $idate = substr($idate,0,4).substr($idate,5,2).substr($idate,8,2);
-echo $idate;
 $dbLink = db_connect_syslog(DBADMIN, DBADMINPW);
 session_start();
 $sql = "SELECT value FROM settings where name='PATH_BASE'";
@@ -32,9 +31,9 @@ if(num_rows($result)==0){
 } else {
     $line = fetch_array($result);
     $apath = $line[0];
-    $cmd = "sudo $path/scripts/import.sh dumpfile_".$idate.".txt";
-    echo $cmd;
+    $cmd = "sudo $path/scripts/doimport.sh dumpfile_".$idate.".txt";
     exec($cmd, $out);
     echo  $out[0];
-} }
+    echo "Import started";
+    } }
 ?>
