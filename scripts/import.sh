@@ -13,6 +13,7 @@ if [ -s "$export" ]; then
   echo "file found in the online store";
 else
     echo "file not in the online store"
+    rm /path_to_logzilla/exports/import.running
     exit  ;
 fi
 mkdir $temp
@@ -35,4 +36,5 @@ rm -rf $temp
 
 echo "reindex sphinx"
 /path_to_logzilla/sphinx/indexer.sh full
+rm //path_to_logzilla/exports/import.running
 echo "***all done***"
