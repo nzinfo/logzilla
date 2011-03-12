@@ -87,34 +87,19 @@ $grid->setNavOptions('edit', array("width"=>"auto","height"=>"auto","dataheight"
 $grid->setNavOptions('add', array("width"=>"auto","height"=>"auto","dataheight"=>"auto","top"=>200,"left"=>200)); 
 
 $custom = <<<CUSTOM
-function easyDate (cellValue, options, rowdata)
-{
-    var t = jQuery.timeago(cellValue);
-    var cellHtml = "<span>" + t + "</span>";
-    return cellHtml;
-}
-
-function setWidth(percent){
-        screen_res = ($(document).width())*0.99;
-        col = parseInt((percent*(screen_res/100)));
-        return col;
-};
-function setHeight(percent){
-        screen_res = ($(document).height())*0.99;
-        col = parseInt((percent*(screen_res/100)));
-        return col;
-};
-
 
 $(document).ready(function() {
 
-        $('#triggergrid').fluidGrid({base:'#portlet-header_Email_alerts', offset:-15});
-        $('#triggergrid').jqGrid('setGridHeight',setHeight(57));
+        var modalWidth = $("#portlet_Email_Alerts").width();
+        var modalHeight = $("#portlet_Email_Alerts").height() - 52;
+        $('#triggergrid').jqGrid('setGridWidth',modalWidth);
+        $('#triggergrid').jqGrid('setGridHeight',modalHeight);
+        $('#triggergrid').fluidGrid({base:'#portlet_Email_Alerts', offset:-25});
 });
 
 $(window).resize(function()
 {
-        $('#triggergrid').fluidGrid({base:'#portlet-header_Email_alerts', offset:-15});
+        $('#triggergrid').fluidGrid({base:'#portlet_Email_Alerts', offset:-25});
 });
 
 
