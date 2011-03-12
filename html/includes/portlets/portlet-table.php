@@ -1099,7 +1099,7 @@ function lzecs(msg){
             <th id="suppress_date" width="25%">Date</th>
             <th id="suppress_time" width="25%">Time</th>
             <th id="suppress_match" width="25%">Match</th>
-            <th id="suppress_msg_header" width="25%">Message Text</th>
+            <!-- Defferred until 3.3 - Ticket #59: <th id="suppress_msg_header" width="25%">Message Text</th> -->
             </tr>
             </thead>
             <tbody>
@@ -1122,24 +1122,26 @@ function lzecs(msg){
        
             <option value="mne">All Matching Mnemonics</option>
   
-       <!-- Message and Notes deferred until 3.3 release 
+       <!-- Message and Notes deferred until 3.3 release Ticket #59
             <option value="notes">All Matching Notes</option> -->
             
             <?php if($_SESSION['SNARE'] == "1") {
                 echo '<option value="eid">All Matching EventId\'s</option>';
             }?>
             
-       <!-- Message and Notes deferred until 3.3 release 
+       <!-- Message and Notes deferred until 3.3 release Ticket #59
             <option value="msg">All Matching Messages</option> -->
             
             </select>
             </div>
             </td>
+            <!-- Defferred until 3.3 - Ticket #59: 
        <div class="divContainer">
             <td>
             <input type="text" id="suppress_msg_text">
             </td>
         </div>
+        -->
             </tr>
             </tbody>
             </table>
@@ -1241,6 +1243,7 @@ function refresh(source, delay)
 // END Tail
 //------------------------------------
 
+/* Defferred until 3.3 Ticket #59
 $(document).ready(function(){
     $("#suppress_msg_text").hide();
     $("#suppress_msg_header").hide();
@@ -1261,6 +1264,7 @@ $(document).ready(function(){
         }
     });
 });
+*/
 
 </script>
 <?php } else { ?>
