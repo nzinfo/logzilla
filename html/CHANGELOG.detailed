@@ -1,5 +1,10 @@
 CHANGELOG
 
+
+3.1.225 - bugfix
+TH:
+ - prevent double insert of archive
+
 3.1.224 - Enhancements
 TH:
  - archive import (what else)
