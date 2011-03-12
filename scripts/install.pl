@@ -38,7 +38,7 @@ sub p {
 }
 
 my $version = "3.1";
-my $subversion = ".224";
+my $subversion = ".225";
 
 # Grab the base path
 my $lzbase = getcwd;
@@ -910,6 +910,8 @@ if (-d "$crondir") {
                 print SFILE "$webuser ALL=NOPASSWD:$lzbase/scripts/hup.pl\n";
                 print SFILE "# Allows Apache user to apply new licenses from the web interface\n";
                 print SFILE "$webuser ALL=NOPASSWD:$lzbase/scripts/licadd.pl\n";
+                print SFILE "# Allows Apache user to import data from archive\n";
+                print SFILE "$webuser ALL=NOPASSWD:$lzbase/scripts/doimport.sh\n";
                 close SFILE;
                 print "Appended sudoer access for $webuser to $file\n";
                 if ($os !~ /Ubuntu/i) {
