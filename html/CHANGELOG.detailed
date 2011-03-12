@@ -1,5 +1,9 @@
 CHANGELOG
 
+3.1.227 - bugfix
+CD:
+ - #113 Grid autosize for email alerts grid
+
 3.1.226 - bugfix
 CD:
  - #59 Commented out 3.3 changes
