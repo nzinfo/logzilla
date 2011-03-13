@@ -38,7 +38,7 @@ sub p {
 }
 
 my $version = "3.1";
-my $subversion = ".227";
+my $subversion = ".228";
 
 # Grab the base path
 my $lzbase = getcwd;
@@ -458,22 +458,22 @@ if ($ok =~ /[Yy]/) {
     $sth->execute; 
 
 # Create Partition events
-    #my $event = qq{
-    #CREATE EVENT logs_add_partition ON SCHEDULE EVERY 1 DAY STARTS '$dateTomorrow 00:00:00' ON COMPLETION NOT PRESERVE ENABLE DO CALL logs_add_part_proc();
-    #};
-    #my $sth = $dbh->prepare("
-    #$event
-    #") or die "Could not create partition events: $DBI::errstr";
-    #$sth->execute;
+    my $event = qq{
+    CREATE EVENT logs_add_partition ON SCHEDULE EVERY 1 DAY STARTS '$dateTomorrow 00:00:00' ON COMPLETION NOT PRESERVE ENABLE DO CALL logs_add_part_proc();
+    };
+    my $sth = $dbh->prepare("
+    $event
+    ") or die "Could not create partition events: $DBI::errstr";
+    $sth->execute;
 
 #  TH: use the new archive feature!
-#    my $event = qq{
-#    CREATE EVENT logs_add_archive ON SCHEDULE EVERY 1 DAY STARTS '$dateTomorrow 00:10:00' ON COMPLETION NOT PRESERVE ENABLE DO CALL logs_add_archive_proc();
-#    };
-#    my $sth = $dbh->prepare("
-#        $event
-#        ") or die "Could not create archive events: $DBI::errstr";
-#    $sth->execute;
+    my $event = qq{
+    CREATE EVENT logs_add_archive ON SCHEDULE EVERY 1 DAY STARTS '$dateTomorrow 00:10:00' ON COMPLETION NOT PRESERVE ENABLE DO CALL logs_add_archive_proc();
+    };
+    my $sth = $dbh->prepare("
+        $event
+        ") or die "Could not create archive events: $DBI::errstr";
+    $sth->execute;
 
     my $event = qq{
     CREATE EVENT logs_del_partition ON SCHEDULE EVERY 1 DAY STARTS '$dateTomorrow 00:15:00' ON COMPLETION NOT PRESERVE ENABLE DO CALL logs_delete_part_proc();
@@ -492,26 +492,26 @@ if ($ok =~ /[Yy]/) {
         ") or die "Could not create event: cacheUpdate: $DBI::errstr";
     $sth->execute;
 
-    #my $event = qq{
-    #CREATE PROCEDURE logs_add_part_proc()
-    #SQL SECURITY DEFINER
-    #COMMENT 'Creates partitions for tomorrow' 
-    #BEGIN    
-    #DECLARE new_partition CHAR(32) DEFAULT
-    #CONCAT ('p', DATE_FORMAT(DATE_ADD(CURDATE(), INTERVAL 1 DAY), '%Y%m%d'));
-    #DECLARE max_day INTEGER DEFAULT TO_DAYS(NOW()) +1;
-    #SET \@s =
-    #CONCAT('ALTER TABLE `logs` ADD PARTITION (PARTITION ', new_partition,
-    #' VALUES LESS THAN (', max_day, '))');
-    #PREPARE stmt FROM \@s;
-    #EXECUTE stmt;
-    #DEALLOCATE PREPARE stmt;
-    #END 
-    #};
-    #my $sth = $dbh->prepare("
-    #    $event
-    #    ") or die "Could not create partition events: $DBI::errstr";
-    #$sth->execute;
+    my $event = qq{
+    CREATE PROCEDURE logs_add_part_proc()
+    SQL SECURITY DEFINER
+    COMMENT 'Creates partitions for tomorrow' 
+    BEGIN    
+    DECLARE new_partition CHAR(32) DEFAULT
+    CONCAT ('p', DATE_FORMAT(DATE_ADD(CURDATE(), INTERVAL 1 DAY), '%Y%m%d'));
+    DECLARE max_day INTEGER DEFAULT TO_DAYS(NOW()) +1;
+    SET \@s =
+    CONCAT('ALTER TABLE `logs` ADD PARTITION (PARTITION ', new_partition,
+    ' VALUES LESS THAN (', max_day, '))');
+    PREPARE stmt FROM \@s;
+    EXECUTE stmt;
+    DEALLOCATE PREPARE stmt;
+    END 
+    };
+    my $sth = $dbh->prepare("
+        $event
+        ") or die "Could not create partition events: $DBI::errstr";
+    $sth->execute;
 
     my $event = qq{
     CREATE PROCEDURE logs_delete_part_proc()
@@ -540,20 +540,19 @@ if ($ok =~ /[Yy]/) {
         ") or die "Could not create partition events: $DBI::errstr";
     $sth->execute;
 
-#  TH: use the new archive feature!
-#    my $event = qq{
-#    CREATE PROCEDURE logs_add_archive_proc()
-#    SQL SECURITY DEFINER
-#    COMMENT 'Creates archive for old messages' 
-#    BEGIN    
-#    INSERT INTO `logs_archive` SELECT * FROM `$dbtable` 
-#    WHERE `$dbtable`.`lo` < DATE_SUB(CURDATE(), INTERVAL (SELECT value from settings WHERE name='RETENTION') DAY);
-#    END 
-#    };
-#    my $sth = $dbh->prepare("
-#        $event
-#        ") or die "Could not create partition events: $DBI::errstr";
-#    $sth->execute;
+    #my $event = qq{
+    #CREATE PROCEDURE logs_add_archive_proc()
+    #SQL SECURITY DEFINER
+    #COMMENT 'Creates archive for old messages' 
+    #BEGIN    
+    #INSERT INTO `logs_archive` SELECT * FROM `$dbtable` 
+    #WHERE `$dbtable`.`lo` < DATE_SUB(CURDATE(), INTERVAL (SELECT value from settings WHERE name='RETENTION') DAY);
+    #END 
+    #};
+    #my $sth = $dbh->prepare("
+    #    $event
+    #    ") or die "Could not create partition events: $DBI::errstr";
+    #$sth->execute;
 
     # CDUKES: [[ticket:17]]
     my $event = qq{
@@ -570,27 +569,27 @@ if ($ok =~ /[Yy]/) {
         ") or die "Could not create updateCache Procedure: $DBI::errstr";
     $sth->execute;
 
-    # TH: adding export procedure
-    my $event = qq{
-    CREATE PROCEDURE export()
-    SQL SECURITY DEFINER
-    COMMENT 'Export yesterdays data to a file'
-    BEGIN
-    DECLARE export CHAR(32) DEFAULT CONCAT ('dumpfile_', DATE_FORMAT(DATE_SUB(CURDATE(), INTERVAL 1 day), '%Y%m%d'),'.txt');
-    DECLARE export_path CHAR(127);
-    SELECT value into export_path from settings WHERE name="ARCHIVE_PATH";
-    SET \@s =
-    CONCAT('select * into outfile "',export_path, '/' , export,'" from `$dbtable` where TO_DAYS( lo )=',TO_DAYS(NOW())-1);
-    PREPARE stmt FROM \@s;
-    EXECUTE stmt;
-    DEALLOCATE PREPARE stmt;
-    INSERT INTO archives (archive, records) VALUES (export,(SELECT COUNT(*) FROM `$dbtable` WHERE lo BETWEEN DATE_SUB(CONCAT(CURDATE(), ' 00:00:00'), INTERVAL 1 DAY) AND DATE_SUB(CONCAT(CURDATE(), ' 23:59:59'), INTERVAL  1 DAY)));
-    END 
-    };
-    my $sth = $dbh->prepare("
-        $event
-        ") or die "Could not create export Procedure: $DBI::errstr";
-    $sth->execute;
+    # [[ticket:10]] TH: adding export procedure
+    #my $event = qq{
+    #CREATE PROCEDURE export()
+    #SQL SECURITY DEFINER
+    #COMMENT 'Export yesterdays data to a file'
+    #BEGIN
+    #DECLARE export CHAR(32) DEFAULT CONCAT ('dumpfile_', DATE_FORMAT(DATE_SUB(CURDATE(), INTERVAL 1 day), '%Y%m%d'),'.txt');
+    #DECLARE export_path CHAR(127);
+    #SELECT value into export_path from settings WHERE name="ARCHIVE_PATH";
+    #SET \@s =
+    #CONCAT('select * into outfile "',export_path, '/' , export,'" from `$dbtable` where TO_DAYS( lo )=',TO_DAYS(NOW())-1);
+    #PREPARE stmt FROM \@s;
+    #EXECUTE stmt;
+    #DEALLOCATE PREPARE stmt;
+    #INSERT INTO archives (archive, records) VALUES (export,(SELECT COUNT(*) FROM `$dbtable` WHERE lo BETWEEN DATE_SUB(CONCAT(CURDATE(), ' 00:00:00'), INTERVAL 1 DAY) AND DATE_SUB(CONCAT(CURDATE(), ' 23:59:59'), INTERVAL  1 DAY)));
+    #END 
+    #};
+    #my $sth = $dbh->prepare("
+    #$event
+    #") or die "Could not create export Procedure: $DBI::errstr";
+    #$sth->execute;
 
 
 # Turn the event scheduler on
@@ -670,8 +669,6 @@ if ($ok =~ /[Yy]/) {
     print "Skipped database creation\n";
 }
 print "Generating $lzbase/html/config/config.php\n";
-#my $ok  = &p("Ok to continue?", "y");
-#if ($ok =~ /[Yy]/) {
 my $config =qq{<?php
 DEFINE('DBADMIN', '$dbadmin');
 DEFINE('DBADMINPW', '$dbadminpw');
@@ -695,12 +692,9 @@ foreach my $line (@data) {
 print CNF "?>\n"; 
 close(CNF); 
 close(FILE); 
-#} else {
-#print "Skipped config generation\n";
-#}
 
-#Modifies the exports dir to he correct user
-system "chown mysql.mysql ../exports" and warn "Could not modify archive directory";   
+# [[ticket:10]] Modifies the exports dir to he correct user
+# system "chown mysql.mysql ../exports" and warn "Could not modify archive directory";   
 
 
 #Create log files for later use by the server
