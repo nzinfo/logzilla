@@ -38,7 +38,7 @@ sub p {
 }
 
 my $version = "3.1";
-my $subversion = ".228";
+my $subversion = ".229";
 
 # Grab the base path
 my $lzbase = getcwd;
@@ -249,8 +249,8 @@ if ($ok =~ /[Yy]/) {
 
 #  TH: use the new archive feature!
 ## Create archive table
-#    my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/logs_archive.sql`;
-#    print $res;
+    my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/logs_archive.sql`;
+    print $res;
 
 # Create triggers table
     my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/triggers.sql`;
@@ -540,19 +540,19 @@ if ($ok =~ /[Yy]/) {
         ") or die "Could not create partition events: $DBI::errstr";
     $sth->execute;
 
-    #my $event = qq{
-    #CREATE PROCEDURE logs_add_archive_proc()
-    #SQL SECURITY DEFINER
-    #COMMENT 'Creates archive for old messages' 
-    #BEGIN    
-    #INSERT INTO `logs_archive` SELECT * FROM `$dbtable` 
-    #WHERE `$dbtable`.`lo` < DATE_SUB(CURDATE(), INTERVAL (SELECT value from settings WHERE name='RETENTION') DAY);
-    #END 
-    #};
-    #my $sth = $dbh->prepare("
-    #    $event
-    #    ") or die "Could not create partition events: $DBI::errstr";
-    #$sth->execute;
+    my $event = qq{
+    CREATE PROCEDURE logs_add_archive_proc()
+    SQL SECURITY DEFINER
+    COMMENT 'Creates archive for old messages' 
+    BEGIN    
+    INSERT INTO `logs_archive` SELECT * FROM `$dbtable` 
+    WHERE `$dbtable`.`lo` < DATE_SUB(CURDATE(), INTERVAL (SELECT value from settings WHERE name='RETENTION') DAY);
+    END 
+    };
+    my $sth = $dbh->prepare("
+        $event
+        ") or die "Could not create partition events: $DBI::errstr";
+    $sth->execute;
 
     # CDUKES: [[ticket:17]]
     my $event = qq{
