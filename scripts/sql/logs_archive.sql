@@ -25,18 +25,18 @@ SET character_set_client = utf8;
 CREATE TABLE `logs_archive` (
   `id` bigint(20) unsigned NOT NULL,
   `host` varchar(128) NOT NULL,
-  `facility` enum('0','1','2','3','4','5','6','7','8','9','10','11','12','13','14','15','16','17','18','19','20','21','22','23','100','101','102','103') NOT NULL,
+  `facility` enum('0','1','2','3','4','5','6','7','8','9','10','11','12','13','14','15','16','17','18','19','20','21','22','23') NOT NULL,
   `severity` enum('0','1','2','3','4','5','6','7') NOT NULL,
   `program` int(10) unsigned NOT NULL,
   `msg` varchar(2048) NOT NULL,
   `mne` int(10) unsigned NOT NULL,
+  `eid` int(10) unsigned NOT NULL DEFAULT '0',
   `suppress` datetime NOT NULL DEFAULT '2010-03-01 00:00:00',
   `counter` int(11) NOT NULL DEFAULT '1',
   `fo` datetime NOT NULL,
   `lo` datetime NOT NULL,
   `notes` varchar(255) NOT NULL
 ) ENGINE=ARCHIVE DEFAULT CHARSET=latin1;
-SET character_set_client = @saved_cs_client;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
 
 /*!40101 SET SQL_MODE=@OLD_SQL_MODE */;
