@@ -1,5 +1,9 @@
 CHANGELOG
 
+3.1.231 - Regression
+CD:
+ - #10 more cleanup in install.pl - think now its all
+ 
 3.1.230 - Bugfix
 CD:
  - Found new bug in grids: When jQuery Modal set 'true', advanced search boxes do not work
