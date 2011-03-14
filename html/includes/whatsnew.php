@@ -40,7 +40,7 @@ Admin&gt;Server Admin&gt;PORTLET_HOSTS_LIMIT/PORTLET_MNE_LIMIT</li>
 </ul>
 To add more hosts to the search criteria than what is
 listed in the portlet, simply click the + icon in that portlet.<br>
-<a href="http://www.youtube.com/embed/a0qMe7Z3EYg?rel=0&amp;wmode=transparent" 
+<a href="http://www.youtube.com/embed/FoVSVqysx9c?rel=0&amp;wmode=transparent" 
 
         onclick="return hs.htmlExpand(this, {objectType: 'iframe', width: 480, height: 385, 
 
@@ -69,7 +69,7 @@ There are now 20 pre-built charts available from the charts menu.<br>
 For example: To get Today's Top 10 Cisco Mnemonics, click Charts&gt;Top
 10&gt;By
 Count&gt;Mnemonics<br>
-<a href="http://www.youtube.com/embed/a0qMe7Z3EYg?rel=0&wmode=transparent"
+<a href="http://www.youtube.com/embed/pQSzoaPsSXw?rel=0&wmode=transparent"
 onclick="return hs.htmlExpand(this, {objectType: 'iframe', width: 480, height: 385,
 allowSizeReduction: false, wrapperClassName: 'draggable-header no-footer',
 preserveContent: false, objectLoadTime: 'after'})"
@@ -95,7 +95,7 @@ see this menu item).<br>
 This new function allows Regular Expression pattern matching of
 incoming events allowing email alerts to be sent whenever a match is
 made.<br>
-<a href="http://www.youtube.com/embed/a0qMe7Z3EYg?rel=0&wmode=transparent"
+<a href="http://www.youtube.com/embed/2vDjkZXIWP8?rel=0&wmode=transparent"
 onclick="return hs.htmlExpand(this, {objectType: 'iframe', width: 480, height: 385,
 allowSizeReduction: false, wrapperClassName: 'draggable-header no-footer',
 preserveContent: false, objectLoadTime: 'after'})"

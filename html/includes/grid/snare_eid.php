@@ -69,7 +69,7 @@ $("#portlet-header_Snare_EventId .ui-icon-search").click(function() {
                 width: '90%',
                 position: "center",
                 autoOpen:false,
-                modal: true,
+                modal: false,
                 title: "Windows Event ID Selector",
                 overlay: {
                         backgroundColor: '#000',
@@ -80,8 +80,8 @@ $("#portlet-header_Snare_EventId .ui-icon-search").click(function() {
                                 $(this).dialog('close');
                         },
                 },
-            open: function(event, ui) { $('#host_dialog').css('overflow','hidden');$('.ui-widget-overlay').css('width','99%') },
-            close: function(event, ui) { $('#host_dialog').css('overflow','auto') }
+            open: function(event, ui) { $('#eid_dialog').css('overflow','hidden');$('.ui-widget-overlay').css('width','99%') },
+            close: function(event, ui) { $('#eid_dialog').css('overflow','auto') }
         });             
         $("#eid_dialog").dialog('open');
         $("#eid_dialog").ready(function(){

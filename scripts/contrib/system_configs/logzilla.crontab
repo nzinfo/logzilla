@@ -24,4 +24,4 @@
 #####################################################
 0 0 * * * /path_to_logzilla/sphinx/indexer.sh merge >> /path_to_logs/sphinx_indexer.log 2>&1
 
-0 1 * * * root sh /path_to_logzilla/scripts/export.sh 
+# 0 1 * * * root sh /path_to_logzilla/scripts/export.sh 

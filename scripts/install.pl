@@ -38,7 +38,7 @@ sub p {
 }
 
 my $version = "3.1";
-my $subversion = ".229";
+my $subversion = ".230";
 
 # Grab the base path
 my $lzbase = getcwd;
@@ -836,7 +836,7 @@ if ($paths_updated >0) {
 #####################################################
 # Daily export archives
 #####################################################
-0 1 * * * root sh $lzbase/scripts/export.sh
+# 0 1 * * * root sh $lzbase/scripts/export.sh
 
 #####################################################
 # END LogZilla Cron Entries
@@ -905,7 +905,7 @@ if (-d "$crondir") {
                 print SFILE "# Allows Apache user to apply new licenses from the web interface\n";
                 print SFILE "$webuser ALL=NOPASSWD:$lzbase/scripts/licadd.pl\n";
                 print SFILE "# Allows Apache user to import data from archive\n";
-                print SFILE "$webuser ALL=NOPASSWD:$lzbase/scripts/doimport.sh\n";
+                print SFILE "# $webuser ALL=NOPASSWD:$lzbase/scripts/doimport.sh\n";
                 close SFILE;
                 print "Appended sudoer access for $webuser to $file\n";
                 if ($os !~ /Ubuntu/i) {

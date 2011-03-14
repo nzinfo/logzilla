@@ -1442,6 +1442,7 @@ remember( '#hosts' );
 remember( '#eids' );
 
 }); // end doc ready
+/*
 $(document).ready(function(){
 
  // Initialize checkboxes according to the value stored in cookies :
@@ -1463,6 +1464,7 @@ $(document).ready(function(){
     });
     
 });
+*/
 </script>
 <!-- End Cookies -->
 
