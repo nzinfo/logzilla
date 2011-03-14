@@ -69,7 +69,7 @@ $("#portlet-header_Mnemonics .ui-icon-search").click(function() {
                 width: '90%',
                 position: "center",
                 autoOpen:false,
-                modal: true,
+                modal: false,
                 title: "Mnemonic Selector",
                 overlay: {
                         backgroundColor: '#000',
@@ -80,8 +80,8 @@ $("#portlet-header_Mnemonics .ui-icon-search").click(function() {
                                 $(this).dialog('close');
                         },
                 },
-            open: function(event, ui) { $('#host_dialog').css('overflow','hidden');$('.ui-widget-overlay').css('width','99%') },
-            close: function(event, ui) { $('#host_dialog').css('overflow','auto') }
+            open: function(event, ui) { $('#mne_dialog').css('overflow','hidden');$('.ui-widget-overlay').css('width','99%') },
+            close: function(event, ui) { $('#mne_dialog').css('overflow','auto') }
         });             
         $("#mne_dialog").dialog('open');
         $("#mne_dialog").ready(function(){

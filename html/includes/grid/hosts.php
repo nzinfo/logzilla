@@ -69,7 +69,7 @@ $("#portlet-header_Hosts .ui-icon-search").click(function() {
                 width: '90%',
                 position: "center",
                 autoOpen:false,
-                modal: true,
+                modal: false,
                 title: "Host Selector",
                 overlay: {
                         backgroundColor: '#000',

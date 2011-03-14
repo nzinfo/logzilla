@@ -1,5 +1,11 @@
 CHANGELOG
 
+3.1.230 - Bugfix
+CD:
+ - Found new bug in grids: When jQuery Modal set 'true', advanced search boxes do not work
+ - Fix missing height/width settings in favorites editor
+ - Added Youtube Video's for the "What's New" Menu item.
+
 3.1.229 - Regression
 CD:
  - #10 Added archive table back in
