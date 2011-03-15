@@ -1,7 +1,12 @@
 CHANGELOG
 
-3.1.231 - Regression
+3.1.232 - Multiple
 CD:
+ - Reset snare_eid in db_insert from previous loop so that new non-snare events aren't assigned the last eid.
+ - #106 - Created upgrade option in install.pl
+
+3.1.231 - Regression
+TH:
  - #10 more cleanup in install.pl - think now its all
  
 3.1.230 - Bugfix

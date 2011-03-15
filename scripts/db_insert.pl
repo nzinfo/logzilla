@@ -609,6 +609,7 @@ sub do_msg {
 
     # Get incoming variables from PIPE
     if ($msg =~ m/$re_pipe/) {
+        my $snare_eid = "";
         # v3.2 Fields are: TS, Host, PRI, Program,  and MSG
         $ts = $1;
         $host = $2;
@@ -765,8 +766,11 @@ sub do_msg {
             print LOG "FAC: $facility\n";
             print LOG "SEV: $severity\n";
             print LOG "PRG: $prg\n";
-            print LOG "MSG: $msg\n\n";
-            print LOG "MNE: $mne\n\n";
+            print LOG "MSG: $msg\n";
+            print LOG "MNE: $mne\n";
+            if ($snare > 0) {
+                print LOG "EID: $snare_eid\n\n";
+            }
         }
         if (($debug > 2) and ($verbose)) { 
             print STDOUT "HOST: $host\n";
@@ -774,8 +778,11 @@ sub do_msg {
             print STDOUT "FAC: $facility\n";
             print STDOUT "SEV: $severity\n";
             print STDOUT "PRG: $prg\n";
-            print STDOUT "MSG: $msg\n\n";
-            print STDOUT "MNE: $mne\n\n";
+            print STDOUT "MSG: $msg\n";
+            print STDOUT "MNE: $mne\n";
+            if ($snare > 0) {
+                print STDOUT "EID: $snare_eid\n\n";
+            }
         }
     } else {
         # If something gets inserted wrong from the PIPE we'll set host = blank so we can error out later
