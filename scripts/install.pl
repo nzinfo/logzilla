@@ -44,7 +44,7 @@ sub p {
 }
 
 my $version = "3.2";
-my $subversion = ".232";
+my $subversion = ".233";
 
 # Grab the base path
 my $lzbase = getcwd;
@@ -143,21 +143,43 @@ if ($ok =~ /[Yy]/) {
         print "2. There is a potential for data loss, so please make sure you have backed up your database before proceeding.\n";
         my $ok  = &p("Ok to continue?", "y");
         if ($ok =~ /[Yy]/) {
+            my ($ver, $major, $table, @data);
             my $sth = $dbh->prepare("
-                select name,value from $dbname.settings where name='VERSION';
-                ") or die "Could not enable the Global event scheduler: $DBI::errstr";
+                show tables like 'settings';
+                ") or die "Could not execute: $DBI::errstr";
             $sth->execute;
-            my $ver;
-            while (my @data = $sth->fetchrow_array()) {
-                $ver = $data[1];
+            while (@data = $sth->fetchrow_array()) {
+                $table = $data[0];
             }
-            if ($ver =~ /3\.1/) {
-                do_upgrade('3.1');
+            if ($table eq "settings") {
+                $major eq 3;
             } else {
-                print("\n\033[1m\tERROR!\n\033[0m");
-                print "Sorry, but there is no upgrade available from version $ver to $version\n";
+                $major eq 2;
+            }
+            if ($major eq 3) {
+                print "$major\n";
                 exit;
-
+                my $sth = $dbh->prepare("
+                    select name,value from $dbname.settings where name='VERSION';
+                    ") or die "Could not execute: $DBI::errstr";
+                $sth->execute;
+                while (my @data = $sth->fetchrow_array()) {
+                    $ver = $data[1];
+                }
+                if ($ver =~ /3\.1/) {
+                    do_upgrade('3.1');
+                } else {
+                    print("\n\033[1m\tERROR!\n\033[0m");
+                    print "Sorry, but there is no upgrade available from version $ver to $version\n";
+                    exit;
+                }
+            } else {
+                print "You are running a very old version of LogZilla (php-syslog-ng).\n";
+                print "Install will try to upgrade, but be sure you have backed up your database.\n";
+                my $ok  = &p("Ok to continue?", "y");
+                if ($ok =~ /[Yy]/) {
+                    do_upgrade('2');
+                }
             }
         } else {
             print "Please select a database name other than $dbname\n";
@@ -1194,6 +1216,9 @@ sub do_upgrade {
             DROP TABLE settings_orig;
             ") or die "Could not update $dbname: $DBI::errstr";
         $sth->execute;
+    } else {
+        print "Your version is not a candidate for upgrade.\n";
+        exit;
     }
 }
 
