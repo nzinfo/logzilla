@@ -1,5 +1,9 @@
 CHANGELOG
 
+3.1.236 - Minor
+CD:
+ - Updated db_insert.pl to rename junk program names (like xml data, etc) to just "Unknown"
+
 3.1.235 - MySQL Remote DB
 CD:
  - Added regex to replace 'LOAD DATA INFILE' with 'LOAD DATA LOCAL INFILE' when using remote database.

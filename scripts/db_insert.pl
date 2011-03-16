@@ -216,7 +216,7 @@ if (($debug > 0) or ($verbose)) {
 
 my ($ts, $host, %host_cache, $facility, $pri, $prg, %program_cache, $prg32, $msg, $mne, %mne_cache, $mne32, $severity, $snare_eid, %snare_eid_cache); 
 # my $re_pipe = qr/(\S+)\t(\d+)\t(\S+)?\t(.*)/;
-my $re_pipe = qr/(\S+ \S+)\t(\S+)\t(\d+)\t(\S+).*\t(.*)/;
+my $re_pipe = qr/(\S+ \S+)\t(\S+)\t(\d+)\t(\S+)?.*\t(.*)/;
 # v3.2 Fields are: TS, Host, PRI, Program,  and MSG
 # the $severity and $facility fields are split from the $pri coming in so that they can be stored as integers into 2 separate db columns
 # re_mne is used to capture Cisco Mnemonics
@@ -738,11 +738,11 @@ sub do_msg {
         # Special fix (urldecode) for any urlencoded strings coming in from VmWare or Apache
         $prg =~ s/\%([A-Fa-f0-9]{2})/pack('C', hex($1))/seg;
         $msg =~ s/\%([A-Fa-f0-9]{2})/pack('C', hex($1))/seg;
+
         # Catch-all for junk streams...
         # This won't work well in non-english environments...
-        if ($prg !~ /^[a-zA-Z0-9]+/) {
-            $prg = "Unknown";
-        }
+        $prg = "Unknown" if ($prg !~ /^[a-zA-Z0-9]+$/);
+
         $prg32 = crc32("$prg");
         $mne32 = crc32("$mne");
         unless ($host_cache{$host}){
