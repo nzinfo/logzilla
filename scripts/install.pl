@@ -44,7 +44,7 @@ sub p {
 }
 
 my $version = "3.2";
-my $subversion = ".234";
+my $subversion = ".235";
 
 # Grab the base path
 my $lzbase = getcwd;
@@ -78,9 +78,6 @@ $dbrootpass = qq{$dbrootpass};
 my $dbname = &p("Database to install to", "syslog");
 my $dbtable =  "logs";
 my $dbhost  = &p("Enter the name of the MySQL server", "localhost");
-if ($dbhost !~ /localhost|127.0.0.1/) {
-    system "perl -i -pe 's|qq{LOAD DATA INFILE|qq{LOAD DATA LOCAL INFILE|g' ./db_insert.pl" or die "Could not modify ./db_insert.pl $!\n";
-}
 my $dbport  = &p("Enter the port of the MySQL server", "3306");
 use IO::Socket::INET;
 
@@ -218,6 +215,23 @@ setup_cron();
 setup_sudo();
 setup_apparmor();
 fbutton();
+if ($dbhost !~ /localhost|127.0.0.1/) {
+    my $file = "$lzbase/scripts/db_insert.pl";
+    open( FILE, "$file" );
+    my @data = <FILE>;
+    close( FILE );
+    open(FILE,">$file") || die("Cannot Open $file: $!"); 
+    foreach my $line (@data) {
+        chomp $line;
+        if ($line =~ /^(my.*=.*LOAD DATA) (INFILE.*)/) {
+            #print "Altering $line:\n$1 LOCAL $2\n";
+            print FILE "$1 LOCAL $2\n";
+        } else {
+            print FILE "$line\n";
+        }
+    }
+    close( FILE );
+}
 hup_syslog();
 
 sub do_install {
