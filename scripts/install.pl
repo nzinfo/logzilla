@@ -44,7 +44,7 @@ sub p {
 }
 
 my $version = "3.2";
-my $subversion = ".233";
+my $subversion = ".234";
 
 # Grab the base path
 my $lzbase = getcwd;
@@ -78,7 +78,17 @@ $dbrootpass = qq{$dbrootpass};
 my $dbname = &p("Database to install to", "syslog");
 my $dbtable =  "logs";
 my $dbhost  = &p("Enter the name of the MySQL server", "localhost");
+if ($dbhost !~ /localhost|127.0.0.1/) {
+    system "perl -i -pe 's|qq{LOAD DATA INFILE|qq{LOAD DATA LOCAL INFILE|g' ./db_insert.pl" or die "Could not modify ./db_insert.pl $!\n";
+}
 my $dbport  = &p("Enter the port of the MySQL server", "3306");
+use IO::Socket::INET;
+
+my $sock = IO::Socket::INET->new(
+    PeerAddr=> "$dbhost",
+    PeerPort=> $dbport,
+    Proto   => "tcp");
+my $localip = $sock->sockhost;
 my $dbadmin  = &p("Enter the name to create as the owner of the $dbname database", "syslogadmin");
 $dbadmin = qq{$dbadmin};
 my $dbadminpw = &p("Enter the password for the $dbadmin user", "$dbadmin");
@@ -565,26 +575,26 @@ sub make_dbuser {
     # Remove old user in case this is an upgrade
     # Have to do this for the new LOAD DATA INFILE
     my $dbh = db_connect($dbname, $lzbase, $dbroot, $dbrootpass);
-    my $grant = qq{GRANT USAGE ON *.* TO '$dbadmin'\@'$dbhost';};
+    my $grant = qq{GRANT USAGE ON *.* TO '$dbadmin'\@'$localip';};
     my $sth = $dbh->prepare("
         $grant
         ") or die "Could not temporarily drop the $dbadmin user on $dbname: $DBI::errstr";
     $sth->execute;
-    my $grant = qq{DROP USER '$dbadmin'\@'$dbhost';};
+    my $grant = qq{DROP USER '$dbadmin'\@'$localip';};
     my $sth = $dbh->prepare("
         $grant
         ") or die "Could not temporarily drop the $dbadmin user on $dbname: $DBI::errstr";
     $sth->execute;
 
 # Grant access to $dbadmin
-    my $grant = qq{GRANT ALL PRIVILEGES ON $dbname.* TO '$dbadmin'\@'$dbhost' IDENTIFIED BY '$dbadminpw';};
+    my $grant = qq{GRANT ALL PRIVILEGES ON $dbname.* TO '$dbadmin'\@'$localip' IDENTIFIED BY '$dbadminpw';};
     my $sth = $dbh->prepare("
         $grant
         ") or die "Could not create $dbadmin user on $dbname: $DBI::errstr";
     $sth->execute;
 
     # CDUKES: [[ticket:16]]
-    my $grant = qq{GRANT FILE ON *.* TO '$dbadmin'\@'$dbhost' IDENTIFIED BY '$dbadminpw';};
+    my $grant = qq{GRANT FILE ON *.* TO '$dbadmin'\@'$localip' IDENTIFIED BY '$dbadminpw';};
     my $sth = $dbh->prepare("
         $grant
         ") or die "Could not create $dbadmin user on $dbname: $DBI::errstr";

@@ -1,5 +1,9 @@
 CHANGELOG
 
+3.1.234 - MySQL Remote DB
+CD:
+ - Added logic into install.pl for remote DB support.
+
 3.1.233 - Upgrades
 CD:
  - #106 - Working on an upgrade path for php-syslog-ng v2.x
