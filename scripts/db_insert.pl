@@ -244,7 +244,6 @@ my $db_insert_host = $dbh->prepare("INSERT INTO hosts (host, lastseen) VALUES (?
 my $db_insert_snare_eid = $dbh->prepare("INSERT INTO snare_eid (eid, lastseen) VALUES (?,?) ON DUPLICATE KEY UPDATE seen=seen + 1, lastseen=? ");
 #my $dumpfile = "/dev/shm/infile.txt";
 my $dumpfile = "/tmp/logzilla_import.txt";
-#my $sql = qq{LOAD DATA LOCAL INFILE '$dumpfile' INTO TABLE logs FIELDS TERMINATED BY "\\t" LINES TERMINATED BY "\\n" (host,facility,severity,program,msg,mne,fo,lo)};
 my $infile_prep = qq{LOAD DATA INFILE '$dumpfile' INTO TABLE logs FIELDS TERMINATED BY "\\t" LINES TERMINATED BY "\\n" (host,facility,severity,program,msg,mne,eid,fo,lo)};
 my $db_load_infile = $dbh->prepare("$infile_prep");
 my $db_insert_mpX = $dbh->prepare("REPLACE INTO cache (name,value,updatetime) VALUES (?,?,?)");
