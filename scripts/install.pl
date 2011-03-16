@@ -44,7 +44,7 @@ sub p {
 }
 
 my $version = "3.2";
-my $subversion = ".235";
+my $subversion = ".236";
 
 # Grab the base path
 my $lzbase = getcwd;
@@ -232,6 +232,7 @@ if ($dbhost !~ /localhost|127.0.0.1/) {
     }
     close( FILE );
 }
+setup_rclocal();
 hup_syslog();
 
 sub do_install {
@@ -1041,6 +1042,25 @@ sub setup_apparmor {
                 close $config;
             }
         }
+    }
+}
+sub setup_rclocal {
+    my $file = "/etc/rc.local";
+    if (-f "$file") {
+        open my $config, '+<', "$file" or warn "FAILED: $!\n";
+        my @all = <$config>;
+        if (!grep(/sphinx/, @all)) {
+            seek $config, 0, 0;
+            splice @all, -1, 0, "$lzbase/sphinx/bin/searchd -c $lzbase/sphinx/sphinx.conf\n";
+            print $config @all;
+        }
+        close $config;
+    } else {
+        print("\n\033[1m\tERROR!\n\033[0m");
+        print "Unable to locate your $file\n";
+        print "You will need to manually add the Sphinx Daemon startup to your system...\n";
+        print "Sphinx startup command:\n";
+        print "$lzbase/sphinx/bin/searchd -c $lzbase/sphinx/sphinx.conf\n";
     }
 }
 
