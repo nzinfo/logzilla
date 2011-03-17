@@ -1,5 +1,9 @@
 CHANGELOG
 
+3.1.238 - Minor
+CD:
+ - Changed portlet title for "Mnemonics" to "Cisco Mnemonics"
+
 3.1.237 - Upgrade
 CD:
  - #106 More work on the upgrade process
