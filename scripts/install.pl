@@ -23,6 +23,7 @@ use DBI;
 use Date::Calc;
 use Term::ReadLine;
 use File::Copy;
+use Switch;
 
 # not needed here, but might as well warn the user to install it now since db_insert will need them
 use Text::LevenshteinXS qw(distance);
@@ -44,7 +45,7 @@ sub p {
 }
 
 my $version = "3.2";
-my $subversion = ".236";
+my $subversion = ".237";
 
 # Grab the base path
 my $lzbase = getcwd;
@@ -150,42 +151,35 @@ if ($ok =~ /[Yy]/) {
         print "2. There is a potential for data loss, so please make sure you have backed up your database before proceeding.\n";
         my $ok  = &p("Ok to continue?", "y");
         if ($ok =~ /[Yy]/) {
-            my ($ver, $major, $table, @data);
-            my $sth = $dbh->prepare("
-                show tables like 'settings';
-                ") or die "Could not execute: $DBI::errstr";
-            $sth->execute;
-            while (@data = $sth->fetchrow_array()) {
-                $table = $data[0];
-            }
-            if ($table eq "settings") {
-                $major eq 3;
-            } else {
-                $major eq 2;
-            }
-            if ($major eq 3) {
-                print "$major\n";
-                exit;
-                my $sth = $dbh->prepare("
-                    select name,value from $dbname.settings where name='VERSION';
-                    ") or die "Could not execute: $DBI::errstr";
-                $sth->execute;
-                while (my @data = $sth->fetchrow_array()) {
-                    $ver = $data[1];
-                }
-                if ($ver =~ /3\.1/) {
-                    do_upgrade('3.1');
+            my ($iver, $isub, $ver, $subver, $major, $table, @data);
+            $ver = $dbh->selectrow_array("
+                SELECT value from $dbname.settings where name='VERSION';
+                ");
+            $iver = $ver;
+            $iver =~ s/\.//g;
+            if ($iver) {
+                $subver = $dbh->selectrow_array("
+                    SELECT value from $dbname.settings where name='VERSION_SUB';
+                    ");
+                $isub = $subver;
+                $isub =~ s/\.//g;
+                my $t = $subversion;
+                $t =~ s/\.//g;
+                if ($isub < $t) {
+                    print "Your Version: $ver" . "$subver\n";
+                    print "New Version: $version" . "$subversion\n";
+                    do_upgrade($iver, $isub);
                 } else {
-                    print("\n\033[1m\tERROR!\n\033[0m");
-                    print "Sorry, but there is no upgrade available from version $ver to $version\n";
-                    exit;
+                    print "Your Version: $ver" . "$subver\n";
+                    print "New Version: $version" . "$subversion\n";
+                    print "Your database is already up to date.\n";
                 }
             } else {
                 print "You are running a very old version of LogZilla (php-syslog-ng).\n";
                 print "Install will try to upgrade, but be sure you have backed up your database.\n";
                 my $ok  = &p("Ok to continue?", "y");
                 if ($ok =~ /[Yy]/) {
-                    do_upgrade('2');
+                    do_upgrade(2,2);
                 }
             }
         } else {
@@ -1195,74 +1189,83 @@ sub show_EULA {
 
 sub do_upgrade {
     my $ver = shift;
-    if ($ver eq "3.1") {
-        my $dbh = db_connect($dbname, $lzbase, $dbroot, $dbrootpass);
-        my $sth = $dbh->prepare("
-            alter table logs add `eid` int(10) unsigned NOT NULL DEFAULT '0';
-            ") or die "Could not update $dbname: $DBI::errstr";
-        $sth->execute;
-        my $sth = $dbh->prepare("
-            alter table logs add index eid(eid);
-            ") or die "Could not update $dbname: $DBI::errstr";
-        $sth->execute;
-        my $sth = $dbh->prepare("
-            alter table hosts add `lastseen` datetime NOT NULL default '2011-03-01 00:00:00';
-            ") or die "Could not update $dbname: $DBI::errstr";
-        $sth->execute;
-        my $sth = $dbh->prepare("
-            alter table hosts add `seen` smallint(5) unsigned NOT NULL DEFAULT '1';
-            ") or die "Could not update $dbname: $DBI::errstr";
-        $sth->execute;
-        my $sth = $dbh->prepare("
-            alter table mne add `lastseen` datetime NOT NULL default '2011-03-01 00:00:00';
-            ") or die "Could not update $dbname: $DBI::errstr";
-        $sth->execute;
-        my $sth = $dbh->prepare("
-            alter table mne add `seen` smallint(5) unsigned NOT NULL DEFAULT '1';
-            ") or die "Could not update $dbname: $DBI::errstr";
-        $sth->execute;
-        my $sth = $dbh->prepare("
-            CREATE TABLE `snare_eid` (
-            `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
-            `eid` smallint(5) unsigned NOT NULL DEFAULT '0',
-            `lastseen` datetime NOT NULL,
-            `seen` smallint(5) unsigned NOT NULL DEFAULT '1',
-            PRIMARY KEY (`id`),
-            UNIQUE KEY `eid` (`eid`)
-            ) ENGINE=MyISAM AUTO_INCREMENT=3 DEFAULT CHARSET=latin1;
-            ") or die "Could not update $dbname: $DBI::errstr";
-        $sth->execute;
-        my $sth = $dbh->prepare("
-            CREATE TABLE `triggers` (
-            `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
-            `description` varchar(255) NOT NULL,
-            `pattern` varchar(255) NOT NULL,
-            `mailto` varchar(255) NOT NULL DEFAULT 'root\@localhost',
-            `mailfrom` varchar(255) NOT NULL DEFAULT 'root\@localhost',
-            `subject` varchar(255) NOT NULL,
-            `body` text CHARACTER SET utf8 NOT NULL,
-            `disabled` enum('Yes','No') NOT NULL DEFAULT 'No',
-            PRIMARY KEY (`id`)
-            ) ENGINE=MyISAM AUTO_INCREMENT=3 DEFAULT CHARSET=latin1;
-            ") or die "Could not update $dbname: $DBI::errstr";
-        $sth->execute;
-        my $sth = $dbh->prepare("
-            RENAME TABLE settings TO settings_orig;
-            ") or die "Could not update $dbname: $DBI::errstr";
-        $sth->execute;
-        my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/settings.sql`;
-        print $res;
-        my $sth = $dbh->prepare("
-            REPLACE INTO settings SELECT * FROM settings_orig;
-            ") or die "Could not update $dbname: $DBI::errstr";
-        $sth->execute;
-        my $sth = $dbh->prepare("
-            DROP TABLE settings_orig;
-            ") or die "Could not update $dbname: $DBI::errstr";
-        $sth->execute;
-    } else {
-        print "Your version is not a candidate for upgrade.\n";
-        exit;
+    my $subver = shift;
+    switch ($subver) {
+        case 122 { 
+            my $dbh = db_connect($dbname, $lzbase, $dbroot, $dbrootpass);
+            my $sth = $dbh->prepare("
+                alter table logs add `eid` int(10) unsigned NOT NULL DEFAULT '0';
+                ") or die "Could not update $dbname: $DBI::errstr";
+            $sth->execute;
+            my $sth = $dbh->prepare("
+                alter table logs add index eid(eid);
+                ") or die "Could not update $dbname: $DBI::errstr";
+            $sth->execute;
+            my $sth = $dbh->prepare("
+                alter table hosts add `lastseen` datetime NOT NULL default '2011-03-01 00:00:00';
+                ") or die "Could not update $dbname: $DBI::errstr";
+            $sth->execute;
+            my $sth = $dbh->prepare("
+                alter table hosts add `seen` smallint(5) unsigned NOT NULL DEFAULT '1';
+                ") or die "Could not update $dbname: $DBI::errstr";
+            $sth->execute;
+            my $sth = $dbh->prepare("
+                alter table mne add `lastseen` datetime NOT NULL default '2011-03-01 00:00:00';
+                ") or die "Could not update $dbname: $DBI::errstr";
+            $sth->execute;
+            my $sth = $dbh->prepare("
+                alter table mne add `seen` smallint(5) unsigned NOT NULL DEFAULT '1';
+                ") or die "Could not update $dbname: $DBI::errstr";
+            $sth->execute;
+            my $sth = $dbh->prepare("
+                CREATE TABLE `snare_eid` (
+                `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+                `eid` smallint(5) unsigned NOT NULL DEFAULT '0',
+                `lastseen` datetime NOT NULL,
+                `seen` smallint(5) unsigned NOT NULL DEFAULT '1',
+                PRIMARY KEY (`id`),
+                UNIQUE KEY `eid` (`eid`)
+                ) ENGINE=MyISAM AUTO_INCREMENT=3 DEFAULT CHARSET=latin1;
+                ") or die "Could not update $dbname: $DBI::errstr";
+            $sth->execute;
+            my $sth = $dbh->prepare("
+                CREATE TABLE `triggers` (
+                `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+                `description` varchar(255) NOT NULL,
+                `pattern` varchar(255) NOT NULL,
+                `mailto` varchar(255) NOT NULL DEFAULT 'root\@localhost',
+                `mailfrom` varchar(255) NOT NULL DEFAULT 'root\@localhost',
+                `subject` varchar(255) NOT NULL,
+                `body` text CHARACTER SET utf8 NOT NULL,
+                `disabled` enum('Yes','No') NOT NULL DEFAULT 'No',
+                PRIMARY KEY (`id`)
+                ) ENGINE=MyISAM AUTO_INCREMENT=3 DEFAULT CHARSET=latin1;
+                ") or die "Could not update $dbname: $DBI::errstr";
+            $sth->execute;
+            my $sth = $dbh->prepare("
+                RENAME TABLE settings TO settings_orig;
+                ") or die "Could not update $dbname: $DBI::errstr";
+            $sth->execute;
+            my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/settings.sql`;
+            print $res;
+            my $sth = $dbh->prepare("
+                REPLACE INTO settings SELECT * FROM settings_orig;
+                ") or die "Could not update $dbname: $DBI::errstr";
+            $sth->execute;
+            my $sth = $dbh->prepare("
+                DROP TABLE settings_orig;
+                ") or die "Could not update $dbname: $DBI::errstr";
+            $sth->execute;
+        }
+        case 2 { 
+            print "Attempting upgrade from php-syslog-ng (v2.x) to LogZilla (v3.x)\n";
+            print "Not Implemented yet...sorry\n";
+            exit;
+        }
+        else  { 
+            print "Your version is not a candidate for upgrade.\n";
+            exit;
+        }
     }
 }
 
