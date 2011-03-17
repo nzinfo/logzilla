@@ -30,9 +30,9 @@ if( $count >0 ) {
 var limit = <?php echo ($_SESSION['PORTLET_MNE_LIMIT'])?>;
 var cnt = <?php echo $count?>;
 if (cnt < 11) {
-    $('#portlet-header_Mnemonics').text("Last " + cnt + " Mnemonics");
+    $('#portlet-header_Mnemonics').text("Last " + cnt + " Cisco Mnemonics");
     } else {
-    $('#portlet-header_Mnemonics').text("Last " + limit + " Mnemonics");
+    $('#portlet-header_Mnemonics').text("Last " + limit + " Cisco Mnemonics");
     $('#portlet-header_Mnemonics').append(" (<?php echo commify($count)?> total)")
 };
 </script>
