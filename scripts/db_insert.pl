@@ -516,30 +516,6 @@ while (my $msg = <STDIN>) {
             $mph += $mpm;
             $mpm = 0;
             @mps = ();
-            my @hosts = keys %host_cache;
-            $now = strftime("%Y-%m-%d %H:%M:%S", localtime);
-            foreach my $h (@hosts) {
-                $db_insert_host->execute($h, $now, $now);
-                %host_cache = ();
-            }
-            my @prgs = keys %program_cache;
-            foreach my $p (@prgs) {
-                $db_insert_prg->execute($p, $program_cache{$p});
-            }
-            my @mnes = keys %mne_cache;
-            foreach my $m (@mnes) {
-                $db_insert_mne->execute($m, $mne_cache{$m}, $now, $now);
-            }
-            if ($snare > 0) {
-                my @snare_eids = keys %snare_eid_cache;
-                foreach my $s (@snare_eids) {
-                    $db_insert_snare_eid->execute($s, $now, $now);
-                }
-            }
-            %host_cache = ();
-            %program_cache = ();
-            %mne_cache = ();
-            %snare_eid_cache = ();
         }
         # Temp: exit after 5 minutes for testing
         #if ($#mpm == 5) {
@@ -568,6 +544,30 @@ while (my $msg = <STDIN>) {
         $mps = 0;
         $do_msg_mps = 0;
         $mps_timer_start = (time);
+            my @hosts = keys %host_cache;
+            $now = strftime("%Y-%m-%d %H:%M:%S", localtime);
+            foreach my $h (@hosts) {
+                $db_insert_host->execute($h, $now, $now);
+                %host_cache = ();
+            }
+            my @prgs = keys %program_cache;
+            foreach my $p (@prgs) {
+                $db_insert_prg->execute($p, $program_cache{$p});
+            }
+            my @mnes = keys %mne_cache;
+            foreach my $m (@mnes) {
+                $db_insert_mne->execute($m, $mne_cache{$m}, $now, $now);
+            }
+            if ($snare > 0) {
+                my @snare_eids = keys %snare_eid_cache;
+                foreach my $s (@snare_eids) {
+                    $db_insert_snare_eid->execute($s, $now, $now);
+                }
+            }
+            %host_cache = ();
+            %program_cache = ();
+            %mne_cache = ();
+            %snare_eid_cache = ();
     }
     $end_time = (time);
     my $now = strftime("%Y-%m-%d %H:%M:%S", localtime);

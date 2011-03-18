@@ -235,17 +235,9 @@ if( !tm_done ) {
 <script type="text/javascript" src="includes/js/jquery/plugins/jquery.timeago.js"></script>
 <!-- END Timeago -->
 
-<!-- BEGIN News -->
-<script type="text/javascript" src="includes/js/jquery/plugins/highslide/highslide-full.packed.js"></script>
-<!-- END News -->
-
 <!-- BEGIN Cookies -->
 <script type="text/javascript" src="includes/js/jquery/plugins/jquery.cookie.js"></script>
 <!-- END Cookies -->
-
-<!-- BEGIN Sticky -->
-<script type="text/javascript" src="includes/js/jquery/plugins/jquery.StickyForms.js"></script>
-<!-- END Sticky -->
 
 <!-- BEGIN Tabs -->
 <script type="text/javascript">
@@ -1234,6 +1226,7 @@ function reset_layout()
 <!-- BEGIN Tip Modal -->
 <script type="text/javascript">
 <?php if ($_SESSION['TOOLTIP_GLOBAL'] == "1") { ?>
+<?php if ($_SERVER["REQUEST_URI"] == $_SESSION['SITE_URL'] . "index.php") { ?>
 $(document).ready(function() {  
         $("#tipmodal").dialog({
                         bgiframe: true,
@@ -1275,7 +1268,7 @@ $(document).ready(function() {
                 });
                 $("#tipmodal").dialog('open');     
         });
-<?php } ?>
+<?php }} ?>
         </script>
 <!-- END Tip Modal -->
 <!-- BEGIN Search Param Text -->
@@ -1333,19 +1326,6 @@ $(document).ready(function(){
 });
 </script>
 <!-- END portlet table highlight -->
-
-<!-- BEGIN News -->
-<script type="text/javascript">
-$(document).ready(function(){
-    hs.graphicsDir = 'includes/js/jquery/plugins/highslide/graphics/';
-    hs.showCredits = false;
-    hs.outlineType = 'rounded-white';
-    hs.wrapperClassName = 'draggable-header';
-    hs.align = 'center';
-    hs.outlineWhileAnimating = true;
-});
-</script>
-<!-- END News -->
 
 <!-- C is for Cookie -->
 <script type="text/javascript">

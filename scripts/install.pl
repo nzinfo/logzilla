@@ -45,7 +45,7 @@ sub p {
 }
 
 my $version = "3.2";
-my $subversion = ".239";
+my $subversion = ".240";
 
 # Grab the base path
 my $lzbase = getcwd;
@@ -95,9 +95,11 @@ my $siteadmin  = &p("Enter the name to create as the WEBSITE owner", "admin");
 $siteadmin = qq{$siteadmin};
 my $siteadminpw = &p("Enter the password for $siteadmin", "$siteadmin");
 $siteadminpw = qq{$siteadminpw};
-my $email  = &p("Enter your email address", 'info@logzilla.pro');
+my $email  = &p("Enter your email address", 'root@localhost');
 my $sitename  = &p("Enter a name for your website", 'The home of LogZilla');
-my $url  = &p("Enter the base url for your site (include trailing slash)", '/logs/');
+my $url  = &p("Enter the base url for your site (e.g: / or /logs/)", '/logs/');
+$url = $url . "/" if ($url !~ /\/$/); 
+$url = "/" . $url if ($url !~ /^\//); 
 my $logpath  = &p("Where should log files be stored?", '/var/log/logzilla');
 my $retention  = &p("How long before I archive old logs? (in days)", '7');
 my $snare  = &p("Do you plan to log Windows events from SNARE to this server?", 'n');
@@ -270,114 +272,114 @@ sub do_install {
     print $res;
 
 # Create cache table
-    my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/cache.sql`;
-    print $res;
+my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/cache.sql`;
+print $res;
 
 # Create hosts table
-    my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/hosts.sql`;
-    print $res;
+my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/hosts.sql`;
+print $res;
 
 # Create mnemonics table
-    my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/mne.sql`;
-    print $res;
+my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/mne.sql`;
+print $res;
 
 # Create snare_eid table
-    my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/snare_eid.sql`;
-    print $res;
+my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/snare_eid.sql`;
+print $res;
 
 # Create programs table
-    my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/programs.sql`;
-    print $res;
+my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/programs.sql`;
+print $res;
 
 # Create suppress table
-    my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/suppress.sql`;
-    print $res;
+my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/suppress.sql`;
+print $res;
 
 # Create facilities table
-    my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/facilities.sql`;
-    print $res;
+my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/facilities.sql`;
+print $res;
 
 # Create severities table
-    my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/severities.sql`;
-    print $res;
+my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/severities.sql`;
+print $res;
 
 # Create ban table
-    my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/banned_ips.sql`;
-    print $res;
+my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/banned_ips.sql`;
+print $res;
 
 #  TH: use the new archive feature!
 ## Create archive table
-    my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/logs_archive.sql`;
-    print $res;
+my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/logs_archive.sql`;
+print $res;
 
 # Create triggers table
-    my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/triggers.sql`;
-    print $res;
+my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/triggers.sql`;
+print $res;
 
 # Groups
-    my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/groups.sql`;
-    print $res;
+my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/groups.sql`;
+print $res;
 
 # Insert totd data
-    my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/totd.sql`;
-    print $res;
+my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/totd.sql`;
+print $res;
 
 # Insert LZECS data
-    my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/lzecs.sql`;
-    print $res;
+my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/lzecs.sql`;
+print $res;
 
 # Insert Suppress data
-    my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/suppress.sql`;
-    print $res;
+my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/suppress.sql`;
+print $res;
 
 # Insert ui_layout data
-    my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/ui_layout.sql`;
-    print $res;
+my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/ui_layout.sql`;
+print $res;
 
 # Insert help data
-    my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/help.sql`;
-    print $res;
+my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/help.sql`;
+print $res;
 
 # Insert history table
-    my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/history.sql`;
-    print $res;
+my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/history.sql`;
+print $res;
 
 # Insert archives table
 #   my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/archives.sql`;
 #   print $res;
 # Insert users table
-    my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/users.sql`;
-    print $res;
+my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/users.sql`;
+print $res;
 
-    make_partitions();
-    create_views();
+make_partitions();
+create_views();
 }
 
 sub update_paths {
-    my $search = "/path_to_logzilla";
-    print "Updating file paths\n";
-    foreach my $file (qx(grep -Rl $search ../* | egrep -v "install.pl|\\.svn|\\.sql|license.txt|CHANGELOG|html/includes/index.php|\\.logtest|sphinx/src|sphinx/bin|html/ioncube")) {
-        chomp $file;
-        print "Modifying $file\n";
-        system "perl -i -pe 's|$search|$lzbase|g' $file" and warn "Could not modify $file $!\n";
-    }
-    my $search = "/path_to_logs";
-    print "Updating log paths\n";
-    foreach my $file (qx(grep -Rl $search ../* | egrep -v "install.pl|.svn|.sql|CHANGELOG")) {
-        chomp $file;
-        print "Modifying $file\n";
-        system "perl -i -pe 's|$search|$logpath|g' $file" and warn "Could not modify $file $!\n";
-    }
+my $search = "/path_to_logzilla";
+print "Updating file paths\n";
+foreach my $file (qx(grep -Rl $search ../* | egrep -v "install.pl|\\.svn|\\.sql|license.txt|CHANGELOG|html/includes/index.php|\\.logtest|sphinx/src|sphinx/bin|html/ioncube")) {
+chomp $file;
+print "Modifying $file\n";
+system "perl -i -pe 's|$search|$lzbase|g' $file" and warn "Could not modify $file $!\n";
+}
+my $search = "/path_to_logs";
+print "Updating log paths\n";
+foreach my $file (qx(grep -Rl $search ../* | egrep -v "install.pl|.svn|.sql|CHANGELOG")) {
+chomp $file;
+print "Modifying $file\n";
+system "perl -i -pe 's|$search|$logpath|g' $file" and warn "Could not modify $file $!\n";
+}
 }
 
 
 sub make_logfiles {
 #Create log files for later use by the server
-    my $logfile = "$logpath/logzilla.log";
-    open(LOG,">>$logfile");
-    if (! -f $logfile) {
-        print STDOUT "Unable to open log file \"$logfile\" for writing...$!\n";
-        exit;
+my $logfile = "$logpath/logzilla.log";
+open(LOG,">>$logfile");
+if (! -f $logfile) {
+print STDOUT "Unable to open log file \"$logfile\" for writing...$!\n";
+exit;
     }
     chmod 0666, "$logpath/logzilla.log";
     close(LOG);
@@ -762,12 +764,10 @@ sub update_settings {
             ") or die "Could not update settings table: $DBI::errstr";
         $sth->execute;
     }
-    if ($email ne "info\@logzilla.pro") {
-        my $sth = $dbh->prepare("
-            update triggers set mailto='$email', mailfrom='$email';
-            ") or die "Could not update triggers table: $DBI::errstr";
-        $sth->execute;
-    }
+    my $sth = $dbh->prepare("
+        update triggers set mailto='$email', mailfrom='$email';
+        ") or die "Could not update triggers table: $DBI::errstr";
+    $sth->execute;
     my $sth = $dbh->prepare("
         update users set username='$siteadmin' where username='admin';
         ") or die "Could not insert user data: $DBI::errstr";
