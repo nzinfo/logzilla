@@ -741,7 +741,7 @@ sub do_msg {
 
         # Catch-all for junk streams...
         # This won't work well in non-english environments...
-        $prg = "Unknown" if ($prg !~ /^[a-zA-Z0-9]+$/);
+        $prg = "Unknown" if ($prg !~ /^[\w\'-\s]+$/);
 
         $prg32 = crc32("$prg");
         $mne32 = crc32("$mne");

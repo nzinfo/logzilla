@@ -1,5 +1,9 @@
 CHANGELOG
 
+3.1.239 - Update
+CD:
+ - Better catch-all scrub for program names in db_insert.pl (previous regex made too many things come in as "unknown")
+
 3.1.238 - Minor
 CD:
  - Changed portlet title for "Mnemonics" to "Cisco Mnemonics"
