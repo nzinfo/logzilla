@@ -13,7 +13,7 @@ getsettings();
 <html>
 <head>
 <meta http-equiv="X-UA-Compatible" content="chrome=1">
-<link rel="shortcut icon" type="image/x-icon" href="favicon.ico" />
+<link rel="shortcut icon" type="image/x-icon" href="<?php echo $_SESSION['SITE_URL']?>favicon.ico" />
 <?php echo "<title>".$addTitle.": ".$_SESSION['PROGNAME']." ".$_SESSION['VERSION']."</title>\n"; ?>
 <meta name="Description" "<?php echo $_SESSION['PROGNAME']?>">
 <meta name="Keywords" 'LogZilla', 'Syslog', 'Syslog Tool', 'Syslog Analysis', 'Syslog Analyzer'>
