@@ -57,10 +57,6 @@ This file contains any custom css that I've written
 <link type="text/css" rel="stylesheet" href="<?php echo $_SESSION['SITE_URL']?>css/selectbox.css" />
 <!-- END Select Boxes -->
 
-<!-- BEGIN Error Dialogs -->
-<link type="text/css" rel="stylesheet" href="<?php echo $_SESSION['SITE_URL']?>css/errordialog.css" />
-<!-- END Error Dialogs -->
-
 <!-- BEGIN News -->
 <link type="text/css" rel="stylesheet" href="<?php echo $_SESSION['SITE_URL']?>includes/js/jquery/plugins/highslide/highslide.css" />
 <!-- END News -->

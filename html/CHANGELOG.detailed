@@ -1,5 +1,14 @@
 CHANGELOG
 
+3.1.240 - Update
+CD:
+ - Set login Tips to only show at login, not when navigating back during normal use.
+ - Renamed Sunny theme to LogZilla and placed it first in the themeswitcher.
+ - Clear session variables when url = login.php
+ - Fixed bug: missing session_start() in ajax/json.sadmin that was not updating session variables until logout/login
+ - Moved db_insert.pl cache dumps to end of loop rather than dumping every minute so that hosts, etc. don't show up in last seen as all at the same time.
+ - Moved highslide call to whatsnew page - there's a path error somewhere causing the license helper to report a missing file.
+
 3.1.239 - Update
 CD:
  - Better catch-all scrub for program names in db_insert.pl (previous regex made too many things come in as "unknown")

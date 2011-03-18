@@ -137,7 +137,7 @@ $(function() {
 
 <div class="dialog_hide">
 <div id="license_form" title='Paste New License'>
-Please paste the data from your license.txt in the area below.<br />
+Please paste the data from your license.txt in the area below.<br />Be sure to <u>include the full text</u> of the license including the date and ending dashes.<br /><br />
 You can obtain a free license from <a href="http://www.logzilla.pro/licensing/eval">LogZilla.pro</a>
 <form>
 <textarea style="width:100%;" id="licdata" rows="15" cols="15" class="text ui-widget-content ui-corner-all" /></textarea>
