@@ -1,5 +1,9 @@
 CHANGELOG
 
+3.1.241 - Regress
+CD:
+ - Removed foreach statement from login.
+
 3.1.240 - Update
 CD:
  - Set login Tips to only show at login, not when navigating back during normal use.
