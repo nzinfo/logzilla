@@ -25,4 +25,5 @@ This software is made available to end users under two licenses: a free, open-so
 <li>Maximum number of hosts: <?php echo commify($_SESSION['LZ_LIC_HOSTS'])?></li>
 <li>Authentication modules: <?php echo $_SESSION['LZ_LIC_AUTH']?></li>
 <li>Adhoc Charts: <?php echo $_SESSION['LZ_LIC_ADHOC']?></li>
+<li>Email Alerts: <?php echo $_SESSION['LZ_LIC_TRIGGERS']?></li>
 </ul>
