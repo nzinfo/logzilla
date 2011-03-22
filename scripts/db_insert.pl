@@ -865,6 +865,7 @@ sub do_msg {
     # Now that the distance test is over we need to insert any new records that either didn't previously exist or because we had the dedup feature disabled
     if ($insert != 0) {
         if ($host ne "")  {
+            $snare_eid = 0 if ($snare_eid eq "");
             $queue = "$host\t$facility\t$severity\t$prg32\t$msg\t$mne32\t$snare_eid\t$ts\t$ts\t\n";
         } else {
             $do_msg_mps++;

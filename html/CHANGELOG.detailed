@@ -1,5 +1,10 @@
 CHANGELOG
 
+3.1.244 - Bug Fix
+CD:
+ - db_insert bug: when snare enabled, but no snare events, snare_eid value is blank causing impoorts to fail.
+   resolved by setting snare_eid = 0 when field is blank.
+
 3.1.243 - Minor
 CD:
  - Fixed typo on about page
