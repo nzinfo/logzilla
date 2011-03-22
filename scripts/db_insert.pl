@@ -244,7 +244,9 @@ my $db_insert_host = $dbh->prepare("INSERT INTO hosts (host, lastseen) VALUES (?
 my $db_insert_snare_eid = $dbh->prepare("INSERT INTO snare_eid (eid, lastseen) VALUES (?,?) ON DUPLICATE KEY UPDATE seen=seen + 1, lastseen=? ");
 #my $dumpfile = "/dev/shm/infile.txt";
 my $dumpfile = "/tmp/logzilla_import.txt";
-my $infile_prep = qq{LOAD DATA LOCAL INFILE '$dumpfile' INTO TABLE logs FIELDS TERMINATED BY "\\t" LINES TERMINATED BY "\\n" (host,facility,severity,program,msg,mne,eid,fo,lo)};
+
+# See ticket #117 regarding non-local databases and auto-partitioning
+my $infile_prep = qq{LOAD DATA INFILE '$dumpfile' INTO TABLE logs FIELDS TERMINATED BY "\\t" LINES TERMINATED BY "\\n" (host,facility,severity,program,msg,mne,eid,fo,lo)};
 my $db_load_infile = $dbh->prepare("$infile_prep");
 my $db_insert_mpX = $dbh->prepare("REPLACE INTO cache (name,value,updatetime) VALUES (?,?,?)");
 my $db_insert_sum = $dbh->prepare("INSERT INTO cache (name,value,updatetime) VALUES ('msg_sum',?,?) ON DUPLICATE KEY UPDATE value=value + ?");
@@ -270,11 +272,11 @@ my $mode = 0644;   chmod $mode, "$dumpfile";
 $dbh->{RaiseError} = 1;
 $dbh->{PrintError} = 1;
 # Pre-populate cache's with db values
-my $prg_select = $dbh->prepare("SELECT * FROM programs");
-$prg_select->execute();
-while (my $ref = $prg_select->fetchrow_hashref()) {
-    $program_cache{$ref->{'name'}} = $ref->{'crc'};
-}
+#my $prg_select = $dbh->prepare("SELECT * FROM programs");
+#$prg_select->execute();
+#while (my $ref = $prg_select->fetchrow_hashref()) {
+#$program_cache{$ref->{'name'}} = $ref->{'crc'};
+#}
 
 # Had to remove pre-reading hosts from the DB into the cache table since we started tracking hostcount and lastseen
 # If we pull them in, they will get counted as being seen again.
@@ -365,10 +367,10 @@ while (my $msg = <STDIN>) {
     }
     push(@dumparr, do_msg($msg));
     if (eof()) { # check for end of last file
-        $db_insert_host->{TraceLevel} = 4 if (($debug > 4) and ($verbose));
-        $db_insert_prg->{TraceLevel} = 4 if (($debug > 4) and ($verbose));
-        $db_insert_mne->{TraceLevel} = 4 if (($debug > 4) and ($verbose));
-        $db_insert_snare_eid->{TraceLevel} = 4 if (($debug > 4) and ($verbose));
+        $db_insert_host->{TraceLevel} = $debug if (($debug) and ($verbose));
+        $db_insert_prg->{TraceLevel} = $debug if (($debug) and ($verbose));
+        $db_insert_mne->{TraceLevel} = $debug if (($debug) and ($verbose));
+        $db_insert_snare_eid->{TraceLevel} = $debug if (($debug) and ($verbose));
         open (DUMP, ">$dumpfile") or die "can't open $dumpfile: $!\n";
         print LOG "EOF - Flushing buffer\n" if ($debug > 0);
         print STDOUT "EOF - Flushing buffer\n" if ($debug > 0);
@@ -378,12 +380,12 @@ while (my $msg = <STDIN>) {
         print DUMP @dumparr;
         undef (@dumparr);
         close (DUMP);
-        $db_load_infile->{TraceLevel} = 4 if (($debug > 4) and ($verbose));
+        $db_load_infile->{TraceLevel} = $debug if (($debug) and ($verbose));
         $db_load_infile->execute();
-        if ($db_load_infile->errstr()) {
+        if ($dbh->errstr()) {
             # cdukes: Added to catch errors on missing partitions
             # This will auto-create a new partition if it is missing.
-            if ($db_load_infile->errstr() =~ /Table has no partition for value (\d+)/) {
+            if ($dbh->errstr() =~ /Table has no partition for value (\d+)/) {
                 makepart($1);
                 $db_load_infile->execute();
                 if ($db_load_infile->errstr() =~ /Table has no partition for value (\d+)/) {
@@ -504,12 +506,12 @@ while (my $msg = <STDIN>) {
         print LOG "\n#######\nCurrent MPS = $mps ($do_msg_mps deduplicated)\n#######\n" if ($debug > 2);
         $mpm += $mps;
         push(@mps, "chart_mps_$sec,$mps,$now");
-        $db_insert_sum->{TraceLevel} = 4 if (($debug > 4) and ($verbose));
+        $db_insert_sum->{TraceLevel} = $debug if (($debug) and ($verbose));
         $db_insert_sum->execute($mps, $now, $mps);
         if ($#mps == 60) {
             my $now = strftime("%Y-%m-%d %H:%M:%S", localtime);
             push(@mpm, "chart_mpm_$min,$mpm,$now");
-            $db_insert_mpX->{TraceLevel} = 4 if (($debug > 4) and ($verbose));
+            $db_insert_mpX->{TraceLevel} = $debug if (($debug) and ($verbose));
             $db_insert_mpX->execute("chart_mpm_$min", "$mpm", "$now");
             print STDOUT "Messages Per Minute = $mpm\n" if ($debug > 1);
             print LOG "Messages Per Minute = $mpm\n" if ($debug > 1);
@@ -792,7 +794,7 @@ sub do_msg {
     # If the SQZ feature is enabled, continue, if not we'll just insert the record afterward
     if($dedup eq 1) {
         $insert = 1;
-        $db_select->{TraceLevel} = 4 if (($debug > 4) and ($verbose));
+        $db_select->{TraceLevel} = $debug if (($debug) and ($verbose));
         # Select any records between now and $dedup_window seconds ago that match this host, facility, etc.
         $db_select->execute($host, $facility, $severity, $prg32, $datetime_past, $datetime_now);
         if ($db_select->errstr()) {
@@ -833,7 +835,7 @@ sub do_msg {
             # Next, for each row found, we're going to select it and get some information such as the fo and counter
             print LOG "Processing $numrows rows:\n\tSource: $update_id\n\tCurrent: $rows[$i]\n" if ($debug > 3);
             print STDOUT "Processing $numrows rows:\n\tSource: $update_id\n\tCurrent: $rows[$i]\n" if (($debug > 3) and ($verbose));
-            $db_select_id->{TraceLevel} = 4 if (($debug > 4) and ($verbose));
+            $db_select_id->{TraceLevel} = $debug if (($debug) and ($verbose));
             $db_select_id->execute($rows[$i]);
             while (my $ref = $db_select_id->fetchrow_hashref()) {
                 print LOG "Counter from DBID $rows[$i] = ".$ref->{'counter'}."\n" if ($debug > 3);
@@ -845,14 +847,14 @@ sub do_msg {
             # if the row returned is the FIRST record, we need to update it with new counter, fo and lo
             print LOG "UPDATING DB Record: $update_id with new counter ($counter) and timestamps\n" if ($debug > 3);
             print STDOUT "UPDATING DB Record: $update_id with new counter ($counter) and timestamps\n" if (($debug > 3) and ($verbose));
-            $db_update->{TraceLevel} = 4 if (($debug > 4) and ($verbose));
+            $db_update->{TraceLevel} = $debug if (($debug) and ($verbose));
             $db_update->execute($counter,$fo,$datetime_now,$update_id);
             # Todo - check on forking to speed this up?
             #$dbh->{InactiveDestroy} = 1;
             #fork and exit;
             print LOG "DELETING DB Record: $rows[$i] which is a duplicate record of $update_id\n" if ($debug > 3);
             print STDOUT "DELETING DB Record: $rows[$i] which is a duplicate record of $update_id\n" if (($debug > 3) and ($verbose));
-            $db_del->{TraceLevel} = 4 if (($debug > 4) and ($verbose));
+            $db_del->{TraceLevel} = $debug if (($debug) and ($verbose));
             $db_del->execute($rows[$i]);
             # Since we've already done an update of the first record, we don't need to insert anything after this
             $insert = 0;
