@@ -1,5 +1,10 @@
 CHANGELOG
 
+3.1.248 - Minor
+CD:
+ - Change 'seen' column from smallint to int unsigned in hosts, mnes and eids
+ - Added scripts/dbupdate.pl script to modify seen columns and add seen updates to cacheUpdate mysql proc.
+
 3.1.247 - BugFix
 CD:
  - Fix for top menu charts not showing 'none' mnemonics when mne charts aren't being asked for (as in top 10 programs).

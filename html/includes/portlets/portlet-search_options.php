@@ -55,6 +55,14 @@ if ($_SESSION['SHOWCOUNTS'] == "1") {
   </tr>
 </thead>
   <tbody>
+    <tr>
+        <td>
+        <td>
+        <label for="cookietoggle">Toggle Cookies</label>
+        <input type="checkbox" id="cookietoggle" />
+        </td>
+        </td>
+  </tr>
     <?php  if ( $_SESSION['FOOGRAPHS'] == "1" ) { ?>
     <tr>
         <td>TopX</td>
@@ -204,6 +212,11 @@ if ($_SESSION['SHOWCOUNTS'] == "1") {
     </tr>
 </tbody>
 </table>
+<script type="text/javascript">
+$(document).ready(function(){
+        $("#cookietoggle").button()
+}); // end doc ready
+</script>
 <!-- END HTML for search options -->
 <?php } else { ?>
 <script type="text/javascript">
