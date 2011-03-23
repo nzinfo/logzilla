@@ -1,5 +1,9 @@
 CHANGELOG
 
+3.1.247 - BugFix
+CD:
+ - Fix for top menu charts not showing 'none' mnemonics when mne charts aren't being asked for (as in top 10 programs).
+
 3.1.246 - Enhancement
 CD:
  - Updated install.pl to add updates for the seen hosts, mnes and snare_eids when calling the updateCache procedure in MySQL.
