@@ -45,7 +45,7 @@ sub p {
 }
 
 my $version = "3.2";
-my $subversion = ".245";
+my $subversion = ".246";
 
 # Grab the base path
 my $lzbase = getcwd;
@@ -543,6 +543,9 @@ sub make_partitions {
     BEGIN    
     REPLACE INTO cache (name,value,updatetime) VALUES ('msg_sum', (SELECT SUM(counter) FROM `$dbtable`),NOW());
     REPLACE INTO cache (name,value,updatetime) VALUES (CONCAT('chart_mpd_',DATE_FORMAT(NOW() - INTERVAL 1 DAY, '%Y-%m-%d_%a')), (SELECT SUM(counter) FROM `$dbtable` WHERE lo BETWEEN DATE_SUB(CONCAT(CURDATE(), ' 00:00:00'), INTERVAL 1 DAY) AND DATE_SUB(CONCAT(CURDATE(), ' 23:59:59'), INTERVAL  1 DAY)),NOW());
+    UPDATE `hosts` SET `seen` = ( SELECT SUM(`$dbtable`.`counter`) FROM `$dbtable` WHERE `$dbtable`.`host` = `hosts`.`host` );
+    UPDATE `mne` SET `seen` = ( SELECT SUM(`$dbtable`.`counter`) FROM `$dbtable` WHERE `$dbtable`.`mne` = `mne`.`crc` );
+    UPDATE `snare_eid` SET `seen` = ( SELECT SUM(`$dbtable`.`counter`) FROM `$dbtable` WHERE `$dbtable`.`eid` = `snare_eid`.`eid` );
     END 
     };
     my $sth = $dbh->prepare("
