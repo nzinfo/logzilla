@@ -45,7 +45,7 @@ sub p {
 }
 
 my $version = "3.2";
-my $subversion = ".247";
+my $subversion = ".248";
 
 # Grab the base path
 my $lzbase = getcwd;
@@ -1209,7 +1209,7 @@ sub do_upgrade {
                 ") or die "Could not update $dbname: $DBI::errstr";
             $sth->execute;
             my $sth = $dbh->prepare("
-                alter table hosts add `seen` smallint(5) unsigned NOT NULL DEFAULT '1';
+                alter table hosts add `seen` int(10) unsigned NOT NULL DEFAULT '1';
                 ") or die "Could not update $dbname: $DBI::errstr";
             $sth->execute;
             my $sth = $dbh->prepare("
@@ -1217,7 +1217,7 @@ sub do_upgrade {
                 ") or die "Could not update $dbname: $DBI::errstr";
             $sth->execute;
             my $sth = $dbh->prepare("
-                alter table mne add `seen` smallint(5) unsigned NOT NULL DEFAULT '1';
+                alter table mne add `seen` int(10) unsigned NOT NULL DEFAULT '1';
                 ") or die "Could not update $dbname: $DBI::errstr";
             $sth->execute;
             my $sth = $dbh->prepare("
@@ -1225,7 +1225,7 @@ sub do_upgrade {
                 `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
                 `eid` smallint(5) unsigned NOT NULL DEFAULT '0',
                 `lastseen` datetime NOT NULL,
-                `seen` smallint(5) unsigned NOT NULL DEFAULT '1',
+                `seen` int(10) unsigned NOT NULL DEFAULT '1',
                 PRIMARY KEY (`id`),
                 UNIQUE KEY `eid` (`eid`)
                 ) ENGINE=MyISAM AUTO_INCREMENT=3 DEFAULT CHARSET=latin1;

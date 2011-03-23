@@ -40,8 +40,8 @@ if (cnt < 11) {
 <thead class="ui-widget-header">
   <tr>
     <th width="5%" style="text-align:left"></th>
-    <th width="50%" style="text-align:left">Host</th>
-    <th width="20%" style="text-align:left">Seen</th>
+    <th width="45%" style="text-align:left">Host</th>
+    <th width="25%" style="text-align:left">Seen</th>
     <th width="25%" style="text-align:left">Last Seen</th>
   </tr>
 </thead>
