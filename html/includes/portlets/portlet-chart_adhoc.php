@@ -28,13 +28,28 @@ if ((has_portlet_access($_SESSION['username'], 'Graph Results') == TRUE) || ($_S
     $where = "WHERE 1=1";
 
     $qstring = '';
+    // If url is pasted without a date/time, assume today.
+    if($_GET) {
+        if (!in_array('lo_checkbox', $_GET)) {
+            $_GET['lo_checkbox'] = "on";
+        }
+        if (!in_array('lo_date', $_GET)) {
+            $_GET['lo_date'] = date("Y-m-d");
+        }
+        if (!in_array('lo_time_start', $_GET)) {
+            $_GET['lo_time_start'] = "00:00:00";
+        }
+        if (!in_array('lo_time_end', $_GET)) {
+            $_GET['lo_time_end'] = "23:59:59";
+        }
+    }
     $page = get_input('page');
     $qstring .= "?page=$page";
 
-$show_suppressed = get_input('show_suppressed');
-$qstring .= "&show_suppressed=$show_suppressed";
-    
-// Special - this gets posted via javascript since it comes from the hosts grid
+    $show_suppressed = get_input('show_suppressed');
+    $qstring .= "&show_suppressed=$show_suppressed";
+
+    // Special - this gets posted via javascript since it comes from the hosts grid
 // Form code is somewhere near line 992 of js_footer.php
 $hosts = get_input('hosts');
 // sel_hosts comes from the main page <select>, whereas 'hosts' above this line comes from the grid select via javascript.
@@ -293,15 +308,6 @@ if ($facilities) {
             $where.= " AND fo BETWEEN '$start' AND '$end'";
         }
     }
-    // If url is pasted without a date/time, assume today.
-    if($_GET) {
-        if (!in_array('fo_checkbox', $_GET)) {
-            $start = date("Y-m-d") . " 00:00:00";
-            $end = date("Y-m-d") . " 23:59:59";
-            $where .= " AND mne !='".mne2crc('None')."'";
-            $where .= " AND fo BETWEEN '$start' AND '$end'";
-        }
-    }
     // LO
     $start = "";
     $end = "";
@@ -394,6 +400,9 @@ if ($facilities) {
     $groupby = get_input('groupby');
     if ($groupby === "eid") {
         $where .= " AND eid > 0 ";
+    }
+    if ($groupby === "mne") {
+        $where .= " AND mne !='".mne2crc('None')."'";
     }
     $qstring .= "&groupby=$groupby";
     $groupby = (!empty($groupby)) ? $groupby : "host";
