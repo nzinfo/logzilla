@@ -16,7 +16,8 @@ sub p {
     return $input ? $input : $default;
 }
 my $ok  = &p("This script will perform a DB column and Event Procedure update to the syslog databasee.\nIt is only meant for users of LogZilla v3.x.214 through .247\nBEFORE you continue, please edit this file and set \$dbtable and \$config at the top!\nContinue? (yes/no)", "n");
-if ($ok !~ /[Yy]/) {
+if ($ok =~ /[Yy]/) {
+    print "Performing updates...\n";
 
     if (! -f $config) {
         print STDOUT "Can't open config file \"$config\" : $!\n"; 
@@ -82,4 +83,5 @@ if ($ok !~ /[Yy]/) {
         $event
         ") or die "Could not create updateCache Procedure: $DBI::errstr";
     $sth->execute;
+    print "Updates completed...\n";
 }
