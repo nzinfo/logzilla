@@ -45,7 +45,7 @@ sub p {
 }
 
 my $version = "3.2";
-my $subversion = ".249";
+my $subversion = ".250";
 
 # Grab the base path
 my $lzbase = getcwd;
@@ -222,6 +222,8 @@ if ($dbhost !~ /localhost|127.0.0.1/) {
         if ($line =~ /^(my.*=.*LOAD DATA) (INFILE.*)/) {
             #print "Altering $line:\n$1 LOCAL $2\n";
             print FILE "$1 LOCAL $2\n";
+        } elsif ($line =~ /^(my.*"DBI:mysql.*;)(mysql_read_default_group=logzilla;")/) {
+            print FILE $1 . "mysql_local_infile=1;" . $2 ."\n";
         } else {
             print FILE "$line\n";
         }
@@ -272,114 +274,114 @@ sub do_install {
     print $res;
 
 # Create cache table
-my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/cache.sql`;
-print $res;
+    my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/cache.sql`;
+    print $res;
 
 # Create hosts table
-my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/hosts.sql`;
-print $res;
+    my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/hosts.sql`;
+    print $res;
 
 # Create mnemonics table
-my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/mne.sql`;
-print $res;
+    my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/mne.sql`;
+    print $res;
 
 # Create snare_eid table
-my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/snare_eid.sql`;
-print $res;
+    my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/snare_eid.sql`;
+    print $res;
 
 # Create programs table
-my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/programs.sql`;
-print $res;
+    my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/programs.sql`;
+    print $res;
 
 # Create suppress table
-my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/suppress.sql`;
-print $res;
+    my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/suppress.sql`;
+    print $res;
 
 # Create facilities table
-my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/facilities.sql`;
-print $res;
+    my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/facilities.sql`;
+    print $res;
 
 # Create severities table
-my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/severities.sql`;
-print $res;
+    my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/severities.sql`;
+    print $res;
 
 # Create ban table
-my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/banned_ips.sql`;
-print $res;
+    my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/banned_ips.sql`;
+    print $res;
 
 #  TH: use the new archive feature!
 ## Create archive table
-my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/logs_archive.sql`;
-print $res;
+    my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/logs_archive.sql`;
+    print $res;
 
 # Create triggers table
-my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/triggers.sql`;
-print $res;
+    my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/triggers.sql`;
+    print $res;
 
 # Groups
-my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/groups.sql`;
-print $res;
+    my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/groups.sql`;
+    print $res;
 
 # Insert totd data
-my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/totd.sql`;
-print $res;
+    my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/totd.sql`;
+    print $res;
 
 # Insert LZECS data
-my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/lzecs.sql`;
-print $res;
+    my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/lzecs.sql`;
+    print $res;
 
 # Insert Suppress data
-my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/suppress.sql`;
-print $res;
+    my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/suppress.sql`;
+    print $res;
 
 # Insert ui_layout data
-my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/ui_layout.sql`;
-print $res;
+    my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/ui_layout.sql`;
+    print $res;
 
 # Insert help data
-my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/help.sql`;
-print $res;
+    my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/help.sql`;
+    print $res;
 
 # Insert history table
-my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/history.sql`;
-print $res;
+    my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/history.sql`;
+    print $res;
 
 # Insert archives table
 #   my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/archives.sql`;
 #   print $res;
 # Insert users table
-my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/users.sql`;
-print $res;
+    my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/users.sql`;
+    print $res;
 
-make_partitions();
-create_views();
+    make_partitions();
+    create_views();
 }
 
 sub update_paths {
-my $search = "/path_to_logzilla";
-print "Updating file paths\n";
-foreach my $file (qx(grep -Rl $search ../* | egrep -v "install.pl|\\.svn|\\.sql|license.txt|CHANGELOG|html/includes/index.php|\\.logtest|sphinx/src|sphinx/bin|html/ioncube")) {
-chomp $file;
-print "Modifying $file\n";
-system "perl -i -pe 's|$search|$lzbase|g' $file" and warn "Could not modify $file $!\n";
-}
-my $search = "/path_to_logs";
-print "Updating log paths\n";
-foreach my $file (qx(grep -Rl $search ../* | egrep -v "install.pl|.svn|.sql|CHANGELOG")) {
-chomp $file;
-print "Modifying $file\n";
-system "perl -i -pe 's|$search|$logpath|g' $file" and warn "Could not modify $file $!\n";
-}
+    my $search = "/path_to_logzilla";
+    print "Updating file paths\n";
+    foreach my $file (qx(grep -Rl $search ../* | egrep -v "install.pl|\\.svn|\\.sql|license.txt|CHANGELOG|html/includes/index.php|\\.logtest|sphinx/src|sphinx/bin|html/ioncube")) {
+        chomp $file;
+        print "Modifying $file\n";
+        system "perl -i -pe 's|$search|$lzbase|g' $file" and warn "Could not modify $file $!\n";
+    }
+    my $search = "/path_to_logs";
+    print "Updating log paths\n";
+    foreach my $file (qx(grep -Rl $search ../* | egrep -v "install.pl|.svn|.sql|CHANGELOG")) {
+        chomp $file;
+        print "Modifying $file\n";
+        system "perl -i -pe 's|$search|$logpath|g' $file" and warn "Could not modify $file $!\n";
+    }
 }
 
 
 sub make_logfiles {
 #Create log files for later use by the server
-my $logfile = "$logpath/logzilla.log";
-open(LOG,">>$logfile");
-if (! -f $logfile) {
-print STDOUT "Unable to open log file \"$logfile\" for writing...$!\n";
-exit;
+    my $logfile = "$logpath/logzilla.log";
+    open(LOG,">>$logfile");
+    if (! -f $logfile) {
+        print STDOUT "Unable to open log file \"$logfile\" for writing...$!\n";
+        exit;
     }
     chmod 0666, "$logpath/logzilla.log";
     close(LOG);
