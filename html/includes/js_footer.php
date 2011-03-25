@@ -1355,52 +1355,54 @@ function clearCookies() {
         }
     }
 }
-jQuery("input:reset").click( function() { 
+// $("label[for='cookietoggle']").html("&nbsp;&nbsp;<span class='ui-button ui-button-text'>Reset Cookies&nbsp;&nbsp;</span>");
+    // $pagecontent .= "<label for=\"cookietoggle\">Remember Settings</label><input type=\"checkbox\" id=\"cookietoggle\" />\n";
+$("#reset_placeholder").html("<input class='ui-state-default ui-corner-all' type='reset' id='btnReset' value='Reset Cookies'>");
+$("#cookietoggle").button();
+$("#btnReset").click( function() { 
+      // var isChecked = $(this).attr('checked');
+        // if (isChecked == 'false') {
         clearCookies();
+        // };
         }); 
 
 // Adapted from http://www.komodomedia.com/blog/2008/07/using-jquery-to-save-form-details/
 function remember( selector ){
-    // if we have a checkbox
-    if($(this).attr("type") == "checkbox") {
-      // Get "checked" status and set cookiename field
-      var isChecked = $(this).attr('checked');
-      var cookiename = options['prefix'] + $(this).attr('id');
-
-      //if this item has been cookied, restore it
-      if($.cookie( cookiename ) == "true") {
-        $(this).attr( 'checked', $.cookie( cookiename ) );
-      }
-      //assign a change function to the item to cookie it
-      $(this).change(
-        function(){
-    if (selector == "#hosts") {
-    var v = $(this).attr(':checkbox');
-    var f = $(this).attr("type");
-    // alert (v + " and " + f);
-    }
-          $.cookie( cookiename, $(this).attr('checked'), { path: '/', expires: 365 });
-        }
-      );
-    } else {
     $(selector).each(
-        function(){
+            function(){
             //if this item has been cookied, restore it
             var cookiename = $(this).attr('id');
             cookiename = 'ck_' + cookiename;
             if( $.cookie( cookiename ) ){
-                $(this).val( $.cookie(cookiename) );
+            $(this).val( $.cookie(cookiename) );
             }
             //assign a change function to the item to cookie it
             $(this).change(
                 function(){
-                    $.cookie(cookiename, $(this).val(), { path: '/', expires: 365 });
-// alert("saving cookie: " + cookiename);
+                $.cookie(cookiename, $(this).val(), { path: '/', expires: 365 });
+                // alert("saving cookie: " + cookiename);
                 }
+                );
+            }
             );
-        }
+};
+function c_remember( selector ){
+    $(selector).each(
+            function(){
+                //if this item has been cookied, restore it
+                var cookiename = $(this).attr("id");
+            cookiename = 'ck_' + cookiename;
+            if( $.cookie( cookiename ) ){
+                    $(this).attr('checked', true);
+                }
+                $(this).change(
+                    function(){
+                    $.cookie(cookiename, $(this).attr("id"), { path: '/', expires: 365 });
+                    // alert("saving cookie: " + cookiename);
+                    }
+                );
+                }
     );
-    }
 };
 
 
@@ -1417,17 +1419,39 @@ remember( '#chart_type' );
 remember( '#tail' );
 remember( '#show_suppressed' );
 remember( '#graphtype' );
-remember( '#mnemonics' );
-remember( '#hosts' );
-remember( '#eids' );
+// c_remember( '#mnemonics' );
+// c_remember( '#hosts' );
+// c_remember( '#eids' );
+// c_remember( '#cookietoggle' );
 
 }); // end doc ready
 /*
 $(document).ready(function(){
+    // if we have a checkbox
+ $("input[@type='checkbox']").each(function(){
+      // Get "checked" status and set cookiename field
+      var isChecked = $(this).attr('checked');
+      var cookiename = options['prefix'] + $(this).attr('id');
+
+      //if this item has been cookied, restore it
+      if($.cookie( cookiename ) == "true") {
+        $(this).attr( 'checked', $.cookie( cookiename ) );
+      }
+      //assign a change function to the item to cookie it
+      $(this).change(
+        function(){
+    }
+          $.cookie( cookiename, $(this).attr('checked'), { path: '/', expires: 365 });
+        }
+      );
+    } else {
 
  // Initialize checkboxes according to the value stored in cookies :
  $("input[@type='checkbox']").each(function(){
+      var isChecked = $(this).attr('checked');
+        if (isChecked == 'true') {
      this.checked=LireCookie(this.value);  // LireCookie returns true or null;
+     }
     });
 
   $(this).click(function(){

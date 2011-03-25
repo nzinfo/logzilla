@@ -1,5 +1,10 @@
 CHANGELOG
 
+3.1.250 - Multi
+CD:
+ - More work on cookies
+ - Fix for remote database inserts in db_insert.pl (dsn needs use_local_infile keyword).
+
 3.1.249 - Minor
 CD:
  - Typo in dbupdates.pl script
