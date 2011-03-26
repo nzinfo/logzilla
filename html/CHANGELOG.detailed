@@ -1,5 +1,9 @@
 CHANGELOG
 
+3.1.252 - Minor
+CD:
+ - Added scripts/cleardatabase.pl which allows resetting the admin password and clearing all data to start fresh.
+
 3.1.251 - Minor
 CD:
  - Found typo for crc2prg in adhoc charts
