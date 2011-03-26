@@ -481,7 +481,7 @@ if ($facilities) {
                         $x_horiz_labels[] = crc2mne($line[$dbcolumn]);
                         break;
                     case 'program':
-                        $x_horiz_labels[] = c2prg($line[$dbcolumn]);
+                        $x_horiz_labels[] = crc2prg($line[$dbcolumn]);
                         break;
                     case 'facility':
                         $x_horiz_labels[] = int2fac($line[$dbcolumn]);
@@ -533,7 +533,7 @@ if ($facilities) {
                         $x_horiz_labels[] = crc2mne($line[$dbcolumn]);
                         break;
                     case 'program':
-                        $x_horiz_labels[] = c2prg($line[$dbcolumn]);
+                        $x_horiz_labels[] = crc2prg($line[$dbcolumn]);
                         break;
                     case 'facility':
                         $x_horiz_labels[] = int2fac($line[$dbcolumn]);
