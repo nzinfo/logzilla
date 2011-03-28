@@ -21,7 +21,13 @@
 use strict;
 $| = 1;
 
-my $licfile="/path_to_logzilla/license.txt";
+# Get LogZilla base directory
+use Cwd;
+my $lzbase = getcwd;
+$lzbase =~ s/\/scripts//g;
+
+
+my $licfile="$lzbase/license.txt";
 if ($ARGV[0]) {
     my $txt = $ARGV[0];
     open FILE, ">$licfile" or die "Unable to open $licfile: $!";

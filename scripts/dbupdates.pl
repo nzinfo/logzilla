@@ -4,8 +4,15 @@ use strict;
 $| = 1;
 use DBI;
 
+# Edit this if your table is not the default
 my $dbtable = "logs";
-my $config = "../html/config/config.php";
+
+# Get LogZilla base directory
+use Cwd;
+my $lzbase = getcwd;
+$lzbase =~ s/\/scripts//g;
+
+my $config = "$lzbase/html/config/config.php";
 
 system("stty erase ^H");
 sub p {
@@ -15,7 +22,7 @@ sub p {
     chomp(my $input = <STDIN>);
     return $input ? $input : $default;
 }
-my $ok  = &p("This script will perform a DB column and Event Procedure update to the syslog databasee.\nIt is only meant for users of LogZilla v3.x.214 through .247\nBEFORE you continue, please edit this file and set \$dbtable and \$config at the top!\nContinue? (yes/no)", "n");
+my $ok  = &p("This script will perform a DB column and Event Procedure update to the syslog databasee.\nIt is only meant for users of LogZilla v3.x.214 through .247\nBEFORE you continue, please edit this file and set \$dbtable at the top!\nContinue? (yes/no)", "n");
 if ($ok =~ /[Yy]/) {
     print "Performing updates...\n";
 
