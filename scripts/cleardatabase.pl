@@ -4,6 +4,11 @@ use strict;
 $| = 1;
 use DBI;
 
+# Get LogZilla base directory
+use Cwd;
+my $lzbase = getcwd;
+$lzbase =~ s/\/scripts//g;
+
 system("stty erase ^H");
 
 use vars qw/ %opt /;
@@ -18,7 +23,7 @@ sub init()
     getopts( "$opt_string", \%opt ) or usage();
     usage() if $opt{h};
     $debug = defined($opt{'d'}) ? $opt{'d'} : '0';
-    $config = defined($opt{'c'}) ? $opt{'c'} : "/path_to_logzilla/html/config/config.php";
+    $config = defined($opt{'c'}) ? $opt{'c'} : "$lzbase/html/config/config.php";
 }
 
 init();
@@ -34,7 +39,7 @@ This program is used to restore LogZilla to defaults.
     -h        : this (help) message
     -d        : debug level (0-5) (0 = disabled [default])
     -c        : config file (overrides the default config.php file location set in the '\$config' variable in this script)
-    example: $0 -l /var/log/foo.log -d 5 -c /path_to_logzilla/html/config/config.php -v -t /var/log/syslog
+    example: $0 -l /var/log/foo.log -d 5 -c $lzbase/html/config/config.php -v -t /var/log/syslog
 EOF
     exit;
 }
@@ -56,7 +61,7 @@ if (!$db){
     exit;
 }
 my $dsn = "DBI:mysql:$db:;mysql_read_default_group=logzilla;"
-. "mysql_read_default_file=/path_to_logzilla/scripts/sql/lzmy.cnf";
+. "mysql_read_default_file=$lzbase/scripts/sql/lzmy.cnf";
 $dbh = DBI->connect($dsn, $dbuser, $dbpass);
 if (!$dbh) {
     print LOG "Can't connect to database: ", $DBI::errstr, "\n";
