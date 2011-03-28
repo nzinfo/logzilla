@@ -246,7 +246,7 @@ my $db_insert_snare_eid = $dbh->prepare("INSERT INTO snare_eid (eid, lastseen) V
 my $dumpfile = "/tmp/logzilla_import.txt";
 
 # See ticket #117 regarding non-local databases and auto-partitioning
-my $infile_prep = qq{LOAD DATA LOCAL INFILE '$dumpfile' INTO TABLE logs FIELDS TERMINATED BY "\\t" LINES TERMINATED BY "\\n" (host,facility,severity,program,msg,mne,eid,fo,lo)};
+my $infile_prep = qq{LOAD DATA INFILE '$dumpfile' INTO TABLE logs FIELDS TERMINATED BY "\\t" LINES TERMINATED BY "\\n" (host,facility,severity,program,msg,mne,eid,fo,lo)};
 my $db_load_infile = $dbh->prepare("$infile_prep");
 my $db_insert_mpX = $dbh->prepare("REPLACE INTO cache (name,value,updatetime) VALUES (?,?,?)");
 my $db_insert_sum = $dbh->prepare("INSERT INTO cache (name,value,updatetime) VALUES ('msg_sum',?,?) ON DUPLICATE KEY UPDATE value=value + ?");
