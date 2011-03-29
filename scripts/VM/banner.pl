@@ -5,13 +5,26 @@
 # The script is called from /etc/rc.local
 
 use strict;
-my @ip = `ifconfig eth0`;
-my $ip = $ip[1];
-chomp($ip);
-if ($ip =~ /.*addr:(\d+\.\d+\.\d+\.\d+).*/) {
-    $ip = $1;
+my ($linfo, $ip);
+
+my $re = qr/\b\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\b/;
+sub getip {
+    $ip = ((`/sbin/ifconfig eth0`)[1] =~ /inet addr:(\S+).*/);
+    return $1;
+}
+
+my $i = 0;
+while ((getip !~ /$re/) && ($i <=5)) {
+    print "Waiting for network...\n";
+    sleep 1;
+    $i++
+}
+if (getip =~ /$re/) {
+    $ip = getip;
+    $linfo = "To get to the web interface, browse to http://$ip from your local PC";
 } else {
-    $ip = "<ip>";
+    $linfo = "To get to the web interface, browse to http://<ip> from your local PC
+    To find your IP address, run 'ifconfig' after logging in to this console.";
 }
 my $banner = qq{
 #######################################################################
@@ -33,7 +46,7 @@ to get the latest source
 Access:
 The login/password for the shell is log/log
 The login/password for the Web Interface is admin/admin
-To get to the web interface, browse to http://$ip from your local PC
+$linfo
 
 More Information and Help:
 Please read /var/www/logzilla/VM-README.txt
