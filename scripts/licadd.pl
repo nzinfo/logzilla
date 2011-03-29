@@ -21,15 +21,7 @@
 use strict;
 $| = 1;
 
-# Get LogZilla base directory
-# use Cwd;
-# my $lzbase = getcwd;
-# $lzbase =~ s/\/scripts//g;
-# Above causes web interface license additions to fail.
 my $licfile="/path_to_logzilla/license.txt";
-
-
-my $licfile="$lzbase/license.txt";
 if ($ARGV[0]) {
     my $txt = $ARGV[0];
     open FILE, ">$licfile" or die "Unable to open $licfile: $!";
