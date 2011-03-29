@@ -1,5 +1,6 @@
 #!/bin/bash
 
+killall searchd
 cd ../sphinx/src
 tar xzvf sphinx-0.9.9.tar.gz
 cd sphinx-0.9.9
@@ -7,8 +8,6 @@ cd sphinx-0.9.9
 make && make install
 cd ../..
 ./indexer.sh full
-killall searchd
 bin/searchd
 
-echo "you have to insert the search daemon in the rc.local file. Please refer to the manual"
 

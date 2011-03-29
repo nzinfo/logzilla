@@ -123,7 +123,7 @@ if ($_SESSION['SHOWCOUNTS'] == "1") {
         <option>10
         <option>25
         <option>50
-        <option>100
+        <option selected>100
         <option>150
         <option>250
         <option>500
