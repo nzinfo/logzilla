@@ -1,5 +1,9 @@
 CHANGELOG
 
+3.1.256 - Regession
+CD:
+ - Had to set path manually in licadd.pl because getcwd won't work from web interface.
+
 3.1.255 - VM
 CD:
  - Added scripts/VM/banner.pl which is used to set tty and ssh banners for Virtual Machine deployments
