@@ -1,5 +1,9 @@
 CHANGELOG
 
+3.1.258 - VM/banner
+CD:
+ - Better banner script. When udev rules are deleted for VM, must wait for new IP.
+
 3.1.257 - Regession
 CD:
  - Fixed typo in licadd
