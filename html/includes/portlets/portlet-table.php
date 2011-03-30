@@ -439,8 +439,9 @@ if ($_SESSION['SPX_ENABLE'] == "1") {
 
     if ( !$sphinx_results )
     {
-        $info = "<font size=\"3\" color=\"white\"><br><br>Sphinx - Error in query: ";
-        echo ( "$info" . $cl->GetLastError() . ".\n</font>" );
+        $info = "<font size=\"3\"><br>Sphinx - Error in query: <br></font>";
+        $helpurl="$info<br><button class=\"ui-button ui-button-text-only ui-widget ui-state-default ui-corner-all\"><a href=\"http://nms.gdd.net/index.php/Install_Guide_for_LogZilla_v3.0#Installing_Sphinx\" target=_new>SPHINX HELP</a></button>";
+        echo ( "$helpurl " . $cl->GetLastError() . ".\n</font>" );
     } else
     {
         if ($sphinx_results['total_found'] > 0) {
@@ -646,7 +647,7 @@ endswitch;
 
   $count = mysql_num_rows($result);
   if ($count > 0) {
-      $info = "<center>Showing $count of ".commify($total)." Results</center>";
+      $info = "<center>Displaying $count of ".commify($total)." Possible Results</center>";
       ?>
           <script type="text/javascript">
           $("#portlet-header_Search_Results").html('<?php echo "$info"?>');
@@ -670,10 +671,24 @@ endswitch;
       if (!$info) {
           // same error below until I know what Tom wants here :-)
           // Stop fighting! :-) the limitation applies only when (un-)suppression is active
-      		if( $show_suppressed == 'all' ) {
-      			 $info = "No results found. Please try refining your search.<br />Your indexes were last updated $spx_lastupdate";
-      		} else {
-         		 $info = "No results within the first $spx_max records. Please try refining your search.<br />Your indexes were last updated $spx_lastupdate";
+          if( $show_suppressed == 'all' ) {
+              $info = "Please try refining the search parameters (such as date and time)<br />Sphinx Information: Your indexes were last updated $spx_lastupdate";
+              if ($_SESSION['SPX_ENABLE'] == "1") {
+                  echo "<br><br><b><u>Results</u></b><br>\n";
+                  echo "Found ".$sphinx_results['total']." matching documents in ".$sphinx_results['time']." seconds<br>\n";
+                  echo count($sphinx_results['words'])." search terms:<br>\n";
+                  if (is_array($sphinx_results['words'])) {
+                      foreach ($sphinx_results['words'] as $key=>$word) {
+                          echo "&nbsp;&nbsp;&nbsp;&nbsp;\"$key\" found ".commify($sphinx_results['words'][$key]['hits'])." times in all possible logs tables and date ranges.<br>\n";
+                      }
+                  }
+                  echo "<br>\n";
+              }
+              // echo "<pre>\n";
+              // die(print_r($sphinx_results));
+              // echo "</pre>\n";
+          } else {
+              $info = "No results within the first $spx_max records. Please try refining your search (such as the date of the event).<br />Sphinx Information: Your indexes were last updated $spx_lastupdate";
       		}
       }
     
@@ -814,6 +829,11 @@ if ($_SESSION['DEBUG'] > 0 ) {
     echo "$str<br>\n";
     $end_time = microtime(true);
     echo "Page generated in " . round(($end_time - $start_time),5) . " seconds\n";
+}
+if ($_SESSION['SPX_ENABLE'] == "1") {
+    if ($count > 0) {
+        echo "&nbsp;&nbsp;&nbsp;&nbsp;".commify($total)." matches found in " . $sphinx_results['time']. " seconds\n";
+    }
 }
 ?>
   <input type="hidden" name="tail" id="tail" value="<?php echo $tail?>">
