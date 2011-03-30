@@ -546,30 +546,30 @@ while (my $msg = <STDIN>) {
         $mps = 0;
         $do_msg_mps = 0;
         $mps_timer_start = (time);
-            my @hosts = keys %host_cache;
-            $now = strftime("%Y-%m-%d %H:%M:%S", localtime);
-            foreach my $h (@hosts) {
-                $db_insert_host->execute($h, $now, $now);
-                %host_cache = ();
-            }
-            my @prgs = keys %program_cache;
-            foreach my $p (@prgs) {
-                $db_insert_prg->execute($p, $program_cache{$p});
-            }
-            my @mnes = keys %mne_cache;
-            foreach my $m (@mnes) {
-                $db_insert_mne->execute($m, $mne_cache{$m}, $now, $now);
-            }
-            if ($snare > 0) {
-                my @snare_eids = keys %snare_eid_cache;
-                foreach my $s (@snare_eids) {
-                    $db_insert_snare_eid->execute($s, $now, $now);
-                }
-            }
+        my @hosts = keys %host_cache;
+        $now = strftime("%Y-%m-%d %H:%M:%S", localtime);
+        foreach my $h (@hosts) {
+            $db_insert_host->execute($h, $now, $now);
             %host_cache = ();
-            %program_cache = ();
-            %mne_cache = ();
-            %snare_eid_cache = ();
+        }
+        my @prgs = keys %program_cache;
+        foreach my $p (@prgs) {
+            $db_insert_prg->execute($p, $program_cache{$p});
+        }
+        my @mnes = keys %mne_cache;
+        foreach my $m (@mnes) {
+            $db_insert_mne->execute($m, $mne_cache{$m}, $now, $now);
+        }
+        if ($snare > 0) {
+            my @snare_eids = keys %snare_eid_cache;
+            foreach my $s (@snare_eids) {
+                $db_insert_snare_eid->execute($s, $now, $now);
+            }
+        }
+        %host_cache = ();
+        %program_cache = ();
+        %mne_cache = ();
+        %snare_eid_cache = ();
     }
     $end_time = (time);
     my $now = strftime("%Y-%m-%d %H:%M:%S", localtime);
@@ -739,7 +739,9 @@ sub do_msg {
         #}
         # Special fix (urldecode) for any urlencoded strings coming in from VmWare or Apache
         $prg =~ s/\%([A-Fa-f0-9]{2})/pack('C', hex($1))/seg;
-        $msg =~ s/\%([A-Fa-f0-9]{2})/pack('C', hex($1))/seg;
+        if (!$mne) {
+            $msg =~ s/\%([A-Fa-f0-9]{2})/pack('C', hex($1))/seg;
+        }
 
         # Catch-all for junk streams...
         # This won't work well in non-english environments...
