@@ -1,5 +1,10 @@
 CHANGELOG
 
+3.1.262 - Installation
+CD:
+ - Added Sphinx extract, compile, index and daemon start to install.pl
+  Will prompt during install for setup, or use './install.pl install_sphinx' as a shortcut.
+
 3.1.261 - Bug
 CD:
  - urlencode for VMWare server was interferring with Cisco Mnemonic for %C(4K)
