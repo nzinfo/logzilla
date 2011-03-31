@@ -33,6 +33,7 @@ use String::CRC32;
 use MIME::Lite;
 
 
+
 $| = 1;
 
 system("stty erase ^H");
@@ -45,13 +46,51 @@ sub p {
 }
 
 my $version = "3.2";
-my $subversion = ".261";
+my $subversion = ".262";
 
 # Grab the base path
 my $lzbase = getcwd;
 $lzbase =~ s/\/scripts//g;
 my $now = localtime;
 
+# The command line args below are really just for me so I don't have to keep going through extra steps to test 1 thing.
+# But you can use them if you want :-)
+foreach (@ARGV) {
+    switch ($_) {
+        case "update_paths" {
+            update_paths();
+            exit;
+        }
+        case "genconfig" {
+            genconfig();
+            exit;
+        }
+        case "add_logrotate" {
+            add_logrotate();
+            exit;
+        }
+        case "add_syslog_conf" {
+            add_syslog_conf();
+            exit;
+        }
+        case "setup_cron" {
+            setup_cron();
+            exit;
+        }
+        case "setup_sudo" {
+            setup_sudo();
+            exit;
+        }
+        case "setup_apparmor" {
+            setup_apparmor();
+            exit;
+        }
+        case "install_sphinx" {
+            install_sphinx();
+            exit;
+        }
+    }
+}
 print("\n\033[1m\n\n========================================\033[0m\n");
 print("\n\033[1m\tLogZilla End User License\n\033[0m");
 print("\n\033[1m========================================\n\n\033[0m\n\n");
@@ -210,6 +249,7 @@ add_syslog_conf();
 setup_cron();
 setup_sudo();
 setup_apparmor();
+install_sphinx();
 fbutton();
 if ($dbhost !~ /localhost|127.0.0.1/) {
     my $file = "$lzbase/scripts/db_insert.pl";
@@ -1013,6 +1053,45 @@ sub setup_sudo {
         print "# Allows Apache user to HUP the syslog-ng process\n";
         print "www-data ALL=NOPASSWD:$lzbase/scripts/hup.pl\n";
         print "www-data ALL=NOPASSWD:$lzbase/scripts/licadd.pl\n";
+    }
+}
+
+sub kill {
+    my $PROGRAM = shift;
+    my @ps = `ps ax`;
+    @ps = map { m/(\d+)/; $1 } grep { /\Q$PROGRAM\E/ } @ps;
+    for ( @ps ) {
+        (kill 9, $_) or die("Unable to kill process for $PROGRAM\n");
+    }
+    my $time = gmtime();
+#print "Killed $PROGRAM @ps\n";
+}
+
+sub install_sphinx {
+    print("\n\033[1m\n\n========================================\033[0m\n");
+    print("\n\033[1m\tSphinx Indexer\n\033[0m");
+    print("\n\033[1m========================================\n\n\033[0m\n\n");
+    print "Install will attempt to extract and compile your sphinx indexer.\n";
+    print "This option may not work on all systems, so please watch for errors.\n";
+    print "The steps taken are as follows:\n";
+    print "killall searchd (to stop any currently running Sphinx searchd processes).\n";
+    print "cd $lzbase/sphinx/src\n";
+    print "tar xzvf sphinx-0.9.9.tar.gz\n";
+    print "cd $lzbase/sphinx/src/sphinx-0.9.9\n";
+    print "./configure --prefix `pwd`/../..\n";
+    print "make && make install\n";
+    print "cd $lzbase/sphinx\n";
+    print "$lzbase/sphinx/bin/searchd -c $lzbase/sphinx/sphinx.conf\n";
+    print "./indexer.sh full\n";
+    my $ok  = &p("Ok to continue?", "y");
+    if ($ok =~ /[Yy]/) {
+        my $checkprocess = `ps -C searchd -o pid=`;
+        if ($checkprocess) {
+            system("killall searchd");
+        }
+        system("rm -f $lzbase/sphinx/data/idx_* && cd $lzbase/sphinx/src && tar xzvf sphinx-0.9.9.tar.gz && cd $lzbase/sphinx/src/sphinx-0.9.9 && ./configure --prefix `pwd`/../.. && make && make install && $lzbase/sphinx/indexer.sh full && $lzbase/sphinx/bin/searchd -c $lzbase/sphinx/sphinx.conf && cd $lzbase/scripts");
+    } else {
+        print "Skipping Sphinx Installation\n";
     }
 }
 
