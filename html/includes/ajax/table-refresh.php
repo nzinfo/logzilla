@@ -254,6 +254,8 @@ if($msg_mask !== '') {
         $msg_mask = mysql_real_escape_string($msg_mask);
                 $where.= " AND msg like '%$msg_mask%'";  
 }
+// #121 Add final where statement for tail refresh options, since auto-refresh is only querying live incoming data.
+$where .= " AND lo > CONCAT(CURDATE(), ' 00:00:00')";
 
 /*
 $notes_mask = get_input('notes_mask');
