@@ -679,7 +679,7 @@ endswitch;
                   echo count($sphinx_results['words'])." search terms:<br>\n";
                   if (is_array($sphinx_results['words'])) {
                       foreach ($sphinx_results['words'] as $key=>$word) {
-                          echo "&nbsp;&nbsp;&nbsp;&nbsp;\"$key\" found ".commify($sphinx_results['words'][$key]['hits'])." times in all possible logs tables and date ranges.<br>\n";
+                          echo "&nbsp;&nbsp;&nbsp;&nbsp;\"$key\" found ".commify($sphinx_results['words'][$key]['hits'])." times in all possible log tables and date ranges.<br>\n";
                       }
                   }
                   echo "<br>\n";
