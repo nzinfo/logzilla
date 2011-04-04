@@ -25,7 +25,12 @@ $dbLink = db_connect_syslog(DBADMIN, DBADMINPW);
 
 $today = date("Y-m-d");
 //construct where clause 
-$where = "WHERE 1=1";
+// $where = "WHERE 1=1";
+// Use max(id) for tail page
+// #121 Set limit here and use MAX to just grab the last X rows - much faster
+$limit = get_input('limit');
+$limit = (!empty($limit)) ? $limit : "10";
+$where = "WHERE id >  ((SELECT MAX(id) from ".$_SESSION['TBL_MAIN'] .") - $limit)";
 
 $qstring = '';
 // $page = get_input('page');
@@ -234,8 +239,6 @@ if ($facilities) {
     $where .= ")";
 }
 
-$limit = get_input('limit');
-$limit = (!empty($limit)) ? $limit : "10";
 $qstring .= "&limit=$limit";
 
 // portlet-sphinxquery
@@ -254,8 +257,6 @@ if($msg_mask !== '') {
         $msg_mask = mysql_real_escape_string($msg_mask);
                 $where.= " AND msg like '%$msg_mask%'";  
 }
-// #121 Add final where statement for tail refresh options, since auto-refresh is only querying live incoming data.
-$where .= " AND lo > CONCAT(CURDATE(), ' 00:00:00')";
 
 /*
 $notes_mask = get_input('notes_mask');
@@ -348,10 +349,13 @@ $graphtype = get_input('graphtype');
 $qstring .= "&graphtype=$graphtype";
 
 if ($orderby) {
-    $where.= " ORDER BY $orderby";  
+    // $where.= " ORDER BY $orderby";  
+    // manually set orderby because this is the refresh page
+    $where.= " ORDER BY lo";  
 }
 if ($order) {
-    $where.= " $order";  
+    // manually set order because this is the refresh page
+    $where.= " DESC";  
 }
 
 ?>
