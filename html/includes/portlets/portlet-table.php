@@ -830,7 +830,7 @@ if ($_SESSION['DEBUG'] > 0 ) {
     $end_time = microtime(true);
     echo "Page generated in " . round(($end_time - $start_time),5) . " seconds\n";
 }
-if ($_SESSION['SPX_ENABLE'] == "1") {
+if (($_SESSION['SPX_ENABLE'] == "1") && ($tail == "off")) {
     if ($count > 0) {
         echo "&nbsp;&nbsp;&nbsp;&nbsp;".commify($total)." matches found in " . $sphinx_results['time']. " seconds\n";
     }

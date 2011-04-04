@@ -1,5 +1,13 @@
 CHANGELOG
 
+3.1.265 - Cosmetic
+CD:
+ - Don't show sphinx result count during tail
+
+3.1.264 - Bug
+CD:
+ - Better fix for #121
+
 3.1.263 - Bug
 CD:
  - Fix for #121: Tail operation stalls on large DB's when returning to homepage
