@@ -46,7 +46,7 @@ sub p {
 }
 
 my $version = "3.2";
-my $subversion = ".265";
+my $subversion = ".266";
 
 # Grab the base path
 my $lzbase = getcwd;
@@ -1118,6 +1118,13 @@ sub setup_apparmor {
                 splice @all, -1, 0, "  /tmp/logzilla_import.txt r,\n  $lzbase/exports/** rw,\n";
                 print $config @all;
                 close $config;
+            }
+            print "\n\nAppArmor must be restarted, would you like to restart it now?\n";
+            my $ok  = &p("Ok to continue?", "y");
+            if ($ok =~ /[Yy]/) {
+                my $r = `/etc/init.d/apparmor restart`;
+            } else {
+                print("\033[1m\n\tPlease be sure to restart apparmor..\n\033[0m");
             }
         }
     }
