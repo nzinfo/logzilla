@@ -1,5 +1,9 @@
 CHANGELOG
 
+3.1.266 - Install Script
+CD:
+ - Added restart of AppArmor daemon when adding to security profile
+
 3.1.265 - Cosmetic
 CD:
  - Don't show sphinx result count during tail
