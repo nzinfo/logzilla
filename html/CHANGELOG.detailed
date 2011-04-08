@@ -1,8 +1,12 @@
 CHANGELOG
 
+3.1.268 - Snare Bug
+CD:
+ - Typo in db_insert was not inserting the correct snare_eid to the logs table.
+
 3.1.267 - Sphinx bug
 CD:
- - Fix for #127: Unexpect $end when searching for "I/O"
+ - Fix for #126: Unexpect $end when searching for "I/O"
 
 3.1.266 - Install Script
 CD:
