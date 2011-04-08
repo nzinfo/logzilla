@@ -600,6 +600,7 @@ sub makepart {
 }
 sub do_msg {
     $msg = shift;
+    $snare_eid = "";
     print LOG "\n\nINCOMING MESSAGE:\n$msg\n" if ($debug > 0);
     print STDOUT "\n\nINCOMING MESSAGE:\n$msg\n" if (($debug > 2) and ($verbose));
     # Get current date and time
@@ -610,7 +611,6 @@ sub do_msg {
 
     # Get incoming variables from PIPE
     if ($msg =~ m/$re_pipe/) {
-        my $snare_eid = "";
         # v3.2 Fields are: TS, Host, PRI, Program,  and MSG
         $ts = $1;
         $host = $2;
@@ -639,7 +639,7 @@ sub do_msg {
                 $facility = 16;
             }
             if ($msg =~ m/.*\\011(.*)\\011(.*)\\011(.*)\\011(.*)\\011(.*)\\011(.*)\\011(.*)\\011.*\\011(.*)\\011.*/) {
-                my $eventid = $1;
+                $snare_eid = $1;
                 my $source = $2;
                 my $username = $3;
                 my $usertype = $4;
@@ -649,7 +649,7 @@ sub do_msg {
                 my $description = $8;
                 if ($debug > 1) {
                     print LOG "facility: $facilityname ($facility)\n";
-                    print LOG "eventid: $eventid\n";
+                    print LOG "eventid: $snare_eid\n";
                     print LOG "source: $source\n";
                     print LOG "username: $username\n";
                     print LOG "usertype: $usertype\n";
@@ -660,7 +660,7 @@ sub do_msg {
                 }
                 if (($debug > 2) and ($verbose)) { 
                     print STDOUT "facility: $facilityname ($facility)\n";
-                    print STDOUT "eventid: $eventid\n";
+                    print STDOUT "eventid: $snare_eid\n";
                     print STDOUT "source: $source\n";
                     print STDOUT "username: $username\n";
                     print STDOUT "type: $type\n";
@@ -669,8 +669,7 @@ sub do_msg {
                     print STDOUT "description: $description\n";
                 }
                 $prg = $source;
-                $snare_eid = $eventid;
-                $msg = "Log=".$facilityname.", Source=".$source.", Category=".$category.", Type=".$type.", EventID=".$eventid.", Username=".$username.", Usertype=".$usertype.", Computer=".$computer.", Description=".$description;
+                $msg = "Log=".$facilityname.", Source=".$source.", Category=".$category.", Type=".$type.", EventID=".$snare_eid.", Username=".$username.", Usertype=".$usertype.", Computer=".$computer.", Description=".$description;
             }
         }
         if ($msg =~ /3Com_Firewall/) {
@@ -869,7 +868,7 @@ sub do_msg {
     # Now that the distance test is over we need to insert any new records that either didn't previously exist or because we had the dedup feature disabled
     if ($insert != 0) {
         if ($host ne "")  {
-            $snare_eid = 0 if ($snare_eid eq "");
+            $snare_eid = 0 if not $snare_eid;
             $queue = "$host\t$facility\t$severity\t$prg32\t$msg\t$mne32\t$snare_eid\t$ts\t$ts\t\n";
         } else {
             $do_msg_mps++;
