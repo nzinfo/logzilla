@@ -13,3 +13,12 @@ Alias /logs "/path_to_logzilla/html/"
  Order allow,deny
  Allow from all
  </Directory>
+
+# Svn users should disable access to the .svn directories
+<DirectoryMatch .*\.svn/.*>
+    Deny From All
+</DirectoryMatch>
+# Uncomment below AFTER you are finished setting up your IONCube licensing
+#<DirectoryMatch .*ioncube.*>
+    #Deny From All
+#</DirectoryMatch>

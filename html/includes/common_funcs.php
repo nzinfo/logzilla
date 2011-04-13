@@ -752,4 +752,284 @@ function getRelativeTime($date) {
         return $diff . " week" . plural($diff) . " ago";
     return "on " . date("F j, Y", strtotime($date));
 }
+
+function array_recurse(&$array) {
+    foreach ($array as &$data) {
+        if (!is_array($data)) { // If it's not an array, return it
+            return $data;
+        }
+        else { // If it IS an array, call this function on it
+            array_recurse($data);
+        }
+    }
+}
+
+function search($json_o, $spx_max=1000,$index="idx_logs idx_delta_logs",$spx_ip="127.0.0.1",$spx_port=3312) {
+    $basePath = dirname( __FILE__ );
+    require_once ($basePath . "/SPHINX.class.php");
+
+    /* Incoming values should contain:
+     * JSON Object:
+     * passed here from the $_POST using json_encode($_POST);
+     * * values are optional, if no values are passed, all possible rows (up to $spx_max are returned:
+     * * * Note that all values are considered as OR operators, 
+     * * *  so if host=server and message=test, then only results containing BOTH will return.
+
+     * Optional values - defaults are supplied in function:
+     * spx_max = the maximum records to search for - this is memory dependent, so use with caution.
+     * indexes to search
+     * sphinx server ip
+     * sphinx port
+     *
+     * Sample incoming JSON string:
+     *
+     {"fo_date":"2011-04-12","fo_time_start":"00:00:00","fo_time_end":"23:59:59","lo_checkbox":"on","lo_date":"2011-04-12","lo_time_start":"00:00:00","lo_time_end":"23:59:59","dupop":"","dupcount":"0","orderby":"lo","order":"DESC","limit":"100","groupby":"host","chart_type":"pie","tail":"off","show_suppressed":"all","msg_mask":"Search through 2,624 Messages","q_type":"boolean","hosts":"","mnemonics":"","eids":"","page":"Results"}
+     */
+
+    $cl = new SphinxClient ();
+    $cl->SetServer ( $spx_ip, $spx_port );
+
+    // Decode json object into an array:
+    $json_a = json_decode($json_o, true);
+    // die(print_r($json_a));
+
+    // Default operator for concatenation is OR (|) - someday we may allow the option of &&, etc. so it's here as a variable.
+    $oper = "|";
+
+    // loop through array to get the fields that the user wants to search on:
+    // Note: Only certain values need to be looped here for modification before presenting to sphinx.
+    // many of the items not looped below can be called directly using $json_a['name'];
+    foreach ($json_a as $key=>$val) {
+        // echo "Key = $key, Val = $val\n";
+        switch($key) {
+            // Strings
+            case 'msg_mask':
+                $val = preg_replace ('/^Search through .*\sMessages/m', '', $val);
+                $val = $cl->EscapeString ($val);
+                $msg_mask .= $val . " $oper ";
+                break;
+            case 'hosts':
+                $val = $cl->EscapeString ($val);
+                $hosts .= str_replace (',', ' | ', $val);
+                break;
+            case 'sel_hosts':
+                foreach ($val as $subkey=>$subval) {
+                    // echo "SubKey = $subkey, SubVal = $subval\n";
+                    $subval = $cl->EscapeString ($subval);
+                    $hosts .= $subval . " $oper ";
+                }
+                break;
+
+            case 'mnemonics':
+                if (preg_match ('/,/', $val)) {
+                    $pieces = explode(',',$val);
+                    foreach ($pieces as $part) {
+                        $mnes[] .= mne2crc($part);
+                    }
+                } else {
+                    $mnes[] .= mne2crc($val);
+                }
+                break;
+            case 'sel_mne':
+                foreach ($val as $subkey=>$subval) {
+                     // echo "SubKey = $subkey, SubVal = $subval\n";
+                    $subval = $cl->EscapeString ($subval);
+                    $mnes[] .= mne2crc($subval);
+                }
+                break;
+
+
+            case 'note':
+                $val = $cl->EscapeString ($val);
+                $note .= $val . " $oper ";
+                break;
+
+                // Integers
+            case 'eids':
+                if (preg_match ('/,/', $val)) {
+                    $pieces = explode(',',$val);
+                    foreach ($pieces as $part) {
+                        $eids[] .= intval($part);
+                    }
+                } else {
+                    $eids[] .= intval($val);
+                }
+                break;
+            case 'sel_eid':
+                foreach ($val as $subkey=>$subval) {
+                    // echo "SubKey = $subkey, SubVal = $subval\n";
+                    $eids[] .= intval($subval);
+                }
+                break;
+
+
+
+        }
+    }
+    // die(print_r($json_a));
+
+    $dupop = $json_a['dupop'];
+    $dupcount = intval($json_a['dupcount']);
+    $orderby = $json_a['orderby'];
+    $order = $json_a['order'];
+    $limit = intval($json_a['limit']);
+    $groupby = $json_a['groupby'];
+    $chart_type = $json_a['chart_type'];
+    $show_suppressed = $json_a['show_suppressed'];
+    $q_type = $json_a['q_type'];
+
+    $msg_mask = rtrim($msg_mask, " $oper ");
+    $hosts = rtrim($hosts, " $oper ");
+    $note = rtrim($note, " $oper ");
+
+    // Add DB column to strings
+    if (!preg_match ('/any|all|phrase/', $q_type)) {
+        if ($msg_mask)  {
+            $msg_mask = "@MSG " . $msg_mask . " ";
+        }
+        if ($hosts) {
+            $hosts = "@HOST " . $hosts . " ";
+        }
+        if ($note) {
+            $note = "@NOTES " . $note;
+        }
+    }
+
+    // SetFilter used on integer fields - takes an array
+    if ($json_a['severities']) {
+        $cl->SetFilter( 'severity', $json_a['severities'] ); 
+    }
+    if ($json_a['facilities']) {
+        $cl->SetFilter( 'facility', $json_a['facilities'] ); 
+    }
+    if ($eids) {
+        $cl->SetFilter( 'eid', $eids ); 
+    }
+    if ($json_a['programs']) {
+        $cl->SetFilter( 'prg', $json_a['programs'] ); 
+    }
+    if ($mnemonics) {
+        $cl->SetFilter( 'mne', $mnes ); 
+    }
+
+    $search_string = $msg_mask . $hosts . $note;
+
+    // Test for empty search and remove whitespaces
+    $search_string = preg_replace('/^\s+$/', '',$search_string);
+    $search_string = preg_replace('/\s+$/', '',$search_string);
+    //  echo "Looking for '".$search_string."'\n";
+
+    switch ($q_type) {
+        case "any":
+            $cl->SetMatchMode ( SPH_MATCH_ANY );
+        break;
+        case "all":
+            $cl->SetMatchMode ( SPH_MATCH_ALL );
+        break;
+        case "phrase":
+            $cl->SetMatchMode ( SPH_MATCH_PHRASE );
+        break;
+        case "boolean":
+            $cl->SetMatchMode ( SPH_MATCH_BOOLEAN );
+        break;
+        case "extended":
+            $cl->SetMatchMode ( SPH_MATCH_EXTENDED2 );
+        break;
+    }
+
+    $sph_sort = "$orderby $order";
+
+    $cl->SetSortMode ( SPH_SORT_EXTENDED , $sph_sort );
+
+    // Datetime filtering
+    $fo_checkbox = $json_a['fo_checkbox'];
+    $fo_date = $json_a['fo_date'];
+    $fo_time_start = $json_a['fo_time_start'];
+    $fo_time_end = $json_a['fo_time_end'];
+    $lo_checkbox = $json_a['lo_checkbox'];
+    $lo_date = $json_a['lo_date'];
+    $lo_time_start = $json_a['lo_time_start'];
+    $lo_time_end = $json_a['lo_time_end'];
+
+    if ($fo_checkbox == "on") {
+        if($fo_date!='') {
+            list($start,$end) = explode(' to ', $fo_date);
+            if($end=='') $end = "$start" ; 
+            if(($start==$end) and ($fo_time_start>$fo_time_end)) {
+                $endx = strtotime($end);
+                $endx = $endx+24*3600;
+                $end = date('Y-m-d', mktime(0,0,0,date('m',$endx),date('d',$endx),date('Y',$endx))); }
+                $start .= " $fo_time_start"; 
+                $end .= " $fo_time_end"; 
+                $fo_start = "$start" ;
+                $fo_end = "$end" ;
+        }
+    }
+    if ($lo_checkbox == "on") {
+        if($lo_date!='') {
+            list($start,$end) = explode(' to ', $lo_date);
+            if($end=='') $end = "$start" ; 
+            if(($start==$end) and ($lo_time_start>$lo_time_end)) {
+                $endx = strtotime($end);
+                $endx = $endx+24*3600;
+                $end = date('Y-m-d', mktime(0,0,0,date('m',$endx),date('d',$endx),date('Y',$endx))); }
+                $start .= " $lo_time_start"; 
+                $end .= " $lo_time_end"; 
+                $lo_start = "$start" ;
+                $lo_end = "$end" ;
+        }
+    }
+
+
+    if ($json_a['fo_checkbox'] == "on")  $cl->SetFilterRange ( 'fo', strtotime("$fo_start"),  strtotime("$fo_end") );
+    if ($json_a['lo_checkbox'] == "on")  $cl->SetFilterRange ( 'lo', strtotime("$lo_start"),  strtotime("$lo_end") );
+
+
+    // Duplicates filtering
+    $min = "0";
+    $max = "999";
+    if (($dupop) && ($dupop !== 'undefined')) {
+        switch ($dupop) {
+            case "gt":
+                $dupop = ">";
+            $min = $dupcount + 1;
+            break;
+
+            case "lt":
+                $dupop = "<";
+            $max = $dupcount - 1;
+            break;
+
+            case "eq":
+                $dupop = "=";
+            $min = $dupcount;
+            $max = $dupcount;
+            break;
+
+            case "gte":
+                $dupop = ">=";
+            $min = $dupcount;
+            break;
+            $min = $dupcount;
+            case "lte":
+                $dupop = "<=";
+
+            break;
+        }
+    }
+    $cl->SetFilterRange ( 'counter', intval($min), intval($max) );
+
+    $cl->SetLimits(0, intval($spx_max));
+
+    // make the query
+    // echo "<pre>";
+     // die(print_r($cl));
+    $sphinx_results = $cl->Query ($search_string, $index);
+    // echo "<pre>";
+      // die(print_r($sphinx_results));
+
+    // Description of return types (matches, total found, etc.:
+    // http://sphinxsearch.com/docs/manual-0.9.9.html#api-func-query
+    return json_encode($sphinx_results);
+}
 ?>

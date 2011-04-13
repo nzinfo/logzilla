@@ -1,5 +1,13 @@
 CHANGELOG
 
+3.1.269 - Multiple
+CD:
+ - #128 Removed increment setting from triggers.sql install file and set the test trigger id to 1 (was 2).
+ - #128 Fixed setPrimaryKeyId in email alerts grid - position in file required it to be above setColModel call.
+ - Small modification to indexer.sh to print both start and end times after the run completes.
+ - Replaced code in portlets/portlet-table for filter_lo_start/end, etc. with the strototime function.
+ - #129 Added new function to common_funcs for better use of sphinx queries (function search()) - not implemented yet
+
 3.1.268 - Snare Bug
 CD:
  - Typo in db_insert was not inserting the correct snare_eid to the logs table.
