@@ -655,11 +655,10 @@ endswitch;
           <?php
   } else {
       // CDUKES: Added error check to see if Sphinx is working
-      $helpurl="<button class=\"ui-button ui-button-text-only ui-widget ui-state-default ui-corner-all\"><a href=\"http://nms.gdd.net/index.php/Install_Guide_for_LogZilla_v3.0#Installing_Sphinx\" target=_new>HELP</a></button>";
       $file = $_SESSION['PATH_LOGS'] . "/sphinx_indexer.log";
       if (is_file($file)) {
-          $line = `tail $file | grep Finished`;
-          $spx_lastupdate = getRelativeTime(preg_replace('/.*: (\d+-\d+-\d+ \d+:\d+:\d+).*/', '$1', $line));
+        $line = `tail $file | grep "and completed on "`;
+        $spx_lastupdate = getRelativeTime(preg_replace('/.*and completed on (\d+-\d+-\d+) at (\d+:\d+:\d+).*/', '$1 $2', $line));
           if (preg_match("/1969/", "$spx_lastupdate")) {
               $info = "$helpurl Your Sphinx indexes have not been set up, please verify that CRON is running properly!";
           } elseif (!preg_match("/[minutes|seconds]/i", "$spx_lastupdate")) {

@@ -34,6 +34,7 @@ $grid->SelectCommand = 'SELECT description,pattern,mailto,mailfrom,subject,body,
 // set the ouput format to json
 $grid->dataType = 'json';
 $grid->table = 'triggers';
+$grid->setPrimaryKeyId('id');
 
 
 $labels = array("description"=>"Description", "pattern"=>"Regex Pattern", "mailto"=>"Mail Recipient", "mailfrom"=>"Mail Originator", "subject"=>"Mail Subject", "body"=>"Mail Body", "disabled"=>"Disabled?");
@@ -71,7 +72,6 @@ $grid->setGridOptions(array(
     ));
 
 
-$grid->setPrimaryKeyId('id');
 
 
 

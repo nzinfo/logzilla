@@ -111,6 +111,7 @@ else
                 fi
         fi
 fi
-DATE=`date +%F`
-TIME=`date +%T`
-echo "Finished Sphinx Indexer: $DATE $TIME"
+DATE2=`date +%F`
+TIME2=`date +%T`
+echo "Indexer started on $DATE at $TIME and completed on $DATE2 at $TIME2"
+

@@ -9,6 +9,6 @@
   rotate 5
   daily
   postrotate
-  /etc/init.d/syslog-ng restart > /dev/null 2>&1 || true
+  /bin/kill -HUP `cat /var/run/syslog-ng.pid 2> /dev/null` 2> /dev/null || true
   endscript
 }
