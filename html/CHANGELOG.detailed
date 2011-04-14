@@ -1,5 +1,12 @@
 CHANGELOG
 
+3.1.271 - Cookies
+CD:
+ - #47: Grid selections mirror portlet. 
+   Cookies for every main page option.
+   Remember icon added to portlets to enable/disable remembering individual portlet settings.
+   Reset Cookies button now resets noth cookies and form
+
 3.1.270 - Search Function
 CD:
  - #129 More work on the new search() function. Tested and working now (not implmented outside the function yet).

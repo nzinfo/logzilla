@@ -839,8 +839,8 @@ $(document).ready(function() {
             } else {
             var comma = '0';
             };
-            $("#msg_mask").val("Search through "+comma+" Messages");
-            watermark("#msg_mask","Search through "+comma+" Messages");
+            // $("#msg_mask").val("Search through "+comma+" Messages");
+            // watermark("#msg_mask","Search through "+comma+" Messages");
             });
         if (SPX == "0") {
         $.get("includes/ajax/counts.php?data=notes", function(data){
@@ -989,7 +989,7 @@ $("#portlet-header_Snare_EventId").prepend('<a href="#"><span class="ui-icon ui-
 jQuery("#btnSearch").click( function() { 
         var hosts = jQuery("#hostsgrid").jqGrid('getGridParam','selarrrow'); 
         var mne = jQuery("#mnegrid").jqGrid('getGridParam','selarrrow'); 
-        var eid = jQuery("#eidgrid").jqGrid('getGridParam','selarrrow'); 
+        var eid = jQuery("#eidgrid").jqGrid('getGridParam','selarrrow');
         if (hosts) {
         $("#results").append("<input type='hidden' name='hosts' value='"+hosts+"'>");
         }
@@ -1326,7 +1326,6 @@ $(document).ready(function(){
 });
 </script>
 <!-- END portlet table highlight -->
-
 <!-- C is for Cookie -->
 <script type="text/javascript">
 $(document).ready(function(){
@@ -1357,14 +1356,14 @@ function clearCookies() {
 }
 // $("label[for='cookietoggle']").html("&nbsp;&nbsp;<span class='ui-button ui-button-text'>Reset Cookies&nbsp;&nbsp;</span>");
     // $pagecontent .= "<label for=\"cookietoggle\">Remember Settings</label><input type=\"checkbox\" id=\"cookietoggle\" />\n";
-$("#reset_placeholder").html("<input class='ui-state-default ui-corner-all' type='reset' id='btnReset' value='Reset Cookies'>");
+$("#reset_placeholder").html("<input class='ui-state-default ui-corner-all' type='button' id='btnReset' value='Reset Cookies'>");
 $("#cookietoggle").button();
-$("#btnReset").click( function() { 
+/*$("#btnReset").click( function() { 
       // var isChecked = $(this).attr('checked');
         // if (isChecked == 'false') {
         clearCookies();
         // };
-        }); 
+        }); */
 
 // Adapted from http://www.komodomedia.com/blog/2008/07/using-jquery-to-save-form-details/
 function remember( selector ){
@@ -1406,6 +1405,7 @@ function c_remember( selector ){
 };
 
 
+/*
 remember( '#severities' );
 remember( '#facilities' );
 remember( '#programs' );
@@ -1418,7 +1418,9 @@ remember( '#groupby' );
 remember( '#chart_type' );
 remember( '#tail' );
 remember( '#show_suppressed' );
-remember( '#graphtype' );
+remember( '#graphtype' ); 
+*/
+
 // c_remember( '#mnemonics' );
 // c_remember( '#hosts' );
 // c_remember( '#eids' );
@@ -1484,3 +1486,7 @@ $(document).ready(function(){
 } ?>
 <!-- End Feedback Button -->
 
+
+<!-- BEGIN Cookies -->
+<script type="text/javascript" src="includes/cookie_Remember.js"></script>
+<!-- END Cookies -->

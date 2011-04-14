@@ -80,8 +80,16 @@ $("#portlet-header_Snare_EventId .ui-icon-search").click(function() {
                                 $(this).dialog('close');
                         },
                 },
-            open: function(event, ui) { $('#eid_dialog').css('overflow','hidden');$('.ui-widget-overlay').css('width','99%') },
-            close: function(event, ui) { $('#eid_dialog').css('overflow','auto') }
+            open: function(event, ui) { 
+		//start code(by abani)
+		 setRememberedCheckboxesForDialog('snare_EventId','gbox_eidgrid',12,'portlet-content_Snare_EventId'); 
+		//end code (by abani)
+		$('#eid_dialog').css('overflow','hidden');$('.ui-widget-overlay').css('width','99%') },
+            close: function(event, ui) { 
+		//start code(by abani)
+		 setRememberedCheckboxes('snare_EventId','portlet-content_Snare_EventId');
+		//end code (by abani)
+		$('#eid_dialog').css('overflow','auto') }
         });             
         $("#eid_dialog").dialog('open');
         $("#eid_dialog").ready(function(){

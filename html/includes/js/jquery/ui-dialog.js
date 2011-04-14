@@ -150,6 +150,7 @@ $.widget("ui.dialog", {
         self._isOpen = false;
 
         ($.fn.bgiframe && uiDialog.bgiframe());
+
     },
     _init: function() {
         if ( this.options.autoOpen ) {
