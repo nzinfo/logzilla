@@ -80,8 +80,17 @@ $("#portlet-header_Hosts .ui-icon-search").click(function() {
                                 $(this).dialog('close');
                         },
                 },
-            open: function(event, ui) { $('#host_dialog').css('overflow','hidden');$('.ui-widget-overlay').css('width','99%') },
-            close: function(event, ui) { $('#host_dialog').css('overflow','auto') }
+            open: function(event, ui) { 
+		
+	//start code(by abani)
+		setRememberedCheckboxesForDialog('hosts','host_dialog',14,'portlet-content_Hosts'); 
+	//end code (by abani)
+		$('#host_dialog').css('overflow','hidden');$('.ui-widget-overlay').css('width','99%') 
+		},
+            close: function(event, ui) {
+
+ setRememberedCheckboxes('hosts','portlet-content_Hosts');	
+ $('#host_dialog').css('overflow','auto') }
         });             
         $("#host_dialog").dialog('open');
         $("#host_dialog").ready(function(){

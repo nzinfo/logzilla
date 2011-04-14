@@ -48,6 +48,7 @@ $grid->setGridOptions(array(
     "shrinkToFit"=>true,
     "setGridHeight"=>"100%",
     "rowList"=>array(20,40,60,75,100,500,750,1000),
+    "loadComplete"=>"js:"
     ));
 
 $grid->setColProperty('Seen', array('width'=>'10'));
@@ -56,6 +57,14 @@ $grid->setColProperty('LastSeen', array('width'=>'35','formatter'=>'js:easyDate'
 $grid->navigator = true;
 $grid->setNavOptions('navigator', array("pdf"=>true,"excel"=>true,"add"=>false,"edit"=>false,"del"=>false,"view"=>false, "search"=>true));
 
+$gridComplete = <<<ONCOMPLETE
+	function ()
+	{	
+	 setRememberedCheckboxesForDialog('mnemonics','gbox_mnegrid',12,'portlet_Mnemonics');
+
+	}
+ONCOMPLETE;
+$grid->setGridEvent('loadComplete', $gridComplete); 
 $custom = <<<CUSTOM
 
 //---------------------------------------------------------------
@@ -80,8 +89,16 @@ $("#portlet-header_Mnemonics .ui-icon-search").click(function() {
                                 $(this).dialog('close');
                         },
                 },
-            open: function(event, ui) { $('#mne_dialog').css('overflow','hidden');$('.ui-widget-overlay').css('width','99%') },
-            close: function(event, ui) { $('#mne_dialog').css('overflow','auto') }
+            open: function(event, ui) { 
+	//start code (by abani)
+	setRememberedCheckboxesForDialog('mnemonics','gbox_mnegrid',12,'portlet_Mnemonics');
+	//end code(by abani)
+	$('#mne_dialog').css('overflow','hidden');$('.ui-widget-overlay').css('width','99%') },
+            close: function(event, ui) { 
+		//start code(by abani)
+		setRememberedCheckboxes('mnemonics','portlet_Mnemonics');
+		//end code(by abani)
+		$('#mne_dialog').css('overflow','auto') }
         });             
         $("#mne_dialog").dialog('open');
         $("#mne_dialog").ready(function(){
