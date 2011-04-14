@@ -1,5 +1,9 @@
 CHANGELOG
 
+3.1.270 - Search Function
+CD:
+ - #129 More work on the new search() function. Tested and working now (not implmented outside the function yet).
+
 3.1.269 - Multiple
 CD:
  - #128 Removed increment setting from triggers.sql install file and set the test trigger id to 1 (was 2).

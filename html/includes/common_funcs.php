@@ -793,6 +793,18 @@ function search($json_o, $spx_max=1000,$index="idx_logs idx_delta_logs",$spx_ip=
     $json_a = json_decode($json_o, true);
     // die(print_r($json_a));
 
+    // Set All Defaults in case they aren't sent via the json object 
+    $dupop = (!empty($json_a['dupop'])) ? $json_a['dupop'] : ">=";
+    $dupcount = (!empty($json_a['dupcount'])) ? $json_a['dupcount'] : 0;
+    $orderby = (!empty($json_a['orderby'])) ? $json_a['orderby'] : "id";
+    $order = (!empty($json_a['order'])) ? $json_a['order'] : "ASC";
+    $limit = (!empty($json_a['limit'])) ? $json_a['limit'] : $spx_max;
+    $groupby = (!empty($json_a['groupby'])) ? $json_a['groupby'] : "host";
+    $show_suppressed = (!empty($json_a['show_suppressed'])) ? $json_a['show_suppressed'] : "all";
+    $q_type = (!empty($json_a['q_type'])) ? $json_a['q_type'] : "boolean";
+
+
+
     // Default operator for concatenation is OR (|) - someday we may allow the option of &&, etc. so it's here as a variable.
     $oper = "|";
 
@@ -867,17 +879,6 @@ function search($json_o, $spx_max=1000,$index="idx_logs idx_delta_logs",$spx_ip=
         }
     }
     // die(print_r($json_a));
-
-    $dupop = $json_a['dupop'];
-    $dupcount = intval($json_a['dupcount']);
-    $orderby = $json_a['orderby'];
-    $order = $json_a['order'];
-    $limit = intval($json_a['limit']);
-    $groupby = $json_a['groupby'];
-    $chart_type = $json_a['chart_type'];
-    $show_suppressed = $json_a['show_suppressed'];
-    $q_type = $json_a['q_type'];
-
     $msg_mask = rtrim($msg_mask, " $oper ");
     $hosts = rtrim($hosts, " $oper ");
     $note = rtrim($note, " $oper ");
@@ -894,6 +895,7 @@ function search($json_o, $spx_max=1000,$index="idx_logs idx_delta_logs",$spx_ip=
             $note = "@NOTES " . $note;
         }
     }
+
 
     // SetFilter used on integer fields - takes an array
     if ($json_a['severities']) {
@@ -1017,6 +1019,7 @@ function search($json_o, $spx_max=1000,$index="idx_logs idx_delta_logs",$spx_ip=
             break;
         }
     }
+    // echo "$min - $max\n";
     $cl->SetFilterRange ( 'counter', intval($min), intval($max) );
 
     $cl->SetLimits(0, intval($spx_max));
@@ -1024,7 +1027,13 @@ function search($json_o, $spx_max=1000,$index="idx_logs idx_delta_logs",$spx_ip=
     // make the query
     // echo "<pre>";
      // die(print_r($cl));
+    //die($search_string);
+    // $cl->Query ("@MSG test", $index);
     $sphinx_results = $cl->Query ($search_string, $index);
+    $error = $cl->GetLastError();
+    if ($error) {
+        $sphinx_results['error'] = $error;
+    }
     // echo "<pre>";
       // die(print_r($sphinx_results));
 
