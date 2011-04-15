@@ -94,9 +94,11 @@ $(document).ready(function(){
 	if($('#q_type-remember-span').attr('class')=='ui-icon ui-icon-circle-check')
 		$('#q_type-remember-span').click();
 		uncheckAllCheckBoxes();
-	$('option').each(function (){
-		$(this).attr('selected',false);
-	});
+	    $('select').each(function (){
+            $(this).find('option').each(function(i, opt) {
+                opt.selected = opt.defaultSelected;
+            });
+	    });
 	});
 	
  });

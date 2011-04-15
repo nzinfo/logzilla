@@ -135,7 +135,7 @@ if ($_SESSION['SHOWCOUNTS'] == "1") {
         <td>Group By</td>
         <td>
         <select name="groupby" id="groupby">
-        <option value="host">Host</option>
+        <option selected value="host">Host</option>
         <option value="msg">Message</option>
         <option value="program">Program</option>
         <option value="facility">Facility</option>
@@ -152,7 +152,7 @@ if ($_SESSION['SHOWCOUNTS'] == "1") {
         <td>Chart Type</td>
         <td>
         <select name="chart_type" id="chart_type">
-        <option value="pie">Pie</option>
+        <option selected value="pie">Pie</option>
         <option value="bar">Bar</option>
         <option value="line">Line</option>
         </select>
@@ -165,7 +165,7 @@ if ($_SESSION['SHOWCOUNTS'] == "1") {
         <td>Auto Refresh</td>
         <td>
         <select name="tail" id="tail">
-        <option value="off">Off
+        <option selected value="off">Off
         <option value="1000">1 Second
         <option value="5000">5 Seconds
         <option value="15000">15 Seconds

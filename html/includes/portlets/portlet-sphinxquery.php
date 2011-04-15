@@ -41,7 +41,7 @@ if ((has_portlet_access($_SESSION['username'], 'Messages') == TRUE) || ($_SESSIO
 <?php } ?>
     <td width="95%">
 <?php if ($_SESSION['SHOWCOUNTS'] > 0) {?>
-        <input autocomplete="off" type="text" style="width: 95%; text-align: left; position: relative; left: 3%;" class="rounded_textbox watermark ui-widget ui-corner-all" name="msg_mask" id="msg_mask" size=30>
+        <input autocomplete="off" type="text" style="width: 95%; text-align: left; position: relative; left: 3%;" class="rounded_textbox ui-widget ui-corner-all" name="msg_mask" id="msg_mask" size=30>
             <?php if (($_SESSION['SPX_ADV'] == "1") && ($_SESSION['SPX_ENABLE'] == "1")) {?>
             <div style="width: 95%; text-align: left; position: relative; left: 3%;">
             <input type="radio" name="q_type" value="any" /> Any
@@ -88,7 +88,7 @@ if ((has_portlet_access($_SESSION['username'], 'Messages') == TRUE) || ($_SESSIO
     </td>
     <td>
 <?php if ($_SESSION['SHOWCOUNTS'] > 0) {?>
-        <input autocomplete="off" type="text" style="width: 95%; text-align: left; position: relative; left: 3%;" class="rounded_textbox watermark ui-widget ui-corner-all" name="notes_mask" id="notes_mask" size=30>
+        <input autocomplete="off" type="text" style="width: 95%; text-align: left; position: relative; left: 3%;" class="rounded_textbox ui-widget ui-corner-all" name="notes_mask" id="notes_mask" size=30>
 <?php } else { ?>
         <input autocomplete="off" type="text" style="width: 95%; text-align: left; position: relative; left: 3%;" class="rounded_textbox ui-widget ui-corner-all" name="notes_mask" id="notes_mask" size=30>
 <?php } ?>

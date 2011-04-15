@@ -1,5 +1,10 @@
 CHANGELOG
 
+3.1.273 - Cookies
+CD:
+ - #47: Cookie Reset button resets search options to page defaults rather than blank.
+ - #47: Removed watermark from message text area so that text could be cookied - moved message counts to portlet header.
+
 3.1.272 - Various
 CD:
  - Added cache update to 3.1.122 upgrade in install.pl
