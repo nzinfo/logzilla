@@ -1,5 +1,9 @@
 CHANGELOG
 
+3.1.275 - Cache Updates
+CD:
+ - #122: (slow cache updates) - should be fixed now. logs table was missing an index on hosts.
+
 3.1.274 - Cache Updates
 CD:
  - #122: Separated table cache updates to help speed up nightly routines on large systems

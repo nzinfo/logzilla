@@ -46,7 +46,7 @@ sub p {
 }
 
 my $version = "3.2";
-my $subversion = ".277";
+my $subversion = ".278";
 
 # Grab the base path
 my $lzbase = getcwd;
@@ -307,6 +307,7 @@ sub do_install {
         PRIMARY KEY (id,lo),
         KEY facility (facility),
         KEY severity (severity),
+        KEY host (host),
         KEY mne (mne),
         KEY eid (eid),
         KEY program (program),
