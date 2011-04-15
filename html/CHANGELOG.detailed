@@ -1,5 +1,11 @@
 CHANGELOG
 
+3.1.272 - Various
+CD:
+ - Added cache update to 3.1.122 upgrade in install.pl
+ -  #129 Replaced portlet-table.php sphinx calls with new search() function
+ - Added better error handling for Sphinx errors
+
 3.1.271 - Cookies
 CD:
  - #47: Grid selections mirror portlet. 

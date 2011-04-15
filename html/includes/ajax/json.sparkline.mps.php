@@ -11,7 +11,7 @@
  *
  */
 
-session_start();
+@session_start();
 $basePath = dirname( __FILE__ );
 require_once ($basePath . "/../common_funcs.php");
 $dbLink = db_connect_syslog(DBADMIN, DBADMINPW);

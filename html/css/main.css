@@ -368,3 +368,8 @@ tr.invisibleRow
      border-collapse: collapse;
      width: 100%;
 }
+.ui-dialog-title { 
+      float:none !important; 
+      display: block; 
+      text-align: center; 
+} 
