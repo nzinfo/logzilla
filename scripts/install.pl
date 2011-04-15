@@ -46,12 +46,19 @@ sub p {
 }
 
 my $version = "3.2";
-my $subversion = ".274";
+my $subversion = ".275";
 
 # Grab the base path
 my $lzbase = getcwd;
 $lzbase =~ s/\/scripts//g;
 my $now = localtime;
+
+my ($sec, $min, $hour, $curmday, $curmon, $curyear, $wday, $yday, $isdst) = localtime time;
+$curyear = $curyear + 1900;
+$curmon = $curmon + 1;
+my ($year,$mon,$mday) = Date::Calc::Add_Delta_Days($curyear,$curmon,$curmday,1);
+my $pAdd = "p".$year.sprintf("%02d",$mon).sprintf("%02d",$mday);
+my $dateTomorrow = $year."-".sprintf("%02d",$mon)."-".sprintf("%02d",$mday);
 
 # The command line args below are really just for me so I don't have to keep going through extra steps to test 1 thing.
 # But you can use them if you want :-)
@@ -395,6 +402,8 @@ sub do_install {
     print $res;
 
     make_partitions();
+    do_procs();
+    do_events();
     create_views();
 }
 
@@ -465,13 +474,6 @@ close(FILE);
 
 sub make_partitions {
 # Get some date values in order to create the MySQL Partition
-    my ($sec, $min, $hour, $curmday, $curmon, $curyear, $wday, $yday, $isdst) = localtime time;
-    $curyear = $curyear + 1900;
-    $curmon = $curmon + 1;
-    my ($year,$mon,$mday) = Date::Calc::Add_Delta_Days($curyear,$curmon,$curmday,1);
-    my $pAdd = "p".$year.sprintf("%02d",$mon).sprintf("%02d",$mday);
-    my $dateTomorrow = $year."-".sprintf("%02d",$mon)."-".sprintf("%02d",$mday);
-
     my $dbh = db_connect($dbname, $lzbase, $dbroot, $dbrootpass);
 # Create initial Partition of the $dbtable table
     my $sth = $dbh->prepare("
@@ -480,41 +482,6 @@ sub make_partitions {
         );
         ") or die "Could not create partition for the $dbtable table: $DBI::errstr";
     $sth->execute; 
-
-# Create Partition events
-    my $event = qq{
-    CREATE EVENT logs_add_partition ON SCHEDULE EVERY 1 DAY STARTS '$dateTomorrow 00:00:00' ON COMPLETION NOT PRESERVE ENABLE DO CALL logs_add_part_proc();
-    };
-    my $sth = $dbh->prepare("
-        $event
-        ") or die "Could not create partition events: $DBI::errstr";
-    $sth->execute;
-
-#  TH: use the new archive feature!
-    my $event = qq{
-    CREATE EVENT logs_add_archive ON SCHEDULE EVERY 1 DAY STARTS '$dateTomorrow 00:10:00' ON COMPLETION NOT PRESERVE ENABLE DO CALL logs_add_archive_proc();
-    };
-    my $sth = $dbh->prepare("
-        $event
-        ") or die "Could not create archive events: $DBI::errstr";
-    $sth->execute;
-
-    my $event = qq{
-    CREATE EVENT logs_del_partition ON SCHEDULE EVERY 1 DAY STARTS '$dateTomorrow 00:15:00' ON COMPLETION NOT PRESERVE ENABLE DO CALL logs_delete_part_proc();
-    };
-    my $sth = $dbh->prepare("
-        $event
-        ") or die "Could not create partition events: $DBI::errstr";
-    $sth->execute;
-
-# CDUKES: [[ticket:17]]
-    my $event = qq{
-    CREATE EVENT cacheUpdate ON SCHEDULE EVERY 1 DAY STARTS '$dateTomorrow 01:00:00' ON COMPLETION NOT PRESERVE ENABLE DO CALL updateCache();
-    };
-    my $sth = $dbh->prepare("
-        $event
-        ") or die "Could not create event: cacheUpdate: $DBI::errstr";
-    $sth->execute;
 
     my $event = qq{
     CREATE PROCEDURE logs_add_part_proc()
@@ -577,6 +544,102 @@ sub make_partitions {
         $event
         ") or die "Could not create partition events: $DBI::errstr";
     $sth->execute;
+}
+
+sub do_events {
+    my $dbh = db_connect($dbname, $lzbase, $dbroot, $dbrootpass);
+
+# Create Partition events
+    my $event = qq{
+    CREATE EVENT logs_add_partition ON SCHEDULE EVERY 1 DAY STARTS '$dateTomorrow 00:00:00' ON COMPLETION NOT PRESERVE ENABLE DO CALL logs_add_part_proc();
+    };
+    my $sth = $dbh->prepare("
+        $event
+        ") or die "Could not create partition events: $DBI::errstr";
+    $sth->execute;
+
+#  TH: use the new archive feature!
+    my $event = qq{
+    CREATE EVENT logs_add_archive ON SCHEDULE EVERY 1 DAY STARTS '$dateTomorrow 00:10:00' ON COMPLETION NOT PRESERVE ENABLE DO CALL logs_add_archive_proc();
+    };
+    my $sth = $dbh->prepare("
+        $event
+        ") or die "Could not create archive events: $DBI::errstr";
+    $sth->execute;
+
+    my $event = qq{
+    CREATE EVENT logs_del_partition ON SCHEDULE EVERY 1 DAY STARTS '$dateTomorrow 00:15:00' ON COMPLETION NOT PRESERVE ENABLE DO CALL logs_delete_part_proc();
+    };
+    my $sth = $dbh->prepare("
+        $event
+        ") or die "Could not create partition events: $DBI::errstr";
+    $sth->execute;
+
+# CDUKES: [[ticket:17]]
+    my $event = qq{
+    CREATE EVENT cacheUpdate ON SCHEDULE EVERY 1 DAY STARTS '$dateTomorrow 01:00:00' ON COMPLETION NOT PRESERVE ENABLE DO CALL updateCache();
+    };
+    my $sth = $dbh->prepare("
+        $event
+        ") or die "Could not create event: cacheUpdate: $DBI::errstr";
+    $sth->execute;
+    my $event = qq{
+    CREATE EVENT cacheHosts ON SCHEDULE EVERY 1 DAY STARTS '$dateTomorrow 01:30:00' ON COMPLETION NOT PRESERVE ENABLE DO CALL updateHosts();
+    };
+    my $sth = $dbh->prepare("
+        $event
+        ") or die "Could not create event: cacheHosts: $DBI::errstr";
+    $sth->execute;
+    my $event = qq{
+    CREATE EVENT cacheMne ON SCHEDULE EVERY 1 DAY STARTS '$dateTomorrow 02:00:00' ON COMPLETION NOT PRESERVE ENABLE DO CALL updateMne();
+    };
+    my $sth = $dbh->prepare("
+        $event
+        ") or die "Could not create event: cacheMne: $DBI::errstr";
+    $sth->execute;
+    my $event = qq{
+    CREATE EVENT cacheEid ON SCHEDULE EVERY 1 DAY STARTS '$dateTomorrow 02:30:00' ON COMPLETION NOT PRESERVE ENABLE DO CALL updateEid();
+    };
+    my $sth = $dbh->prepare("
+        $event
+        ") or die "Could not create event: cacheEid: $DBI::errstr";
+    $sth->execute;
+}
+
+sub do_procs {
+    my $dbh = db_connect($dbname, $lzbase, $dbroot, $dbrootpass);
+
+    my $event = qq{
+    DROP PROCEDURE IF EXISTS updateCache;
+    };
+    my $sth = $dbh->prepare("
+        $event
+        ") or die "Could not drop updateCache Procedure: $DBI::errstr";
+    $sth->execute;
+    my $event = qq{
+    DROP PROCEDURE IF EXISTS updateHosts;
+    };
+    my $sth = $dbh->prepare("
+        $event
+        ") or die "Could not drop updateHosts Procedure: $DBI::errstr";
+    $sth->execute;
+
+    my $event = qq{
+    DROP PROCEDURE IF EXISTS updateMne;
+    };
+    my $sth = $dbh->prepare("
+        $event
+        ") or die "Could not drop updateMne Procedure: $DBI::errstr";
+    $sth->execute;
+
+    my $event = qq{
+    DROP PROCEDURE IF EXISTS updateEid;
+    };
+    my $sth = $dbh->prepare("
+        $event
+        ") or die "Could not drop updateEid Procedure: $DBI::errstr";
+    $sth->execute;
+
 
 # CDUKES: [[ticket:17]]
     my $event = qq{
@@ -586,14 +649,53 @@ sub make_partitions {
     BEGIN    
     REPLACE INTO cache (name,value,updatetime) VALUES ('msg_sum', (SELECT SUM(counter) FROM `$dbtable`),NOW());
     REPLACE INTO cache (name,value,updatetime) VALUES (CONCAT('chart_mpd_',DATE_FORMAT(NOW() - INTERVAL 1 DAY, '%Y-%m-%d_%a')), (SELECT SUM(counter) FROM `$dbtable` WHERE lo BETWEEN DATE_SUB(CONCAT(CURDATE(), ' 00:00:00'), INTERVAL 1 DAY) AND DATE_SUB(CONCAT(CURDATE(), ' 23:59:59'), INTERVAL  1 DAY)),NOW());
-    UPDATE `hosts` SET `seen` = ( SELECT SUM(`$dbtable`.`counter`) FROM `$dbtable` WHERE `$dbtable`.`host` = `hosts`.`host` );
-    UPDATE `mne` SET `seen` = ( SELECT SUM(`$dbtable`.`counter`) FROM `$dbtable` WHERE `$dbtable`.`mne` = `mne`.`crc` );
-    UPDATE `snare_eid` SET `seen` = ( SELECT SUM(`$dbtable`.`counter`) FROM `$dbtable` WHERE `$dbtable`.`eid` = `snare_eid`.`eid` );
     END 
     };
     my $sth = $dbh->prepare("
         $event
         ") or die "Could not create updateCache Procedure: $DBI::errstr";
+    $sth->execute;
+
+# CDUKES: #122
+    my $event = qq{
+    CREATE PROCEDURE updateHosts()
+    SQL SECURITY DEFINER
+    COMMENT 'Verifies host cache totals every night' 
+    BEGIN    
+    UPDATE `hosts` SET `seen` = ( SELECT SUM(`$dbtable`.`counter`) FROM `$dbtable` WHERE `$dbtable`.`host` = `hosts`.`host` );
+    END 
+    };
+    my $sth = $dbh->prepare("
+        $event
+        ") or die "Could not create updateHosts Procedure: $DBI::errstr";
+    $sth->execute;
+
+# CDUKES: #122
+    my $event = qq{
+    CREATE PROCEDURE updateMne()
+    SQL SECURITY DEFINER
+    COMMENT 'Verifies host Mnemonics totals every night' 
+    BEGIN    
+    UPDATE `mne` SET `seen` = ( SELECT SUM(`$dbtable`.`counter`) FROM `$dbtable` WHERE `$dbtable`.`mne` = `mne`.`crc` );
+    END 
+    };
+    my $sth = $dbh->prepare("
+        $event
+        ") or die "Could not create updateMne Procedure: $DBI::errstr";
+    $sth->execute;
+
+# CDUKES: #122
+    my $event = qq{
+    CREATE PROCEDURE updateEid()
+    SQL SECURITY DEFINER
+    COMMENT 'Verifies host SNARE EID totals every night' 
+    BEGIN    
+    UPDATE `snare_eid` SET `seen` = ( SELECT SUM(`$dbtable`.`counter`) FROM `$dbtable` WHERE `$dbtable`.`eid` = `snare_eid`.`eid` );
+    END 
+    };
+    my $sth = $dbh->prepare("
+        $event
+        ") or die "Could not create updateEid Procedure: $DBI::errstr";
     $sth->execute;
 
 # [[ticket:10]] TH: adding export procedure
@@ -617,7 +719,6 @@ sub make_partitions {
 #$event
 #") or die "Could not create export Procedure: $DBI::errstr";
 #$sth->execute;
-
 
 # Turn the event scheduler on
 

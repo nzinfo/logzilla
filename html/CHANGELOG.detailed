@@ -1,5 +1,9 @@
 CHANGELOG
 
+3.1.274 - Cache Updates
+CD:
+ - #122: Separated table cache updates to help speed up nightly routines on large systems
+
 3.1.273 - Cookies
 CD:
  - #47: Cookie Reset button resets search options to page defaults rather than blank.
