@@ -108,6 +108,8 @@ if ($lo_checkbox == "on") {
 // END date/time
 //------------------------------------------------------------
 
+$q_type = get_input('q_type');
+    $qstring .= "&q_type=$q_type";
 
 // see if we are tailing
 $tail = get_input('tail');
@@ -312,239 +314,101 @@ if (($dupop) && ($dupop != 'undefined')) {
 }
     
 if ($_SESSION['SPX_ENABLE'] == "1") {
-    $qtype = get_input('q_type');
-    //---------------BEGIN SPHINX
-    require_once ($basePath . "/../SPHINX.class.php");
-    $index = "idx_logs idx_delta_logs";
-    $cl = new SphinxClient ();
 
-    if($msg_mask_get !== '') {
-        $escaped = $cl->EscapeString ("$msg_mask_get");
-        $escaped = str_replace("\|","|",$escaped);
-        $escaped = str_replace("\!","!",$escaped);
-        // #33 CDUKES: Added masks below so that users can search via @ keyword
-//      $kwd = preg_replace ('/^@(notes|sev|fac|prg|mne|host|eid).*/i', '$1', $msg_mask_get);
-        $kwd = preg_replace ('/^@(notes|host).*/i', '$1', $msg_mask_get);
-        switch ($kwd) {
-            case "notes":
-                $escaped = str_ireplace("\@notes","",$escaped);
-                $msg_mask = "$sph_msg_mask @NOTES $escaped";
-            break;
-            /* out for now until I get time to convert to ints as stored in the db
-            case "sev":
-                $escaped = str_ireplace("\@sev","",$escaped);
-                $msg_mask = "$sph_msg_mask @SEVERITY $escaped";
-            break;
-            case "fac":
-                $escaped = str_ireplace("\@fac","",$escaped);
-                $msg_mask = "$sph_msg_mask @FACILITY $escaped";
-            break;
-            case "prg":
-                $escaped = str_ireplace("\@prg","",$escaped);
-                $msg_mask = "$sph_msg_mask @PROGRAM $escaped";
-            break;
-            case "mne":
-                $escaped = str_ireplace("\@mne","",$escaped);
-                $msg_mask = "$sph_msg_mask @MNE $escaped";
-            break;
-            */
-            case "host":
-                $escaped = str_ireplace("\@host","",$escaped);
-                $msg_mask = "$sph_msg_mask @HOST $escaped";
-            break;
-/*          case "eid":
-                $escaped = str_ireplace("\@eid","",$escaped);
-                $msg_mask = "$sph_msg_mask @EID $escaped";
-            break;
-*/
-            default:
-            $msg_mask = "$sph_msg_mask @MSG $escaped";
-        }
-    }
-    // #33 CDUKES - END
-    else $msg_mask = "$sph_msg_mask";
+    // Encode POST into json and send it off to search:
+    $json_o = search(json_encode($_POST));
 
-    $hostip = $_SESSION['SPX_SRV'];
-    $port = intval($_SESSION['SPX_PORT']);
-    $cl->SetServer ( $hostip, $port );
-    switch ($qtype) {
-        case "any":
-            $cl->SetMatchMode ( SPH_MATCH_ANY );
-        break;
-        case "phrase":
-            $cl->SetMatchMode ( SPH_MATCH_PHRASE );
-        break;
-        case "boolean":
-            $cl->SetMatchMode ( SPH_MATCH_BOOLEAN );
-        break;
-        case "extended":
-            $cl->SetMatchMode ( SPH_MATCH_EXTENDED2 );
-        break;
-        default:
-        $qtype = "boolean";
-        $cl->SetMatchMode ( SPH_MATCH_BOOLEAN );
-    }
-    switch ($orderby) {
-        case "id":
-            $sph_sort = "@id";
-        break;
-        case "counter":
-            $sph_sort = "counter";
-        break;
-        case "facility":
-            $sph_sort = "facility";
-        break; 
-        case "severity":
-            $sph_sort = "severity";
-        break;
-        case "fo":
-            $sph_sort = "fo";
-        break;
-        default:
-        $sph_sort = "lo";
-    }
-    if ($order == 'DESC') {
-        $sph_sort .= " DESC";
-    } else {
-        $sph_sort .= " ASC";
-    }
-    $cl->SetSortMode ( SPH_SORT_EXTENDED , $sph_sort );
-    if ($severities) {
-        $cl->SetFilter( 'severity', $severities ); }
-    if ($facilities) {
-        $cl->SetFilter( 'facility', $facilities ); }
-    if ($eids) {
-        $cl->SetFilter( 'eid', $eids ); }
 
-    // Convert datetime to timestamp
-    $timestamp_array = date_parse($filter_fo_start);
-    $filter_fo_min = mktime($timestamp_array['hour'],$timestamp_array['minute'],$timestamp_array['second'],$timestamp_array['month'],$timestamp_array['day'],$timestamp_array['year']);
-    $timestamp_array = date_parse($filter_fo_end);
-    $filter_fo_max = mktime($timestamp_array['hour'],$timestamp_array['minute'],$timestamp_array['second'],$timestamp_array['month'],$timestamp_array['day'],$timestamp_array['year']);
-    $timestamp_array = date_parse($filter_lo_start);
-    $filter_lo_min = mktime($timestamp_array['hour'],$timestamp_array['minute'],$timestamp_array['second'],$timestamp_array['month'],$timestamp_array['day'],$timestamp_array['year']);
-    $timestamp_array = date_parse($filter_lo_end);
-    $filter_lo_max = mktime($timestamp_array['hour'],$timestamp_array['minute'],$timestamp_array['second'],$timestamp_array['month'],$timestamp_array['day'],$timestamp_array['year']);
+    // If something goes wrong, search() will return ^'SPX_ERROR'
+    if (!preg_match("/^Sphinx Error:/", "$json_o")) {
 
-    if ($fo_checkbox == "on")  $cl->SetFilterRange ( 'fo', $filter_fo_min,  $filter_fo_max );
-    if ($lo_checkbox == "on")  $cl->SetFilterRange ( 'lo', $filter_lo_min,  $filter_lo_max );
-    $cl->SetFilterRange ( 'counter', intval($filter_dup_min), intval($filter_dup_max) );
-
-    // $cl->SetLimits(0, intval($_SESSION['SPX_MAX_MATCHES']));
-    $cl->SetLimits(0, intval($spx_max));
-
-    $sphinx_results = $cl->Query ($msg_mask, $index);
+    // Decode returned json object into an array:
+    $sphinx_results = json_decode($json_o, true);
+    //echo "<pre>";
+    // die(print_r($sphinx_results));
+    // die("result = '$sphinx_results'");
 
     $total = $sphinx_results['total_found'];
 
-    if ( !$sphinx_results )
-    {
-        $info = "<font size=\"3\"><br>Sphinx - Error in query: <br></font>";
-        $helpurl="$info<br><button class=\"ui-button ui-button-text-only ui-widget ui-state-default ui-corner-all\"><a href=\"http://nms.gdd.net/index.php/Install_Guide_for_LogZilla_v3.0#Installing_Sphinx\" target=_new>SPHINX HELP</a></button>";
-        echo ( "$helpurl " . $cl->GetLastError() . ".\n</font>" );
-    } else
-    {
-        if ($sphinx_results['total_found'] > 0) {
-            //  echo "<pre>\n";
-            //  die(print_r($sphinx_results));
-            //  echo "</pre>\n";
-            $where = " where id IN (";
-            foreach ( $sphinx_results["matches"] as $doc => $docinfo ) {
-                $where .= "'$doc',";
-            }
-            $where = rtrim($where, ",");
-            $where .= ")";
-        } else {
-            // Negate search since sphinx returned 0 hits
-            $where = "WHERE 1<1";
-            //  die(print_r($sphinx_results));
+    if ($sphinx_results['total_found'] > 0) {
+        //  echo "<pre>\n";
+        //  die(print_r($sphinx_results));
+        //  echo "</pre>\n";
+        $where = " where id IN (";
+        foreach ( $sphinx_results["matches"] as $doc => $docinfo ) {
+            $where .= "'$doc',";
         }
-    }
-    //---------------END SPHINX
+        $where = rtrim($where, ",");
+        $where .= ")";
     } else {
-        $msg_mask = mysql_real_escape_string($msg_mask_get);
-        switch ($msg_mask_oper) {
-            case "=":
-                $where.= " AND msg='$msg_mask'";  
-            break;
-
-            case "!=":
-                $where.= " AND msg='$msg_mask'";  
-            break;
-
-            case "LIKE":
-                $where.= " AND msg LIKE '%$msg_mask%'";  
-            break;
-
-            case "! LIKE":
-                $where.= " AND msg NOT LIKE '%$msg_mask%'";  
-            break;
-
-            case "RLIKE":
-                $where.= " AND msg RLIKE '$msg_mask'";  
-            break;
-
-            case "! RLIKE":
-                $where.= " AND msg NOT LIKE '$msg_mask'";  
-            break;
-        }
+        // Negate search since sphinx returned 0 hits
+        $where = "WHERE 1<1";
+        //  die(print_r($sphinx_results));
     }
-
-/*
-$notes_mask = get_input('notes_mask');
-$notes_mask = preg_replace ('/^Search through .*\sNotes/m', '', $notes_mask);
-$notes_mask_oper = get_input('notes_mask_oper');
-$notes_andor = get_input('notes_andor');
-$qstring .= "&notes_mask=$notes_mask&notes_mask_oper=$notes_mask_oper&notes_andor=$notes_andor";
-if($notes_mask) {
-    switch ($notes_mask_oper) {
+    } else {
+        $lzbase = str_replace("html/includes/portlets", "", dirname( __FILE__ ));
+        $dlg_start = '<div id="error_dialog" title="Error!">';
+        $dlg_end = "<br><br>The results displayed are taken directly from MySQL which are significantly slower!";
+        $dlg_end .= "</div>";
+        if (preg_match("/.*failed to open.*spd/", "$json_o")) {
+            $error = "The Sphinx indexes are missing!<br>\n";
+            $error .= "Please be sure you have run the indexer on your server by typing:<br><br>\n";
+            $error .= "sudo ${lzbase}sphinx/indexer.sh full<br><br>";
+        } elseif (preg_match("/.*connection to.*failed.*/", "$json_o")) {
+            $error = "The Sphinx daemon is not running!<br>\n";
+            $error .= "Please be sure you have started the daemon on your server by typing:<br><br>\n";
+            $error .= "sudo ${lzbase}sphinx/bin/searchd -c ${lzbase}sphinx/sphinx.conf<br><br>";
+    } else {
+        $error = $json_o;
+    }
+        echo $dlg_start;
+        echo $error;
+        echo $dlg_end;
+            ?>
+        <script type="text/javascript">
+        $(document).ready(function(){
+                $( "#error_dialog" ).dialog({
+                    modal: true,
+                    width: "50%", 
+                    height: 240, 
+                    buttons: {
+                    Ok: function() {
+                        $( this ).dialog( "close" );
+                        }
+                    }
+                 });
+        }); // end doc ready
+        </script>
+        <?php
+    }
+} else {
+    $msg_mask = mysql_real_escape_string($msg_mask_get);
+    switch ($msg_mask_oper) {
         case "=":
-            $where.= " AND notes='$notes_mask'";  
+            $where.= " AND msg='$msg_mask'";  
         break;
 
         case "!=":
-            $where.= " AND notes='$notes_mask'";  
+            $where.= " AND msg='$msg_mask'";  
         break;
 
         case "LIKE":
-            $where.= " AND notes LIKE '%$notes_mask%'";  
+            $where.= " AND msg LIKE '%$msg_mask%'";  
         break;
 
         case "! LIKE":
-            $where.= " AND notes NOT LIKE '%$notes_mask%'";  
+            $where.= " AND msg NOT LIKE '%$msg_mask%'";  
         break;
 
         case "RLIKE":
-            $where.= " AND notes RLIKE '$notes_mask'";  
+            $where.= " AND msg RLIKE '$msg_mask'";  
         break;
 
         case "! RLIKE":
-            $where.= " AND notes NOT LIKE '$notes_mask'";  
+            $where.= " AND msg NOT LIKE '$msg_mask'";  
         break;
-
-        case "EMPTY":
-            $where.= " AND notes = ''";  
-        break;
-
-        case "! EMPTY":
-            $where.= " AND notes != ''";  
-        break;
-    }
-} else {
-    if($notes_mask_oper) {
-        switch ($notes_mask_oper) {
-            case "EMPTY":
-                $where.= " AND notes = ''";  
-            break;
-
-            case "! EMPTY":
-                $where.= " AND notes != ''";  
-            break;
-        }
     }
 }
-*/
-
 
 // Not implemented yet (for graph generation)
 $topx = get_input('topx');
@@ -645,153 +509,142 @@ endswitch;
 }
 
 
-  $count = mysql_num_rows($result);
-  if ($count > 0) {
-      $info = "<center>Displaying $count of ".commify($total)." Possible Results</center>";
-      ?>
-          <script type="text/javascript">
-          $("#portlet-header_Search_Results").html('<?php echo "$info"?>');
-      </script>
-          <?php
-  } else {
-      // CDUKES: Added error check to see if Sphinx is working
-      $file = $_SESSION['PATH_LOGS'] . "/sphinx_indexer.log";
-      if (is_file($file)) {
+$count = mysql_num_rows($result);
+if ($count > 0) {
+    $info = "<center>Displaying $count of ".commify($total)." Possible Results</center>";
+    ?>
+        <script type="text/javascript">
+        $("#portlet-header_Search_Results").html('<?php echo "$info"?>');
+    </script>
+        <?php
+} else {
+    // CDUKES: Added error check to see if Sphinx is working
+    $file = $_SESSION['PATH_LOGS'] . "/sphinx_indexer.log";
+    if (is_file($file)) {
         $line = `tail $file | grep "and completed on "`;
         $spx_lastupdate = getRelativeTime(preg_replace('/.*and completed on (\d+-\d+-\d+) at (\d+:\d+:\d+).*/', '$1 $2', $line));
-          if (preg_match("/1969/", "$spx_lastupdate")) {
-              $info = "$helpurl Your Sphinx indexes have not been set up, please verify that CRON is running properly!";
-          } elseif (!preg_match("/[minutes|seconds]/i", "$spx_lastupdate")) {
-              $info = "$helpurl Your Sphinx indexes were last updated $spx_lastupdate, please verify that CRON is running properly!";
-          }
-      } else {
-          $info = "$helpurl Your Sphinx indexes have not been set up, please verify that CRON is running properly and that $file exists!";
-      }
-      if (!$info) {
-          // same error below until I know what Tom wants here :-)
-          // Stop fighting! :-) the limitation applies only when (un-)suppression is active
-          if( $show_suppressed == 'all' ) {
-              $info = "Please try refining the search parameters (such as date and time)<br />Sphinx Information: Your indexes were last updated $spx_lastupdate";
-              if ($_SESSION['SPX_ENABLE'] == "1") {
-                  echo "<br><br><b><u>Results</u></b><br>\n";
-                  echo "Found ".$sphinx_results['total']." matching documents in ".$sphinx_results['time']." seconds<br>\n";
-                  echo count($sphinx_results['words'])." search terms:<br>\n";
-                  if (is_array($sphinx_results['words'])) {
-                      foreach ($sphinx_results['words'] as $key=>$word) {
-                          echo "&nbsp;&nbsp;&nbsp;&nbsp;\"$key\" found ".commify($sphinx_results['words'][$key]['hits'])." times in all possible log tables and date ranges.<br>\n";
-                      }
-                  }
-                  echo "<br>\n";
-              }
-              // echo "<pre>\n";
-              // die(print_r($sphinx_results));
-              // echo "</pre>\n";
-          } else {
-              $info = "No results within the first $spx_max records. Please try refining your search (such as the date of the event).<br />Sphinx Information: Your indexes were last updated $spx_lastupdate";
-      		}
-      }
-    
-      ?>
-          <script type="text/javascript">
-          $("#theTable").replaceWith('<br /><br /><font color="red"><?php echo "<br />$info"?></font>');
-      </script>
-          <?php
-  }
-  ?>
-<?php
-  while($row = fetch_array($result)) { 
-      $msg = htmlentities($row['msg']);
-        switch ($row['severity']) {
-            case '7':
-                $sev = 'sev7';
-                $sev_text = "DEBUG";
-                break;
-            case '6':
-                $sev = 'sev6';
-                $sev_text = "INFO";
-                break;
-            case '5':
-                $sev = 'sev5';
-                $sev_text = "NOTICE";
-                break;
-            case '4':
-                $sev = 'sev4';
-                $sev_text = "WARNING";
-                break;
-            case '3':
-                $sev = 'sev3';
-                $sev_text = "ERROR";
-                break;
-            case '2':
-                $sev = 'sev2';
-                $sev_text = "CRIT";
-                break;
-            case '1':
-                $sev = 'sev1';
-                $sev_text = "ALERT";
-                break;
-            case '0':
-                $sev = 'sev0';
-                $sev_text = "EMERG";
-                break;
-            default:
+        if (preg_match("/1969/", "$spx_lastupdate")) {
+            $info = "Unable to determine the last Sphinx index time, please make sure that /etc/cron.d/logzilla exists and contains the entry for indexer.sh";
         }
-        echo "<tr id=\"$sev\">\n";
-        // Icon downloaded from http://icons.mysitemyway.com
-        echo "<td class=\"s_td\">\n";
-        echo "<a href=\"#\" onclick=\"edit_note(this);return false;\" id=\"edit_$row[id]\"><img style=\"border-style: none; width: 30px; height: 30px;\" src=\"$_SESSION[SITE_URL]images/edit_sm.png\" /></a>\n";
-        echo "</td>\n";
-        echo "<td class=\"s_td\"><input class=\"checkbox\" type='checkbox' name='dbid[]' value='$row[id]'></td>";
-        if($_SESSION['SNARE'] == "1") {
-            if ($row['eid'] > 0) {
+    } else {
+        $info = "Your Sphinx indexes have not been set up, please verify that CRON is running properly and that $file exists!";
+    }
+    if (!$info) {
+        if ($_SESSION['SPX_ENABLE'] == "1") {
+            echo "<br><br><b><u>Results</u></b><br>\n";
+            echo "Found ".$sphinx_results['total_found']." documents in ".$sphinx_results['time']." seconds<br>\n";
+            echo count($sphinx_results['words'])." search terms:<br>\n";
+            if (is_array($sphinx_results['words'])) {
+                foreach ($sphinx_results['words'] as $key=>$word) {
+                    echo "&nbsp;&nbsp;&nbsp;&nbsp;\"$key\" found ".commify($sphinx_results['words'][$key]['hits'])." times in all possible log tables and date ranges.<br>\n";
+                }
+            }
+            echo "<br>\n";
+        }
+        // echo "<pre>\n";
+        // die(print_r($sphinx_results));
+        // echo "</pre>\n";
+        $info = "No results within the first $spx_max records. Please try refining your search (such as the date of the event).<br />Sphinx Information: Your indexes were last updated $spx_lastupdate";
+    }
+    ?>
+        <script type="text/javascript">
+        $("#theTable").replaceWith('<br /><br /><font color="red"><?php echo "<br />$info"?></font>');
+    </script>
+        <?php
+}
+while($row = fetch_array($result)) { 
+    $msg = htmlentities($row['msg']);
+    switch ($row['severity']) {
+        case '7':
+            $sev = 'sev7';
+            $sev_text = "DEBUG";
+            break;
+        case '6':
+            $sev = 'sev6';
+            $sev_text = "INFO";
+            break;
+        case '5':
+            $sev = 'sev5';
+            $sev_text = "NOTICE";
+            break;
+        case '4':
+            $sev = 'sev4';
+            $sev_text = "WARNING";
+            break;
+        case '3':
+            $sev = 'sev3';
+            $sev_text = "ERROR";
+            break;
+        case '2':
+            $sev = 'sev2';
+            $sev_text = "CRIT";
+            break;
+        case '1':
+            $sev = 'sev1';
+            $sev_text = "ALERT";
+            break;
+        case '0':
+            $sev = 'sev0';
+            $sev_text = "EMERG";
+            break;
+        default:
+    }
+    echo "<tr id=\"$sev\">\n";
+    // Icon downloaded from http://icons.mysitemyway.com
+    echo "<td class=\"s_td\">\n";
+    echo "<a href=\"#\" onclick=\"edit_note(this);return false;\" id=\"edit_$row[id]\"><img style=\"border-style: none; width: 30px; height: 30px;\" src=\"$_SESSION[SITE_URL]images/edit_sm.png\" /></a>\n";
+    echo "</td>\n";
+    echo "<td class=\"s_td\"><input class=\"checkbox\" type='checkbox' name='dbid[]' value='$row[id]'></td>";
+    if($_SESSION['SNARE'] == "1") {
+        if ($row['eid'] > 0) {
             echo "<td class=\"s_td\"><a href=\"$_SESSION[SNARE_EID_URL]$row[eid]\" target=\"_new\"><span class=\"ui-icon ui-icon-search\"></span></a><a href=$_SESSION[SITE_URL]$qstring&eids=$row[eid]>$row[eid]</a></td>\n";
-            } else {
+        } else {
             echo "<td class=\"s_td\">N/A</td>\n";
-            }
         }
-        echo "<td class=\"s_td\"><a href=$_SESSION[SITE_URL]$qstring&hosts[]=$row[host]>$row[host]</a></td>\n";
-        echo "<td class=\"s_td\"><a href=$_SESSION[SITE_URL]$qstring&facilities[]=$row[facility]>".int2fac($row['facility'])."</a></td>\n";
-        echo "<td class=\"s_td $sev\"><a href=$_SESSION[SITE_URL]$qstring&severities[]=$row[severity]>$sev_text</a></td>\n";
-        echo "<td class=\"s_td\"><a href=$_SESSION[SITE_URL]$qstring&programs[]=$row[program]>".crc2prg($row['program'])."</a></td>\n";
-        echo "<td class=\"s_td\"><a href=$_SESSION[SITE_URL]$qstring&mnemonics[]=$row[mne]>".crc2mne($row['mne'])."</a></td>\n";
-        if ($_SESSION['CISCO_MNE_PARSE'] == "1" ) {
-            // $msg = preg_replace('/\s:/', ':', $msg);
-            $msg = preg_replace('/.*%(\w+-.*\d-\w+)\s?:/', '$1', $msg);
+    }
+    echo "<td class=\"s_td\"><a href=$_SESSION[SITE_URL]$qstring&hosts[]=$row[host]>$row[host]</a></td>\n";
+    echo "<td class=\"s_td\"><a href=$_SESSION[SITE_URL]$qstring&facilities[]=$row[facility]>".int2fac($row['facility'])."</a></td>\n";
+    echo "<td class=\"s_td $sev\"><a href=$_SESSION[SITE_URL]$qstring&severities[]=$row[severity]>$sev_text</a></td>\n";
+    echo "<td class=\"s_td\"><a href=$_SESSION[SITE_URL]$qstring&programs[]=$row[program]>".crc2prg($row['program'])."</a></td>\n";
+    echo "<td class=\"s_td\"><a href=$_SESSION[SITE_URL]$qstring&mnemonics[]=$row[mne]>".crc2mne($row['mne'])."</a></td>\n";
+    if ($_SESSION['CISCO_MNE_PARSE'] == "1" ) {
+        // $msg = preg_replace('/\s:/', ':', $msg);
+        $msg = preg_replace('/.*%(\w+-.*\d-\w+)\s?:/', '$1', $msg);
+    }
+# CDUKES: [[ticket:41]] - break long text so it doesn't scroll off the page
+    $msg = wordwrap($msg, 90, " <br> ", true);
+    if($_SESSION['MSG_EXPLODE'] == "1") {
+        $explode_url = "";
+        $pieces = explode(" ", $msg);
+        foreach($pieces as $value) {
+            // url-encoding w/o quot makes sphinx happier
+            $explode_url .= " <a href=\"$_SESSION[SITE_URL]$qstring&msg_mask=".urlencode(trim($value, "\x22"))."\"> ".$value." </a> ";
         }
-        # CDUKES: [[ticket:41]] - break long text so it doesn't scroll off the page
-        $msg = wordwrap($msg, 90, " <br> ", true);
-        if($_SESSION['MSG_EXPLODE'] == "1") {
-            $explode_url = "";
-            $pieces = explode(" ", $msg);
-            foreach($pieces as $value) {
-            	// url-encoding w/o quot makes sphinx happier
-                $explode_url .= " <a href=\"$_SESSION[SITE_URL]$qstring&msg_mask=".urlencode(trim($value, "\x22"))."\"> ".$value." </a> ";
-            }
-        }
-        // Link to LZECS if info is available
-        if($_SESSION['MSG_EXPLODE'] == "1") {
-            if($_SESSION['LZECS'] == "1") {
-                echo "<td class=\"s_td wide\"><a onclick=\"lzecs(this); return false\" id='$msg' href=\"javascript:void(0);\">[LZECS]&nbsp;&nbsp;</a>$explode_url</td>\n";
-            } else {
-                echo "<td class=\"s_td wide\">$explode_url</td>\n";
-            }
+    }
+    // Link to LZECS if info is available
+    if($_SESSION['MSG_EXPLODE'] == "1") {
+        if($_SESSION['LZECS'] == "1") {
+            echo "<td class=\"s_td wide\"><a onclick=\"lzecs(this); return false\" id='$msg' href=\"javascript:void(0);\">[LZECS]&nbsp;&nbsp;</a>$explode_url</td>\n";
         } else {
-            if($_SESSION['LZECS'] == "1") {
-                echo "<td class=\"s_td wide\"><a onclick=\"lzecs(this); return false\" id='$msg' href=\"javascript:void(0);\">[LZECS]&nbsp;&nbsp;</a>$msg</td>\n";
-            } else {
-                echo "<td class=\"s_td wide\">$msg</td>\n";
-            }
+            echo "<td class=\"s_td wide\">$explode_url</td>\n";
         }
-        if ($_SESSION['DEDUP'] == 1) { 
-            echo "<td class=\"s_td\">$row[fo]</td>\n";
-            echo "<td class=\"s_td\">$row[lo]</td>\n";
-            echo "<td class=\"s_td\"><a href=$_SESSION[SITE_URL]$qstring&dupop=eq&dupcount=$row[counter]>$row[counter]</a></td>\n";
+    } else {
+        if($_SESSION['LZECS'] == "1") {
+            echo "<td class=\"s_td wide\"><a onclick=\"lzecs(this); return false\" id='$msg' href=\"javascript:void(0);\">[LZECS]&nbsp;&nbsp;</a>$msg</td>\n";
         } else {
-            echo "<td class=\"s_td\">$row[lo]</td>\n";
+            echo "<td class=\"s_td wide\">$msg</td>\n";
         }
-        echo "<td class=\"s_td\"><a href=$_SESSION[SITE_URL]$qstring&notes_mask=$row[notes]>$row[notes]</a></td>\n";
-        echo "</tr>\n";
-  }
+    }
+    if ($_SESSION['DEDUP'] == 1) { 
+        echo "<td class=\"s_td\">$row[fo]</td>\n";
+        echo "<td class=\"s_td\">$row[lo]</td>\n";
+        echo "<td class=\"s_td\"><a href=$_SESSION[SITE_URL]$qstring&dupop=eq&dupcount=$row[counter]>$row[counter]</a></td>\n";
+    } else {
+        echo "<td class=\"s_td\">$row[lo]</td>\n";
+    }
+    echo "<td class=\"s_td\"><a href=$_SESSION[SITE_URL]$qstring&notes_mask=$row[notes]>$row[notes]</a></td>\n";
+    echo "</tr>\n";
+}
 ?>
   </tbody>
   </table>
@@ -801,19 +654,26 @@ endswitch;
 $postvars = $qstring;
 $qstring = myURL().$qstring;
 if ($_SESSION['DEBUG'] > 0 ) {
-    if (($_SESSION['SPX_ENABLE'] == "1") && ($msg_mask !== '')) {
-        echo "<b><u>Sphinx Query</u></b><pre class=\"code\">$msg_mask</pre><br>\n";
+    if (($_SESSION['SPX_ENABLE'] == "1") && ($msg_mask_get !== '')) {
+    echo "<pre  class=\"code\">";
+    echo "<b><u>Sphinx Query</u></b><pre class=\"code\">$msg_mask_get</pre><br>\n";
+    echo "</pre><br><br>\n";
     }
     if ($_SESSION['SPX_ENABLE'] == "1") {
-        echo "<b><u>Query type</u></b><br>$qtype<br><br>\n";
+    echo "<b><u>Query type</u></b><br>";
+    echo "<pre  class=\"code\">";
+    echo "$q_type<br><br>\n";
+    echo "</pre><br><br>\n";
         echo "<b><u>Results</u></b><br>\n";
-        echo "Found ".$sphinx_results['total']." matching documents in ".$sphinx_results['time']." seconds<br>\n";
+    echo "<pre  class=\"code\">";
+        echo "Found ".$sphinx_results['total_found']." documents in ".$sphinx_results['time']." seconds<br>\n";
         echo count($sphinx_results['words'])." search terms:<br>\n";
         if (is_array($sphinx_results['words'])) {
             foreach ($sphinx_results['words'] as $key=>$word) {
                 echo "&nbsp;&nbsp;&nbsp;&nbsp;\"$key\" found ".$sphinx_results['words'][$key]['hits']." times<br>\n";
             }
         }
+    echo "</pre><br><br>\n";
         echo "<br>\n";
     }
     // echo "<pre>\n";
@@ -822,15 +682,33 @@ if ($_SESSION['DEBUG'] > 0 ) {
     echo "<u><b>The SQL query:</u></b><br>\n";
     $sql = str_replace("AND", "<br>AND", $sql);
     $sql = str_replace("OR", "<br>OR", $sql);
+    echo "<pre  class=\"code\">";
     echo "$sql\n"; 
+    echo "</pre><br><br>\n";
     echo "<br><br><u><b>Post Variables:</u></b><br>\n";
-    $str = str_replace("&", "<br>&", $postvars);
-    echo "$str<br>\n";
+    echo "<pre  class=\"code\">";
+    print_r($_POST);
+    echo "</pre><br><br>\n";
+    if ($_GET) {
+    echo "<br><br><u><b>GET Variables:</u></b><br>\n";
+    echo "<pre  class=\"code\">";
+    print_r($_GET);
+    echo "<br><br>\n";
+    }
+    echo "</pre><br><br>\n";
+    echo "<br><br><u><b>Array formatted response from Sphinx search()</u></b><br>\n";
+    echo "<pre  class=\"code\">";
+    print_r($sphinx_results);
+    echo "</pre><br><br>\n";
+    echo "<br><br><u><b>JSON formatted response from Sphinx search()</u></b><br>\n";
+    echo "<pre  class=\"code\">";
+    echo "$json_o<br><br>\n";
+    echo "</pre><br><br>\n";
     $end_time = microtime(true);
     echo "Page generated in " . round(($end_time - $start_time),5) . " seconds\n";
 }
 if (($_SESSION['SPX_ENABLE'] == "1") && ($tail == "off")) {
-    if ($count > 0) {
+    if ($sphinx_results['total'] > 0) {
         echo "&nbsp;&nbsp;&nbsp;&nbsp;".commify($total)." matches found in " . $sphinx_results['time']. " seconds\n";
     }
 }

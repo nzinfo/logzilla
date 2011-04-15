@@ -1032,7 +1032,7 @@ function search($json_o, $spx_max=1000,$index="idx_logs idx_delta_logs",$spx_ip=
     $sphinx_results = $cl->Query ($search_string, $index);
     $error = $cl->GetLastError();
     if ($error) {
-        $sphinx_results['error'] = $error;
+        return "Sphinx Error: $error";
     }
     // echo "<pre>";
       // die(print_r($sphinx_results));

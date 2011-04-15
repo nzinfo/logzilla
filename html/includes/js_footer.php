@@ -1490,3 +1490,18 @@ $(document).ready(function(){
 <!-- BEGIN Cookies -->
 <script type="text/javascript" src="includes/cookie_Remember.js"></script>
 <!-- END Cookies -->
+
+<!-- BEGIN Error Dialog -->
+<script type="text/javascript">
+$(document).ready(function(){
+    $.fx.speeds._default = 1000;
+    $(function() {
+        $( "#error_dialog" ).dialog({
+        autoOpen: false,
+        show: "blind",
+        hide: "explode"
+        });
+   });
+}); // end doc ready
+</script>
+<!-- END Error Dialog -->

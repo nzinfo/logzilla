@@ -46,7 +46,7 @@ sub p {
 }
 
 my $version = "3.2";
-my $subversion = ".270";
+my $subversion = ".273";
 
 # Grab the base path
 my $lzbase = getcwd;
@@ -209,6 +209,7 @@ if ($ok =~ /[Yy]/) {
                 if ($isub < $t) {
                     print "Your Version: $ver" . "$subver\n";
                     print "New Version: $version" . "$subversion\n";
+                    print "Upgrading, please be patient. If you have a large DB, this could take a long time...\n";
                     do_upgrade($iver, $isub);
                 } else {
                     print "Your Version: $ver" . "$subver\n";
@@ -1347,6 +1348,32 @@ sub do_upgrade {
                 DROP TABLE settings_orig;
                 ") or die "Could not update $dbname: $DBI::errstr";
             $sth->execute;
+
+
+            my $event = qq{
+            DROP PROCEDURE IF EXISTS updateCache;
+            };
+            my $sth = $dbh->prepare("
+                $event
+                ") or die "Could not create updateCache Procedure: $DBI::errstr";
+            $sth->execute;
+            my $event = qq{
+            CREATE PROCEDURE updateCache()
+            SQL SECURITY DEFINER
+            COMMENT 'Verifies cache totals every night' 
+            BEGIN    
+            REPLACE INTO cache (name,value,updatetime) VALUES ('msg_sum', (SELECT SUM(counter) FROM `$dbtable`),NOW());
+            REPLACE INTO cache (name,value,updatetime) VALUES (CONCAT('chart_mpd_',DATE_FORMAT(NOW() - INTERVAL 1 DAY, '%Y-%m-%d_%a')), (SELECT SUM(counter) FROM `$dbtable` WHERE lo BETWEEN DATE_SUB(CONCAT(CURDATE(), ' 00:00:00'), INTERVAL 1 DAY) AND DATE_SUB(CONCAT(CURDATE(), ' 23:59:59'), INTERVAL  1 DAY)),NOW());
+            UPDATE `hosts` SET `seen` = ( SELECT SUM(`$dbtable`.`counter`) FROM `$dbtable` WHERE `$dbtable`.`host` = `hosts`.`host` );
+            UPDATE `mne` SET `seen` = ( SELECT SUM(`$dbtable`.`counter`) FROM `$dbtable` WHERE `$dbtable`.`mne` = `mne`.`crc` );
+            UPDATE `snare_eid` SET `seen` = ( SELECT SUM(`$dbtable`.`counter`) FROM `$dbtable` WHERE `$dbtable`.`eid` = `snare_eid`.`eid` );
+            END 
+            };
+            my $sth = $dbh->prepare("
+                $event
+                ") or die "Could not create updateCache Procedure: $DBI::errstr";
+            $sth->execute;
+
         }
         case 2 { 
             print "Attempting upgrade from php-syslog-ng (v2.x) to LogZilla (v3.x)\n";
