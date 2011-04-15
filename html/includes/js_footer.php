@@ -829,49 +829,30 @@ $(document).ready(function() {
 
 <!-- BEGIN Portal Counts -->
 <script type="text/javascript">
+function humanReadable(size) {  
+    var suffix = ['','K','M','T','P','E','Z','Y'], 
+        tier = 0;   while(size >= 1024) {
+            size = size / 1000;
+            tier++; }
+            return Math.round(size * 10) / 10 + suffix[tier];
+}
 $(document).ready(function() {
         var enabled = <?php print $_SESSION['SHOWCOUNTS']; ?>;
         var SPX = <?php print $_SESSION['SPX_ENABLE']; ?>;
         if (enabled == "1") {
         $.get("includes/ajax/counts.php?data=msgs", function(data){
             if (data) {
-            var comma = commify(data);
-            } else {
-            var comma = '0';
+            $("#portlet-header_Messages").prepend(humanReadable(data)+" ");
             };
-            // $("#msg_mask").val("Search through "+comma+" Messages");
-            // watermark("#msg_mask","Search through "+comma+" Messages");
-            });
-        if (SPX == "0") {
-        $.get("includes/ajax/counts.php?data=notes", function(data){
-            var comma = commify(data);
-            $("#notes_mask").val("Search through "+comma+" Notes");
-            watermark("#notes_mask","Search through "+comma+" Notes");
             });
         };
-        /*
-        $.get("includes/ajax/counts.php?data=prgs", function(data){
-            var comma = commify(data);
-            $("#portlet-header_Programs").prepend(comma+" ");
-            });
-         $.get("includes/ajax/counts.php?data=sevs", function(data){
-             var comma = commify(data);
-             $("#portlet-header_Severities").prepend(comma+" ");
-             });
-        $.get("includes/ajax/counts.php?data=facs", function(data){
-                var comma = commify(data);
-                $("#portlet-header_Facilities").prepend(comma+" ");
-                });
-                */
-        // At some point, it occurred to me that I can simply count the <select> element options and use that number rather than querying the DB, duh!
         var count = $("#programs option").size()
             $("#portlet-header_Programs").prepend(commify(count)+" ");
         var count = $("#facilities option").size()
             $("#portlet-header_Facilities").prepend(commify(count)+" ");
         var count = $("#severities option").size()
             $("#portlet-header_Severities").prepend(commify(count)+" ");
-        }
-            watermark("#dupcount","0");
+        watermark("#dupcount","0");
 });
 </script>
 <!-- END Portal Counts -->
