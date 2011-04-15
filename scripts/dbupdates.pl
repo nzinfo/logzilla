@@ -42,22 +42,32 @@ foreach (@ARGV) {
     switch ($_) {
         case "214_217" {
             update_214_to_247();
+            add_host_index();
             exit;
         }
         case "update_procs" {
             print "\nUpdating MySQL Procedures...\n";
             do_procs();
+            add_host_index();
             exit;
         }
         case "update_events" {
             print "\nUpdating MySQL Events...\n";
             do_events();
+            add_host_index();
             exit;
         }
         case "update_pe" {
             print "\nUpdating MySQL Events and Procedures...\n";
             do_procs();
             do_events();
+            add_host_index();
+            exit;
+        }
+        case "add_host_index" {
+            print "Adding host index to $dbtable\n";
+            add_host_index();
+            print "Completed\n";
             exit;
         }
     }
@@ -135,6 +145,13 @@ sub update_214_to_247 {
     }
 }
 
+sub add_host_index {
+    my $dbh = db_connect();
+    my $sth = $dbh->prepare("
+        alter table $dbtable add index host (host);
+        ") or die "Could not add index: $DBI::errstr";
+    $sth->execute;
+}
 sub do_events {
     my $dbh = db_connect();
 
