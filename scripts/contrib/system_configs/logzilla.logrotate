@@ -3,7 +3,7 @@
 # contributed by Clayton Dukes
 # Last updated on 2010-06-15
 #
-/path_to_logs/*.log {
+/*.log {
   missingok
   compress
   rotate 5
