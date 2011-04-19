@@ -836,17 +836,22 @@ function search($json_o, $spx_max=1000,$index="idx_logs idx_delta_logs",$spx_ip=
                 if (preg_match ('/,/', $val)) {
                     $pieces = explode(',',$val);
                     foreach ($pieces as $part) {
-                        $mnes[] .= mne2crc($part);
+                        $mnes .= mne2crc($part) . " $oper ";
                     }
                 } else {
-                    $mnes[] .= mne2crc($val);
+                    $mnes .= mne2crc($val) . " $oper ";
                 }
                 break;
             case 'sel_mne':
                 foreach ($val as $subkey=>$subval) {
                      // echo "SubKey = $subkey, SubVal = $subval\n";
-                    $subval = $cl->EscapeString ($subval);
-                    $mnes[] .= mne2crc($subval);
+                    $mnes .= mne2crc($subval) . " $oper ";
+                }
+                break;
+            case 'programs':
+                foreach ($val as $subkey=>$subval) {
+                     // echo "SubKey = $subkey, SubVal = $subval\n";
+                    $prgs .= $subval . " $oper ";
                 }
                 break;
 
@@ -881,6 +886,8 @@ function search($json_o, $spx_max=1000,$index="idx_logs idx_delta_logs",$spx_ip=
     // die(print_r($json_a));
     $msg_mask = rtrim($msg_mask, " $oper ");
     $hosts = rtrim($hosts, " $oper ");
+    $mnes = rtrim($mnes, " $oper ");
+    $prgs = rtrim($prgs, " $oper ");
     $note = rtrim($note, " $oper ");
 
     // Add DB column to strings
@@ -890,6 +897,12 @@ function search($json_o, $spx_max=1000,$index="idx_logs idx_delta_logs",$spx_ip=
         }
         if ($hosts) {
             $hosts = "@HOST " . $hosts . " ";
+        }
+        if ($mnes) {
+            $mnes = "@MNE " . $mnes . " ";
+        }
+        if ($prgs) {
+            $prgs = "@PROGRAM " . $prgs . " ";
         }
         if ($note) {
             $note = "@NOTES " . $note;
@@ -907,14 +920,8 @@ function search($json_o, $spx_max=1000,$index="idx_logs idx_delta_logs",$spx_ip=
     if ($eids) {
         $cl->SetFilter( 'eid', $eids ); 
     }
-    if ($json_a['programs']) {
-        $cl->SetFilter( 'prg', $json_a['programs'] ); 
-    }
-    if ($mnemonics) {
-        $cl->SetFilter( 'mne', $mnes ); 
-    }
 
-    $search_string = $msg_mask . $hosts . $note;
+    $search_string = $msg_mask . $hosts . $prgs . $mnes . $note;
 
     // Test for empty search and remove whitespaces
     $search_string = preg_replace('/^\s+$/', '',$search_string);
