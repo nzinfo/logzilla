@@ -26,7 +26,7 @@ CREATE TABLE `hosts` (
   `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
   `host` varchar(128) NOT NULL,
   `lastseen` datetime NOT NULL,
-  `seen` smallint(5) unsigned NOT NULL DEFAULT '1',
+  `seen` int(10) unsigned NOT NULL DEFAULT '1',
   PRIMARY KEY (`id`),
   UNIQUE KEY `host` (`host`)
 ) ENGINE=MyISAM DEFAULT CHARSET=latin1;
