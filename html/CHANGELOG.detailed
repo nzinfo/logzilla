@@ -1,5 +1,9 @@
 CHANGELOG
 
+3.1.276 - Sphinx Search
+CD:
+ - #131 - Fix for using @field for program and mnemonics instead of SetFilter (error was "no such filter attribute")
+
 3.1.275 - Cache Updates
 CD:
  - #122: (slow cache updates) - should be fixed now. logs table was missing an index on hosts.

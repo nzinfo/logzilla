@@ -48,20 +48,26 @@ foreach (@ARGV) {
         case "update_procs" {
             print "\nUpdating MySQL Procedures...\n";
             do_procs();
+            print "Adding host index to $dbtable\n";
             add_host_index();
+            print "Completed\n";
             exit;
         }
         case "update_events" {
             print "\nUpdating MySQL Events...\n";
             do_events();
+            print "Adding host index to $dbtable\n";
             add_host_index();
+            print "Completed\n";
             exit;
         }
         case "update_pe" {
             print "\nUpdating MySQL Events and Procedures...\n";
             do_procs();
             do_events();
+            print "Adding host index to $dbtable\n";
             add_host_index();
+            print "Completed\n";
             exit;
         }
         case "add_host_index" {

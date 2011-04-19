@@ -348,7 +348,7 @@ if ($_SESSION['SPX_ENABLE'] == "1") {
     } else {
         $lzbase = str_replace("html/includes/portlets", "", dirname( __FILE__ ));
         $dlg_start = '<div id="error_dialog" title="Error!">';
-        $dlg_end = "<br><br>The results displayed are taken directly from MySQL which are significantly slower!";
+        $dlg_end = "<br><br>Any results displayed are taken directly from MySQL which are significantly slower!";
         $dlg_end .= "</div>";
         if (preg_match("/.*failed to open.*spd/", "$json_o")) {
             $error = "The Sphinx indexes are missing!<br>\n";
