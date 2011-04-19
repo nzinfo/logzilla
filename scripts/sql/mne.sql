@@ -26,7 +26,7 @@ CREATE TABLE `mne` (
   `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
   `name` varchar(255) NOT NULL,
   `crc` int(10) unsigned NOT NULL,
-  `seen` smallint(5) unsigned NOT NULL DEFAULT '1',
+  `seen` int(10) unsigned NOT NULL DEFAULT '1',
   `lastseen` datetime NOT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `crc_id` (`crc`),

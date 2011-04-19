@@ -26,7 +26,7 @@ CREATE TABLE `snare_eid` (
   `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
   `eid` smallint(5) unsigned NOT NULL DEFAULT '0',
   `lastseen` datetime NOT NULL,
-  `seen` smallint(5) unsigned NOT NULL DEFAULT '1',
+  `seen` int(10) unsigned NOT NULL DEFAULT '1',
   PRIMARY KEY (`id`),
   UNIQUE KEY `eid` (`eid`)
 ) ENGINE=MyISAM AUTO_INCREMENT=2 DEFAULT CHARSET=latin1;

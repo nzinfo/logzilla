@@ -1,6 +1,10 @@
 CHANGELOG
 
-3.1.276 - Sphinx Search
+3.1.280 - Smallint
+CD:
+ - Updated smallint to int for 'seen' columns (smallint limits to 65k)
+
+3.1.279 - Sphinx Search
 CD:
  - #131 - Fix for using @field for program and mnemonics instead of SetFilter (error was "no such filter attribute")
 
