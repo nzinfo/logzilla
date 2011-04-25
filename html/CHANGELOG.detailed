@@ -1,5 +1,17 @@
 CHANGELOG
 
+3.1.281 - Multiple
+CD:
+ - Moved some of the db_insert cache updates to MySQL triggers
+  DB Tables Altered: logs, cache
+  DB Procedures: Dropped updateHosts, updateEid, updateMne
+ - Added db_insert catch for OSSEC messages - they send the originating host in the message.
+ - Modified install.pl to handle upgrading much better
+ - Fixed bug for "Sphinx Error: index idx_delta_logs,idx_logs: sort-by attribute 'id' not found"
+ - Fixed bug in Email Alerts grid that was not deleting the correct row when user clicked delete.
+ - Fixed lacking GET processing of json object pass to Sphinx.
+ - Working on adding upgrade paths for all version of LZ via the install.pl
+
 3.1.280 - Smallint
 CD:
  - Updated smallint to int for 'seen' columns (smallint limits to 65k)

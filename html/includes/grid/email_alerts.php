@@ -30,7 +30,7 @@ $conn->query("SET NAMES utf8");
 // Create the jqGrid instance
 $grid = new jqGridRender($conn);
 // Write the SQL Query
-$grid->SelectCommand = 'SELECT description,pattern,mailto,mailfrom,subject,body,disabled FROM triggers';
+$grid->SelectCommand = 'SELECT id,description,pattern,mailto,mailfrom,subject,body,disabled FROM triggers';
 // set the ouput format to json
 $grid->dataType = 'json';
 $grid->table = 'triggers';
@@ -42,6 +42,7 @@ $labels = array("description"=>"Description", "pattern"=>"Regex Pattern", "mailt
 // Let the grid create the model
 $grid->setColModel(null, null, $labels);
 
+$grid->setColProperty('id', array('hidden'=>true) );
 $grid->setColProperty('disabled', array('width'=>'50',"edittype"=>"select"));
 $grid->setColProperty('body',array("edittype"=>"textarea","editoptions"=>array("rows"=>2, "cols"=> 40),"width"=>200));
 $grid->setColProperty('pattern',array("edittype"=>"textarea","editoptions"=>array("rows"=>1, "cols"=> 40),"width"=>200));

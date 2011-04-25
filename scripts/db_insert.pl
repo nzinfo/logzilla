@@ -224,6 +224,7 @@ my $re_pipe = qr/(\S+ \S+)\t(\S+)\t(\d+)\t(\S+)?.*\t(.*)/;
 #my $re_mne = qr/%(\w+.+?)[:|\s]/;
 my $re_mne = qr/\%([A-Z\-\d\_]+?\-\d+\-[A-Z\-\_\d]+?)(?:\:|\s)/;
 my $re_mne_prg = qr/%(\w+-\d+-\S+):?/; # Attempt to capture Cisco Firewall Mnemonics (they send the mne's as a program)
+my $re_ossec = qr/Alert.*?Location: \((.*?)\) ([\d\.]+)/; # OSSEC sends the originating host as part of the message
 
 $dbh->disconnect();
 $dbh = DBI->connect($dsn, $dbuser, $dbpass);
@@ -238,18 +239,17 @@ my $db_select_id = $dbh->prepare("SELECT counter,fo,lo FROM $dbtable WHERE id=?"
 my $db_update = $dbh->prepare("UPDATE $dbtable SET counter=?, fo=?, lo=? WHERE id=?");
 my $db_del = $dbh->prepare("DELETE FROM $dbtable WHERE id=?");
 my $db_insert = $dbh->prepare("INSERT INTO $dbtable (host,facility,severity,program,msg,mne,eid,fo,lo) VALUES (?,?,?,?,?,?,?,?,?)");
-my $db_insert_prg = $dbh->prepare("INSERT IGNORE INTO programs (name,crc) VALUES (?,?) ");
-my $db_insert_mne = $dbh->prepare("INSERT INTO mne (name, crc, lastseen) VALUES (?,?,?) ON DUPLICATE KEY UPDATE seen=seen + 1, lastseen=? ");
-my $db_insert_host = $dbh->prepare("INSERT INTO hosts (host, lastseen) VALUES (?,?) ON DUPLICATE KEY UPDATE seen=seen + 1, lastseen=? ");
-my $db_insert_snare_eid = $dbh->prepare("INSERT INTO snare_eid (eid, lastseen) VALUES (?,?) ON DUPLICATE KEY UPDATE seen=seen + 1, lastseen=? ");
+my $db_insert_prg = $dbh->prepare("INSERT IGNORE INTO programs (name,crc) VALUES (?,CRC32(?)) ");
+my $db_insert_mne = $dbh->prepare("INSERT IGNORE INTO mne (name, crc, lastseen) VALUES (?,CRC32(?),NOW())");
+my $db_insert_snare_eid = $dbh->prepare("INSERT IGNORE INTO snare_eid (eid, lastseen) VALUES (?,NOW())");
 #my $dumpfile = "/dev/shm/infile.txt";
 my $dumpfile = "/tmp/logzilla_import.txt";
 
 # See ticket #117 regarding non-local databases and auto-partitioning
-my $infile_prep = qq{LOAD DATA INFILE '$dumpfile' INTO TABLE logs FIELDS TERMINATED BY "\\t" LINES TERMINATED BY "\\n" (host,facility,severity,program,msg,mne,eid,fo,lo)};
+my $infile_prep = qq{LOAD DATA INFILE '$dumpfile' INTO TABLE $dbtable FIELDS TERMINATED BY "\\t" LINES TERMINATED BY "\\n" (host,facility,severity,program,msg,mne,eid,fo,lo)};
 my $db_load_infile = $dbh->prepare("$infile_prep");
-my $db_insert_mpX = $dbh->prepare("REPLACE INTO cache (name,value,updatetime) VALUES (?,?,?)");
-my $db_insert_sum = $dbh->prepare("INSERT INTO cache (name,value,updatetime) VALUES ('msg_sum',?,?) ON DUPLICATE KEY UPDATE value=value + ?");
+my $db_insert_mpX = $dbh->prepare("REPLACE INTO cache (name,value,updatetime) VALUES (?,?,NOW())");
+#my $db_insert_sum = $dbh->prepare("INSERT INTO cache (name,value,updatetime) VALUES ('msg_sum',?,?) ON DUPLICATE KEY UPDATE value=value + ?");
 my $queue;
 my @dumparr;
 
@@ -367,7 +367,7 @@ while (my $msg = <STDIN>) {
     }
     push(@dumparr, do_msg($msg));
     if (eof()) { # check for end of last file
-        $db_insert_host->{TraceLevel} = $debug if (($debug) and ($verbose));
+        #$db_insert_host->{TraceLevel} = $debug if (($debug) and ($verbose));
         $db_insert_prg->{TraceLevel} = $debug if (($debug) and ($verbose));
         $db_insert_mne->{TraceLevel} = $debug if (($debug) and ($verbose));
         $db_insert_snare_eid->{TraceLevel} = $debug if (($debug) and ($verbose));
@@ -395,36 +395,33 @@ while (my $msg = <STDIN>) {
             }
         }
         # 2010-08-29: Added to insert cached hosts, progs and mnes upon exit
-        my @hosts = keys %host_cache;
-        $now = strftime("%Y-%m-%d %H:%M:%S", localtime);
-        foreach my $h (@hosts) {
-            $db_insert_host->execute($h, $now, $now);
-        }
+        #my @hosts = keys %host_cache$now = strftime("%Y-%m-%d %H:%M:%S", localtime);
+        #foreach my $h (@hosts) {
+        #$db_insert_host->execute($h, $now, $now);
+        #}
         my @prgs = keys %program_cache;
         foreach my $p (@prgs) {
             $db_insert_prg->execute($p, $program_cache{$p});
         }
         my @mnes = keys %mne_cache;
         foreach my $m (@mnes) {
-            $db_insert_mne->execute($m, $mne_cache{$m}, $now, $now);
+            $db_insert_mne->execute($m, $mne_cache{$m});
         }
         if ($snare > 0) {
             my @snare_eids = keys %snare_eid_cache;
             foreach my $s (@snare_eids) {
-                $db_insert_snare_eid->execute($s, $now, $now);
+                $db_insert_snare_eid->execute($s);
             }
         }
         $sec = strftime("%S", localtime);
         $mps = $mps + $do_msg_mps;
-        push(@mps, "chart_mps_$sec,$mps,$now");
-        $db_insert_sum->execute($mps, $now, $mps);
+        push(@mps, "chart_mps_$sec,$mps");
         foreach my $var (@mps) {
-            if ($var =~ m/(.*),(.*),(.*)/) {
-                $db_insert_mpX->execute("$1", "$2", "$3");
-                print STDOUT "Inserting MPS string: $1, $2, $3\n" if ($debug > 1);
-            }
+            my ($s,$i) = split(",", $var);
+            $db_insert_mpX->execute($s, $i);
+            print STDOUT "Inserting MPS string: $var\n" if ($debug > 1);
         }
-        %host_cache = ();
+        #%host_cache = ();
         %program_cache = ();
         %mne_cache = ();
         %snare_eid_cache = ();
@@ -432,8 +429,8 @@ while (my $msg = <STDIN>) {
         print LOG "Ending insert: " . strftime("%H:%M:%S", localtime) ."\n" if ($debug > 0);
         print STDOUT "Ending insert: " . strftime("%H:%M:%S", localtime) ."\n" if (($debug > 0) and ($verbose));
     }
-    my $now = strftime("%Y-%m-%d %H:%M:%S", localtime);
-    print LOG "\n\n-=-=-=-=-=-=-=\nLOOP START: $now\n" if ($debug > 10);
+    #my $now = strftime("%Y-%m-%d %H:%M:%S", localtime);
+    print LOG "\n\n-=-=-=-=-=-=-=\nLOOP START\n" if ($debug > 10);
     $mps++;
     #print STDOUT $#dumparr."\n";
     if ((($#dumparr + 1) < $q_limit) && ($start_time <= $time_limit)) {
@@ -460,10 +457,9 @@ while (my $msg = <STDIN>) {
             print STDOUT "\n\nQueue Limit Reached: $q_limit messages in $t seconds ($tmp_mps MPS)\n" if ($debug > 0);
         }
         foreach my $var (@mps) {
-            if ($var =~ m/(.*),(.*),(.*)/) {
-                $db_insert_mpX->execute("$1", "$2", "$3");
-                print STDOUT "Inserting MPS string: $1, $2, $3\n" if ($debug > 1);
-            }
+            my ($s,$i) = split(",", $var);
+            $db_insert_mpX->execute($s, $i);
+            print STDOUT "Inserting MPS string: $var\n" if ($debug > 1);
         }
         open (DUMP, ">$dumpfile") or die "can't open $dumpfile: $!\n";
         my $arrcnt = scalar @dumparr;
@@ -496,7 +492,7 @@ while (my $msg = <STDIN>) {
         if ($mps < 1) {
             $mps = ($mps * $secs);
         }
-        $now = strftime("%Y-%m-%d %H:%M:%S", localtime);
+        #$now = strftime("%Y-%m-%d %H:%M:%S", localtime);
         $day = strftime("%d", localtime);
         $hr = strftime("%H", localtime);
         $min = strftime("%M", localtime);
@@ -505,14 +501,14 @@ while (my $msg = <STDIN>) {
         print STDOUT "\n#######\nCurrent MPS = $mps ($do_msg_mps deduplicated)\n#######\n" if ($debug > 2);
         print LOG "\n#######\nCurrent MPS = $mps ($do_msg_mps deduplicated)\n#######\n" if ($debug > 2);
         $mpm += $mps;
-        push(@mps, "chart_mps_$sec,$mps,$now");
-        $db_insert_sum->{TraceLevel} = $debug if (($debug) and ($verbose));
-        $db_insert_sum->execute($mps, $now, $mps);
+        push(@mps, "chart_mps_$sec,$mps");
+        #$db_insert_sum->{TraceLevel} = $debug if (($debug) and ($verbose));
+        #$db_insert_sum->execute($mps, $now, $mps);
         if ($#mps == 60) {
-            my $now = strftime("%Y-%m-%d %H:%M:%S", localtime);
-            push(@mpm, "chart_mpm_$min,$mpm,$now");
+            #my $now = strftime("%Y-%m-%d %H:%M:%S", localtime);
+            push(@mpm, "chart_mpm_$min,$mpm");
             $db_insert_mpX->{TraceLevel} = $debug if (($debug) and ($verbose));
-            $db_insert_mpX->execute("chart_mpm_$min", "$mpm", "$now");
+            $db_insert_mpX->execute("chart_mpm_$min", "$mpm");
             print STDOUT "Messages Per Minute = $mpm\n" if ($debug > 1);
             print LOG "Messages Per Minute = $mpm\n" if ($debug > 1);
             $mph += $mpm;
@@ -525,9 +521,9 @@ while (my $msg = <STDIN>) {
         #exit;
         #}
         if ($#mpm == 60) {
-            $now = strftime("%Y-%m-%d %H:%M:%S", localtime);
-            push(@mph, "chart_mph_$hr,$mph,$now");
-            $db_insert_mpX->execute("chart_mph_$hr", "$mph", "$now");
+            #$now = strftime("%Y-%m-%d %H:%M:%S", localtime);
+            #push(@mph, "chart_mph_$hr,$mph");
+            $db_insert_mpX->execute("chart_mph_$hr", "$mph");
             print STDOUT "Messages Per Hour = $mph\n" if ($debug > 1);
             print LOG "Messages Per Hour = $mph\n" if ($debug > 1);
             $mpd += $mph;
@@ -535,9 +531,9 @@ while (my $msg = <STDIN>) {
             @mpm = ();
         }
         if ($#mph == 24) {
-            $now = strftime("%Y-%m-%d %H:%M:%S", localtime);
-            push(@mpd, "chart_mpd_$day,$mpd,$now");
-            $db_insert_mpX->execute("chart_mpd_$day", "$mpd", "$now");
+            #$now = strftime("%Y-%m-%d %H:%M:%S", localtime);
+            #push(@mpd, "chart_mpd_$day,$mpd");
+            $db_insert_mpX->execute("chart_mpd_$day", "$mpd");
             print STDOUT "Messages Per Day = $mpd\n" if ($debug > 1);
             print LOG "Messages Per Day = $mpd\n" if ($debug > 1);
             $mpd = 0;
@@ -546,24 +542,24 @@ while (my $msg = <STDIN>) {
         $mps = 0;
         $do_msg_mps = 0;
         $mps_timer_start = (time);
-        my @hosts = keys %host_cache;
-        $now = strftime("%Y-%m-%d %H:%M:%S", localtime);
-        foreach my $h (@hosts) {
-            $db_insert_host->execute($h, $now, $now);
-            %host_cache = ();
-        }
+        #my @hosts = keys %host_cache;
+        #$now = strftime("%Y-%m-%d %H:%M:%S", localtime);
+        #foreach my $h (@hosts) {
+        #$db_insert_host->execute($h, $now, $now);
+        #%host_cache = ();
+        #}
         my @prgs = keys %program_cache;
         foreach my $p (@prgs) {
             $db_insert_prg->execute($p, $program_cache{$p});
         }
         my @mnes = keys %mne_cache;
         foreach my $m (@mnes) {
-            $db_insert_mne->execute($m, $mne_cache{$m}, $now, $now);
+            $db_insert_mne->execute($m, $mne_cache{$m});
         }
         if ($snare > 0) {
             my @snare_eids = keys %snare_eid_cache;
             foreach my $s (@snare_eids) {
-                $db_insert_snare_eid->execute($s, $now, $now);
+                $db_insert_snare_eid->execute($s);
             }
         }
         %host_cache = ();
@@ -572,8 +568,8 @@ while (my $msg = <STDIN>) {
         %snare_eid_cache = ();
     }
     $end_time = (time);
-    my $now = strftime("%Y-%m-%d %H:%M:%S", localtime);
-    print LOG "LOOP END: $now\n-=-=-=-=-=-=-=-=-=\n" if ($debug > 10);
+    #my $now = strftime("%Y-%m-%d %H:%M:%S", localtime);
+    print LOG "LOOP END\n-=-=-=-=-=-=-=-=-=\n" if ($debug > 10);
 }
 
 # Subs
@@ -603,11 +599,6 @@ sub do_msg {
     $snare_eid = "";
     print LOG "\n\nINCOMING MESSAGE:\n$msg\n" if ($debug > 0);
     print STDOUT "\n\nINCOMING MESSAGE:\n$msg\n" if (($debug > 2) and ($verbose));
-    # Get current date and time
-    $datetime_now = strftime("%Y-%m-%d %H:%M:%S", localtime);
-
-    # Get current date and time minus $dedup_window in seconds (5 minutes by default)
-    $datetime_past = strftime("%Y-%m-%d %H:%M:%S", localtime(time - $dedup_window));
 
     # Get incoming variables from PIPE
     if ($msg =~ m/$re_pipe/) {
@@ -620,6 +611,11 @@ sub do_msg {
         $prg = $4;
         $msg = $5;
         $prg = "Cisco ASA" if ($msg =~ /^%PIX/);
+        if ($msg =~ /$re_ossec/) {
+            $host = $1;
+            $prg = "OSSEC Security";
+        }
+
         # Handle Snare Format
         if ($prg =~ m/MSWinEventLog\\011.*\\011(.*)\\011.*\\011.*/) {
             if ($snare != 1) {
@@ -692,15 +688,14 @@ sub do_msg {
                 &triggerMail($id, $host, $msg);
             }
         }
-        if ($msg =~ m/$re_mne/) {
+
+        if ($msg =~ /$re_mne/) {
             $mne = $1;
             $prg = "Cisco Syslog";
         } else {
             $mne = "None";
         }
-        if ($prg =~ m/$re_mne_prg/) { # Attempt to capture Cisco Firewall Mnemonics (they send the mne's as a program)
-            $mne = $1;
-        }
+        $mne = $1 if ($prg =~ /$re_mne_prg/); # Cisco ASA's send their Mnemonic in the program field...
         # 2010-05-20: CDUKES - had to remove the non-printable filter below, it was killing German Umlauts.
         # $msg =~ s/[\x00-\x1F\x80-\xFF]//; # Remove any non-printable characters
         $prg =~ s/%ACE.*\d+/Cisco ACE/; # Added because ACE modules don't send their program field properly
@@ -709,10 +704,9 @@ sub do_msg {
         $prg =~ s/date=\d+-\d+-\d+/Fortigate Firewall/; # Added because Fortigate's don't follow IETF standards
         $prg =~ s/:$//; # Strip trailing colon from some programs (such as kernel)
         $msg =~ s/time=\d+:\d+:\d+\s//; # Added because Fortigate's don't s follow IETF standards
-        # @msgs = split(/:/, $msg);
-        if (($prg =~ /^\d+/) && ($prg != "3Com Firewall")) { # Some messages come in with the sequence as the PROGRAM field
-            $prg = "Cisco Syslog";
-        }
+
+
+        # Catch-All:
         if (!$prg) {
             $prg = "Syslog";
         }
@@ -748,14 +742,14 @@ sub do_msg {
 
         $prg32 = crc32("$prg");
         $mne32 = crc32("$mne");
-        unless ($host_cache{$host}){
-            $host_cache{$host} = ($host);
-        }
+        #unless ($host_cache{$host}){
+        #$host_cache{$host} = ($host);
+        #}
         unless ($mne_cache{$mne}){
-            $mne_cache{$mne} = ($mne32);
+            $mne_cache{$mne} = ($mne);
         }
         unless ($program_cache{$prg}){
-            $program_cache{$prg} = ($prg32);
+            $program_cache{$prg} = ($prg);
         }
         if ($snare > 0) {
             unless ($snare_eid_cache{$snare_eid}){
@@ -797,6 +791,10 @@ sub do_msg {
         $insert = 1;
         $db_select->{TraceLevel} = $debug if (($debug) and ($verbose));
         # Select any records between now and $dedup_window seconds ago that match this host, facility, etc.
+        # Get current date and time
+        $datetime_now = strftime("%Y-%m-%d %H:%M:%S", localtime);
+        # Get current date and time minus $dedup_window in seconds (5 minutes by default)
+        $datetime_past = strftime("%Y-%m-%d %H:%M:%S", localtime(time - $dedup_window));
         $db_select->execute($host, $facility, $severity, $prg32, $datetime_past, $datetime_now);
         if ($db_select->errstr()) {
             print LOG "FATAL: Unable to execute SQL statement: ", $db_select->errstr(), "\n" if ($debug > 0);

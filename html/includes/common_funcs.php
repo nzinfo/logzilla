@@ -816,7 +816,6 @@ function search($json_o, $spx_max=1000,$index="idx_logs idx_delta_logs",$spx_ip=
         switch($key) {
             // Strings
             case 'msg_mask':
-                $val = preg_replace ('/^Search through .*\sMessages/m', '', $val);
                 $val = $cl->EscapeString ($val);
                 $msg_mask .= $val . " $oper ";
                 break;
@@ -946,9 +945,11 @@ function search($json_o, $spx_max=1000,$index="idx_logs idx_delta_logs",$spx_ip=
         break;
     }
 
-    $sph_sort = "$orderby $order";
 
-    $cl->SetSortMode ( SPH_SORT_EXTENDED , $sph_sort );
+    if ($orderby == "id") {
+        $orderby = "@id";
+    }
+    $cl->SetSortMode ( SPH_SORT_EXTENDED , "$orderby $order" );
 
     // Datetime filtering
     $fo_checkbox = $json_a['fo_checkbox'];
