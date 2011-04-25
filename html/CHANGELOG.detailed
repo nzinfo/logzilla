@@ -1,5 +1,9 @@
 CHANGELOG
 
+3.1.282 - DB Updates
+CD:
+ - Fix on upgrade to check for existing columns.
+
 3.1.281 - Multiple
 CD:
  - Moved some of the db_insert cache updates to MySQL triggers
