@@ -46,7 +46,7 @@ sub p {
 }
 
 my $version = "3.2";
-my $subversion = ".282";
+my $subversion = ".283";
 
 # Grab the base path
 my $lzbase = getcwd;
@@ -205,7 +205,9 @@ if ($ok =~ /[Yy]/) {
                 print "DB is already at the lastest revision, no need to upgrade.\n";
             } else {
                 print("\n\033[1m\tUpgrading, please be patient!\nIf you have a large DB, this could take a long time...\n\033[0m");
-                if ("$minor$sub" eq 1122) {
+                if ("$minor" eq 0) {
+                    do_upgrade(0);
+                } elsif ("$minor$sub" eq 1122) {
                     do_upgrade(1122);
                 } else {
                     do_upgrade("all");
@@ -1395,6 +1397,29 @@ sub show_EULA {
 sub do_upgrade {
     my $rev = shift;
     switch ($rev) {
+        case 0 {
+            print "You are running an unsupported version of LogZilla (<3.1)\n";
+            print "An attempt will be made to upgrade to $version$subversion...\n";
+            my $ok  = &p("Continue? (yes/no)", "y");
+            if ($ok =~ /[Yy]/) {
+                my $dbh = db_connect($dbname, $lzbase, $dbroot, $dbrootpass);
+                add_snare_to_logtable();
+                hosts_add_seen_columns();
+                mne_add_seen_columns();
+                tbl_add_programs();
+                tbl_add_severities();
+                tbl_add_facilities();
+                create_snare_table();
+                create_email_alerts_table();
+                copy_old_settings();
+                update_procs();
+                add_triggers();
+                if (colExists("logs", "priority") eq 1) {
+                    tbl_logs_alter_from_30();
+                }
+                print "\n\tUpgrade complete, continuing installation...\n\n";
+            }
+        }
         case 1122 { 
             print "Upgrading Database from v3.1.122 to $version$subversion...\n";
             my $dbh = db_connect($dbname, $lzbase, $dbroot, $dbrootpass);
@@ -1410,7 +1435,7 @@ sub do_upgrade {
 
         }
         case "all" {
-            print "Your version is not an official release version.\n";
+            print "Your version is not an officially supported upgrade.\n";
             print "An attempt will be made to upgrade to $version$subversion...\n";
             my $ok  = &p("Continue? (yes/no)", "y");
             if ($ok =~ /[Yy]/) {
@@ -1418,6 +1443,9 @@ sub do_upgrade {
                 add_snare_to_logtable();
                 hosts_add_seen_columns();
                 mne_add_seen_columns();
+                tbl_add_programs();
+                tbl_add_severities();
+                tbl_add_facilities();
                 create_snare_table();
                 create_email_alerts_table();
                 copy_old_settings();
@@ -1524,6 +1552,11 @@ sub create_snare_table {
 
 sub hosts_add_seen_columns {
     my $dbh = db_connect($dbname, $lzbase, $dbroot, $dbrootpass);
+    if (colExists("hosts", "id") eq 0) {
+        print "Creating Hosts table...\n";
+        my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/hosts.sql`;
+        print "$res\n";
+    }
     if (colExists("hosts", "lastseen") eq 0) {
         print "Updating Hosts table...\n";
         $dbh->do("ALTER TABLE hosts ADD `lastseen` datetime NOT NULL default '2011-03-01 00:00:00'; ") or die "Could not update $dbname: $DBI::errstr";
@@ -1532,10 +1565,42 @@ sub hosts_add_seen_columns {
 }
 sub mne_add_seen_columns {
     my $dbh = db_connect($dbname, $lzbase, $dbroot, $dbrootpass);
+    if (colExists("mne", "id") eq 0) {
+        print "Creating Mnemonics table...\n";
+        my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/mne.sql`;
+        print "$res\n";
+    }
     if (colExists("mne", "lastseen") eq 0) {
         print "Updating Mnemonics table...\n";
         $dbh->do("ALTER TABLE mne ADD `lastseen` datetime NOT NULL default '2011-03-01 00:00:00'; ") or die "Could not update $dbname: $DBI::errstr";
         $dbh->do("ALTER TABLE mne ADD `seen` int(10) unsigned NOT NULL DEFAULT '1'; ") or die "Could not update $dbname: $DBI::errstr";
+    }
+}
+sub tbl_logs_alter_from_30 {
+    my $dbh = db_connect($dbname, $lzbase, $dbroot, $dbrootpass);
+    print "Attempting to modify an older logs table to work with the new version.\n";
+    print "This could take a VERY long time, DO NOT cancel this operation\n";
+    if (colExists("$dbtable", "priority") eq 1) {
+
+        print "Updating column: priority->severity\n";
+        $dbh->do("ALTER TABLE $dbtable CHANGE `priority` severity enum('0','1','2','3','4','5','6','7') NOT NULL") or die "Could not update $dbname: $DBI::errstr";
+
+        print "Updating column: facility\n";
+        $dbh->do("ALTER TABLE $dbtable CHANGE `facility` `facility` enum('0','1','2','3','4','5','6','7','8','9','10','11','12','13','14','15','16','17','18','19','20','21','22','23') NOT NULL") or die "Could not update $dbname: $DBI::errstr";
+
+        print "Dropping tag column\n";
+        $dbh->do("ALTER TABLE $dbtable DROP COLUMN tag") or die "Could not update $dbname: $DBI::errstr";
+
+        print "Updating column: program\n";
+        $dbh->do("ALTER TABLE $dbtable CHANGE `program` `program` int(10) unsigned NOT NULL") or die "Could not update $dbname: $DBI::errstr";
+
+        print "Updating column: mne\n";
+        $dbh->do("ALTER TABLE $dbtable CHANGE `mne` `mne` int(10) unsigned NOT NULL") or die "Could not update $dbname: $DBI::errstr";
+        print "Adding Sphinx Counter table\n";
+        my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/sph_counter.sql`;
+
+        print "Replacing UI Layout\n";
+        my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/ui_layout.sql`;
     }
 }
 
@@ -1543,6 +1608,27 @@ sub create_email_alerts_table {
     print "Adding Email Alerts...\n";
     my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/triggers.sql`;
     print $res;
+}
+sub tbl_add_programs {
+    if (colExists("programs", "id") eq 0) {
+        print "Adding Programs Table...\n";
+        my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/programs.sql`;
+        print $res;
+    }
+}
+sub tbl_add_severities {
+    if (colExists("severities", "id") eq 0) {
+        print "Adding Severities Table...\n";
+        my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/severities.sql`;
+        print $res;
+    }
+}
+sub tbl_add_facilities {
+    if (colExists("facilities", "id") eq 0) {
+        print "Adding Facilities Table...\n";
+        my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/facilities.sql`;
+        print $res;
+    }
 }
 
 sub copy_old_settings {
