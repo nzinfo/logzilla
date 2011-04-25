@@ -46,7 +46,7 @@ sub p {
 }
 
 my $version = "3.2";
-my $subversion = ".281";
+my $subversion = ".282";
 
 # Grab the base path
 my $lzbase = getcwd;
@@ -1498,11 +1498,13 @@ sub add_triggers {
 }
 
 sub add_snare_to_logtable {
-    my $dbh = db_connect($dbname, $lzbase, $dbroot, $dbrootpass);
-    print "Adding SNARE eids to $dbtable...\n";
-    $dbh->do("ALTER TABLE $dbtable ADD `eid` int(10) unsigned NOT NULL DEFAULT '0'") or die "Could not update $dbtable: $DBI::errstr";
-    print "Adding SNARE index to $dbtable...\n";
-    $dbh->do("ALTER TABLE $dbtable ADD index eid(eid)") or die "Could not update $dbtable: $DBI::errstr";
+    if (colExists("$dbtable", "eid") eq 0) {
+        my $dbh = db_connect($dbname, $lzbase, $dbroot, $dbrootpass);
+        print "Adding SNARE eids to $dbtable...\n";
+        $dbh->do("ALTER TABLE $dbtable ADD `eid` int(10) unsigned NOT NULL DEFAULT '0'") or die "Could not update $dbtable: $DBI::errstr";
+        print "Adding SNARE index to $dbtable...\n";
+        $dbh->do("ALTER TABLE $dbtable ADD index eid(eid)") or die "Could not update $dbtable: $DBI::errstr";
+    }
 }
 sub create_snare_table {
     my $dbh = db_connect($dbname, $lzbase, $dbroot, $dbrootpass);
@@ -1522,15 +1524,19 @@ sub create_snare_table {
 
 sub hosts_add_seen_columns {
     my $dbh = db_connect($dbname, $lzbase, $dbroot, $dbrootpass);
-    print "Updating Hosts table...\n";
-    $dbh->do("ALTER TABLE hosts ADD `lastseen` datetime NOT NULL default '2011-03-01 00:00:00'; ") or die "Could not update $dbname: $DBI::errstr";
-    $dbh->do("ALTER TABLE hosts ADD `seen` int(10) unsigned NOT NULL DEFAULT '1'; ") or die "Could not update $dbname: $DBI::errstr";
+    if (colExists("hosts", "lastseen") eq 0) {
+        print "Updating Hosts table...\n";
+        $dbh->do("ALTER TABLE hosts ADD `lastseen` datetime NOT NULL default '2011-03-01 00:00:00'; ") or die "Could not update $dbname: $DBI::errstr";
+        $dbh->do("ALTER TABLE hosts ADD `seen` int(10) unsigned NOT NULL DEFAULT '1'; ") or die "Could not update $dbname: $DBI::errstr";
+    }
 }
 sub mne_add_seen_columns {
     my $dbh = db_connect($dbname, $lzbase, $dbroot, $dbrootpass);
-    print "Updating Mnemonics table...\n";
-    $dbh->do("ALTER TABLE mne ADD `lastseen` datetime NOT NULL default '2011-03-01 00:00:00'; ") or die "Could not update $dbname: $DBI::errstr";
-    $dbh->do("ALTER TABLE mne ADD `seen` int(10) unsigned NOT NULL DEFAULT '1'; ") or die "Could not update $dbname: $DBI::errstr";
+    if (colExists("mne", "lastseen") eq 0) {
+        print "Updating Mnemonics table...\n";
+        $dbh->do("ALTER TABLE mne ADD `lastseen` datetime NOT NULL default '2011-03-01 00:00:00'; ") or die "Could not update $dbname: $DBI::errstr";
+        $dbh->do("ALTER TABLE mne ADD `seen` int(10) unsigned NOT NULL DEFAULT '1'; ") or die "Could not update $dbname: $DBI::errstr";
+    }
 }
 
 sub create_email_alerts_table {
@@ -1561,5 +1567,18 @@ sub update_procs {
         END
         ") or die "Could not create updateCache Procedure: $DBI::errstr";
 
+}
+sub colExists {
+    my $table = shift;
+    my $col = shift;
+    my $dbh = db_connect($dbname, $lzbase, $dbroot, $dbrootpass);
+    my $sth = $dbh->column_info( undef, $dbname, $table, '%');
+    my $ref = $sth->fetchall_arrayref;
+    my @cols = map { $_->[3] } @$ref;
+    if (grep(/$col/, @cols)) {
+        return 1;
+    } else {
+        return 0;
+    }
 }
 
