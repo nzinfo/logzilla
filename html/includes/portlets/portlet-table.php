@@ -315,8 +315,12 @@ if (($dupop) && ($dupop != 'undefined')) {
     
 if ($_SESSION['SPX_ENABLE'] == "1") {
 
-    // Encode POST into json and send it off to search:
-    $json_o = search(json_encode($_POST));
+    // Encode POST/GET into json and send it off to search:
+    if ($_POST) {
+        $json_o = search(json_encode($_POST));
+    } else {
+        $json_o = search(json_encode($_GET));
+    }
 
 
     // If something goes wrong, search() will return ^'SPX_ERROR'

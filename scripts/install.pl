@@ -46,7 +46,7 @@ sub p {
 }
 
 my $version = "3.2";
-my $subversion = ".280";
+my $subversion = ".281";
 
 # Grab the base path
 my $lzbase = getcwd;
@@ -156,17 +156,15 @@ if (! -d "$logpath") {
 }
 
 # Create mysql .cnf file
-if (! -f "$lzbase/scripts/sql/lzmy.cnf") {
-    open(CNF,">$lzbase/scripts/sql/lzmy.cnf") || die("Cannot Open $lzbase/scripts/sql/lzmy.cnf: $!"); 
-    print CNF "[logzilla]\n";
-    print CNF "user = $dbadmin\n";
-    print CNF "password = $dbadminpw\n";
-    print CNF "host = $dbhost\n";
-    print CNF "port = $dbport\n";
-    print CNF "database = $dbname\n";
-    close(CNF); 
-    chmod 0400, "$lzbase/scripts/sql/lzmy.cnf";
-}
+open(CNF,">$lzbase/scripts/sql/lzmy.cnf") || die("Cannot Open $lzbase/scripts/sql/lzmy.cnf: $!"); 
+print CNF "[logzilla]\n";
+print CNF "user = $dbadmin\n";
+print CNF "password = $dbadminpw\n";
+print CNF "host = $dbhost\n";
+print CNF "port = $dbport\n";
+print CNF "database = $dbname\n";
+close(CNF); 
+chmod 0400, "$lzbase/scripts/sql/lzmy.cnf";
 
 update_paths();
 make_logfiles();
@@ -175,10 +173,8 @@ genconfig();
 print "All data will be installed into the $dbname database\n";
 my $ok  = &p("Ok to continue?", "y");
 if ($ok =~ /[Yy]/) {
-# First, connect to the mysql database and create the $dbname
     my $dbh = DBI->connect( "DBI:mysql:mysql:$dbhost:$dbport", $dbroot, $dbrootpass );
-    # Check version of MySQL
-    my $sth = $dbh->prepare("SELECT version()") or die "Could not create the $dbname database: $DBI::errstr";
+    my $sth = $dbh->prepare("SELECT version()") or die "Could not get MySQL version: $DBI::errstr";
     $sth->execute;
     while (my @data = $sth->fetchrow_array()) {
         my $ver = $data[0];
@@ -190,75 +186,44 @@ if ($ok =~ /[Yy]/) {
             exit;
         }
     }
-    my $sth = $dbh->prepare("create database $dbname");
-    $sth->execute;
-    if ($dbh->err) {
-        print("\n\033[1m\tThe $dbname Database Already Exists\n\033[0m");
+    if (db_exists() eq 0) {
+        $dbh->do("create database $dbname");
+        do_install();
+    } else {
+        print("\n\033[1m\tPrevious installation detected!\n\033[0m");
         print "Install can attempt an upgrade, but be aware of the following:\n";
         print "1. The upgrade process could potentially take a VERY long time on very large databases.\n";
         print "2. There is a potential for data loss, so please make sure you have backed up your database before proceeding.\n";
         my $ok  = &p("Ok to continue?", "y");
         if ($ok =~ /[Yy]/) {
-            my ($iver, $isub, $ver, $subver, $major, $table, @data);
-            $ver = $dbh->selectrow_array("
-                SELECT value from $dbname.settings where name='VERSION';
-                ");
-            $iver = $ver;
-            $iver =~ s/\.//g;
-            if ($iver) {
-                $subver = $dbh->selectrow_array("
-                    SELECT value from $dbname.settings where name='VERSION_SUB';
-                    ");
-                $isub = $subver;
-                $isub =~ s/\.//g;
-                my $t = $subversion;
-                $t =~ s/\.//g;
-                if ($isub < $t) {
-                    print "Your Version: $ver" . "$subver\n";
-                    print "New Version: $version" . "$subversion\n";
-                    print "Upgrading, please be patient. If you have a large DB, this could take a long time...\n";
-                    do_upgrade($iver, $isub);
+            my ($major, $minor, $sub) = getVer();
+            print "Your Version: $major.$minor.$sub\n";
+            print "New Version: $version" . "$subversion\n";
+            my $t = $subversion;
+            $t =~ s/\.(\d+)/$1/;
+            if ($sub =~ $t) {
+                print "DB is already at the lastest revision, no need to upgrade.\n";
+            } else {
+                print("\n\033[1m\tUpgrading, please be patient!\nIf you have a large DB, this could take a long time...\n\033[0m");
+                if ("$minor$sub" eq 1122) {
+                    do_upgrade(1122);
                 } else {
-                    print "Your Version: $ver" . "$subver\n";
-                    print "New Version: $version" . "$subversion\n";
-                    print "Your database is already up to date.\n";
+                    do_upgrade("all");
                 }
-            } else {
-                print "You are running a very old version of LogZilla (php-syslog-ng).\n";
-                print "Install will try to upgrade, but be sure you have backed up your database.\n";
-                my $ok  = &p("Ok to continue?", "y");
-                if ($ok =~ /[Yy]/) {
-                    do_upgrade(2,2);
-                }
-            }
-        } else {
-            print "Please select a database name other than $dbname\n";
-            my $dbname = &p("Database to install to", "syslog");
-            my $dbh = db_connect($dbname, $lzbase, $dbroot, $dbrootpass);
-            my $sth = $dbh->prepare("create database $dbname");
-            $sth->execute;
-            if ($dbh->err) {
-                print("\n\033[1m\t$dbname Already Exists!\n\033[0m");
-                print "Installation aborted\n";
-                exit;
-            } else {
-                do_install();
             }
         }
-    } else {
-        do_install();
     }
-    $dbh->disconnect();
+    print "\n";
+    make_dbuser();
+    update_settings();
+    add_logrotate();
+    add_syslog_conf();
+    setup_cron();
+    setup_sudo();
+    setup_apparmor();
+    install_sphinx();
+    fbutton();
 }
-make_dbuser();
-update_settings();
-add_logrotate();
-add_syslog_conf();
-setup_cron();
-setup_sudo();
-setup_apparmor();
-install_sphinx();
-fbutton();
 if ($dbhost !~ /localhost|127.0.0.1/) {
     my $file = "$lzbase/scripts/db_insert.pl";
     open( FILE, "$file" );
@@ -289,7 +254,7 @@ sub do_install {
     }
 
 # Create main table
-    my $sth = $dbh->prepare("
+    $dbh->do("
         CREATE TABLE $dbtable (
         id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
         host varchar(128) NOT NULL,
@@ -316,7 +281,6 @@ sub do_install {
         KEY fo (fo)
         ) ENGINE=MyISAM DEFAULT CHARSET=utf8 
         ") or die "Could not create $dbtable table: $DBI::errstr";
-    $sth->execute;
 
 # Create sphinx table
     my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/sph_counter.sql`;
@@ -477,12 +441,11 @@ sub make_partitions {
 # Get some date values in order to create the MySQL Partition
     my $dbh = db_connect($dbname, $lzbase, $dbroot, $dbrootpass);
 # Create initial Partition of the $dbtable table
-    my $sth = $dbh->prepare("
-        alter table $dbtable PARTITION BY RANGE( TO_DAYS( lo ) ) (
+    $dbh->do("
+        ALTER TABLE $dbtable PARTITION BY RANGE( TO_DAYS( lo ) ) (
         PARTITION $pAdd VALUES LESS THAN (to_days('$dateTomorrow'))
         );
         ") or die "Could not create partition for the $dbtable table: $DBI::errstr";
-    $sth->execute; 
 
     my $event = qq{
     CREATE PROCEDURE logs_add_part_proc()
@@ -493,7 +456,7 @@ sub make_partitions {
     CONCAT ('p', DATE_FORMAT(DATE_ADD(CURDATE(), INTERVAL 1 DAY), '%Y%m%d'));
     DECLARE max_day INTEGER DEFAULT TO_DAYS(NOW()) +1;
     SET \@s =
-    CONCAT('ALTER TABLE `logs` ADD PARTITION (PARTITION ', new_partition,
+    CONCAT('ALTER TABLE `$dbtable` ADD PARTITION (PARTITION ', new_partition,
     ' VALUES LESS THAN (', max_day, '))');
     PREPARE stmt FROM \@s;
     EXECUTE stmt;
@@ -733,6 +696,7 @@ sub make_dbuser {
     # DB User
     # Remove old user in case this is an upgrade
     # Have to do this for the new LOAD DATA INFILE
+    print "Temporarily removing $dbadmin from $localip\n";
     my $dbh = db_connect($dbname, $lzbase, $dbroot, $dbrootpass);
     my $grant = qq{GRANT USAGE ON *.* TO '$dbadmin'\@'$localip';};
     my $sth = $dbh->prepare("
@@ -745,8 +709,10 @@ sub make_dbuser {
         ") or die "Could not temporarily drop the $dbadmin user on $dbname: $DBI::errstr";
     $sth->execute;
 
+    print "Adding $dbadmin to $localip\n";
 # Grant access to $dbadmin
-    my $grant = qq{GRANT ALL PRIVILEGES ON $dbname.* TO '$dbadmin'\@'$localip' IDENTIFIED BY '$dbadminpw';};
+    my $grant = qq{GRANT SELECT, INSERT, UPDATE, DELETE, CREATE, DROP, GRANT OPTION, REFERENCES, INDEX, ALTER, CREATE TEMPORARY TABLES, LOCK TABLES, CREATE VIEW, SHOW VIEW, CREATE ROUTINE, ALTER ROUTINE, EXECUTE, EVENT, TRIGGER ON `$dbname`.* TO '$dbadmin'\@'$localip'  IDENTIFIED BY '$dbadminpw'};
+    #my $grant = qq{GRANT ALL PRIVILEGES ON `$dbname.*` TO '$dbadmin'\@'$localip' IDENTIFIED BY '$dbadminpw';};
     my $sth = $dbh->prepare("
         $grant
         ") or die "Could not create $dbadmin user on $dbname: $DBI::errstr";
@@ -763,6 +729,7 @@ sub make_dbuser {
     # Repeat for localhost
     # Remove old user in case this is an upgrade
     # Have to do this for the new LOAD DATA INFILE
+    print "Temporarily removing $dbadmin from localhost\n";
     my $grant = qq{GRANT USAGE ON *.* TO '$dbadmin'\@'localhost';};
     my $sth = $dbh->prepare("
         $grant
@@ -775,7 +742,9 @@ sub make_dbuser {
     $sth->execute;
 
 # Grant access to $dbadmin
-    my $grant = qq{GRANT ALL PRIVILEGES ON $dbname.* TO '$dbadmin'\@'localhost' IDENTIFIED BY '$dbadminpw';};
+    print "Adding $dbadmin to localhost\n";
+    my $grant = qq{GRANT SELECT, INSERT, UPDATE, DELETE, CREATE, DROP, GRANT OPTION, REFERENCES, INDEX, ALTER, CREATE TEMPORARY TABLES, LOCK TABLES, CREATE VIEW, SHOW VIEW, CREATE ROUTINE, ALTER ROUTINE, EXECUTE, EVENT, TRIGGER ON `$dbname`.* TO '$dbadmin'\@'localhost'  IDENTIFIED BY '$dbadminpw'};
+    #my $grant = qq{GRANT ALL PRIVILEGES ON `$dbname.*` TO '$dbadmin'\@'localhost' IDENTIFIED BY '$dbadminpw';};
     my $sth = $dbh->prepare("
         $grant
         ") or die "Could not create $dbadmin user on $dbname: $DBI::errstr";
@@ -795,7 +764,6 @@ sub make_dbuser {
         ") or die "Could not FLUSH PRIVILEGES: $DBI::errstr";
     $sth->execute;
 
-    $dbh->disconnect();
 }
 
 sub create_views {
@@ -932,7 +900,7 @@ sub update_settings {
 
 sub add_logrotate {
     if ( -d "/etc/logrotate.d") {
-        print "Adding LogZilla logrotate.d file to /etc/logrotate.d\n";
+        print "\nAdding LogZilla logrotate.d file to /etc/logrotate.d\n";
         my $ok  = &p("Ok to continue?", "y");
         if ($ok =~ /[Yy]/) {
             system("cp contrib/system_configs/logzilla.logrotate /etc/logrotate.d/logzilla");
@@ -961,41 +929,84 @@ sub add_syslog_conf {
     if ($ok =~ /[Yy]/) {
         my $file  = &p("Where is your syslog-ng.conf file located?", "/etc/syslog-ng/syslog-ng.conf");
         if (-f "$file") {
-            print "Adding syslog-ng configuration to $file\n";
-            # Find syslog-ng.conf source definition
-            my (@sources, $source);
-            open( NGCONFIG, $file );
-            my @config = <NGCONFIG>;
-            close( NGCONFIG );
-            foreach my $var (@config) {
-                next unless $var =~ /^source/; # Skip non-source def's
-                $source = $1 if ($var =~ /^source (\w+)/);
-                push(@sources, $source);
-            }
-            my $count = $#sources + 1;
-            if ($count > 1) {
-                print("\n\033[1m\tWARNING!\n\033[0m");
-                print"You have more than 1 source defined\nThis can potentially be a bad thing\n";
-                print "Your source definitions are:\n";
-                foreach my $t (@sources)
-                { 
-                    print $t ."\n";
-                } 
+            # Check to see if entry already exists
+            my $find = qr/[Ll]og[Zz]illa/;
+            open FILE, "<$file";
+            my @lines = <FILE>;
+            close FILE;
+            if (grep(/$find/, @lines)) {
+                print "\nLogZilla config already exists in $file, skipping add...\n";
+                my $find = qr/lzsub = (\d+)/;
+                if (!grep(/$find/, @lines)) {
+                    print("\n\033[1m\tWARNING!\n\033[0m");
+                    print "An old version of the LogZilla template was detected.\n";
+                    print "\nOLD FORMAT:\n";
+                    print "destination d_logzilla {\n";
+                    print 'program("/var/www/svn/logzilla/scripts/db_insert.pl"';
+                    print "\n";
+                    print 'template("$HOST\t$PRI\t$PROGRAM\t$MSGONLY\n")';
+                    print "\n";
+                    print "template_escape(yes)\n";
+                    print ");\n";
+                    print "};\n";
+
+                    print "\n\nNEW FORMAT:\n";
+                    print "destination d_logzilla {\n";
+                    print 'program("/var/www/svn/logzilla/scripts/db_insert.pl"';
+                    print "\n";
+                    print 'template("$S_YEAR-$S_MONTH-$S_DAY $S_HOUR:$S_MIN:$S_SEC\t$HOST\t$PRI\t$PROGRAM\t$MSGONLY\n")';
+                    print "\n";
+                    print "template_escape(yes)\n";
+                    print ");\n";
+                    print "};\n";
+
+                    print "\n";
+                    print "Install will attempt to alter the line for you, but be sure to verify it after the installation completes.\n";
+                    my $ok  = &p("Modifying $file, ok to continue?", "y");
+                    if ($ok =~ /[Yy]/) {
+                        my $new = '"\$S_YEAR-\$S_MONTH-\$S_DAY \$S_HOUR:\$S_MIN:\$S_SEC\\\t\$HOST\\\t\$PRI\\\t\$PROGRAM\\\t\$MSGONLY\\\n"';
+                        my $old = qw{"\$HOST\\\t\$PRI\\\t\$PROGRAM\\\t\$MSGONLY\\\n"};
+                        print "perl -i -pe 's|$old|$new|g' $file\n";
+                        system "perl -i -pe 's|$old|$new|g' $file" and warn "Could not modify $file $!\n";
+                    }
+                }
             } else {
-                print "Found $count sources\n";
-            } 
-            $source  = &p("Which source definition would you like to use?", "$source");
-            if ($source !~ "s_all") {
-                system "perl -i -pe 's|s_all|$source|g' contrib/system_configs/syslog-ng.conf" and warn "Could not modify contrib/system_configs/syslog-ng.conf $!\n";
+                print "Adding syslog-ng configuration to $file\n";
+                # Find syslog-ng.conf source definition
+                my (@sources, $source);
+                open( NGCONFIG, $file );
+                my @config = <NGCONFIG>;
+                close( NGCONFIG );
+                foreach my $var (@config) {
+                    next unless $var =~ /^source/; # Skip non-source def's
+                    $source = $1 if ($var =~ /^source (\w+)/);
+                    push(@sources, $source);
+                }
+                my $count = $#sources + 1;
+                if ($count > 1) {
+                    print("\n\033[1m\tWARNING!\n\033[0m");
+                    print"You have more than 1 source defined\nThis can potentially be a bad thing\n";
+                    print "Your source definitions are:\n";
+                    foreach my $t (@sources)
+                    { 
+                        print $t ."\n";
+                    } 
+                } else {
+                    print "Found $count sources\n";
+                } 
+                $source  = &p("Which source definition would you like to use?", "$source");
+                if ($source !~ "s_all") {
+                    system "perl -i -pe 's|s_all|$source|g' contrib/system_configs/syslog-ng.conf" and warn "Could not modify contrib/system_configs/syslog-ng.conf $!\n";
+                }
+                open(CNF,">>$file") || die("Cannot Open $file: $!"); 
+                open(FILE,"contrib/system_configs/syslog-ng.conf") || die("Cannot Open file: $!"); 
+                my @data = <FILE>;
+                foreach my $line (@data) {
+                    print CNF "$line";
+                }
+                close(CNF); 
+                close(FILE); 
             }
-            open(CNF,">>$file") || die("Cannot Open $file: $!"); 
-            open(FILE,"contrib/system_configs/syslog-ng.conf") || die("Cannot Open file: $!"); 
-            my @data = <FILE>;
-            foreach my $line (@data) {
-                print CNF "$line";
-            }
-            close(CNF); 
-            close(FILE); 
         } else {
             print "Unable to locate your syslog-ng.conf file\n";
             print "You will need to manually merge contrib/system_configs/syslog-ng.conf with yours.\n";
@@ -1382,100 +1393,38 @@ sub show_EULA {
 }
 
 sub do_upgrade {
-    my $ver = shift;
-    my $subver = shift;
-    switch ($subver) {
-        case 122 { 
+    my $rev = shift;
+    switch ($rev) {
+        case 1122 { 
+            print "Upgrading Database from v3.1.122 to $version$subversion...\n";
             my $dbh = db_connect($dbname, $lzbase, $dbroot, $dbrootpass);
-            my $sth = $dbh->prepare("
-                alter table logs add `eid` int(10) unsigned NOT NULL DEFAULT '0';
-                ") or die "Could not update $dbname: $DBI::errstr";
-            $sth->execute;
-            my $sth = $dbh->prepare("
-                alter table logs add index eid(eid);
-                ") or die "Could not update $dbname: $DBI::errstr";
-            $sth->execute;
-            my $sth = $dbh->prepare("
-                alter table hosts add `lastseen` datetime NOT NULL default '2011-03-01 00:00:00';
-                ") or die "Could not update $dbname: $DBI::errstr";
-            $sth->execute;
-            my $sth = $dbh->prepare("
-                alter table hosts add `seen` int(10) unsigned NOT NULL DEFAULT '1';
-                ") or die "Could not update $dbname: $DBI::errstr";
-            $sth->execute;
-            my $sth = $dbh->prepare("
-                alter table mne add `lastseen` datetime NOT NULL default '2011-03-01 00:00:00';
-                ") or die "Could not update $dbname: $DBI::errstr";
-            $sth->execute;
-            my $sth = $dbh->prepare("
-                alter table mne add `seen` int(10) unsigned NOT NULL DEFAULT '1';
-                ") or die "Could not update $dbname: $DBI::errstr";
-            $sth->execute;
-            my $sth = $dbh->prepare("
-                CREATE TABLE `snare_eid` (
-                `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
-                `eid` smallint(5) unsigned NOT NULL DEFAULT '0',
-                `lastseen` datetime NOT NULL,
-                `seen` int(10) unsigned NOT NULL DEFAULT '1',
-                PRIMARY KEY (`id`),
-                UNIQUE KEY `eid` (`eid`)
-                ) ENGINE=MyISAM AUTO_INCREMENT=3 DEFAULT CHARSET=latin1;
-                ") or die "Could not update $dbname: $DBI::errstr";
-            $sth->execute;
-            my $sth = $dbh->prepare("
-                CREATE TABLE `triggers` (
-                `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
-                `description` varchar(255) NOT NULL,
-                `pattern` varchar(255) NOT NULL,
-                `mailto` varchar(255) NOT NULL DEFAULT 'root\@localhost',
-                `mailfrom` varchar(255) NOT NULL DEFAULT 'root\@localhost',
-                `subject` varchar(255) NOT NULL,
-                `body` text CHARACTER SET utf8 NOT NULL,
-                `disabled` enum('Yes','No') NOT NULL DEFAULT 'No',
-                PRIMARY KEY (`id`)
-                ) ENGINE=MyISAM AUTO_INCREMENT=3 DEFAULT CHARSET=latin1;
-                ") or die "Could not update $dbname: $DBI::errstr";
-            $sth->execute;
-            my $sth = $dbh->prepare("
-                RENAME TABLE settings TO settings_orig;
-                ") or die "Could not update $dbname: $DBI::errstr";
-            $sth->execute;
-            my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/settings.sql`;
-            print $res;
-            my $sth = $dbh->prepare("
-                REPLACE INTO settings SELECT * FROM settings_orig;
-                ") or die "Could not update $dbname: $DBI::errstr";
-            $sth->execute;
-            my $sth = $dbh->prepare("
-                DROP TABLE settings_orig;
-                ") or die "Could not update $dbname: $DBI::errstr";
-            $sth->execute;
+            add_snare_to_logtable();
+            hosts_add_seen_columns();
+            mne_add_seen_columns();
+            create_snare_table();
+            create_email_alerts_table();
+            copy_old_settings();
+            update_procs();
+            add_triggers();
+            print "\n\tUpgrade complete, continuing installation...\n\n";
 
-
-            my $event = qq{
-            DROP PROCEDURE IF EXISTS updateCache;
-            };
-            my $sth = $dbh->prepare("
-                $event
-                ") or die "Could not create updateCache Procedure: $DBI::errstr";
-            $sth->execute;
-            my $event = qq{
-            CREATE PROCEDURE updateCache()
-            SQL SECURITY DEFINER
-            COMMENT 'Verifies cache totals every night' 
-            BEGIN    
-            REPLACE INTO cache (name,value,updatetime) VALUES ('msg_sum', (SELECT SUM(counter) FROM `$dbtable`),NOW());
-            REPLACE INTO cache (name,value,updatetime) VALUES (CONCAT('chart_mpd_',DATE_FORMAT(NOW() - INTERVAL 1 DAY, '%Y-%m-%d_%a')), (SELECT SUM(counter) FROM `$dbtable` WHERE lo BETWEEN DATE_SUB(CONCAT(CURDATE(), ' 00:00:00'), INTERVAL 1 DAY) AND DATE_SUB(CONCAT(CURDATE(), ' 23:59:59'), INTERVAL  1 DAY)),NOW());
-            UPDATE `hosts` SET `seen` = ( SELECT SUM(`$dbtable`.`counter`) FROM `$dbtable` WHERE `$dbtable`.`host` = `hosts`.`host` );
-            UPDATE `mne` SET `seen` = ( SELECT SUM(`$dbtable`.`counter`) FROM `$dbtable` WHERE `$dbtable`.`mne` = `mne`.`crc` );
-            UPDATE `snare_eid` SET `seen` = ( SELECT SUM(`$dbtable`.`counter`) FROM `$dbtable` WHERE `$dbtable`.`eid` = `snare_eid`.`eid` );
-            END 
-            };
-            my $sth = $dbh->prepare("
-                $event
-                ") or die "Could not create updateCache Procedure: $DBI::errstr";
-            $sth->execute;
-
+        }
+        case "all" {
+            print "Your version is not an official release version.\n";
+            print "An attempt will be made to upgrade to $version$subversion...\n";
+            my $ok  = &p("Continue? (yes/no)", "y");
+            if ($ok =~ /[Yy]/) {
+                my $dbh = db_connect($dbname, $lzbase, $dbroot, $dbrootpass);
+                add_snare_to_logtable();
+                hosts_add_seen_columns();
+                mne_add_seen_columns();
+                create_snare_table();
+                create_email_alerts_table();
+                copy_old_settings();
+                update_procs();
+                add_triggers();
+                print "\n\tUpgrade complete, continuing installation...\n\n";
+            }
         }
         case 2 { 
             print "Attempting upgrade from php-syslog-ng (v2.x) to LogZilla (v3.x)\n";
@@ -1504,5 +1453,113 @@ sub db_connect {
     }
 
     return $dbh;
+}
+
+sub db_exists {
+    my $dbh = DBI->connect( "DBI:mysql:mysql:$dbhost:$dbport", $dbroot, $dbrootpass );
+    my $sth = $dbh->prepare("show databases like '$dbname'") or die "Could not get DB's: $DBI::errstr";
+    $sth->execute;
+    while (my @data = $sth->fetchrow_array()) {
+        if ($data[0] == "$dbtable") {
+            return 1;
+        } else {
+            return 0;
+        }
+    }
+}
+
+sub getVer {
+    my $dbh = db_connect($dbname, $lzbase, $dbroot, $dbrootpass);
+    my $ver = $dbh->selectrow_array("
+        SELECT value from settings where name='VERSION';
+        ");
+    my ($major, $minor) = split(/\./, $ver);
+    my $sub = $dbh->selectrow_array("SELECT value from settings where name='VERSION_SUB'; ");
+    $sub =~ s/^\.//;
+    return ($major, $minor, $sub);
+}
+
+sub add_triggers {
+    my $dbh = db_connect($dbname, $lzbase, $dbroot, $dbrootpass);
+    print "Dropping Triggers...\n";
+    $dbh->do("DROP TRIGGER IF EXISTS counts") or die "Could not drop trigger: $DBI::errstr";
+    print "Adding Triggers...\n";
+    $dbh->do("
+        CREATE TRIGGER `counts`
+        AFTER INSERT ON `$dbtable`
+        FOR EACH ROW
+        BEGIN
+        INSERT INTO hosts(host,lastseen,seen) VALUES (NEW.host,NOW(),1) ON DUPLICATE KEY UPDATE seen=seen + 1, lastseen=NOW();
+        UPDATE mne SET seen=seen + 1, lastseen=NOW() WHERE crc=NEW.mne;
+        UPDATE snare_eid SET seen=seen + 1, lastseen=NOW() WHERE eid=NEW.eid;
+        INSERT INTO cache (name,value,updatetime) VALUES ('msg_sum',1,NOW()) ON DUPLICATE KEY UPDATE value=value + 1,updatetime=NOW();
+        END
+        ") or die "Could not add triggers: $DBI::errstr";
+}
+
+sub add_snare_to_logtable {
+    my $dbh = db_connect($dbname, $lzbase, $dbroot, $dbrootpass);
+    print "Adding SNARE eids to $dbtable...\n";
+    $dbh->do("ALTER TABLE $dbtable ADD `eid` int(10) unsigned NOT NULL DEFAULT '0'") or die "Could not update $dbtable: $DBI::errstr";
+    print "Adding SNARE index to $dbtable...\n";
+    $dbh->do("ALTER TABLE $dbtable ADD index eid(eid)") or die "Could not update $dbtable: $DBI::errstr";
+}
+sub create_snare_table {
+    my $dbh = db_connect($dbname, $lzbase, $dbroot, $dbrootpass);
+    print "Adding new SNARE table...\n";
+    $dbh->do("DROP TABLE IF EXISTS snare_eid") or die "Could not update $dbname: $DBI::errstr";
+    $dbh->do("
+        CREATE TABLE `snare_eid` (
+        `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+        `eid` smallint(5) unsigned NOT NULL DEFAULT '0',
+        `lastseen` datetime NOT NULL,
+        `seen` int(10) unsigned NOT NULL DEFAULT '1',
+        PRIMARY KEY (`id`),
+        UNIQUE KEY `eid` (`eid`)
+        ) ENGINE=MyISAM AUTO_INCREMENT=3 DEFAULT CHARSET=latin1;
+        ") or die "Could not update $dbname: $DBI::errstr";
+}
+
+sub hosts_add_seen_columns {
+    my $dbh = db_connect($dbname, $lzbase, $dbroot, $dbrootpass);
+    print "Updating Hosts table...\n";
+    $dbh->do("ALTER TABLE hosts ADD `lastseen` datetime NOT NULL default '2011-03-01 00:00:00'; ") or die "Could not update $dbname: $DBI::errstr";
+    $dbh->do("ALTER TABLE hosts ADD `seen` int(10) unsigned NOT NULL DEFAULT '1'; ") or die "Could not update $dbname: $DBI::errstr";
+}
+sub mne_add_seen_columns {
+    my $dbh = db_connect($dbname, $lzbase, $dbroot, $dbrootpass);
+    print "Updating Mnemonics table...\n";
+    $dbh->do("ALTER TABLE mne ADD `lastseen` datetime NOT NULL default '2011-03-01 00:00:00'; ") or die "Could not update $dbname: $DBI::errstr";
+    $dbh->do("ALTER TABLE mne ADD `seen` int(10) unsigned NOT NULL DEFAULT '1'; ") or die "Could not update $dbname: $DBI::errstr";
+}
+
+sub create_email_alerts_table {
+    print "Adding Email Alerts...\n";
+    my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/triggers.sql`;
+    print $res;
+}
+
+sub copy_old_settings {
+    my $dbh = db_connect($dbname, $lzbase, $dbroot, $dbrootpass);
+    print "Updating Settings...\n";
+    $dbh->do("RENAME TABLE settings TO settings_orig") or die "Could not update $dbname: $DBI::errstr";
+    my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/settings.sql`;
+    print $res;
+    $dbh->do("REPLACE INTO settings SELECT * FROM settings_orig; ") or die "Could not update $dbname: $DBI::errstr";
+    $dbh->do("DROP TABLE settings_orig") or die "Could not update $dbname: $DBI::errstr";
+}
+sub update_procs {
+    my $dbh = db_connect($dbname, $lzbase, $dbroot, $dbrootpass);
+    print "Updating SQL Procedures...\n";
+    $dbh->do("DROP PROCEDURE IF EXISTS updateCache") or die "Could not create updateCache Procedure: $DBI::errstr";
+    $dbh->do("
+        CREATE PROCEDURE updateCache()
+        SQL SECURITY DEFINER
+        COMMENT 'Verifies cache totals every night' 
+        BEGIN    
+        REPLACE INTO cache (name,value,updatetime) VALUES (CONCAT('chart_mpd_',DATE_FORMAT(NOW() - INTERVAL 1 DAY, '%Y-%m-%d_%a')), (SELECT SUM(counter) FROM `$dbtable` WHERE lo BETWEEN DATE_SUB(CONCAT(CURDATE(), ' 00:00:00'), INTERVAL 1 DAY) AND DATE_SUB(CONCAT(CURDATE(), ' 23:59:59'), INTERVAL  1 DAY)),NOW());
+        END
+        ") or die "Could not create updateCache Procedure: $DBI::errstr";
+
 }
 
