@@ -1,5 +1,9 @@
 CHANGELOG
 
+3.1.284 - Install/Upgrade Support
+CD:
+ - Forgot to include trigger creation function for new installs (which would cause no hosts to show in the hosts portlet).
+
 3.1.283 - Upgrade Support
 CD:
  - Added support for upgrading from v3.0.x
