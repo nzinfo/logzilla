@@ -46,7 +46,7 @@ sub p {
 }
 
 my $version = "3.2";
-my $subversion = ".283";
+my $subversion = ".284";
 
 # Grab the base path
 my $lzbase = getcwd;
@@ -217,6 +217,7 @@ if ($ok =~ /[Yy]/) {
     }
     print "\n";
     make_dbuser();
+    add_triggers();
     update_settings();
     add_logrotate();
     add_syslog_conf();
@@ -1413,7 +1414,6 @@ sub do_upgrade {
                 create_email_alerts_table();
                 copy_old_settings();
                 update_procs();
-                add_triggers();
                 if (colExists("logs", "priority") eq 1) {
                     tbl_logs_alter_from_30();
                 }
@@ -1430,7 +1430,6 @@ sub do_upgrade {
             create_email_alerts_table();
             copy_old_settings();
             update_procs();
-            add_triggers();
             print "\n\tUpgrade complete, continuing installation...\n\n";
 
         }
@@ -1450,7 +1449,6 @@ sub do_upgrade {
                 create_email_alerts_table();
                 copy_old_settings();
                 update_procs();
-                add_triggers();
                 print "\n\tUpgrade complete, continuing installation...\n\n";
             }
         }
