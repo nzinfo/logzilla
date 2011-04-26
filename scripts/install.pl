@@ -46,7 +46,7 @@ sub p {
 }
 
 my $version = "3.2";
-my $subversion = ".284";
+my $subversion = ".285";
 
 # Grab the base path
 my $lzbase = getcwd;
@@ -969,7 +969,7 @@ sub add_syslog_conf {
                     if ($ok =~ /[Yy]/) {
                         my $new = '"\$S_YEAR-\$S_MONTH-\$S_DAY \$S_HOUR:\$S_MIN:\$S_SEC\\\t\$HOST\\\t\$PRI\\\t\$PROGRAM\\\t\$MSGONLY\\\n"';
                         my $old = qw{"\$HOST\\\t\$PRI\\\t\$PROGRAM\\\t\$MSGONLY\\\n"};
-                        print "perl -i -pe 's|$old|$new|g' $file\n";
+                        #print "perl -i -pe 's|$old|$new|g' $file\n";
                         system "perl -i -pe 's|$old|$new|g' $file" and warn "Could not modify $file $!\n";
                     }
                 }
