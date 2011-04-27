@@ -46,7 +46,7 @@ sub p {
 }
 
 my $version = "3.2";
-my $subversion = ".285";
+my $subversion = ".286";
 
 # Grab the base path
 my $lzbase = getcwd;
@@ -204,11 +204,12 @@ if ($ok =~ /[Yy]/) {
             if ($sub =~ $t) {
                 print "DB is already at the lastest revision, no need to upgrade.\n";
             } else {
-                print("\n\033[1m\tUpgrading, please be patient!\nIf you have a large DB, this could take a long time...\n\033[0m");
                 if ("$minor" eq 0) {
                     do_upgrade(0);
                 } elsif ("$minor$sub" eq 1122) {
                     do_upgrade(1122);
+                } elsif ("$major$minor" eq 299) {
+                    do_upgrade("php-syslog-ng");
                 } else {
                     do_upgrade("all");
                 }
@@ -1397,13 +1398,14 @@ sub show_EULA {
 
 sub do_upgrade {
     my $rev = shift;
+    print("\n\033[1m\tUpgrading, please be patient!\nIf you have a large DB, this could take a long time...\n\033[0m");
+    my $dbh = db_connect($dbname, $lzbase, $dbroot, $dbrootpass);
     switch ($rev) {
         case 0 {
             print "You are running an unsupported version of LogZilla (<3.1)\n";
             print "An attempt will be made to upgrade to $version$subversion...\n";
             my $ok  = &p("Continue? (yes/no)", "y");
             if ($ok =~ /[Yy]/) {
-                my $dbh = db_connect($dbname, $lzbase, $dbroot, $dbrootpass);
                 add_snare_to_logtable();
                 hosts_add_seen_columns();
                 mne_add_seen_columns();
@@ -1422,7 +1424,6 @@ sub do_upgrade {
         }
         case 1122 { 
             print "Upgrading Database from v3.1.122 to $version$subversion...\n";
-            my $dbh = db_connect($dbname, $lzbase, $dbroot, $dbrootpass);
             add_snare_to_logtable();
             hosts_add_seen_columns();
             mne_add_seen_columns();
@@ -1433,12 +1434,31 @@ sub do_upgrade {
             print "\n\tUpgrade complete, continuing installation...\n\n";
 
         }
+        case "php-syslog-ng" {
+            print "You are running an unsupported version of LogZilla (Php-syslog-ng v2.x)\n";
+            print "An attempt will be made to upgrade to $version$subversion...\n";
+            my $ok  = &p("Continue? (yes/no)", "y");
+            if ($ok =~ /[Yy]/) {
+                add_snare_to_logtable();
+                hosts_add_seen_columns();
+                mne_add_seen_columns();
+                tbl_add_programs();
+                tbl_add_severities();
+                tbl_add_facilities();
+                create_snare_table();
+                create_email_alerts_table();
+                update_procs();
+                if (colExists("logs", "priority") eq 1) {
+                    tbl_logs_alter_from_299();
+                }
+                print "\n\tUpgrade complete, continuing installation...\n\n";
+            }
+        }
         case "all" {
             print "Your version is not an officially supported upgrade.\n";
             print "An attempt will be made to upgrade to $version$subversion...\n";
             my $ok  = &p("Continue? (yes/no)", "y");
             if ($ok =~ /[Yy]/) {
-                my $dbh = db_connect($dbname, $lzbase, $dbroot, $dbrootpass);
                 add_snare_to_logtable();
                 hosts_add_seen_columns();
                 mne_add_seen_columns();
@@ -1496,13 +1516,18 @@ sub db_exists {
 
 sub getVer {
     my $dbh = db_connect($dbname, $lzbase, $dbroot, $dbrootpass);
-    my $ver = $dbh->selectrow_array("
-        SELECT value from settings where name='VERSION';
-        ");
-    my ($major, $minor) = split(/\./, $ver);
-    my $sub = $dbh->selectrow_array("SELECT value from settings where name='VERSION_SUB'; ");
-    $sub =~ s/^\.//;
-    return ($major, $minor, $sub);
+    if (colExists("settings", "id") eq 1) {
+        my $ver = $dbh->selectrow_array("
+            SELECT value from settings where name='VERSION';
+            ");
+        my ($major, $minor) = split(/\./, $ver);
+        my $sub = $dbh->selectrow_array("SELECT value from settings where name='VERSION_SUB'; ");
+        $sub =~ s/^\.//;
+        return ($major, $minor, $sub);
+    } else {
+        # If there is no settings table in the DB, it's php-syslog-ng v2.x
+        return (2, 99, 0);
+    }
 }
 
 sub add_triggers {
@@ -1599,6 +1624,137 @@ sub tbl_logs_alter_from_30 {
 
         print "Replacing UI Layout\n";
         my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/ui_layout.sql`;
+    }
+}
+
+sub tbl_logs_alter_from_299 {
+    my $dbh = db_connect($dbname, $lzbase, $dbroot, $dbrootpass);
+    print("\n\033[1m\tWARNING!\n\033[0m");
+    print "Attempting to modify an older logs table to work with the new version.\n";
+    print "This could take a VERY long time, DO NOT cancel this operation\n";
+    if (colExists("$dbtable", "priority") eq 1) {
+
+        print "Updating column: priority->severity\n";
+        $dbh->do("ALTER TABLE $dbtable CHANGE `priority` severity enum('0','1','2','3','4','5','6','7') NOT NULL") or die "Could not update $dbname: $DBI::errstr";
+
+        print "Updating column: facility\n";
+        $dbh->do("ALTER TABLE $dbtable CHANGE `facility` `facility` enum('0','1','2','3','4','5','6','7','8','9','10','11','12','13','14','15','16','17','18','19','20','21','22','23') NOT NULL") or die "Could not update $dbname: $DBI::errstr";
+
+        print "Dropping tag column\n";
+        $dbh->do("ALTER TABLE $dbtable DROP COLUMN tag") or die "Could not update $dbname: $DBI::errstr";
+
+        print "Dropping level column\n";
+        $dbh->do("ALTER TABLE $dbtable DROP COLUMN level") or die "Could not update $dbname: $DBI::errstr";
+
+        print "Dropping seq column\n";
+        $dbh->do("ALTER TABLE $dbtable DROP COLUMN seq") or die "Could not update $dbname: $DBI::errstr";
+
+        print "Updating column: program\n";
+        $dbh->do("ALTER TABLE $dbtable CHANGE `program` `program` int(10) unsigned NOT NULL") or die "Could not update $dbname: $DBI::errstr";
+
+        print "Updating column: host\n";
+        $dbh->do("ALTER TABLE $dbtable CHANGE `host` `host` varchar(128) NOT NULL") or die "Could not update $dbname: $DBI::errstr";
+
+        print "Updating column: fo\n";
+        $dbh->do("ALTER TABLE $dbtable CHANGE `fo` `fo` datetime NOT NULL") or die "Could not update $dbname: $DBI::errstr";
+
+        print "Updating column: lo\n";
+        $dbh->do("ALTER TABLE $dbtable CHANGE `lo` `lo` datetime NOT NULL") or die "Could not update $dbname: $DBI::errstr";
+
+        print "Adding column: mne\n";
+        $dbh->do("ALTER TABLE $dbtable ADD `mne` int(10) unsigned NOT NULL") or die "Could not update $dbname: $DBI::errstr";
+
+        print "Adding column: suppress\n";
+        $dbh->do("ALTER TABLE $dbtable ADD `suppress` datetime NOT NULL DEFAULT '2010-03-01 00:00:00'") or die "Could not update $dbname: $DBI::errstr";
+
+        print "Adding column: notes\n";
+        $dbh->do("ALTER TABLE $dbtable ADD `notes` varchar(255) NOT NULL") or die "Could not update $dbname: $DBI::errstr";
+
+        print "Altering column: msg\n";
+        $dbh->do("ALTER TABLE $dbtable CHANGE `msg` `msg` varchar(2048) NOT NULL") or die "Could not update $dbname: $DBI::errstr";
+
+        print "Dropping index: priority\n";
+        $dbh->do("ALTER TABLE $dbtable DROP INDEX priority") or die "Could not update $dbname: $DBI::errstr";
+
+        print "Adding index: severity\n";
+        $dbh->do("ALTER TABLE $dbtable ADD INDEX severity (severity)") or die "Could not update $dbname: $DBI::errstr";
+
+        print "Adding index: mne\n";
+        $dbh->do("ALTER TABLE $dbtable ADD INDEX mne (mne)") or die "Could not update $dbname: $DBI::errstr";
+
+        print "Adding index: suppress\n";
+        $dbh->do("ALTER TABLE $dbtable ADD INDEX suppress (suppress)") or die "Could not update $dbname: $DBI::errstr";
+
+        print "Adding primary key\n";
+        $dbh->do("ALTER TABLE $dbtable DROP PRIMARY KEY, ADD PRIMARY KEY (`id`, `lo`)") or die "Could not update $dbname: $DBI::errstr";
+        print "Dropping users table primary key\n";
+        $dbh->do("ALTER TABLE users DROP PRIMARY KEY") or die "Could not update $dbname: $DBI::errstr";
+
+        print "Modifying users table: add id and primary key\n";
+        $dbh->do("ALTER TABLE users ADD `id` int(9) NOT NULL AUTO_INCREMENT, ADD PRIMARY KEY id (id);") or die "Could not update $dbname: $DBI::errstr";
+
+        print "Updating column: users.username\n";
+        $dbh->do("ALTER TABLE users CHANGE `username` `username` varchar(15) NOT NULL") or die "Could not update $dbname: $DBI::errstr";
+        print "Adding column: users.group\n";
+        $dbh->do("ALTER TABLE users ADD `group` int(3) NOT NULL DEFAULT '2'") or die "Could not update $dbname: $DBI::errstr";
+
+        print "Adding column: users.totd\n";
+        $dbh->do("ALTER TABLE users ADD `totd` enum('show','hide') NOT NULL DEFAULT 'show'") or die "Could not update $dbname: $DBI::errstr";
+
+        print "Setting up $siteadmin user\n";
+        $dbh->do("REPLACE INTO `users` (username,pwhash) VALUES ('$siteadmin',md5('$siteadminpw'))") or die "Could not update $dbname: $DBI::errstr";
+
+
+        print "Dropping table: actions\n";
+        $dbh->do("DROP TABLE actions") or die "Could not update $dbname: $DBI::errstr";
+
+        print "Dropping MERGE table: all_logs\n";
+        $dbh->do("DROP TABLE all_logs") or die "Could not update $dbname: $DBI::errstr";
+
+        print "Dropping table: cemdb\n";
+        $dbh->do("DROP TABLE cemdb") or die "Could not update $dbname: $DBI::errstr";
+
+        print "Dropping table: search_cache\n";
+        $dbh->do("DROP TABLE search_cache") or die "Could not update $dbname: $DBI::errstr";
+
+        print "Dropping table: user_access\n";
+        $dbh->do("DROP TABLE user_access") or die "Could not update $dbname: $DBI::errstr";
+
+        print "Adding Sphinx Counter table\n";
+        my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/sph_counter.sql`;
+
+        print "Replacing UI Layout\n";
+        my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/ui_layout.sql`;
+
+        print "Adding Cache Table\n";
+        my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/cache.sql`;
+        print $res;
+
+        print "Adding Groups Table\n";
+        my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/groups.sql`;
+        print $res;
+
+        print "Adding Help Table\n";
+        my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/help.sql`;
+        print $res;
+
+        print "Adding History Table\n";
+        my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/history.sql`;
+        print $res;
+
+        print "Adding lzecs Table\n";
+        my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/lzecs.sql`;
+        print $res;
+
+        print "Creating Suppress Table\n";
+        my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/suppress.sql`;
+        print $res;
+
+        print "Creating Totd Table\n";
+        my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/totd.sql`;
+
+        print "Creating views\n";
+        create_views();
     }
 }
 

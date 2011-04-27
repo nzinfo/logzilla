@@ -1,5 +1,10 @@
 CHANGELOG
 
+3.1.286 - Php-syslog-ng upgrades
+CD:
+ - Completed scripting for upgrade path from the old php-syslog-ng v2.x style databases.
+   Tested repeatedly on our end at this point as working, but results may vary.
+
 3.1.285 - Cisco, Programs as integers
 CD:
  - Quick fix for Cisco syslog sending their program names as integers.
