@@ -50,230 +50,108 @@ if ((has_portlet_access($_SESSION['username'], 'Graph Results') == TRUE) || ($_S
     $qstring .= "&show_suppressed=$show_suppressed";
 
     // Special - this gets posted via javascript since it comes from the hosts grid
-// Form code is somewhere near line 992 of js_footer.php
-$hosts = get_input('hosts');
-// sel_hosts comes from the main page <select>, whereas 'hosts' above this line comes from the grid select via javascript.
-$sel_hosts = get_input('sel_hosts');
-if ($hosts) {
-    $pieces = explode(",", $hosts);
-    foreach ($pieces as $host) {
-        $sel_hosts[] .= $host;
-        $qstring .= "&hosts[]=$host";
+    // Form code is somewhere near line 992 of js_footer.php
+    $hosts = get_input('hosts');
+    // sel_hosts comes from the main page <select>, whereas 'hosts' above this line comes from the grid select via javascript.
+    $sel_hosts = get_input('sel_hosts');
+    if ($hosts) {
+        $pieces = explode(",", $hosts);
+        foreach ($pieces as $host) {
+            $sel_hosts[] .= $host;
+            $qstring .= "&hosts[]=$host";
+        }
     }
-}
-$hosts = $sel_hosts;
-if ($hosts) {
-    $where .= " AND host IN (";
-    $sph_msg_mask .= " @host ";
-    
-    foreach ($hosts as $host) {
+    $hosts = $sel_hosts;
+    if ($hosts) {
+        foreach ($hosts as $host) {
             $where.= "'$host',";
-            $sph_msg_mask .= "$host|";
-        $qstring .= "&sel_hosts[]=$host";
-    }
-    $where = rtrim($where, ",");
-    $sph_msg_mask = rtrim($sph_msg_mask, "|");
-    $where .= ")";
-    $sph_msg_mask .= " ";
-}
-
-// Special - this gets posted via javascript since it comes from the mnemonics grid
-// Form code is somewhere near line 992 of js_footer.php
-$mnemonics = get_input('mnemonics');
-// sel_mne comes from the main page <select>, whereas 'mnemonics' above this line comes from the grid select via javascript.
-$sel_mne = get_input('sel_mne');
-if ($mnemonics) {
-    $pieces = explode(",", $mnemonics);
-    foreach ($pieces as $mne) {
-        $sel_mne[] .= $mne;
-        $qstring .= "&mnemonics[]=$mne";
-    }
-}
-$mnemonics = $sel_mne;
-if ($mnemonics) {
-    if (!in_array(mne2crc('None'), $mnemonics)) {
-        $where .= " AND mne !='".mne2crc('None')."'";
-    }
-    $where .= " AND mne IN (";
-    $sph_msg_mask .= " @mne ";
-    
-    foreach ($mnemonics as $mne) {
-        if (!preg_match("/^\d+/m", $mne)) {
-            $mne = mne2crc($mne);
+            $qstring .= "&sel_hosts[]=$host";
         }
-            $where.= "'$mne',";
-            $sph_msg_mask .= "$mne|";
-        $qstring .= "&sel_mne[]=$mne";
     }
-    $where = rtrim($where, ",");
-    $sph_msg_mask = rtrim($sph_msg_mask, "|");
-    $where .= ")";
-    $sph_msg_mask .= " ";
-}
-
-// Special - this gets posted via javascript since it comes from the Snare EID grid
-// Form code is somewhere near line 992 of js_footer.php
-$eids = get_input('eids');
-// sel_eid comes from the main page <select>, whereas 'eids' above this line comes from the grid select via javascript.
-$sel_eid = get_input('sel_eid');
-if ($eids) {
-    $pieces = explode(",", $eids);
-    foreach ($pieces as $eid) {
-        $sel_eid[] .= $eid;
-        $qstring .= "&eids[]=$eid";
-    }
-}
-$eids = $sel_eid;
-if ($eids) {
-    if (!in_array('0', $eids)) {
-        $where .= " AND eid > 0 ";
-    }
-    $where .= " AND eid IN (";
-    $sph_msg_mask .= " @eid ";
-    
-    foreach ($eids as $eid) {
-            $where.= "'$eid',";
-            $sph_msg_mask .= "$eid|";
-        $qstring .= "&sel_eid[]=$eid";
-    }
-    $where = rtrim($where, ",");
-    $sph_msg_mask = rtrim($sph_msg_mask, "|");
-    $where .= ")";
-    $sph_msg_mask .= " ";
-}
-
-// portlet-programs
-$programs = get_input('programs');
-if ($programs) {
-    $where .= " AND program IN (";
-    foreach ($programs as $program) {
-        if (!preg_match("/^\d+/m", $program)) {
-            $program = prg2crc($program);
+    // Special - this gets posted via javascript since it comes from the mnemonics grid
+    // Form code is somewhere near line 992 of js_footer.php
+    $mnemonics = get_input('mnemonics');
+    // sel_mne comes from the main page <select>, whereas 'mnemonics' above this line comes from the grid select via javascript.
+    $sel_mne = get_input('sel_mne');
+    if ($mnemonics) {
+        $pieces = explode(",", $mnemonics);
+        foreach ($pieces as $mne) {
+            $sel_mne[] .= $mne;
+            $qstring .= "&mnemonics[]=$mne";
         }
-            $where.= "'$program',";
-        $qstring .= "&programs[]=$program";
     }
-    $where = rtrim($where, ",");
-    $where .= ")";
-}
-
-// portlet-severities
-$severities = get_input('severities');
-if ($severities) {
-    $where .= " AND severity IN (";
-    foreach ($severities as $severity) {
-        if (!preg_match("/^\d+/m", $severity)) {
-            $severity = sev2int($severity);
+    $mnemonics = $sel_mne;
+    if ($mnemonics) {
+        if (!in_array(mne2crc('None'), $mnemonics)) {
+            $where .= " AND mne !='".mne2crc('None')."'";
         }
-            $where.= "'$severity',";
-        $qstring .= "&severities[]=$severity";
-    }
-    $where = rtrim($where, ",");
-    $where .= ")";
-}
-
-
-// portlet-facilities
-$facilities = get_input('facilities');
-if ($facilities) {
-    $where .= " AND facility IN (";
-    foreach ($facilities as $facility) {
-        if (!preg_match("/^\d+/m", $facility)) {
-            $facility = fac2int($facility);
+        foreach ($mnemonics as $mne) {
+            if (!preg_match("/^\d+/m", $mne)) {
+                $mne = mne2crc($mne);
+            }
+            $qstring .= "&sel_mne[]=$mne";
         }
-            $where.= "'$facility',";
-        $qstring .= "&facilities[]=$facility";
     }
-    $where = rtrim($where, ",");
-    $where .= ")";
-}
-
-// portlet-sphinxquery
-    // portlet-sphinxquery
+    // Special - this gets posted via javascript since it comes from the Snare EID grid
+    // Form code is somewhere near line 992 of js_footer.php
+    $eids = get_input('eids');
+    // sel_eid comes from the main page <select>, whereas 'eids' above this line comes from the grid select via javascript.
+    $sel_eid = get_input('sel_eid');
+    if ($eids) {
+        $pieces = explode(",", $eids);
+        foreach ($pieces as $eid) {
+            $sel_eid[] .= $eid;
+            $qstring .= "&eids[]=$eid";
+        }
+    }
+    $eids = $sel_eid;
+    if ($eids) {
+        if (!in_array('0', $eids)) {
+            $where .= " AND eid > 0 ";
+        }
+        foreach ($eids as $eid) {
+            $qstring .= "&sel_eid[]=$eid";
+        }
+    }
+    // portlet-programs
+    $programs = get_input('programs');
+    if ($programs) {
+        foreach ($programs as $program) {
+            if (!preg_match("/^\d+/m", $program)) {
+                $program = prg2crc($program);
+            }
+            $qstring .= "&programs[]=$program";
+        }
+    }
+    // portlet-severities
+    $severities = get_input('severities');
+    if ($severities) {
+        foreach ($severities as $severity) {
+            if (!preg_match("/^\d+/m", $severity)) {
+                $severity = sev2int($severity);
+            }
+            $qstring .= "&severities[]=$severity";
+        }
+    }
+    // portlet-facilities
+    $facilities = get_input('facilities');
+    if ($facilities) {
+        foreach ($facilities as $facility) {
+            if (!preg_match("/^\d+/m", $facility)) {
+                $facility = fac2int($facility);
+            }
+            $qstring .= "&facilities[]=$facility";
+        }
+    }
     $msg_mask = get_input('msg_mask');
     $msg_mask = preg_replace ('/^Search through .*\sMessages/m', '', $msg_mask);
     $msg_mask_oper = get_input('msg_mask_oper');
     $qstring .= "&msg_mask=$msg_mask&msg_mask_oper=$msg_mask_oper";
-    if($msg_mask) {
-        switch ($msg_mask_oper) {
-            case "=":
-                $where.= " AND msg='$msg_mask'";  
-            break;
-
-            case "!=":
-                $where.= " AND msg='$msg_mask'";  
-            break;
-
-            case "LIKE":
-                $where.= " AND msg LIKE '%$msg_mask%'";  
-            break;
-
-            case "! LIKE":
-                $where.= " AND msg NOT LIKE '%$msg_mask%'";  
-            break;
-
-            case "RLIKE":
-                $where.= " AND msg RLIKE '$msg_mask'";  
-            break;
-
-            case "! RLIKE":
-                $where.= " AND msg NOT LIKE '$msg_mask'";  
-            break;
-        }
-    }
     $notes_mask = get_input('notes_mask');
     $notes_mask = preg_replace ('/^Search through .*\sNotes/m', '', $notes_mask);
     $notes_mask_oper = get_input('notes_mask_oper');
     $notes_andor = get_input('notes_andor');
     $qstring .= "&notes_mask=$notes_mask&notes_mask_oper=$notes_mask_oper&notes_andor=$notes_andor";
-    if($notes_mask) {
-        switch ($notes_mask_oper) {
-            case "=":
-                $where.= " AND notes='$notes_mask'";  
-            break;
-
-            case "!=":
-                $where.= " AND notes='$notes_mask'";  
-            break;
-
-            case "LIKE":
-                $where.= " AND notes LIKE '%$notes_mask%'";  
-            break;
-
-            case "! LIKE":
-                $where.= " AND notes NOT LIKE '%$notes_mask%'";  
-            break;
-
-            case "RLIKE":
-                $where.= " AND notes RLIKE '$notes_mask'";  
-            break;
-
-            case "! RLIKE":
-                $where.= " AND notes NOT LIKE '$notes_mask'";  
-            break;
-
-            case "EMPTY":
-                $where.= " AND notes = ''";  
-            break;
-
-            case "! EMPTY":
-                $where.= " AND notes != ''";  
-            break;
-        }
-    } else {
-        if($notes_mask_oper) {
-            switch ($notes_mask_oper) {
-                case "EMPTY":
-                    $where.= " AND notes = ''";  
-                break;
-
-                case "! EMPTY":
-                    $where.= " AND notes != ''";  
-                break;
-            }
-        }
-    }
-
     // portlet-datepicker 
     $fo_checkbox = get_input('fo_checkbox');
     $qstring .= "&fo_checkbox=$fo_checkbox";
@@ -305,7 +183,6 @@ if ($facilities) {
                 $start .= " $fo_time_start"; 
                 $end .= " $fo_time_end"; 
             }
-            $where.= " AND fo BETWEEN '$start' AND '$end'";
         }
     }
     // LO
@@ -320,7 +197,6 @@ if ($facilities) {
                 $end .= " $lo_time_end"; 
             }
             if ($date_andor=='') $date_andor = 'AND';
-            $where.= " ".strtoupper($date_andor)." lo BETWEEN '$start' AND '$end'";
         }
     }
     //------------------------------------------------------------
@@ -358,7 +234,6 @@ if ($facilities) {
                 $dupop = "<=";
             break;
         }
-        $where.= " AND counter $dupop '$dupcount'"; 
     }
     $orderby = get_input('orderby');
     $orderby_orig = $orderby;
@@ -398,18 +273,8 @@ if ($facilities) {
         $topx = "top";
     }
     $groupby = get_input('groupby');
-    if ($groupby === "eid") {
-        $where .= " AND eid > 0 ";
-    }
-    if ($groupby === "mne") {
-        $where .= " AND mne !='".mne2crc('None')."'";
-    }
     $qstring .= "&groupby=$groupby";
     $groupby = (!empty($groupby)) ? $groupby : "host";
-    if ($groupby) {
-        $dbcolumn = $groupby;
-        $groupby = " GROUP BY $groupby";  
-    }
     $chart_type = get_input('chart_type');
     $qstring .= "&chart_type=$chart_type";
     $chart_type = (!empty($chart_type)) ? $chart_type : "pie";
@@ -421,8 +286,8 @@ if ($facilities) {
     // ------------------------------------------------------
     // BEGIN Chart Generation
     // ------------------------------------------------------
-    $dbcolumn = (!empty($dbcolumn)) ? $dbcolumn : "host";
-    switch ($dbcolumn) {
+    $groupby = preg_replace ('/_crc/m', '', $groupby);
+    switch ($groupby) {
         case "host":
             $propername = "Hosts";
         break;
@@ -448,157 +313,136 @@ if ($facilities) {
     $ucTopx = ucfirst($topx);
 
 
+    // Encode POST/GET into json and send it off to search:
+    if ($_POST) {
+        $json_o = search(json_encode($_POST));
+    } else {
+        $json_o = search(json_encode($_GET));
+    }
+
+
+    // If something goes wrong, search() will return ^'SPX_ERROR'
+    if (!preg_match("/^Sphinx Error:/", "$json_o")) {
+
+        // Decode returned json object into an array:
+        $sphinx_results = json_decode($json_o, true);
+        //echo "<pre>";
+        // die(print_r($sphinx_results));
+
+        $total = $sphinx_results['total_found'];
+
+        if ($sphinx_results['total_found'] > 0) {
+            //  echo "<pre>\n";
+            //  die(print_r($sphinx_results));
+            //  echo "</pre>\n";
+            $where = " where id IN (";
+            foreach ( $sphinx_results["matches"] as $doc => $docinfo ) {
+                $where .= "'$doc',";
+                $counters[] .= $sphinx_results["matches"]["$doc"]['attrs']['@count'];
+            }
+            $where = rtrim($where, ",");
+            $where .= ")";
+        } else {
+            // Negate search since sphinx returned 0 hits
+            $where = "WHERE 1<1";
+            //  die(print_r($sphinx_results));
+        }
+    } else {
+        $lzbase = str_replace("html/includes/portlets", "", dirname( __FILE__ ));
+        $dlg_start = '<div id="error_dialog" title="Error!">';
+        $dlg_end = "<br><br>Any results displayed are taken directly from MySQL which are significantly slower!";
+        $dlg_end .= "</div>";
+        if (preg_match("/.*failed to open.*spd/", "$json_o")) {
+            $error = "The Sphinx indexes are missing!<br>\n";
+            $error .= "Please be sure you have run the indexer on your server by typing:<br><br>\n";
+            $error .= "sudo ${lzbase}sphinx/indexer.sh full<br><br>";
+        } elseif (preg_match("/.*connection to.*failed.*/", "$json_o")) {
+            $error = "The Sphinx daemon is not running!<br>\n";
+            $error .= "Please be sure you have started the daemon on your server by typing:<br><br>\n";
+            $error .= "sudo ${lzbase}sphinx/bin/searchd -c ${lzbase}sphinx/sphinx.conf<br><br>";
+        } else {
+            $error = $json_o;
+        }
+        echo $dlg_start;
+        echo $error;
+        echo $dlg_end;
+        ?>
+            <script type="text/javascript">
+            $(document).ready(function(){
+                $( "#error_dialog" ).dialog({
+                    modal: true,
+                    width: "50%", 
+                    height: 240, 
+                    buttons: {
+                    Ok: function() {
+                        $( this ).dialog( "close" );
+                        }
+                    }
+                 });
+        }); // end doc ready
+        </script>
+            <?php
+    }
+
+
     switch ($show_suppressed):
         case "suppressed":
-                $sql = "SELECT id, host, facility, severity, program, msg, mne, eid, fo, lo, SUM(counter) as count FROM ".$_SESSION['TBL_MAIN']."_suppressed $where $groupby $orderby $order LIMIT $limit";
-        break;
-        case "unsuppressed":
-                $sql = "SELECT id, host, facility, severity, program, msg, mne, eid, fo, lo, SUM(counter) as count FROM ".$_SESSION['TBL_MAIN']."_unsuppressed  $where $groupby $orderby $order LIMIT $limit";
-        break;
-        default:
-                $sql = "SELECT id, host, facility, severity, program, msg, mne, eid, fo, lo, SUM(counter) as count FROM ".$_SESSION['TBL_MAIN'] ."  $where $groupby $orderby $order LIMIT $limit";
+        $sql = "SELECT * FROM ".$_SESSION['TBL_MAIN']."_suppressed $where";
+    break;
+    case "unsuppressed":
+        $sql = "SELECT * FROM ".$_SESSION['TBL_MAIN']."_unsuppressed $where";
+    break;
+    default:
+    $sql = "SELECT * FROM ".$_SESSION['TBL_MAIN'] ." $where";
     endswitch;
 
     $result = perform_query($sql, $dbLink, "portlet-chart_adhoc");
 
 
-    switch ($chart_type) {
-        case "line":
-            if ($start) {
-            $title = new title( "$ucTopx $limit $propername Report\nGenerated on " .date("D M d Y")."\n<br>(Date Range: $start - $end)" );
-            } else {
-            $title = new title( "$ucTopx $limit $propername Report\nGenerated on " .date("D M d Y")."\n" );
-            }
-        $line_dot = new line();
-        if(num_rows($result) >= 1) {
-            while ($line = fetch_array($result)) {
-                $ids[] = $line['id'];
-                $dotValues[] = intval($line['count']);
-                $d = new dot(intval($line['count']));
-                $dotLabels[] = $d->tooltip($line['host']."<br>#val#");
-                switch ($dbcolumn) {
-                    case 'mne':
-                        $x_horiz_labels[] = crc2mne($line[$dbcolumn]);
-                        break;
-                    case 'program':
-                        $x_horiz_labels[] = crc2prg($line[$dbcolumn]);
-                        break;
-                    case 'facility':
-                        $x_horiz_labels[] = int2fac($line[$dbcolumn]);
-                        break;
-                    case 'severity':
-                        $x_horiz_labels[] = int2sev($line[$dbcolumn]);
-                        break;
-                    default:
-                        $x_horiz_labels[] = $line[$dbcolumn];
-                }
-            }
-        } else {
-            $dotValues[] = 0;
-            $x_horiz_labels[] =  ""; 
-            $title = new title( "$ucTopx $limit $propername Report\nNo results match your search criteria"."\n" );
-        }
-        $line_dot->set_values( $dotLabels );
-
-        $chart = new open_flash_chart();
-        $chart->set_title( $title );
-        $chart->add_element( $line_dot );
-        $y = new y_axis();
-        // grid steps:
-        $y->set_range( 0, max($dotValues), round(max($dotValues)/10));
-        $chart->set_y_axis( $y );
-        $x_labels = new x_axis_labels();
-        $x_labels->set_vertical();
-        $x_labels->set_labels( $x_horiz_labels );
-        $x = new x_axis();
-        $x->set_labels( $x_labels );
-        $chart->set_x_axis( $x );
-        break;
-
-        case "bar":
-            if ($start) {
-            $title = new title( "$ucTopx $limit $propername Report\nGenerated on " .date("D M d Y")."\n<br>(Date Range: $start - $end)" );
-            } else {
-            $title = new title( "$ucTopx $limit $propername Report\nGenerated on " .date("D M d Y")."\n" );
-            }
-        $bar = new bar_rounded_glass();
-        if(num_rows($result) >= 1) {
-            while ($line = fetch_array($result)) {
-                $ids[] = $line['id'];
-                $dotValues[] = intval($line['count']);
-                $d = new dot(intval($line['count']));
-                $dotLabels[] = $d->tooltip($line['host']."<br>#val#");
-                switch ($dbcolumn) {
-                    case 'mne':
-                        $x_horiz_labels[] = crc2mne($line[$dbcolumn]);
-                        break;
-                    case 'program':
-                        $x_horiz_labels[] = crc2prg($line[$dbcolumn]);
-                        break;
-                    case 'facility':
-                        $x_horiz_labels[] = int2fac($line[$dbcolumn]);
-                        break;
-                    case 'severity':
-                        $x_horiz_labels[] = int2sev($line[$dbcolumn]);
-                        break;
-                    default:
-                        $x_horiz_labels[] = $line[$dbcolumn];
-                }
-            }
-        } else {
-            $dotValues[] = 0;
-            $x_horiz_labels[] =  "No results found"; 
-            $title = new title( "$ucTopx $limit $propername Report\nNo results match your search criteria"."\n" );
-        }
-        // Set bar values
-        $bar->set_values( $dotValues );
-        $chart = new open_flash_chart();
-        $chart->set_title( $title );
-        $chart->add_element( $bar );
-        //
-        // create a Y Axis object
-        //
-        $y = new y_axis();
-        // grid steps:
-        $y->set_range( 0, max($dotValues), round(max($dotValues)/10));
-        $chart->set_y_axis( $y );
-
-        $x_labels = new x_axis_labels();
-        $x_labels->set_vertical();
-        $x_labels->set_labels( $x_horiz_labels );
-        $x = new x_axis();
-        $x->set_labels( $x_labels );
-        $chart->set_x_axis( $x );
-        break;
-
-        // Default is Pie
-        default:
+    if ($start) {
+        $title = new title( "$ucTopx $limit $propername (by $sortname) Report\nGenerated on " .date("D M d Y")."\n<br>(Date Range: $start - $end)" );
+    } else {
+        $title = new title( "$ucTopx $limit $propername (by $sortname) Report\nGenerated on " .date("D M d Y")."\n" );
+    }
+    if (($groupby == "msg") && ($chart_type !== "pie")) {
+        $dlg_start = '<div id="error_dialog" title="Warning">';
+        $dlg_end = "<center><br><br>When grouping by Message, Pie charts should be used.<br>Most often, messages are too long to place across the X labels on line and bar charts.<br>The results will be shown using a Pie</center>";
+        $dlg_end .= "</div>";
+        echo $dlg_start;
+        echo $dlg_end;
+        ?>
+            <script type="text/javascript">
+            $(document).ready(function(){
+                $( "#error_dialog" ).dialog({
+                    modal: true,
+                    width: "50%", 
+                    height: 240, 
+                    buttons: {
+                    Ok: function() {
+                        $( this ).dialog( "close" );
+                        }
+                    }
+                 });
+        }); // end doc ready
+        </script>
+            <?php
+        $chart_type="pie";
+    }
+    if ($chart_type == "pie") {
         $pievalues = array();
-        if ($start) {
-            $title = new title( "$ucTopx $limit $propername (by $sortname) Report\nGenerated on " .date("D M d Y")."\n<br>(Date Range: $start - $end)" );
-        } else {
-            $title = new title( "$ucTopx $limit $propername (by $sortname) Report\nGenerated on " .date("D M d Y")."\n" );
-        }
         $ctype = new pie();
         if(num_rows($result) >= 1) {
+            $i=0;
             while ($line = fetch_array($result)) {
-                switch ($dbcolumn) {
-                    case 'mne':
-                        $pievalues[] = new pie_value(intval($line['count']),  crc2mne($line[$dbcolumn]));
-                        break;
-                    case 'program':
-                        $pievalues[] = new pie_value(intval($line['count']),  crc2prg($line[$dbcolumn]));
-                        break;
-                    case 'facility':
-                        $pievalues[] = new pie_value(intval($line['count']),  int2fac($line[$dbcolumn]));
-                        break;
-                    case 'severity':
-                        $pievalues[] = new pie_value(intval($line['count']),  int2sev($line[$dbcolumn]));
-                        break;
-                    default:
-                        $pievalues[] = new pie_value(intval($line['count']),  $line[$dbcolumn]);
-                }
+                $name = $line[$groupby];
+                if ($groupby == "program") { $name = crc2prg($name); }
+                if ($groupby == "facility") { $name = int2fac($name); }
+                if ($groupby == "severity") { $name = int2sev($name); }
+                if ($groupby == "mne") { $name = crc2mne($name); }
+                // die(print_r($line));
+                $pievalues[] = new pie_value(intval($counters[$i]),  $name);
                 $ids[] = $line['id'];
+                $i++;
             }
         } else {
             $pievalues[] = new pie_value(intval(0),  "No results found"); 
@@ -645,6 +489,57 @@ if ($facilities) {
         $chart = new open_flash_chart();
         $chart->set_title( $title );
         $chart->add_element( $ctype );
+    } else {
+
+        if( $chart_type == "line") {
+            $bar = new line();
+        } else {
+            $bar = new bar_rounded_glass();
+        }
+        if(num_rows($result) >= 1) {
+            $i=0;
+            while ($line = fetch_array($result)) {
+                $ids[] = $line['id'];
+                $dotValues[] = intval($counters[$i]);
+                $d = new dot(intval($counters[$i]));
+                $dotLabels[] = $d->tooltip($line['host']."<br>#val#");
+                $name = $line[$groupby];
+                if ($groupby == "program") { $name = crc2prg($name); }
+                if ($groupby == "facility") { $name = int2fac($name); }
+                if ($groupby == "severity") { $name = int2sev($name); }
+                if ($groupby == "mne") { $name = crc2mne($name); }
+                $x_horiz_labels[] = ($name);
+                $i++;
+            }
+            // echo "<pre>";
+            // die(print_r($dotLabels));
+        } else {
+            $dotValues[] = 0;
+            $x_horiz_labels[] =  "No results found"; 
+            $title = new title( "$ucTopx $limit $propername Report\nNo results match your search criteria"."\n" );
+        }
+        // Set bar values
+        // echo "<pre>";
+        // die(print_r($dotValues));
+        $bar->set_values( $dotValues );
+        $chart = new open_flash_chart();
+        $chart->set_title( $title );
+        $chart->add_element( $bar );
+        //
+        // create a Y Axis object
+        //
+        $y = new y_axis();
+        // grid steps:
+        $y->set_range( 0, max($dotValues), round(max($dotValues)/10));
+        $chart->set_y_axis( $y );
+
+        $x_labels = new x_axis_labels();
+        $x_labels->set_vertical();
+        $x_labels->set_labels( $x_horiz_labels );
+        $x = new x_axis();
+        $x->set_labels( $x_labels );
+        $chart->set_x_axis( $x );
+
     }
 }
 
@@ -686,6 +581,7 @@ function pclick_host(index)
     value = value.replace(/"/g, "");
     var postvars = $("#postvars").val();
     postvars = postvars.replace(/&hosts=/g, "");
+    postvars = postvars.replace(/&groupby=.*&/g, "&");
     var url = (postvars + "&sel_hosts[]=" + value);
     url = url.replace(/Graph/g, "Results");
     self.location=url;
@@ -696,6 +592,7 @@ function pclick_msg(index)
     value = value.replace(/"/g, "");
     var postvars = $("#postvars").val();
     postvars = postvars.replace(/&msg_mask=/g, "");
+    postvars = postvars.replace(/&groupby=.*&/g, "&");
     var url = (postvars + "&msg_mask=" + value);
     url = url.replace(/Graph/g, "Results");
     self.location=url;
@@ -706,6 +603,7 @@ function pclick_prg(index)
     value = value.replace(/"/g, "");
     var postvars = $("#postvars").val();
     postvars = postvars.replace(/&programs[]=/g, "");
+    postvars = postvars.replace(/&groupby=.*&/g, "&");
     var url = (postvars + "&programs[]=" + value);
     url = url.replace(/Graph/g, "Results");
     self.location=url;
@@ -716,6 +614,7 @@ function pclick_fac(index)
     value = value.replace(/"/g, "");
     var postvars = $("#postvars").val();
     postvars = postvars.replace(/&facilities[]=/g, "");
+    postvars = postvars.replace(/&groupby=.*&/g, "&");
     var url = (postvars + "&facilities[]=" + value);
     url = url.replace(/Graph/g, "Results");
     self.location=url;
@@ -726,6 +625,7 @@ function pclick_sev(index)
     value = value.replace(/"/g, "");
     var postvars = $("#postvars").val();
     postvars = postvars.replace(/&severities[]=/g, "");
+    postvars = postvars.replace(/&groupby=.*&/g, "&");
     var url = (postvars + "&severities[]=" + value);
     url = url.replace(/Graph/g, "Results");
     self.location=url;
@@ -736,6 +636,7 @@ function pclick_mne(index)
     value = value.replace(/"/g, "");
     var postvars = $("#postvars").val();
     postvars = postvars.replace(/&mnemonics[]=/g, "");
+    postvars = postvars.replace(/&groupby=.*&/g, "&");
     var url = (postvars + "&sel_mne[]=" + value);
     url = url.replace(/Graph/g, "Results");
     self.location=url;
@@ -747,6 +648,7 @@ function pclick_eid(index)
     value = value.replace(/"/g, "");
     var postvars = $("#postvars").val();
     postvars = postvars.replace(/&eids=/g, "");
+    postvars = postvars.replace(/&groupby=.*&/g, "&");
     var url = (postvars + "&sel_eid[]=" + value);
     url = url.replace(/Graph/g, "Results");
     self.location=url;
@@ -874,13 +776,64 @@ $(".portlet-header .ui-icon-disk").click(function() {
 $postvars = $qstring;
 $qstring = myURL().$qstring;
 if ($_SESSION['DEBUG'] > 0 ) {
-    echo "<u><b>The SQL query:</u></b><br>\n";
-    $sql = str_replace("AND", "<br>AND", $sql);
-    $sql = str_replace("OR", "<br>OR", $sql);
-    echo "$sql\n"; 
-    echo "<br><br><u><b>Post Variables:</u></b><br>\n";
-    $str = str_replace("&", "<br>&", $postvars);
-    echo "$str\n<br>";
+        if (($_SESSION['SPX_ENABLE'] == "1") && ($msg_mask !== '')) {
+            echo "<pre  class=\"code\">";
+            echo "<b><u>Message Text Query</u></b><pre class=\"code\">$msg_mask</pre><br>\n";
+            echo "</pre><br><br>\n";
+        }
+        if ($_SESSION['SPX_ENABLE'] == "1") {
+            $qtype = get_input('qtype');
+            echo "<b><u>Query type</u></b><br>";
+            echo "<pre  class=\"code\">";
+            echo "$q_type<br><br>\n";
+            echo "</pre><br><br>\n";
+            echo "<b><u>Results</u></b><br>\n";
+            echo "<pre  class=\"code\">";
+            echo "Found ".$sphinx_results['total_found']." documents in ".$sphinx_results['time']." seconds<br>\n";
+            echo count($sphinx_results['words'])." search terms:<br>\n";
+            if (is_array($sphinx_results['words'])) {
+                foreach ($sphinx_results['words'] as $key=>$word) {
+                    echo "&nbsp;&nbsp;&nbsp;&nbsp;\"$key\" found ".$sphinx_results['words'][$key]['hits']." times<br>\n";
+                }
+            }
+            echo "</pre><br><br>\n";
+            echo "<br>\n";
+        }
+        // echo "<pre>\n";
+        // die(print_r($sphinx_results));
+        // echo "</pre>\n";
+        echo "<u><b>The SQL query:</u></b><br>\n";
+        $sql = str_replace("AND", "<br>AND", $sql);
+        $sql = str_replace("OR", "<br>OR", $sql);
+        echo "<pre  class=\"code\">";
+        echo "$sql\n"; 
+        echo "</pre><br><br>\n";
+        echo "<br><br><u><b>Post Variables:</u></b><br>\n";
+        echo "<pre  class=\"code\">";
+        print_r($_POST);
+        echo "</pre><br><br>\n";
+        if ($_GET) {
+            echo "<br><br><u><b>GET Variables:</u></b><br>\n";
+            echo "<pre  class=\"code\">";
+            print_r($_GET);
+            echo "<br><br>\n";
+        }
+        echo "</pre><br><br>\n";
+        echo "<br><br><u><b>Array formatted response from Sphinx search()</u></b><br>\n";
+        echo "<pre  class=\"code\">";
+        print_r($sphinx_results);
+        echo "</pre><br><br>\n";
+        echo "<br><br><u><b>JSON formatted response from Sphinx search()</u></b><br>\n";
+        echo "<pre  class=\"code\">";
+        echo "$json_o<br><br>\n";
+        echo "</pre><br><br>\n";
+        $end_time = microtime(true);
+        echo "Page generated in " . round(($end_time - $start_time),5) . " seconds\n";
+    }
+if (($_SESSION['SPX_ENABLE'] == "1") && ($tail == "off")) {
+    if ($sphinx_results['total'] > 0) {
+        echo "&nbsp;&nbsp;&nbsp;&nbsp;".commify($total)." matches found in " . $sphinx_results['time']. " seconds\n";
+    }
 }
 ?>
 <div class='XLButtons'>

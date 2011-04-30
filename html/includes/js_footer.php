@@ -1456,14 +1456,15 @@ $(document).ready(function(){
 <!-- End Cookies -->
 
 <!-- Begin Feedback Button -->
-<?php if ($_SESSION['FEEDBACK'] == "1") { 
- echo '<script type="text/javascript">';
- echo '(function() {';
-  echo 'var uv = document.createElement(\'script\'); uv.type = \'text/javascript\'; uv.async = true;';
-  echo 'uv.src = (\'https:\' == document.location.protocol ? \'https://\' : \'http://\') + \'widget.uservoice.com/F0qq3CXmGGHuLQx6tkjizQ.js\';';
-  echo 'var s = document.getElementsByTagName(\'script\')[0]; s.parentNode.insertBefore(uv, s);';
-  echo '})();';
- echo '</script>';
+<?php if ($_SESSION['FEEDBACK'] == "1") { ?>
+<script type="text/javascript">
+  (function() {
+    var uv = document.createElement('script'); uv.type = 'text/javascript'; uv.async = true;
+    uv.src = ('https:' == document.location.protocol ? 'https://' : 'http://') + 'widget.uservoice.com/HyvsbYr0NYlAPK9IiN6BQ.js';
+    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(uv, s);
+  })();
+</script>
+        <?php
 } ?>
 <!-- End Feedback Button -->
 

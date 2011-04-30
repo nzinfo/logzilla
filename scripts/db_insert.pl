@@ -707,7 +707,7 @@ sub do_msg {
 
 
         # Catch-All:
-        $prg =~ s/\d+/Cisco Syslog/; # Cisco Messages send the program as an int string.
+        $prg =~ s/^\d+$/Cisco Syslog/; # Cisco Messages send the program as an int string.
         if (!$prg) {
             $prg = "Syslog";
         }

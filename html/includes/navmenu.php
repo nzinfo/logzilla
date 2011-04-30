@@ -91,7 +91,7 @@ if ($_SERVER["REQUEST_URI"] == $_SESSION['SITE_URL'] . "index.php") {
             <ul>
             <li><a href="#">By Count</a>
                 <ul>
-                <li><a href="<?php echo $_SESSION['SITE_URL']?>?page=Graph&show_suppressed=all&limit=10&orderby=counter&order=DESC&groupby=host&chart_type=pie" onclick="$(this).animate({ opacity: 0.3 }, 500 );">Hosts</a></li>
+                <li><a href="<?php echo $_SESSION['SITE_URL']?>?page=Graph&show_suppressed=all&limit=10&orderby=counter&order=DESC&groupby=host_crc&chart_type=pie" onclick="$(this).animate({ opacity: 0.3 }, 500 );">Hosts</a></li>
                 <li><a onclick="$(this).animate({ opacity: 0.3 }, 500 );" href="<?php echo $_SESSION['SITE_URL']?>?page=Graph&show_suppressed=all&limit=10&orderby=counter&order=DESC&groupby=program&chart_type=pie">Programs</a></li>
                 <li><a onclick="$(this).animate({ opacity: 0.3 }, 500 );" href="<?php echo $_SESSION['SITE_URL']?>?page=Graph&show_suppressed=all&limit=10&orderby=counter&order=DESC&groupby=severity&chart_type=pie">Severities</a></li>
                 <li><a onclick="$(this).animate({ opacity: 0.3 }, 500 );" href="<?php echo $_SESSION['SITE_URL']?>?page=Graph&show_suppressed=all&limit=10&orderby=counter&order=DESC&groupby=facility&chart_type=pie">Facilities</a></li>
@@ -103,7 +103,7 @@ if ($_SERVER["REQUEST_URI"] == $_SESSION['SITE_URL'] . "index.php") {
             </li>
             <li><a href="#">By LO</a>
                 <ul>
-                <li><a onclick="$(this).animate({ opacity: 0.3 }, 500 );" href="<?php echo $_SESSION['SITE_URL']?>?page=Graph&show_suppressed=all&limit=10&orderby=lo&order=DESC&groupby=host&chart_type=pie">Hosts</a></li>
+                <li><a onclick="$(this).animate({ opacity: 0.3 }, 500 );" href="<?php echo $_SESSION['SITE_URL']?>?page=Graph&show_suppressed=all&limit=10&orderby=lo&order=DESC&groupby=host_crc&chart_type=pie">Hosts</a></li>
                 <li><a onclick="$(this).animate({ opacity: 0.3 }, 500 );" href="<?php echo $_SESSION['SITE_URL']?>?page=Graph&show_suppressed=all&limit=10&orderby=lo&order=DESC&groupby=program&chart_type=pie">Programs</a></li>
                 <li><a onclick="$(this).animate({ opacity: 0.3 }, 500 );" href="<?php echo $_SESSION['SITE_URL']?>?page=Graph&show_suppressed=all&limit=10&orderby=lo&order=DESC&groupby=severity&chart_type=pie">Severities</a></li>
                 <li><a onclick="$(this).animate({ opacity: 0.3 }, 500 );" href="<?php echo $_SESSION['SITE_URL']?>?page=Graph&show_suppressed=all&limit=10&orderby=lo&order=DESC&groupby=facility&chart_type=pie">Facilities</a></li>
@@ -112,7 +112,7 @@ if ($_SERVER["REQUEST_URI"] == $_SESSION['SITE_URL'] . "index.php") {
             </li>
             <li><a href="#">By Facility</a>
                 <ul>
-                <li><a onclick="$(this).animate({ opacity: 0.3 }, 500 );" href="<?php echo $_SESSION['SITE_URL']?>?page=Graph&show_suppressed=all&limit=10&orderby=facility&order=DESC&groupby=host&chart_type=pie">Hosts</a></li>
+                <li><a onclick="$(this).animate({ opacity: 0.3 }, 500 );" href="<?php echo $_SESSION['SITE_URL']?>?page=Graph&show_suppressed=all&limit=10&orderby=facility&order=DESC&groupby=host_crc&chart_type=pie">Hosts</a></li>
                 <li><a onclick="$(this).animate({ opacity: 0.3 }, 500 );" href="<?php echo $_SESSION['SITE_URL']?>?page=Graph&show_suppressed=all&limit=10&orderby=facility&order=DESC&groupby=program&chart_type=pie">Programs</a></li>
                 <li><a onclick="$(this).animate({ opacity: 0.3 }, 500 );" href="<?php echo $_SESSION['SITE_URL']?>?page=Graph&show_suppressed=all&limit=10&orderby=facility&order=DESC&groupby=severity&chart_type=pie">Severities</a></li>
                 <li><a onclick="$(this).animate({ opacity: 0.3 }, 500 );" href="<?php echo $_SESSION['SITE_URL']?>?page=Graph&show_suppressed=all&limit=10&orderby=facility&order=DESC&groupby=facility&chart_type=pie">Facilities</a></li>
@@ -121,7 +121,7 @@ if ($_SERVER["REQUEST_URI"] == $_SESSION['SITE_URL'] . "index.php") {
             </li>
             <li><a href="#">By Severity</a>
                 <ul>
-                <li><a onclick="$(this).animate({ opacity: 0.3 }, 500 );" href="<?php echo $_SESSION['SITE_URL']?>?page=Graph&show_suppressed=all&limit=10&orderby=severity&order=DESC&groupby=host&chart_type=pie">Hosts</a></li>
+                <li><a onclick="$(this).animate({ opacity: 0.3 }, 500 );" href="<?php echo $_SESSION['SITE_URL']?>?page=Graph&show_suppressed=all&limit=10&orderby=severity&order=DESC&groupby=host_crc&chart_type=pie">Hosts</a></li>
                 <li><a onclick="$(this).animate({ opacity: 0.3 }, 500 );" href="<?php echo $_SESSION['SITE_URL']?>?page=Graph&show_suppressed=all&limit=10&orderby=severity&order=DESC&groupby=program&chart_type=pie">Programs</a></li>
                 <li><a onclick="$(this).animate({ opacity: 0.3 }, 500 );" href="<?php echo $_SESSION['SITE_URL']?>?page=Graph&show_suppressed=all&limit=10&orderby=severity&order=DESC&groupby=severity&chart_type=pie">Severities</a></li>
                 <li><a onclick="$(this).animate({ opacity: 0.3 }, 500 );" href="<?php echo $_SESSION['SITE_URL']?>?page=Graph&show_suppressed=all&limit=10&orderby=severity&order=DESC&groupby=facility&chart_type=pie">Facilities</a></li>

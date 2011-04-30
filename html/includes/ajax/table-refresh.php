@@ -351,7 +351,7 @@ $qstring .= "&graphtype=$graphtype";
 if ($orderby) {
     // $where.= " ORDER BY $orderby";  
     // manually set orderby because this is the refresh page
-    $where.= " ORDER BY lo";  
+    $where.= " ORDER BY id";  
 }
 if ($order) {
     // manually set order because this is the refresh page
