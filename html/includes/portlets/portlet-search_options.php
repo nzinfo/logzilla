@@ -127,6 +127,8 @@ if ($_SESSION['SHOWCOUNTS'] == "1") {
         <option>150
         <option>250
         <option>500
+        <option>1000
+        <option>5000
         </select>
         </td>
      </tr>
@@ -135,14 +137,16 @@ if ($_SESSION['SHOWCOUNTS'] == "1") {
         <td>Group By</td>
         <td>
         <select name="groupby" id="groupby">
-        <option selected value="host">Host</option>
-        <option value="msg">Message</option>
+        <option selected value="">None</option>
+        <option  value="host_crc">Host</option>
+        <option value="msg_crc">Message</option>
         <option value="program">Program</option>
         <option value="facility">Facility</option>
         <option value="severity">Severity</option>
         <option value="mne">Mnemonic</option>
+        <option value="notes_crc">Notes</option>
         <?php if($_SESSION['SNARE'] == "1") {?>
-        <option value="eids">Windows EventId</option>
+        <option value="eid">Windows EventId</option>
         <?php } ?>
         </select>
         </td>
@@ -152,7 +156,8 @@ if ($_SESSION['SHOWCOUNTS'] == "1") {
         <td>Chart Type</td>
         <td>
         <select name="chart_type" id="chart_type">
-        <option selected value="pie">Pie</option>
+        <option selected value="">None</option>
+        <option value="pie">Pie</option>
         <option value="bar">Bar</option>
         <option value="line">Line</option>
         </select>

@@ -1,5 +1,18 @@
 CHANGELOG
 
+3.1.287 - Various
+CD:
+ - Updated 'feedback' button to say 'idea box' and use the LZ Blue color.
+ - Small fix for detecting Snare program names in db_insert (it was concatenating Cisco Syslog and the Snare Program).
+ - Major speed enhancements added for Sphinx queries.
+ - Replaced Adhoc chart MySQL queries with Sphinx (MUCH faster charting now).
+ - Added group sorting to Sphinx
+ - Added grouping by message to Charts (will provide top messages)
+ - Added error check for setting high result limits (more than 25) when Auto refresh is enabled.
+ - Updated Sphinx max_matches to 5000 (was limited to 1000)
+ - Updated limit in search options to 5000 (was 500).
+ - Added warning dialog when limit > 500 that the waiting will be on the client browser side and not the server.
+
 3.1.286 - Php-syslog-ng upgrades
 CD:
  - Completed scripting for upgrade path from the old php-syslog-ng v2.x style databases.

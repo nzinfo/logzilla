@@ -115,7 +115,28 @@ $q_type = get_input('q_type');
 $tail = get_input('tail');
 if (!$tail) { $tail = "off"; }
 $qstring .= "&tail=$tail";
-
+$limit = get_input('limit');
+$limit = (!empty($limit)) ? $limit : "10";
+$qstring .= "&limit=$limit";
+if (($tail > 0) && ($limit > 25)) {
+    ?>
+    <script type="text/javascript">
+        $(document).ready(function(){
+                $( "<div id='tail_error'><center><br><br>The Maximum result set for the auto refresh page is 25.<br>Any more than that would simply scroll off the page before being seen.<br>Please check your 'limit' setting in the 'Search Options' portlet.</div></center>" ).dialog({
+                    modal: true,
+                    width: "50%", 
+                    height: 240, 
+                    buttons: {
+                    Ok: function() {
+                        $( this ).dialog( "close" );
+                        }
+                    }
+                 });
+        }); // end doc ready
+    </script>
+    <?php
+    $limit = 25;
+};
 // Special - this gets posted via javascript since it comes from the hosts grid
 // Form code is somewhere near line 992 of js_footer.php
 $hosts = get_input('hosts');
@@ -257,9 +278,6 @@ if ($facilities) {
     $where .= ")";
 }
 
-$limit = get_input('limit');
-$limit = (!empty($limit)) ? $limit : "10";
-$qstring .= "&limit=$limit";
 
 // portlet-sphinxquery
 $msg_mask_get = get_input('msg_mask');
@@ -715,6 +733,24 @@ if (($_SESSION['SPX_ENABLE'] == "1") && ($tail == "off")) {
     if ($sphinx_results['total'] > 0) {
         echo "&nbsp;&nbsp;&nbsp;&nbsp;".commify($total)." matches found in " . $sphinx_results['time']. " seconds\n";
     }
+if ($limit > 500) {
+    ?>
+    <script type="text/javascript">
+        $(document).ready(function(){
+                $( "<div id='limit_warning'><center><br><br>Setting the result set higher than 500 may cause your browser to timeout.<br>Note that this is a client side browser limitation and not a server issue.<br>(The server returned <?php echo commify($total)." matches in " . $sphinx_results['time']?> seconds.)</div></center>" ).dialog({
+                    modal: true,
+                    width: "50%", 
+                    height: 240, 
+                    buttons: {
+                    Ok: function() {
+                        $( this ).dialog( "close" );
+                        }
+                    }
+                 });
+        }); // end doc ready
+    </script>
+    <?php
+};
 }
 ?>
   <input type="hidden" name="tail" id="tail" value="<?php echo $tail?>">

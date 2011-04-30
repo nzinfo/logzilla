@@ -28,6 +28,7 @@
 <!-- BEGIN JqGrid -->
 <script src="<?php echo $_SESSION['SITE_URL']?>includes/grid/js/i18n/grid.locale-en.js" type="text/javascript"></script>
 <script src="<?php echo $_SESSION['SITE_URL']?>includes/grid/js/jquery.jqGrid.min.js" type="text/javascript"></script>
+<script src="<?php echo $_SESSION['SITE_URL']?>includes/grid/js/jquery.jqChart.js" type="text/javascript"></script>
 <!-- END JqGrid -->
 
 <!-- BEGIN JQuery UI -->

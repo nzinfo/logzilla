@@ -781,9 +781,6 @@ function search($json_o, $spx_max=1000,$index="idx_logs idx_delta_logs",$spx_ip=
      * sphinx server ip
      * sphinx port
      *
-     * Sample incoming JSON string:
-     *
-     {"fo_date":"2011-04-12","fo_time_start":"00:00:00","fo_time_end":"23:59:59","lo_checkbox":"on","lo_date":"2011-04-12","lo_time_start":"00:00:00","lo_time_end":"23:59:59","dupop":"","dupcount":"0","orderby":"lo","order":"DESC","limit":"100","groupby":"host","chart_type":"pie","tail":"off","show_suppressed":"all","msg_mask":"Search through 2,624 Messages","q_type":"boolean","hosts":"","mnemonics":"","eids":"","page":"Results"}
      */
 
     $cl = new SphinxClient ();
@@ -799,7 +796,6 @@ function search($json_o, $spx_max=1000,$index="idx_logs idx_delta_logs",$spx_ip=
     $orderby = (!empty($json_a['orderby'])) ? $json_a['orderby'] : "id";
     $order = (!empty($json_a['order'])) ? $json_a['order'] : "ASC";
     $limit = (!empty($json_a['limit'])) ? $json_a['limit'] : $spx_max;
-    $groupby = (!empty($json_a['groupby'])) ? $json_a['groupby'] : "host";
     $show_suppressed = (!empty($json_a['show_suppressed'])) ? $json_a['show_suppressed'] : "all";
     $q_type = (!empty($json_a['q_type'])) ? $json_a['q_type'] : "boolean";
 
@@ -835,16 +831,16 @@ function search($json_o, $spx_max=1000,$index="idx_logs idx_delta_logs",$spx_ip=
                 if (preg_match ('/,/', $val)) {
                     $pieces = explode(',',$val);
                     foreach ($pieces as $part) {
-                        $mnes .= mne2crc($part) . " $oper ";
+                        $mnes[] .= mne2crc($part);
                     }
                 } else {
-                    $mnes .= mne2crc($val) . " $oper ";
+                    $mnes[] .= mne2crc($val);
                 }
                 break;
             case 'sel_mne':
                 foreach ($val as $subkey=>$subval) {
                      // echo "SubKey = $subkey, SubVal = $subval\n";
-                    $mnes .= mne2crc($subval) . " $oper ";
+                    $mnes[] .= mne2crc($subval);
                 }
                 break;
             case 'programs':
@@ -859,33 +855,11 @@ function search($json_o, $spx_max=1000,$index="idx_logs idx_delta_logs",$spx_ip=
                 $val = $cl->EscapeString ($val);
                 $note .= $val . " $oper ";
                 break;
-
-                // Integers
-            case 'eids':
-                if (preg_match ('/,/', $val)) {
-                    $pieces = explode(',',$val);
-                    foreach ($pieces as $part) {
-                        $eids[] .= intval($part);
-                    }
-                } else {
-                    $eids[] .= intval($val);
-                }
-                break;
-            case 'sel_eid':
-                foreach ($val as $subkey=>$subval) {
-                    // echo "SubKey = $subkey, SubVal = $subval\n";
-                    $eids[] .= intval($subval);
-                }
-                break;
-
-
-
         }
     }
     // die(print_r($json_a));
     $msg_mask = rtrim($msg_mask, " $oper ");
     $hosts = rtrim($hosts, " $oper ");
-    $mnes = rtrim($mnes, " $oper ");
     $prgs = rtrim($prgs, " $oper ");
     $note = rtrim($note, " $oper ");
 
@@ -896,12 +870,6 @@ function search($json_o, $spx_max=1000,$index="idx_logs idx_delta_logs",$spx_ip=
         }
         if ($hosts) {
             $hosts = "@HOST " . $hosts . " ";
-        }
-        if ($mnes) {
-            $mnes = "@MNE " . $mnes . " ";
-        }
-        if ($prgs) {
-            $prgs = "@PROGRAM " . $prgs . " ";
         }
         if ($note) {
             $note = "@NOTES " . $note;
@@ -916,11 +884,31 @@ function search($json_o, $spx_max=1000,$index="idx_logs idx_delta_logs",$spx_ip=
     if ($json_a['facilities']) {
         $cl->SetFilter( 'facility', $json_a['facilities'] ); 
     }
-    if ($eids) {
-        $cl->SetFilter( 'eid', $eids ); 
+    if ($json_a['eid']) {
+        $cl->SetFilter( 'eid', $json_a['eid'] ); 
+    }
+    if ($json_a['sel_eid']) {
+        $cl->SetFilter( 'eid', $json_a['sel_eid'] ); 
+    }
+    if ($json_a['groupby'] == "mne") {
+        unset($mnes["None"]);
+    }
+    if ($json_a['mne']) {
+        $cl->SetFilter( 'mne', $mnes ); 
+    }
+    if ($json_a['sel_mne']) {
+        $cl->SetFilter( 'mne', $mnes ); 
+    }
+    if ($json_a['groupby'] == "mne") {
+        $cl->SetFilter( 'mne', array(mne2crc('None')), true ); 
+    }
+    // echo "<pre>";
+    // die(mne2crc('None'));
+    if ($json_a['groupby'] == "eid") {
+        $cl->SetFilter( 'eid', array(0), true ); 
     }
 
-    $search_string = $msg_mask . $hosts . $prgs . $mnes . $note;
+    $search_string = $msg_mask . $hosts . $prgs . $note;
 
     // Test for empty search and remove whitespaces
     $search_string = preg_replace('/^\s+$/', '',$search_string);
@@ -945,11 +933,9 @@ function search($json_o, $spx_max=1000,$index="idx_logs idx_delta_logs",$spx_ip=
         break;
     }
 
+    if ($orderby == "id") { $orderby = "@id"; }
+    if ($json_a['tail'] !== "off") { $order = "DESC"; }
 
-    if ($orderby == "id") {
-        $orderby = "@id";
-    }
-    $cl->SetSortMode ( SPH_SORT_EXTENDED , "$orderby $order" );
 
     // Datetime filtering
     $fo_checkbox = $json_a['fo_checkbox'];
@@ -1030,12 +1016,18 @@ function search($json_o, $spx_max=1000,$index="idx_logs idx_delta_logs",$spx_ip=
     // echo "$min - $max\n";
     $cl->SetFilterRange ( 'counter', intval($min), intval($max) );
 
-    $cl->SetLimits(0, intval($spx_max));
+    $cl->setLimits(0,intval($limit), $spx_max);
+
+    if ($json_a['groupby']) {
+        $cl->setGroupBy($json_a['groupby'],SPH_GROUPBY_ATTR,"@count $order");
+    }
+        $cl->SetSortMode ( SPH_SORT_EXTENDED , "$orderby $order" );
+
 
     // make the query
     // echo "<pre>";
-     // die(print_r($cl));
-    //die($search_string);
+    // die(print_r($cl));
+    // die($search_string);
     // $cl->Query ("@MSG test", $index);
     $sphinx_results = $cl->Query ($search_string, $index);
     $error = $cl->GetLastError();
