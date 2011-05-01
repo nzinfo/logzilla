@@ -46,7 +46,7 @@ sub p {
 }
 
 my $version = "3.2";
-my $subversion = ".287";
+my $subversion = ".288";
 
 # Grab the base path
 my $lzbase = getcwd;
@@ -1103,6 +1103,7 @@ if (-d "$crondir") {
         print "or use 'crontab -e' as root and paste the contents of $lzbase/scripts/contrib/system_configs/logzilla.crontab into it.\n";
         print "If you add it manually as root's personal crontab, then be sure to remove the \"root\" username from the last entry.\n";
     }
+    hup_crond();
 }
 
 sub setup_sudo {
@@ -1309,6 +1310,29 @@ sub hup_syslog {
         }
     }
 }
+
+sub hup_crond {
+    print "\n\n";
+    my $checkprocess = `cat /var/run/crond.pid`;
+    if ($checkprocess) {
+        print "\n\nCron.d should be restarted, would you like to send a HUP signal to the process?\n";
+        my $ok  = &p("Ok to HUP CRON?", "y");
+        if ($ok =~ /[Yy]/) {
+            if ($checkprocess =~ /(\d+)/) {
+                my $pid = $1;
+                print STDOUT "HUPing CRON PID $pid\n";
+                my $r = `kill -HUP $pid`;
+            } else {
+                print STDOUT "Unable to find PID for CRON.D in /var/run\n";
+            }
+        } else {
+            print("\033[1m\n\tPlease be sure to restart CRON..\n\033[0m");
+        }
+    }
+}
+
+
+
 
 
 
