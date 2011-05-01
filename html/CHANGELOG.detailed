@@ -1,5 +1,9 @@
 CHANGELOG
 
+3.1.288 - Cron Update
+CD:
+ - Small addition to install.pl to ask for permission to restart CRON when updating /etc/cron.d/logzilla
+
 3.1.287 - Various
 CD:
  - Updated 'feedback' button to say 'idea box' and use the LZ Blue color.
