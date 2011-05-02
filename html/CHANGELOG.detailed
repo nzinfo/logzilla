@@ -1,5 +1,9 @@
 CHANGELOG
 
+3.1.290 - Cosmetic
+CD:
+ - Forgot to include the new help.sql file.
+
 3.1.289 - Cosmetic
 CD:
  - Set check for SPX_MAX to only show limit > 1000 when SPX_MAX is > 1000
