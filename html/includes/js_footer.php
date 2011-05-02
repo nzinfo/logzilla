@@ -986,6 +986,14 @@ jQuery("#btnGraph").click( function() {
         var hosts = jQuery("#hostsgrid").jqGrid('getGridParam','selarrrow'); 
         var mne = jQuery("#mnegrid").jqGrid('getGridParam','selarrrow'); 
         var eid = jQuery("#eidgrid").jqGrid('getGridParam','selarrrow'); 
+        var groupby = $("#groupby").val();
+        var chart_type = $("#chart_type").val();
+        if (groupby == "" && chart_type == "") {
+        $("#results").append("<input type='hidden' name='groupby' value='host_crc'>");
+        $("#results").append("<input type='hidden' name='chart_type' value='pie'>");
+        $("#results").append("<input type='hidden' name='limit' value='10'>");
+        $("#results").append("<input type='hidden' name='orderby' value='counter'>");
+        }
         if (hosts) {
         $("#results").append("<input type='hidden' name='hosts' value='"+hosts+"'>");
         }

@@ -1,9 +1,9 @@
-# http://nms.gdd.net/index.php/Install_Guide_for_LogZilla_v3.0
+# http://www.logzilla.pro
 # LogZilla logrotate snippet for Ubuntu Linux
 # contributed by Clayton Dukes
 # Last updated on 2010-06-15
 #
-/path_to_logs/*.log {
+/*.log {
   missingok
   compress
   rotate 5
