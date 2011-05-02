@@ -1,5 +1,13 @@
 CHANGELOG
 
+3.1.289 - Cosmetic
+CD:
+ - Set check for SPX_MAX to only show limit > 1000 when SPX_MAX is > 1000
+ - Set default graph to be Top 10 hosts when the "Graph" button is clicked and no paramaters have been set.
+ - Changed "Auto Refresh" to "Live Scroll (Tail)"
+ - Corrected "Search Options" portlet help section.
+ - Updated help file for Snare Events portlet.
+
 3.1.288 - Cron Update
 CD:
  - Small addition to install.pl to ask for permission to restart CRON when updating /etc/cron.d/logzilla

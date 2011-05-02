@@ -128,7 +128,9 @@ if ($_SESSION['SHOWCOUNTS'] == "1") {
         <option>250
         <option>500
         <option>1000
+        <?php  if ( $_SESSION['SPX_MAX_MATCHES'] > 1000 ) { ?>
         <option>5000
+        <?php } ?>
         </select>
         </td>
      </tr>
@@ -167,7 +169,7 @@ if ($_SESSION['SHOWCOUNTS'] == "1") {
 
 
     <tr>
-        <td>Auto Refresh</td>
+        <td>Live Scroll (Tail)</td>
         <td>
         <select name="tail" id="tail">
         <option selected value="off">Off
