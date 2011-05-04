@@ -1,5 +1,10 @@
 CHANGELOG
 
+3.1.291 - Various
+CD:
+ - Fix for assertion failure when querying Mnemonics (set crc to intval)
+ - Minor update for showing total messages on search portlet
+
 3.1.290 - Cosmetic
 CD:
  - Forgot to include the new help.sql file.
@@ -21,7 +26,7 @@ CD:
  - Updated 'feedback' button to say 'idea box' and use the LZ Blue color.
  - Small fix for detecting Snare program names in db_insert (it was concatenating Cisco Syslog and the Snare Program).
  - Major speed enhancements added for Sphinx queries.
- - Replaced Adhoc chart MySQL queries with Sphinx (MUCH faster charting now).
+ - #119: Replaced Adhoc chart MySQL queries with Sphinx (MUCH faster charting now).
  - Added group sorting to Sphinx
  - Added grouping by message to Charts (will provide top messages)
  - Added error check for setting high result limits (more than 25) when Auto refresh is enabled.
