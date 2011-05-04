@@ -46,7 +46,7 @@ sub p {
 }
 
 my $version = "3.2";
-my $subversion = ".290";
+my $subversion = ".291";
 
 # Grab the base path
 my $lzbase = getcwd;
@@ -379,14 +379,14 @@ sub do_install {
 sub update_paths {
     my $search = "/path_to_logzilla";
     print "Updating file paths\n";
-    foreach my $file (qx(grep -Rl $search ../* | egrep -v "install.pl|\\.svn|\\.sql|license.txt|CHANGELOG|html/includes/index.php|\\.logtest|sphinx/src|sphinx/bin|html/ioncube")) {
+    foreach my $file (qx(grep -RlI $search ../* | egrep -v "install.pl|\\.svn|\\.sql|license.txt|CHANGELOG|html/includes/index.php|\\.logtest|sphinx/src|sphinx/bin|html/ioncube")) {
         chomp $file;
         print "Modifying $file\n";
         system "perl -i -pe 's|$search|$lzbase|g' $file" and warn "Could not modify $file $!\n";
     }
     my $search = "/path_to_logs";
     print "Updating log paths\n";
-    foreach my $file (qx(grep -Rl $search ../* | egrep -v "install.pl|.svn|.sql|CHANGELOG")) {
+    foreach my $file (qx(grep -RlI $search ../* | egrep -v "install.pl|.svn|.sql|CHANGELOG")) {
         chomp $file;
         print "Modifying $file\n";
         system "perl -i -pe 's|$search|$logpath|g' $file" and warn "Could not modify $file $!\n";

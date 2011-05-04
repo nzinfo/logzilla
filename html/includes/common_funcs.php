@@ -831,16 +831,16 @@ function search($json_o, $spx_max=1000,$index="idx_logs idx_delta_logs",$spx_ip=
                 if (preg_match ('/,/', $val)) {
                     $pieces = explode(',',$val);
                     foreach ($pieces as $part) {
-                        $mnes[] .= mne2crc($part);
+                        $mnes[] .= intval(mne2crc($part));
                     }
                 } else {
-                    $mnes[] .= mne2crc($val);
+                    $mnes[] .= intval(mne2crc($val));
                 }
                 break;
             case 'sel_mne':
                 foreach ($val as $subkey=>$subval) {
                      // echo "SubKey = $subkey, SubVal = $subval\n";
-                    $mnes[] .= mne2crc($subval);
+                    $mnes[] .= intval(mne2crc($subval));
                 }
                 break;
             case 'programs':

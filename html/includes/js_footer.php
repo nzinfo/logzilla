@@ -842,7 +842,7 @@ $(document).ready(function() {
         if (enabled == "1") {
         $.get("includes/ajax/counts.php?data=msgs", function(data){
             if (data) {
-            $("#portlet-header_Messages").prepend(humanReadable(data)+" ");
+            $("#portlet-header_Messages").append(' ('+humanReadable(data)+" total)");
             };
             });
         };
