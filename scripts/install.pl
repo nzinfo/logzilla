@@ -46,7 +46,7 @@ sub p {
 }
 
 my $version = "3.2";
-my $subversion = ".291";
+my $subversion = ".292";
 
 # Grab the base path
 my $lzbase = getcwd;
@@ -1506,6 +1506,8 @@ sub do_upgrade {
             exit;
         }
     }
+    update_help();
+    update_ui_layout();
 }
 
 sub db_connect {
@@ -1646,8 +1648,6 @@ sub tbl_logs_alter_from_30 {
         print "Adding Sphinx Counter table\n";
         my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/sph_counter.sql`;
 
-        print "Replacing UI Layout\n";
-        my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/ui_layout.sql`;
     }
 }
 
@@ -1747,19 +1747,12 @@ sub tbl_logs_alter_from_299 {
         print "Adding Sphinx Counter table\n";
         my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/sph_counter.sql`;
 
-        print "Replacing UI Layout\n";
-        my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/ui_layout.sql`;
-
         print "Adding Cache Table\n";
         my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/cache.sql`;
         print $res;
 
         print "Adding Groups Table\n";
         my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/groups.sql`;
-        print $res;
-
-        print "Adding Help Table\n";
-        my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/help.sql`;
         print $res;
 
         print "Adding History Table\n";
@@ -1808,6 +1801,19 @@ sub tbl_add_facilities {
         print $res;
     }
 }
+
+sub update_help {
+    print "Updating help files...\n";
+    my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/help.sql`;
+    print $res;
+}
+
+sub update_ui_layout {
+    print "Updating UI Layout files...\n";
+    my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/ui_layout.sql`;
+    print $res;
+}
+
 
 sub copy_old_settings {
     my $dbh = db_connect($dbname, $lzbase, $dbroot, $dbrootpass);
