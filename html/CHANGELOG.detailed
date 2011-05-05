@@ -1,5 +1,10 @@
 CHANGELOG
 
+3.1.292 - Minor
+CD:
+ - Fix for 3.1->3.2 upgrades on ui_layout (missed email alerts table) and new help sql
+ - Update to add no-cache to html header
+
 3.1.291 - Various
 CD:
  - Fix for assertion failure when querying Mnemonics (set crc to intval)
