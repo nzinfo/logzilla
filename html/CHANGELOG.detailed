@@ -1,14 +1,6 @@
-CHANGELOG
-
-3.1.292 - Minor
+3.1.293 - Cisco Mnemonic Lookup
 CD:
- - Fix for 3.1->3.2 upgrades on ui_layout (missed email alerts table) and new help sql
- - Update to add no-cache to html header
-
-3.1.291 - Various
-CD:
- - Fix for assertion failure when querying Mnemonics (set crc to intval)
- - Minor update for showing total messages on search portlet
+ - Added search icon to results to allow lookup of Cisco Error Messages on cisco.com (direct link requires login)
 
 3.1.290 - Cosmetic
 CD:
@@ -17,7 +9,7 @@ CD:
 3.1.289 - Cosmetic
 CD:
  - Set check for SPX_MAX to only show limit > 1000 when SPX_MAX is > 1000
- - Set default graph to be Top 10 hosts when the "Graph" button is clicked and no paramaters have been set.
+ - Set default graph to be Top 10 hosts when the "Graph" button is clicked and no parameters have been set.
  - Changed "Auto Refresh" to "Live Scroll (Tail)"
  - Corrected "Search Options" portlet help section.
  - Updated help file for Snare Events portlet.
@@ -31,7 +23,7 @@ CD:
  - Updated 'feedback' button to say 'idea box' and use the LZ Blue color.
  - Small fix for detecting Snare program names in db_insert (it was concatenating Cisco Syslog and the Snare Program).
  - Major speed enhancements added for Sphinx queries.
- - #119: Replaced Adhoc chart MySQL queries with Sphinx (MUCH faster charting now).
+ - Replaced Adhoc chart MySQL queries with Sphinx (MUCH faster charting now).
  - Added group sorting to Sphinx
  - Added grouping by message to Charts (will provide top messages)
  - Added error check for setting high result limits (more than 25) when Auto refresh is enabled.
@@ -104,11 +96,11 @@ CD:
  - #47: Grid selections mirror portlet. 
    Cookies for every main page option.
    Remember icon added to portlets to enable/disable remembering individual portlet settings.
-   Reset Cookies button now resets noth cookies and form
+   Reset Cookies button now resets both cookies and form
 
 3.1.270 - Search Function
 CD:
- - #129 More work on the new search() function. Tested and working now (not implmented outside the function yet).
+ - #129 More work on the new search() function. Tested and working now (not implemented outside the function yet).
 
 3.1.269 - Multiple
 CD:
@@ -124,7 +116,7 @@ CD:
 
 3.1.267 - Sphinx bug
 CD:
- - Fix for #126: Unexpect $end when searching for "I/O"
+ - Fix for #126: Unexpected $end when searching for "I/O"
 
 3.1.266 - Install Script
 CD:
@@ -149,7 +141,7 @@ CD:
 
 3.1.261 - Bug
 CD:
- - urlencode for VMWare server was interferring with Cisco Mnemonic for %C(4K)
+ - urlencode for VMWare server was interfering with Cisco Mnemonic for %C(4K)
 
 3.1.260 - Minor
 CD:
@@ -163,11 +155,11 @@ CD:
 CD:
  - Better banner script. When udev rules are deleted for VM, must wait for new IP.
 
-3.1.257 - Regession
+3.1.257 - Regression
 CD:
  - Fixed typo in licadd
 
-3.1.256 - Regession
+3.1.256 - Regression
 CD:
  - Had to set path manually in licadd.pl because getcwd won't work from web interface.
 
@@ -177,9 +169,9 @@ CD:
 
 3.1.254 - Paths
 CD:
- - Set pathing in some perl scripts using getcwd rather than regex replace during install
+ - Set pathing in some Perl scripts using getcwd rather than regex replace during install
 
-3.1.253 - Mysql
+3.1.253 - MySQL
 CD:
  - Forgot to remove LOCAL keyword from the MySQL LOAD DATA command after testing remote DB inserts.
 
@@ -189,7 +181,7 @@ CD:
 
 3.1.251 - Minor
 CD:
- - Found typo for crc2prg in adhoc charts
+ - Found typo for crc2prg in Adhoc charts
 
 3.1.250 - Multi
 CD:
@@ -219,7 +211,7 @@ CD:
 
 3.1.244 - BugFix
 CD:
- - db_insert bug: when snare enabled, but no snare events, snare_eid value is blank causing impoorts to fail.
+ - db_insert bug: when snare enabled, but no snare events, snare_eid value is blank causing imports to fail.
    resolved by setting snare_eid = 0 when field is blank.
 
 3.1.243 - Minor
@@ -278,13 +270,13 @@ CD:
 
 3.1.231 - Regression
 TH:
- - #10 more cleanup in install.pl - think now its all
+ - #10 more cleanup in install.pl - think now it's all
  
 3.1.230 - Bugfix
 CD:
  - Found new bug in grids: When jQuery Modal set 'true', advanced search boxes do not work
  - Fix missing height/width settings in favorites editor
- - Added Youtube Video's for the "What's New" Menu item.
+ - Added YouTube Video's for the "What's New" Menu item.
 
 3.1.229 - Regression
 CD:
@@ -419,7 +411,7 @@ CD:
  - #33 Added @hosts capability to msg_mask
  - Fixed #103 - Duplicate count on mne/hosts header when moving portlet
 
-3.1.200 - enchancment
+3.1.200 - enchantment
 TH:
  - Started import portlet
  
@@ -494,7 +486,7 @@ CD:
 
 3.1.184 - Menus
 CD:
- - Fixed mis-aligned submenus
+ - Fixed misaligned submenus
  - Added fade to clicked menu items (user request to know they clicked)
 
 3.1.183 - Work on sudoers
@@ -524,7 +516,7 @@ CD:
 
 3.1.176 - Sphinx
 AW:
- - Added LSB compliant script for startinup of searchd
+ - Added LSB compliant script for startup of searchd
 
 3.1.176 - bugfix
 TH:
@@ -539,7 +531,7 @@ TH:
  - added to copy of the crontab to /etc/cron.d from install.pl
  - as lazy guy I also added a sphinx_install.sh
 
-3.1.173 - snipplet
+3.1.173 - snippet
 TH:
  - just uploaded portlet-import.php cause at svn its saver than on my crashed HDD
 
@@ -570,7 +562,7 @@ CD:
 
 3.1.167 - More investigation on SNMP
 CD:
- - #31 Small chages to traps.sh so that it didn't truncate.
+ - #31 Small changes to traps.sh so that it didn't truncate.
 
 3.1.166 - Various
 CD:
@@ -604,12 +596,12 @@ CD:
 
 3.1.161 - Backend updates
 CD:
- - Aligned the frot page hosts table a bit better
+ - Aligned the front page hosts table a bit better
  - Added a subject line to the email alerts which includes the host that generated the trigger.
 
 3.1.160 - Backend updates
 CD:
- - Forgot to remove the border from the hosts gris (for testing only)
+ - Forgot to remove the border from the hosts grid (for testing only)
 
 3.1.159 - Backend updates
 CD:
@@ -623,12 +615,12 @@ CD:
 
 3.1.157 - Backend updates
 CD:
- - added a touch to the install for $logdir/logzilla.log so thet errors don't occur when using the common function 'logmsg'
+ - added a touch to the install for $logdir/logzilla.log so that errors don't occur when using the common function 'logmsg'
  - Cleanup up some backend future code for the LZECS project
 
-3.1.156 - Litte bug in the export procedure
+3.1.156 - Little bug in the export procedure
 TH:
- - export file not calulated right in 1st of every month
+ - export file not calculated right in 1st of every month
 
 3.1.155 - more work in traps
 TH:
@@ -650,7 +642,7 @@ TH:
 3.1.151 - Missing files
 CD:
  - letterhead
- - eula
+ - Eula
  - fixed term pager
 
 3.1.150 - Cosmetic
@@ -746,24 +738,24 @@ CD:
 TH:
  - have to indexer.sh full after import
 
-3.1.131 - Enhancment: views uses REGEXP for msg
+3.1.131 - Enhancement: views uses REGEXP for msg
 TH:
  - #59: ready for further work
  
-3.1.130 - Enhancment: Shell Script for importing archives
+3.1.130 - Enhancement: Shell Script for importing archives
 TH:
  - found in scripts/contrib/import_shell
  
-3.1.129 - Enhancment: db_insert.pl looks into my.cnf
+3.1.129 - Enhancement: db_insert.pl looks into my.cnf
 CD:
  - #75: Testing scripts/sql/lzmy.cnf
 
-3.1.128 - Enhancment: db_insert.pl looks into my.cnf
+3.1.128 - Enhancement: db_insert.pl looks into my.cnf
 CD:
  - #75: Added lzmy.cnf file creation to the install.pl
  - Changed the mysql read from db_insert.pl to point to $lzbase/scripts/lzmy.cnf
 
-3.1.127 - Enhancment: db_insert.pl looks into my.cnf
+3.1.127 - Enhancement: db_insert.pl looks into my.cnf
 TH:
  - logzilla looks into a [logzilla] section in my.cnf for db_insert.pl
 
@@ -772,9 +764,9 @@ TH:
  - was too fast for the 125
  - also fixed the db_insert.pl bug (removed the extra "exit;") 
 
-3.1.125 - Enhancment: Prototype of arhive tool
+3.1.125 - Enhancement: Prototype of archive tool
 TH:
- - first archive Prototype; it export automaticly and bz2 it
+ - first archive Prototype; it export automatically and bz2 it
  - the import (still) a simple shell script, there a lot of work to do
  - all functions/procedures/scripts needs parametering
 
@@ -786,6 +778,7 @@ TH:
 CD:
  - Initial work on #62 (Event Triggers)
  - (minor) Modified default settings in settings.sql for some unused LDAP options (defaulted them to hidden)
+
 
 3.1.122 - DB User
 CD:

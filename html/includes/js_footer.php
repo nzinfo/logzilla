@@ -403,7 +403,8 @@ var travel = 0;
 var points = [];
 var points_max = 60;
 mdraw = function() {
-   	var md = new Date();
+    var md = new Date();
+    var data = { };
    	var timenow = md.getTime();
    	if (lasttime && lasttime!=timenow) {
 	   	var pps = Math.round(travel / (timenow - lasttime) * 1000);
@@ -426,7 +427,7 @@ mdraw = function() {
                     };
                 };
                 var avg = Math.round(total / (data.length - 1));
-                if (isNumber(avg)){
+                if (isNumber(avg) && (avg >0)){
                     $('#sparktext').text(avg+" MPS (avg)");
                 } else {
                     $('#sparktext').text("No Incoming Messages");

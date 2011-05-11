@@ -628,7 +628,11 @@ while($row = fetch_array($result)) {
     echo "<td class=\"s_td\"><a href=$_SESSION[SITE_URL]$qstring&facilities[]=$row[facility]>".int2fac($row['facility'])."</a></td>\n";
     echo "<td class=\"s_td $sev\"><a href=$_SESSION[SITE_URL]$qstring&severities[]=$row[severity]>$sev_text</a></td>\n";
     echo "<td class=\"s_td\"><a href=$_SESSION[SITE_URL]$qstring&programs[]=$row[program]>".crc2prg($row['program'])."</a></td>\n";
-    echo "<td class=\"s_td\"><a href=$_SESSION[SITE_URL]$qstring&mnemonics[]=$row[mne]>".crc2mne($row['mne'])."</a></td>\n";
+    if (crc2mne($row['mne']) !== 'None') {
+        echo "<td class=\"s_td\"><a href=\"http://www.cisco.com/cgi-bin/Support/Errordecoder/index.cgi?action=search&index=all&locale=en&query=".crc2mne($row['mne'])."&counter=0&paging=5&links=reference&sa=Submit\" target=\"_new\"><span class=\"ui-icon ui-icon-search\"></span></a><a href=$_SESSION[SITE_URL]$qstring&mnemonics[]=$row[mne]>".crc2mne($row['mne'])."</a></td>\n";
+    } else {
+        echo "<td class=\"s_td\"><a href=$_SESSION[SITE_URL]$qstring&mnemonics[]=$row[mne]>".crc2mne($row['mne'])."</a></td>\n";
+    }
     if ($_SESSION['CISCO_MNE_PARSE'] == "1" ) {
         // $msg = preg_replace('/\s:/', ':', $msg);
         $msg = preg_replace('/.*%(\w+-.*\d-\w+)\s?:/', '$1', $msg);
