@@ -941,15 +941,12 @@ $(".XLButtons").appendTo("#portlet-header_Graph_Results");
                     <td>
                     <select style="width: 40%" name="orderby" id="orderby">
                     <option <?php if ($orderby_orig == 'id') echo "selected"; ?> value="id">Database ID</option>
-                    <?php  if ( $_SESSION["DEDUP"] == "1" ) { ?>
                     <option <?php if ($orderby_orig == 'counter') echo "selected"; ?> value="counter">Count</option>
-                    <?php  } ?>
-                    <option <?php if ($orderby_orig == 'host') echo "selected"; ?> value="host">Host</option>
-                    <option <?php if ($orderby_orig == 'program') echo "selected"; ?> value="program">Program</option>
                     <option <?php if ($orderby_orig == 'facility') echo "selected"; ?> value="facility">Facility</option>
                     <option <?php if ($orderby_orig == 'severity') echo "selected"; ?> value="severity">Severity</option>
-                    <option <?php if ($orderby_orig == 'msg') echo "selected"; ?> value="msg">Message</option>
+                    <?php  if ( $_SESSION["DEDUP"] == "1" ) { ?>
                     <option <?php if ($orderby_orig == 'fo') echo "selected"; ?> value="fo">First Occurrence</option>
+                    <?php  } ?>
                     <option <?php if ($orderby_orig == 'lo') echo "selected"; ?> value="lo">Last Occurrence</option>
                     </select>
                     </td>
@@ -965,6 +962,7 @@ $(".XLButtons").appendTo("#portlet-header_Graph_Results");
                     </td>
                 </tr>
 
+                    <?php  if ( $_SESSION["DEDUP"] == "1" ) { ?>
                 <TR>
                     <TD WIDTH="10%">
                     <input type="checkbox" name="fo_checkbox" id="fo_checkbox" <?php if ($fo_checkbox == 'on') echo "checked"; ?>>
@@ -975,8 +973,8 @@ $(".XLButtons").appendTo("#portlet-header_Graph_Results");
                         <input type="text" size="25" value="<?php echo $fo_date?>" name="fo_date" id="fo_date">
                         </div>
                         <!--The fo_time_wrapper div is referenced in jquery.timePicker.js -->
-                        <div id="fo_time_wrapper_usave"> 
-                        <input type="text" id="fo_time_start_usave" size="10" value="<?php echo $fo_time_start?>" /> 
+                        <div id="fo_time_wrapper_usave">
+                        <input type="text" id="fo_time_start_usave" size="10" value="<?php echo $fo_time_start?>" />
                         <input type="text" id="fo_time_end_usave" size="10" value="<?php echo $fo_time_end?>" />
                         </div>
                     </TD>
@@ -991,19 +989,24 @@ $(".XLButtons").appendTo("#portlet-header_Graph_Results");
                 <td width="95%">
                 </td>
             </tr>
-            
+                    <?php } ?>
+
                 <TR>
                     <TD WIDTH="10%">
                     <input type="checkbox" name="lo_checkbox" id="lo_checkbox" <?php if ($lo_checkbox == 'on') echo "checked"; ?>>
+                    <?php  if ( $_SESSION["DEDUP"] == "1" ) { ?>
                     <b>LO</b>
+                    <?php } else { ?>
+                    <b>Last Occurrence</b>
+                    <?php } ?>
                     </TD>
                     <TD WIDTH="90%" COLSPAN="2">
                         <div id="lo_date_wrapper">
                         <input type="text" size="25" value="<?php echo $lo_date?>" name="lo_date" id="lo_date">
                     </div>
                         <!--The lo_time_wrapper div is referenced in jquery.timePicker.js -->
-                        <div id="lo_time_wrapper_usave"> 
-                        <input type="text" id="lo_time_start_usave" size="10" value="<?php echo $lo_time_start?>" /> 
+                        <div id="lo_time_wrapper_usave">
+                        <input type="text" id="lo_time_start_usave" size="10" value="<?php echo $lo_time_start?>" />
                         <input type="text" id="lo_time_end_usave" size="10" value="<?php echo $lo_time_end?>" />
                         </div>
                     </TD>

@@ -40,7 +40,7 @@ $(document).ready(function(){
 <?php
 if ($_SERVER["REQUEST_URI"] == $_SESSION['SITE_URL'] . "index.php") {
     $today = intval(date("my")); 
-    if ($today < 911) { ?>
+    if ($today < 1111) { ?>
      <li><a href="includes/whatsnew.php" onclick="return hs.htmlExpand(this, { objectType: 'ajax', align: 'center', headingText: 'LogZilla v3.2 Features', width: 800} )">What's New?</a></li>
          <?php } else { ?>
          <script type="text/javascript">
