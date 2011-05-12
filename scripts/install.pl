@@ -46,7 +46,7 @@ sub p {
 }
 
 my $version = "3.2";
-my $subversion = ".294";
+my $subversion = ".295";
 
 # Grab the base path
 my $lzbase = getcwd;
@@ -178,7 +178,7 @@ if ($ok =~ /[Yy]/) {
     $sth->execute;
     while (my @data = $sth->fetchrow_array()) {
         my $ver = $data[0];
-        if ($ver !~ /5\.[15]/) {
+        if ($ver !~ /5\.[19]/) {
             print("\n\033[1m\tERROR!\n\033[0m");
             print "LogZilla requires MySQL v5.1 or better.\n";
             print "Your version is $ver\n";
