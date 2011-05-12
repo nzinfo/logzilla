@@ -1,39 +1,37 @@
 
 CHANGELOG
 
-Summary of changes from LogZilla v3.0.91 to v3.1
+Summary of changes from LogZilla v3.1 to v3.2
 For a detailed list of changes, please see the CHANGELOG.detailed file.
 
 
+Installation:
+ - The LogZilla installation guide is located at:
+   http://nms.gdd.net/index.php/Install_Guide_for_LogZilla_v3.2
+
 Upgrading:
- - Details on how to upgrade LogZilla are located at:
-   http://nms.gdd.net/index.php/Upgrade_Procedures_for_Logzilla_3.0#New.2FEasier_upgrade_procedures
+ - The LogZilla installation now fully supports all upgrades (including the old php-syslog-ng v2.9x series).
+   To upgrade, cd to your scripts/ directory and type ./install.pl
 
 
-Enhancements:
- - The event suppression backend now uses SQL views rather than individual SELECT statements which provides faster queries.
- - Added a new MySQL event which runs at 1:00am (by default) to verify cache table counts.
- - Moved daily partitioning from a MySQL event to a db_insert event as the MySQL event scheduler would fail to create partitions on servers that weren't on 24 hours a day.
-   - The auto-partition in db_insert will simply create a new partition when one is not detected.
- - Removed the FO (First Occurrence) field from the web interface when Deduplication is disabled.
- - Changed the message search options to default to BOOLEAN
-   - Note: In order to used advanced searching, you will now need to enable them in admin>settings>SPX_ADV
- - Retention (how long to wait before moving data to the archive table) is now configurable in the web interface.
-   - To change it, modify Admin>settings>RETENTION
- - LogZilla now uses sphinx to search: msg, host, program, severity, facility, mnemonic, fo, lo, and counter.
-   - This provides much better performance to LogZilla since Sphinx is now indexing those additional columns.
 
+There are almost 175 enhancements and updates since v3.1 was released, here are just a few:
 
-Fixes:
- - A bug was found and fixed when using Deduplication that was causing the message counts to be reported inaccurately.
- - Messages contain @, such as email addresses are now searchable.
- - The LOAD DATA INFILE LOCAL command has been changed to LOAD DATA INFILE and is now stored in /tmp
-   - Some OS's do not have a /dev/shm directory so it was causing errors on those systems.
- - Fixed the Timerange Problem on fo and lo while searching with sphinx
- - Fixed the "showing xx of yyy entries", yyy now displays the total results for the searched criteria, not the total of all rows.
- - DB: Fixed typo in help table for "FO - Last Occurrence" (should be "LO")
- - Changed re_pipe in db_insert.pl to account for program names with trailing spaces (like kernel in CentOS)
- - Added filter to not include "None" Mnemonics in Cisco Mnemonic Charts.
- - Added flush of host, prog and mne upon exit from db_insert (so smaller servers won't lose cache)
- - Removed the word "Options" from the nav menu - it doesn't fit well on linux desktop Firefox
-
+ - Added "Idea Box" - users can now submit and vote for enhancement requests online for future LogZilla versions.
+ - Major speed enhancements added for both text queries and charts.
+ - Installation process has been modified to provide full installation and upgrades including compilation of the backend indexer.
+   Added automatic upgrade to existing databases during installation. 
+   Upgrade support for older php-syslog-ng (v2.9.9) installations added as well.
+ - New Email Alerts function allows for regular expression pattern matching on incoming messages.
+ - Added support for OSSEC (http://www.ossec.net/) messages
+ - New "Remember" option added to front page portlets so users don't have to re-enter search criteria each time.
+ - Added better error handling for invalid queries or missing indexes.
+ - Added better license input support.
+ - Added support for Windows Events from Snare Eventlog (http://www.intersectalliance.com/projects/SnareWindows/)
+ - Modified Mnemonics, Hosts and Snare portlets to track when they were last seen and how many times that event has been seen.
+ - Mnemonics, Hosts and Snare portlets now provide advanced filtering capabilities by clicking on the search icon for that portlet.
+ - Added support for remote Databases.
+ - Added support for non-standard characters in MySql passwords.
+ - Added pre-built charts to the main menu
+ - Added "Favorites" editor for admins to modify/remove user saved Favorites.
+ - Default timestamps for incoming messages now use the source message time in syslog-ng.conf
