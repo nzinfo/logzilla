@@ -1,3 +1,8 @@
+
+3.1.294 - Cosmetic
+CD:
+ - Updated the master CHANGELOG file with a summary of changes for this release.
+
 3.1.293 - Cisco Mnemonic Lookup
 CD:
  - Added search icon to results to allow lookup of Cisco Error Messages on cisco.com (direct link requires login)
