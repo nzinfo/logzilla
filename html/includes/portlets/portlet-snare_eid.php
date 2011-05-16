@@ -79,7 +79,6 @@ if (cnt < 11) {
         echo "</table>";
 } else { 
     echo "<b><u>No Windows Event ID's</u></b><br>";
-    echo "Either wait for caches to update, or restart your syslog daemon.\n<br>";
 } 
 ?>
 

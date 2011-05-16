@@ -48,6 +48,7 @@ $grid->setGridOptions(array(
     "shrinkToFit"=>true,
     "setGridHeight"=>"100%",
     "rowList"=>array(20,40,60,75,100,500,750,1000),
+    "loadComplete"=>"js:"
     ));
 
 $grid->setColProperty('Seen', array('width'=>'10'));
@@ -56,6 +57,14 @@ $grid->setColProperty('LastSeen', array('width'=>'35','formatter'=>'js:easyDate'
 $grid->navigator = true;
 $grid->setNavOptions('navigator', array("pdf"=>true,"excel"=>true,"add"=>false,"edit"=>false,"del"=>false,"view"=>false, "search"=>true));
 
+$gridComplete = <<<ONCOMPLETE
+	function ()
+	{	
+setRememberedCheckboxesForDialog('hosts','host_dialog',14,'portlet-content_Hosts'); 
+
+	}
+ONCOMPLETE;
+$grid->setGridEvent('loadComplete', $gridComplete);
 $custom = <<<CUSTOM
 
 //---------------------------------------------------------------
@@ -95,6 +104,8 @@ $("#portlet-header_Hosts .ui-icon-search").click(function() {
         $("#host_dialog").dialog('open');
         $("#host_dialog").ready(function(){
         // Some magic to set the proper width of the grid inside a Modal window
+
+
         var modalWidth = $("#host_dialog").width();
         var modalHeight = $("#host_dialog").height() - 52;
         $('#hostsgrid').jqGrid('setGridWidth',modalWidth);

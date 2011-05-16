@@ -1,6 +1,7 @@
 $(document).ready(function(){
 	if(createRememberButton('mnemonics','portlet-header_Mnemonics')){
 		handleRememberClickEventForCheckBox('mnemonics','portlet_Mnemonics');
+
 	}	
 	setRememberedCheckboxes('mnemonics','portlet_Mnemonics');
 	//setTimeout(function(){	setRememberedCheckboxesForDialog('mnemonics','mne_dialog',11); },5000);
