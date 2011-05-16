@@ -1,3 +1,7 @@
+3.1.296 - Bug
+CD:
+ - Bug when using intval on CRC32
+
 3.1.295 - EID/Mne/Host Cookies
 CD:
  - Updates on cookies
