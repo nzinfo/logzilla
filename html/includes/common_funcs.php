@@ -843,6 +843,24 @@ function search($json_o, $spx_max=1000,$index="idx_logs idx_delta_logs",$spx_ip=
                     $mnes[] .= intval(mne2crc($subval));
                 }
                 break;
+            case 'eids':
+                if (preg_match ('/,/', $val)) {
+                    $pieces = explode(',',$val);
+                    foreach ($pieces as $part) {
+                        $eids[] .= intval($part);
+                    }
+                } else {
+		    if ($val !== '') {
+                        $eids[] .= intval($val);
+		    }
+                }
+                break;
+            case 'sel_eid':
+                foreach ($val as $subkey=>$subval) {
+                     // echo "SubKey = $subkey, SubVal = $subval\n";
+                    $eids[] .= intval($subval);
+                }
+                break;
             case 'programs':
                 foreach ($val as $subkey=>$subval) {
                      // echo "SubKey = $subkey, SubVal = $subval\n";
@@ -884,16 +902,13 @@ function search($json_o, $spx_max=1000,$index="idx_logs idx_delta_logs",$spx_ip=
     if ($json_a['facilities']) {
         $cl->SetFilter( 'facility', $json_a['facilities'] ); 
     }
-    if ($json_a['eid']) {
-        $cl->SetFilter( 'eid', $json_a['eid'] ); 
-    }
-    if ($json_a['sel_eid']) {
-        $cl->SetFilter( 'eid', $json_a['sel_eid'] ); 
+    if (is_array($eids)) {
+        $cl->SetFilter( 'eid', $eids ); 
     }
     if ($json_a['groupby'] == "mne") {
         unset($mnes["None"]);
     }
-    if ($json_a['mne']) {
+    if ($json_a['mnemonics']) {
         $cl->SetFilter( 'mne', $mnes ); 
     }
     if ($json_a['sel_mne']) {

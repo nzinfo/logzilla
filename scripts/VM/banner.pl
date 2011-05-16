@@ -40,7 +40,7 @@ dpkg-reconfigure tzdata
 
 First Bootup:
 Please run:
-cd /var/www/logzilla && svn update && /etc/init.d/syslog-ng restart
+cd /path_to_logzilla && svn update && /etc/init.d/syslog-ng restart
 to get the latest source
 
 Access:
@@ -49,7 +49,7 @@ The login/password for the Web Interface is admin/admin
 $linfo
 
 More Information and Help:
-Please read /var/www/logzilla/VM-README.txt
+Please read /path_to_logzilla/VM-README.txt
 
 Please report any trouble to http://support.logzilla.pro                       
 #######################################################################

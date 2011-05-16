@@ -30,7 +30,7 @@ $conn->query("SET NAMES utf8");
 // Create the jqGrid instance
 $grid = new jqGridRender($conn);
 // Write the SQL Query
-$grid->SelectCommand = 'SELECT eid as EventId, seen as Seen, lastseen as LastSeen FROM snare_eid';
+$grid->SelectCommand = 'SELECT eid AS EventId, seen AS Seen, lastseen AS LastSeen FROM snare_eid where eid>0';
 // set the ouput format to json
 $grid->dataType = 'json';
 // Let the grid create the model
@@ -48,6 +48,7 @@ $grid->setGridOptions(array(
     "shrinkToFit"=>true,
     "setGridHeight"=>"100%",
     "rowList"=>array(20,40,60,75,100,500,750,1000),
+ "loadComplete"=>"js:"
     ));
 
 $grid->setColProperty('Seen', array('width'=>'10'));
@@ -56,6 +57,13 @@ $grid->setColProperty('LastSeen', array('width'=>'35','formatter'=>'js:easyDate'
 $grid->navigator = true;
 $grid->setNavOptions('navigator', array("pdf"=>true,"excel"=>true,"add"=>false,"edit"=>false,"del"=>false,"view"=>false, "search"=>true));
 
+$gridComplete = <<<ONCOMPLETE
+	function ()
+	{	
+ setRememberedCheckboxesForDialog('snare_EventId','gbox_eidgrid',12,'portlet-content_Snare_EventId'); 
+	}
+ONCOMPLETE;
+$grid->setGridEvent('loadComplete', $gridComplete); 
 $custom = <<<CUSTOM
 
 //---------------------------------------------------------------
