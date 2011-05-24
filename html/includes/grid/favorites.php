@@ -30,10 +30,11 @@ $conn->query("SET NAMES utf8");
 // Create the jqGrid instance
 $grid = new jqGridRender($conn);
 // Write the SQL Query
-$grid->SelectCommand = 'SELECT userid,urlname,url,spanid FROM history';
+$grid->SelectCommand = 'SELECT id,userid,urlname,url,spanid FROM history';
 // set the ouput format to json
 $grid->dataType = 'json';
 $grid->table = 'history';
+$grid->setPrimaryKeyId('id');
 
 
 $labels = array("userid"=>"User ID", "urlname"=>"Favorite Name", "url"=>"URL", "spanid"=>"Menu Location");
@@ -41,6 +42,7 @@ $labels = array("userid"=>"User ID", "urlname"=>"Favorite Name", "url"=>"URL", "
 // Let the grid create the model
 $grid->setColModel(null, null, $labels);
 
+$grid->setColProperty('id', array('hidden'=>true) );
 $grid->setColProperty('spanid', array('width'=>'225',"edittype"=>"select"));
 $grid->setColProperty('url',array("edittype"=>"textarea","editoptions"=>array("rows"=>6, "cols"=> 100),"width"=>300));
 
@@ -70,7 +72,6 @@ $grid->setGridOptions(array(
     ));
 
 
-$grid->setPrimaryKeyId('id');
 
 
 
