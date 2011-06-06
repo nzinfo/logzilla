@@ -35,7 +35,7 @@ $(document).ready(function(){
 <!-- END News -->
 
 <!-- Top Level -->
-<li><a onclick="$(this).animate({ opacity: 0.3 }, 500 );" href="<?php echo $_SESSION['SITE_URL']?>?page=Main"><img style='position: relative; left: 17%; text-align: center; vertical-align: middle; border: 0 none; width: 67px; height: 19px;' src='images/LogZilla_Letterhead_smoothfont_67x19_transparent.png' alt='Home'/></a></li>
+<li><a onclick="$(this).effect('highlight');" href="<?php echo $_SESSION['SITE_URL']?>?page=Main"><img style='position: relative; left: 17%; text-align: center; vertical-align: middle; border: 0 none; width: 67px; height: 19px;' src='images/LogZilla_Letterhead_smoothfont_67x19_transparent.png' alt='Home'/></a></li>
 
 <?php
 if ($_SERVER["REQUEST_URI"] == $_SESSION['SITE_URL'] . "index.php") {
@@ -66,20 +66,20 @@ if ($_SERVER["REQUEST_URI"] == $_SESSION['SITE_URL'] . "index.php") {
             <?php 
             if ($_SESSION['AUTHTYPE'] != "none") { 
             ?>
-            <li><a onclick="$(this).animate({ opacity: 0.3 }, 500 );" href="<?php echo $_SESSION['SITE_URL']?>?page=User">User Admin</a></li>
+            <li><a onclick="$(this).effect('highlight');" href="<?php echo $_SESSION['SITE_URL']?>?page=User">User Admin</a></li>
             <?php } ?>
             <?php 
             if ((has_portlet_access($_SESSION['username'], 'Server Settings') == TRUE) || ($_SESSION['AUTHTYPE'] == "none")) { 
             ?>
-            <li><a onclick="$(this).animate({ opacity: 0.3 }, 500 );" href="<?php echo $_SESSION['SITE_URL']?>?page=Admin">Server Admin</a></li>
-            <li><a onclick="$(this).animate({ opacity: 0.3 }, 500 );" href="<?php echo $_SESSION['SITE_URL']?>?page=Email_Alerts">Email Alerts</a></li>
+            <li><a onclick="$(this).effect('highlight');" href="<?php echo $_SESSION['SITE_URL']?>?page=Admin">Server Admin</a></li>
+            <li><a onclick="$(this).effect('highlight');" href="<?php echo $_SESSION['SITE_URL']?>?page=Email_Alerts">Email Alerts</a></li>
             <?php } ?>
             <?php 
             if ((has_portlet_access($_SESSION['username'], 'Portlet Group Permissions') == TRUE) && ($_SESSION['AUTHTYPE'] != "none")) { 
             ?>
-            <li><a onclick="$(this).animate({ opacity: 0.3 }, 500 );" href="<?php echo $_SESSION['SITE_URL']?>?page=Portlet_Admin">Portlet Admin</a></li>
+            <li><a onclick="$(this).effect('highlight');" href="<?php echo $_SESSION['SITE_URL']?>?page=Portlet_Admin">Portlet Admin</a></li>
             <?php } ?>
-            <li><a onclick="$(this).animate({ opacity: 0.3 }, 500 ); reset_layout();return false;" href="#">Reset Layout</a></li>
+            <li><a onclick="$(this).effect('highlight'); reset_layout();return false;" href="#">Reset Layout</a></li>
         </ul>
     </li>
     <!-- END Top Level with 2nd Level -->
@@ -91,46 +91,46 @@ if ($_SERVER["REQUEST_URI"] == $_SESSION['SITE_URL'] . "index.php") {
             <ul>
             <li><a href="#">By Count</a>
                 <ul>
-                <li><a href="<?php echo $_SESSION['SITE_URL']?>?page=Graph&show_suppressed=all&limit=10&orderby=counter&order=DESC&groupby=host_crc&chart_type=pie" onclick="$(this).animate({ opacity: 0.3 }, 500 );">Hosts</a></li>
-                <li><a onclick="$(this).animate({ opacity: 0.3 }, 500 );" href="<?php echo $_SESSION['SITE_URL']?>?page=Graph&show_suppressed=all&limit=10&orderby=counter&order=DESC&groupby=program&chart_type=pie">Programs</a></li>
-                <li><a onclick="$(this).animate({ opacity: 0.3 }, 500 );" href="<?php echo $_SESSION['SITE_URL']?>?page=Graph&show_suppressed=all&limit=10&orderby=counter&order=DESC&groupby=severity&chart_type=pie">Severities</a></li>
-                <li><a onclick="$(this).animate({ opacity: 0.3 }, 500 );" href="<?php echo $_SESSION['SITE_URL']?>?page=Graph&show_suppressed=all&limit=10&orderby=counter&order=DESC&groupby=facility&chart_type=pie">Facilities</a></li>
-                <li><a onclick="$(this).animate({ opacity: 0.3 }, 500 );" href="<?php echo $_SESSION['SITE_URL']?>?page=Graph&show_suppressed=all&limit=10&orderby=counter&order=DESC&groupby=mne&chart_type=pie">Cisco Mnemonics</a></li>
+                <li><a href="<?php echo $_SESSION['SITE_URL']?>?page=Graph&show_suppressed=all&limit=10&orderby=counter&order=DESC&groupby=host_crc&chart_type=pie" onclick="$(this).effect('highlight');">Hosts</a></li>
+                <li><a onclick="$(this).effect('highlight');" href="<?php echo $_SESSION['SITE_URL']?>?page=Graph&show_suppressed=all&limit=10&orderby=counter&order=DESC&groupby=program&chart_type=pie">Programs</a></li>
+                <li><a onclick="$(this).effect('highlight');" href="<?php echo $_SESSION['SITE_URL']?>?page=Graph&show_suppressed=all&limit=10&orderby=counter&order=DESC&groupby=severity&chart_type=pie">Severities</a></li>
+                <li><a onclick="$(this).effect('highlight');" href="<?php echo $_SESSION['SITE_URL']?>?page=Graph&show_suppressed=all&limit=10&orderby=counter&order=DESC&groupby=facility&chart_type=pie">Facilities</a></li>
+                <li><a onclick="$(this).effect('highlight');" href="<?php echo $_SESSION['SITE_URL']?>?page=Graph&show_suppressed=all&limit=10&orderby=counter&order=DESC&groupby=mne&chart_type=pie">Cisco Mnemonics</a></li>
         <?php if($_SESSION['SNARE'] == "1") {?>
-                <li><a onclick="$(this).animate({ opacity: 0.3 }, 500 );" href="<?php echo $_SESSION['SITE_URL']?>?page=Graph&show_suppressed=all&limit=10&orderby=counter&order=DESC&groupby=eid&chart_type=pie">Windows EventId</a></li>
+                <li><a onclick="$(this).effect('highlight');" href="<?php echo $_SESSION['SITE_URL']?>?page=Graph&show_suppressed=all&limit=10&orderby=counter&order=DESC&groupby=eid&chart_type=pie">Windows EventId</a></li>
                     <?php } ?>
                 </ul>
             </li>
             <li><a href="#">By LO</a>
                 <ul>
-                <li><a onclick="$(this).animate({ opacity: 0.3 }, 500 );" href="<?php echo $_SESSION['SITE_URL']?>?page=Graph&show_suppressed=all&limit=10&orderby=lo&order=DESC&groupby=host_crc&chart_type=pie">Hosts</a></li>
-                <li><a onclick="$(this).animate({ opacity: 0.3 }, 500 );" href="<?php echo $_SESSION['SITE_URL']?>?page=Graph&show_suppressed=all&limit=10&orderby=lo&order=DESC&groupby=program&chart_type=pie">Programs</a></li>
-                <li><a onclick="$(this).animate({ opacity: 0.3 }, 500 );" href="<?php echo $_SESSION['SITE_URL']?>?page=Graph&show_suppressed=all&limit=10&orderby=lo&order=DESC&groupby=severity&chart_type=pie">Severities</a></li>
-                <li><a onclick="$(this).animate({ opacity: 0.3 }, 500 );" href="<?php echo $_SESSION['SITE_URL']?>?page=Graph&show_suppressed=all&limit=10&orderby=lo&order=DESC&groupby=facility&chart_type=pie">Facilities</a></li>
-                <li><a onclick="$(this).animate({ opacity: 0.3 }, 500 );" href="<?php echo $_SESSION['SITE_URL']?>?page=Graph&show_suppressed=all&limit=10&orderby=lo&order=DESC&groupby=mne&chart_type=pie">Cisco Mnemonics</a></li>
+                <li><a onclick="$(this).effect('highlight');" href="<?php echo $_SESSION['SITE_URL']?>?page=Graph&show_suppressed=all&limit=10&orderby=lo&order=DESC&groupby=host_crc&chart_type=pie">Hosts</a></li>
+                <li><a onclick="$(this).effect('highlight');" href="<?php echo $_SESSION['SITE_URL']?>?page=Graph&show_suppressed=all&limit=10&orderby=lo&order=DESC&groupby=program&chart_type=pie">Programs</a></li>
+                <li><a onclick="$(this).effect('highlight');" href="<?php echo $_SESSION['SITE_URL']?>?page=Graph&show_suppressed=all&limit=10&orderby=lo&order=DESC&groupby=severity&chart_type=pie">Severities</a></li>
+                <li><a onclick="$(this).effect('highlight');" href="<?php echo $_SESSION['SITE_URL']?>?page=Graph&show_suppressed=all&limit=10&orderby=lo&order=DESC&groupby=facility&chart_type=pie">Facilities</a></li>
+                <li><a onclick="$(this).effect('highlight');" href="<?php echo $_SESSION['SITE_URL']?>?page=Graph&show_suppressed=all&limit=10&orderby=lo&order=DESC&groupby=mne&chart_type=pie">Cisco Mnemonics</a></li>
                 </ul>
             </li>
             <li><a href="#">By Facility</a>
                 <ul>
-                <li><a onclick="$(this).animate({ opacity: 0.3 }, 500 );" href="<?php echo $_SESSION['SITE_URL']?>?page=Graph&show_suppressed=all&limit=10&orderby=facility&order=DESC&groupby=host_crc&chart_type=pie">Hosts</a></li>
-                <li><a onclick="$(this).animate({ opacity: 0.3 }, 500 );" href="<?php echo $_SESSION['SITE_URL']?>?page=Graph&show_suppressed=all&limit=10&orderby=facility&order=DESC&groupby=program&chart_type=pie">Programs</a></li>
-                <li><a onclick="$(this).animate({ opacity: 0.3 }, 500 );" href="<?php echo $_SESSION['SITE_URL']?>?page=Graph&show_suppressed=all&limit=10&orderby=facility&order=DESC&groupby=severity&chart_type=pie">Severities</a></li>
-                <li><a onclick="$(this).animate({ opacity: 0.3 }, 500 );" href="<?php echo $_SESSION['SITE_URL']?>?page=Graph&show_suppressed=all&limit=10&orderby=facility&order=DESC&groupby=facility&chart_type=pie">Facilities</a></li>
-                <li><a onclick="$(this).animate({ opacity: 0.3 }, 500 );" href="<?php echo $_SESSION['SITE_URL']?>?page=Graph&show_suppressed=all&limit=10&orderby=facility&order=DESC&groupby=mne&chart_type=pie">Cisco Mnemonics</a></li>
+                <li><a onclick="$(this).effect('highlight');" href="<?php echo $_SESSION['SITE_URL']?>?page=Graph&show_suppressed=all&limit=10&orderby=facility&order=DESC&groupby=host_crc&chart_type=pie">Hosts</a></li>
+                <li><a onclick="$(this).effect('highlight');" href="<?php echo $_SESSION['SITE_URL']?>?page=Graph&show_suppressed=all&limit=10&orderby=facility&order=DESC&groupby=program&chart_type=pie">Programs</a></li>
+                <li><a onclick="$(this).effect('highlight');" href="<?php echo $_SESSION['SITE_URL']?>?page=Graph&show_suppressed=all&limit=10&orderby=facility&order=DESC&groupby=severity&chart_type=pie">Severities</a></li>
+                <li><a onclick="$(this).effect('highlight');" href="<?php echo $_SESSION['SITE_URL']?>?page=Graph&show_suppressed=all&limit=10&orderby=facility&order=DESC&groupby=facility&chart_type=pie">Facilities</a></li>
+                <li><a onclick="$(this).effect('highlight');" href="<?php echo $_SESSION['SITE_URL']?>?page=Graph&show_suppressed=all&limit=10&orderby=facility&order=DESC&groupby=mne&chart_type=pie">Cisco Mnemonics</a></li>
                 </ul>
             </li>
             <li><a href="#">By Severity</a>
                 <ul>
-                <li><a onclick="$(this).animate({ opacity: 0.3 }, 500 );" href="<?php echo $_SESSION['SITE_URL']?>?page=Graph&show_suppressed=all&limit=10&orderby=severity&order=DESC&groupby=host_crc&chart_type=pie">Hosts</a></li>
-                <li><a onclick="$(this).animate({ opacity: 0.3 }, 500 );" href="<?php echo $_SESSION['SITE_URL']?>?page=Graph&show_suppressed=all&limit=10&orderby=severity&order=DESC&groupby=program&chart_type=pie">Programs</a></li>
-                <li><a onclick="$(this).animate({ opacity: 0.3 }, 500 );" href="<?php echo $_SESSION['SITE_URL']?>?page=Graph&show_suppressed=all&limit=10&orderby=severity&order=DESC&groupby=severity&chart_type=pie">Severities</a></li>
-                <li><a onclick="$(this).animate({ opacity: 0.3 }, 500 );" href="<?php echo $_SESSION['SITE_URL']?>?page=Graph&show_suppressed=all&limit=10&orderby=severity&order=DESC&groupby=facility&chart_type=pie">Facilities</a></li>
-                <li><a onclick="$(this).animate({ opacity: 0.3 }, 500 );" href="<?php echo $_SESSION['SITE_URL']?>?page=Graph&show_suppressed=all&limit=10&orderby=severity&order=DESC&groupby=mne&chart_type=pie">Cisco Mnemonics</a></li>
+                <li><a onclick="$(this).effect('highlight');" href="<?php echo $_SESSION['SITE_URL']?>?page=Graph&show_suppressed=all&limit=10&orderby=severity&order=DESC&groupby=host_crc&chart_type=pie">Hosts</a></li>
+                <li><a onclick="$(this).effect('highlight');" href="<?php echo $_SESSION['SITE_URL']?>?page=Graph&show_suppressed=all&limit=10&orderby=severity&order=DESC&groupby=program&chart_type=pie">Programs</a></li>
+                <li><a onclick="$(this).effect('highlight');" href="<?php echo $_SESSION['SITE_URL']?>?page=Graph&show_suppressed=all&limit=10&orderby=severity&order=DESC&groupby=severity&chart_type=pie">Severities</a></li>
+                <li><a onclick="$(this).effect('highlight');" href="<?php echo $_SESSION['SITE_URL']?>?page=Graph&show_suppressed=all&limit=10&orderby=severity&order=DESC&groupby=facility&chart_type=pie">Facilities</a></li>
+                <li><a onclick="$(this).effect('highlight');" href="<?php echo $_SESSION['SITE_URL']?>?page=Graph&show_suppressed=all&limit=10&orderby=severity&order=DESC&groupby=mne&chart_type=pie">Cisco Mnemonics</a></li>
                 </ul>
             </li>
             </ul>
         </li>
-                <li><a onclick="$(this).animate({ opacity: 0.3 }, 500 );" href="<?php echo $_SESSION['SITE_URL']?>?page=Charts">MPx Charts</a></li>
+                <li><a onclick="$(this).effect('highlight');" href="<?php echo $_SESSION['SITE_URL']?>?page=Charts">MPx Charts</a></li>
         </ul>
     </li>
     <!-- END Top Level with 2nd Level -->
@@ -150,19 +150,19 @@ if ($_SERVER["REQUEST_URI"] == $_SESSION['SITE_URL'] . "index.php") {
             <!-- BEGIN 2nd Level with 3nd Level -->
             <li><a href="#">Online</a>
                 <ul>
-                    <li><a onclick="$(this).animate({ opacity: 0.3 }, 500 );" href="http://nms.gdd.net/index.php/LogZilla_Installation_Guide" target="_blank">Installation Guide</a></li>
-                    <li><a onclick="$(this).animate({ opacity: 0.3 }, 500 );" href="http://demo.logzilla.pro/login.php" target="_blank">Demo Site</a></li>
-                    <li><a onclick="$(this).animate({ opacity: 0.3 }, 500 );" href="http://nms.gdd.net" target="_blank">NMS Wiki</a></li>
-                    <li><a onclick="$(this).animate({ opacity: 0.3 }, 500 );" href="http://forum.logzilla.pro" target="_blank">LogZilla Forum</a></li>
-                    <li><a onclick="$(this).animate({ opacity: 0.3 }, 500 );" href="http://www.logzilla.pro/licensing" target="_blank">Get Licenses</a></li>
-                    <li><a onclick="$(this).animate({ opacity: 0.3 }, 500 );" href="http://www.logzilla.pro/packs" target="_blank">Upgrades</a></li>
-                    <li><a onclick="$(this).animate({ opacity: 0.3 }, 500 );" href="http://www.cisco.com/en/US/technologies/collateral/tk869/tk769/white_paper_c11-557812.html" target="_blank">Syslog LP</a></li>
+                    <li><a onclick="$(this).effect('highlight');" href="http://nms.gdd.net/index.php/LogZilla_Installation_Guide" target="_blank">Installation Guide</a></li>
+                    <li><a onclick="$(this).effect('highlight');" href="http://demo.logzilla.pro/login.php" target="_blank">Demo Site</a></li>
+                    <li><a onclick="$(this).effect('highlight');" href="http://nms.gdd.net" target="_blank">NMS Wiki</a></li>
+                    <li><a onclick="$(this).effect('highlight');" href="http://forum.logzilla.pro" target="_blank">LogZilla Forum</a></li>
+                    <li><a onclick="$(this).effect('highlight');" href="http://www.logzilla.pro/licensing" target="_blank">Get Licenses</a></li>
+                    <li><a onclick="$(this).effect('highlight');" href="http://www.logzilla.pro/packs" target="_blank">Upgrades</a></li>
+                    <li><a onclick="$(this).effect('highlight');" href="http://www.cisco.com/en/US/technologies/collateral/tk869/tk769/white_paper_c11-557812.html" target="_blank">Syslog LP</a></li>
                 </ul>
             </li>
             <!-- END 2nd Level with 3nd Level -->
             <!-- BEGIN 2nd Level -->
-            <li><a onclick="$(this).animate({ opacity: 0.3 }, 500 );" href="<?php echo $_SESSION['SITE_URL']?>?page=Bugs">Bugs/TODO</a></li>
-            <li><a onclick="$(this).animate({ opacity: 0.3 }, 500 );" href="<?php echo $_SESSION['SITE_URL']?>?page=About">About <?php echo $_SESSION['PROGNAME']?></a></li>
+            <li><a onclick="$(this).effect('highlight');" href="<?php echo $_SESSION['SITE_URL']?>?page=Bugs">Bugs/TODO</a></li>
+            <li><a onclick="$(this).effect('highlight');" href="<?php echo $_SESSION['SITE_URL']?>?page=About">About <?php echo $_SESSION['PROGNAME']?></a></li>
             <!-- END 2nd Level -->
         </ul>
     </li>
@@ -185,7 +185,7 @@ if ($_SERVER["REQUEST_URI"] == $_SESSION['SITE_URL'] . "index.php") {
             <?php 
             if ((has_portlet_access($_SESSION['username'], 'Edit Favorites') == TRUE) || ($_SESSION['AUTHTYPE'] == "none")) { 
             ?>
-            <li><a onclick="$(this).animate({ opacity: 0.3 }, 500 );" href="<?php echo $_SESSION['SITE_URL']?>?page=Favorites">Favorites Admin</a></li>
+            <li><a onclick="$(this).effect('highlight');" href="<?php echo $_SESSION['SITE_URL']?>?page=Favorites">Favorites Admin</a></li>
             <?php } ?>
          </ul>
             <!-- END 2nd Level with 3nd Level -->
