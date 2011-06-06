@@ -1,3 +1,7 @@
+3.2.302 - Minor
+CD:
+ - Typo in search() function caused invalid parameter error for preg_match
+
 3.2.301 - Minor
 CD:
  - Fix for small bug after testing on other systems

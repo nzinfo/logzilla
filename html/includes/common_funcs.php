@@ -828,7 +828,7 @@ function search($json_o, $spx_max=1000,$index="idx_logs idx_delta_logs",$spx_ip=
             case 'mnemonics':
                 foreach ($val as $subkey=>$subval) {
                     // echo "SubKey = $subkey, SubVal = $subval\n";
-                    if (!preg_match ('/^\d+$/', $val)) {
+                    if (!preg_match ('/^\d+$/', $subval)) {
                         $mnes[] .= mne2crc($subval);
                     } else {
                         $mnes[] .= $subval;
