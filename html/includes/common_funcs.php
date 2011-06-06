@@ -798,11 +798,7 @@ function search($json_o, $spx_max=1000,$index="idx_logs idx_delta_logs",$spx_ip=
     $limit = (!empty($json_a['limit'])) ? $json_a['limit'] : $spx_max;
     $show_suppressed = (!empty($json_a['show_suppressed'])) ? $json_a['show_suppressed'] : "all";
     $q_type = (!empty($json_a['q_type'])) ? $json_a['q_type'] : "boolean";
-
-
-
-    // Default operator for concatenation is OR (|) - someday we may allow the option of &&, etc. so it's here as a variable.
-    $oper = "|";
+    $search_op = (!empty($json_a['search_op'])) ? $json_a['search_op'] : "|";
 
     // loop through array to get the fields that the user wants to search on:
     // Note: Only certain values need to be looped here for modification before presenting to sphinx.
@@ -813,49 +809,33 @@ function search($json_o, $spx_max=1000,$index="idx_logs idx_delta_logs",$spx_ip=
             // Strings
             case 'msg_mask':
                 $val = $cl->EscapeString ($val);
-                $msg_mask .= $val . " $oper ";
+                $msg_mask .= $val . " $search_op ";
                 break;
-            case 'hosts':
-                $val = $cl->EscapeString ($val);
-                $hosts .= str_replace (',', ' | ', $val);
-                break;
-            case 'sel_hosts':
+            case 'notes_mask':
                 foreach ($val as $subkey=>$subval) {
                     // echo "SubKey = $subkey, SubVal = $subval\n";
                     $subval = $cl->EscapeString ($subval);
-                    $hosts .= $subval . " $oper ";
+                    $notes_mask .= $subval . " $search_op ";
                 }
                 break;
-
-            case 'mnemonics':
-                if (preg_match ('/,/', $val)) {
-                    $pieces = explode(',',$val);
-                    foreach ($pieces as $part) {
-                        $mnes[] .= mne2crc($part);
-                    }
-                } else {
-                    $mnes[] .= mne2crc($val);
-                }
-                break;
-            case 'sel_mne':
+            case 'hosts':
                 foreach ($val as $subkey=>$subval) {
-                     // echo "SubKey = $subkey, SubVal = $subval\n";
-                    $mnes[] .= mne2crc($subval);
+                    // echo "SubKey = $subkey, SubVal = $subval\n";
+                    $subval = $cl->EscapeString ($subval);
+                    $hosts .= $subval . " $search_op ";
+                }
+                break;
+            case 'mnemonics':
+                foreach ($val as $subkey=>$subval) {
+                    // echo "SubKey = $subkey, SubVal = $subval\n";
+                    if (!preg_match ('/^\d+$/', $val)) {
+                        $mnes[] .= mne2crc($subval);
+                    } else {
+                        $mnes[] .= $subval;
+                    }
                 }
                 break;
             case 'eids':
-                if (preg_match ('/,/', $val)) {
-                    $pieces = explode(',',$val);
-                    foreach ($pieces as $part) {
-                        $eids[] .= $part;
-                    }
-                } else {
-		    if ($val !== '') {
-                        $eids[] .= $val;
-		    }
-                }
-                break;
-            case 'sel_eid':
                 foreach ($val as $subkey=>$subval) {
                      // echo "SubKey = $subkey, SubVal = $subval\n";
                     $eids[] .= $subval;
@@ -864,22 +844,15 @@ function search($json_o, $spx_max=1000,$index="idx_logs idx_delta_logs",$spx_ip=
             case 'programs':
                 foreach ($val as $subkey=>$subval) {
                      // echo "SubKey = $subkey, SubVal = $subval\n";
-                    $prgs .= $subval . " $oper ";
+                    $prgs[] .= $subval;
                 }
-                break;
-
-
-            case 'note':
-                $val = $cl->EscapeString ($val);
-                $note .= $val . " $oper ";
                 break;
         }
     }
     // die(print_r($json_a));
-    $msg_mask = rtrim($msg_mask, " $oper ");
-    $hosts = rtrim($hosts, " $oper ");
-    $prgs = rtrim($prgs, " $oper ");
-    $note = rtrim($note, " $oper ");
+    $msg_mask = rtrim($msg_mask, " $search_op ");
+    $hosts = rtrim($hosts, " $search_op ");
+    $notes_mask = rtrim($notes_mask, " $search_op ");
 
     // Add DB column to strings
     if (!preg_match ('/any|all|phrase/', $q_type)) {
@@ -889,8 +862,8 @@ function search($json_o, $spx_max=1000,$index="idx_logs idx_delta_logs",$spx_ip=
         if ($hosts) {
             $hosts = "@HOST " . $hosts . " ";
         }
-        if ($note) {
-            $note = "@NOTES " . $note;
+        if ($notes_mask) {
+            $notes_mask = "@NOTES " . $notes_mask;
         }
     }
 
@@ -911,19 +884,17 @@ function search($json_o, $spx_max=1000,$index="idx_logs idx_delta_logs",$spx_ip=
     if ($json_a['mnemonics']) {
         $cl->SetFilter( 'mne', $mnes ); 
     }
-    if ($json_a['sel_mne']) {
-        $cl->SetFilter( 'mne', $mnes ); 
-    }
     if ($json_a['groupby'] == "mne") {
         $cl->SetFilter( 'mne', array(mne2crc('None')), true ); 
     }
-    // echo "<pre>";
-    // die(mne2crc('None'));
     if ($json_a['groupby'] == "eid") {
         $cl->SetFilter( 'eid', array(0), true ); 
     }
+    if ($json_a['programs']) {
+        $cl->SetFilter( 'program', $prgs ); 
+    }
 
-    $search_string = $msg_mask . $hosts . $prgs . $note;
+    $search_string = $msg_mask . $hosts . $notes_mask;
 
     // Test for empty search and remove whitespaces
     $search_string = preg_replace('/^\s+$/', '',$search_string);

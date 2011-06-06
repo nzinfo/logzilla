@@ -29,11 +29,10 @@ $start_time = microtime(true);
 $today = date("Y-m-d");
 //construct where clause 
 $where = "WHERE 1=1";
-$sph_msg_mask = '';
 $total = 'unknown';
 $qstring = '';
 $page = get_input('page');
-$qstring .= "?page=$page";
+$qstring .= "&page=$page";
 $show_suppressed = get_input('show_suppressed');
 $qstring .= "&show_suppressed=$show_suppressed";
 $spx_max = get_input('spx_max');
@@ -47,17 +46,15 @@ $qstring .= "&spx_max=$spx_max";
 $fo_checkbox = get_input('fo_checkbox');
     $qstring .= "&fo_checkbox=$fo_checkbox";
 $fo_date = get_input('fo_date');
-    $qstring .= "&fo_date=$fo_date";
+    $qstring .= "&fo_date=".urlencode($fo_date);
 $fo_time_start = get_input('fo_time_start');
     $qstring .= "&fo_time_start=$fo_time_start";
 $fo_time_end = get_input('fo_time_end');
     $qstring .= "&fo_time_end=$fo_time_end";
-// $date_andor = get_input('date_andor');
-    // $qstring .= "&date_andor=$date_andor";
 $lo_checkbox = get_input('lo_checkbox');
     $qstring .= "&lo_checkbox=$lo_checkbox";
 $lo_date = get_input('lo_date');
-    $qstring .= "&lo_date=$lo_date";
+    $qstring .= "&lo_date=".urlencode($lo_date);
 $lo_time_start = get_input('lo_time_start');
     $qstring .= "&lo_time_start=$lo_time_start";
 $lo_time_end = get_input('lo_time_end');
@@ -113,7 +110,7 @@ $q_type = get_input('q_type');
 
 // see if we are tailing
 $tail = get_input('tail');
-if (!$tail) { $tail = "off"; }
+$tail = (!empty($tail)) ? $tail : "off";
 $qstring .= "&tail=$tail";
 $limit = get_input('limit');
 $limit = (!empty($limit)) ? $limit : "10";
@@ -137,154 +134,44 @@ if (($tail > 0) && ($limit > 25)) {
     <?php
     $limit = 25;
 };
-// Special - this gets posted via javascript since it comes from the hosts grid
-// Form code is somewhere near line 992 of js_footer.php
-$hosts = get_input('hosts');
-// sel_hosts comes from the main page <select>, whereas 'hosts' above this line comes from the grid select via javascript.
-$sel_hosts = get_input('sel_hosts');
-if ($hosts) {
-    $pieces = explode(",", $hosts);
-    foreach ($pieces as $host) {
-        $sel_hosts[] .= $host;
-        $qstring .= "&hosts[]=$host";
-    }
-}
-$hosts = $sel_hosts;
-if ($hosts) {
-    $where .= " AND host IN (";
-    $sph_msg_mask .= " @host ";
-    
-    foreach ($hosts as $host) {
-            $where.= "'$host',";
-            $sph_msg_mask .= "$host|";
-        $qstring .= "&sel_hosts[]=$host";
-    }
-    $where = rtrim($where, ",");
-    $sph_msg_mask = rtrim($sph_msg_mask, "|");
-    $where .= ")";
-    $sph_msg_mask .= " ";
-}
-
-// Special - this gets posted via javascript since it comes from the mnemonics grid
-// Form code is somewhere near line 992 of js_footer.php
-$mnemonics = get_input('mnemonics');
-// sel_mne comes from the main page <select>, whereas 'mnemonics' above this line comes from the grid select via javascript.
-$sel_mne = get_input('sel_mne');
-if ($mnemonics) {
-    $pieces = explode(",", $mnemonics);
-    foreach ($pieces as $mne) {
-        $sel_mne[] .= $mne;
-        $qstring .= "&mnemonics[]=$mne";
-    }
-}
-$mnemonics = $sel_mne;
-if ($mnemonics) {
-    if (!in_array(mne2crc('None'), $mnemonics)) {
-        $where .= " AND mne !='".mne2crc('None')."'";
-    }
-    $where .= " AND mne IN (";
-    $sph_msg_mask .= " @mne ";
-    
-    foreach ($mnemonics as $mne) {
-        if (!preg_match("/^\d+/m", $mne)) {
-            $mne = mne2crc($mne);
-        }
-            $where.= "'$mne',";
-            $sph_msg_mask .= "$mne|";
-        $qstring .= "&sel_mne[]=$mne";
-    }
-    $where = rtrim($where, ",");
-    $sph_msg_mask = rtrim($sph_msg_mask, "|");
-    $where .= ")";
-    $sph_msg_mask .= " ";
-}
-
-// Special - this gets posted via javascript since it comes from the Snare EID grid
-// Form code is somewhere near line 992 of js_footer.php
-$eids = get_input('eids');
-// sel_eid comes from the main page <select>, whereas 'eids' above this line comes from the grid select via javascript.
-$sel_eid = get_input('sel_eid');
-if ($eids) {
-    $pieces = explode(",", $eids);
-    foreach ($pieces as $eid) {
-        $sel_eid[] .= $eid;
-        $qstring .= "&eids[]=$eid";
-    }
-}
-$eids = $sel_eid;
-if ($eids) {
-    $where .= " AND eid IN (";
-//    $sph_msg_mask .= " @eid ";
-    
-    foreach ($eids as $eid) {
-            $where.= "'$eid',";
-//          $sph_msg_mask .= "$eid|";
-        $qstring .= "&sel_eid[]=$eid";
-    }
-    $where = rtrim($where, ",");
-//  $sph_msg_mask = rtrim($sph_msg_mask, "|");
-    $where .= ")";
-//  $sph_msg_mask .= " ";
-}
 
 // portlet-programs
 $programs = get_input('programs');
 if ($programs) {
-    $where .= " AND program IN (";
-    $sph_msg_mask .= " @program ";
-    
     foreach ($programs as $program) {
-        if (!preg_match("/^\d+/m", $program)) {
-            $program = prg2crc($program);
-        }
-            $where.= "'$program',";
-            $sph_msg_mask .= "$program|";
-        $qstring .= "&programs[]=$program";
+        $qstring .= "&programs[]=".urlencode($program);
     }
-    $where = rtrim($where, ",");
-    $sph_msg_mask = rtrim($sph_msg_mask, "|");
-    $where .= ")";
-    $sph_msg_mask .= " ";
 }
 
 // portlet-severities
 $severities = get_input('severities');
 if ($severities) {
-    $where .= " AND severity IN (";
     foreach ($severities as $severity) {
         if (!preg_match("/^\d+/m", $severity)) {
             $severity = sev2int($severity);
         }
-            $where.= "'$severity',";
         $qstring .= "&severities[]=$severity";
     }
-    $where = rtrim($where, ",");
-    $where .= " )";
 }
 
 
 // portlet-facilities
 $facilities = get_input('facilities');
 if ($facilities) {
-    $where .= " AND facility IN (";
     foreach ($facilities as $facility) {
         if (!preg_match("/^\d+/m", $facility)) {
             $facility = fac2int($facility);
         }
-            $where.= "'$facility',";
         $qstring .= "&facilities[]=$facility";
     }
-    $where = rtrim($where, ",");
-    $where .= ")";
 }
 
 
-// portlet-sphinxquery
-$msg_mask_get = get_input('msg_mask');
-$msg_mask_get = preg_replace ('/^Search through .*\sMessages/m', '', $msg_mask_get);
+$searchText = get_input('msg_mask');
+$qstring .= "&msg_mask=$searchText";
 
-$msg_mask_oper = get_input('msg_mask_oper');
-$qstring .= "&msg_mask=$msg_mask_get&msg_mask_oper=$msg_mask_oper";
+$notes_mask = get_input('notes_mask');
+$qstring .= "&notes_mask=$notes_mask";
 
 $orderby = get_input('orderby');
 $qstring .= "&orderby=$orderby";
@@ -292,14 +179,15 @@ $qstring .= "&orderby=$orderby";
 $order = get_input('order');
 $qstring .= "&order=$order";
 
-// portlet-search_options
 $dupop = get_input('dupop');
 $qstring .= "&dupop=$dupop";
+
 $filter_dup_min = "0";
 $filter_dup_max = "999";
 $dupop_orig = $dupop;
 $dupcount = get_input('dupcount');
 $qstring .= "&dupcount=$dupcount";
+
 if (($dupop) && ($dupop != 'undefined')) {
     switch ($dupop) {
         case "gt":
@@ -332,30 +220,170 @@ if (($dupop) && ($dupop != 'undefined')) {
 }
     
 if ($_SESSION['SPX_ENABLE'] == "1") {
+    $searchArr['lo_checkbox'] = $lo_checkbox;
+    $searchArr['lo_date'] = $lo_date;
+    $searchArr['lo_time_start'] = $lo_time_start;
+    $searchArr['lo_time_end'] = $lo_time_end;
+    $searchArr['orderby'] = $orderby;
+    $searchArr['order'] = $order;
+    $searchArr['limit'] = $limit;
+    $searchArr['groupby'] = $groupby;
+    $searchArr['tail'] = $tail;
+    $searchArr['show_suppressed'] = $show_suppressed;
+    $searchArr['q_type'] = $q_type;
+    $searchArr['page'] = $page;
+    $searchArr['programs'] = $programs;
+    $searchArr['severities'] = $severities;
+    $searchArr['facilities'] = $facilities;
+    $searchArr['facilities'] = $facilities;
+    $searchArr['dupop'] = $dupop_orig;
+    $searchArr['dupcount'] = $dupcount;
 
-    // Encode POST/GET into json and send it off to search:
-    if ($_POST) {
-        $json_o = search(json_encode($_POST));
-    } else {
-        $json_o = search(json_encode($_GET));
+    // Get the search operator - default is or (|) set in the search() function
+    if (preg_match("/\||&|!/", "$searchText")) {
+        $searchArr['search_op'] = preg_replace ('/.*(\||&|!).*/', '$1', $searchText);
+        $op = $searchArr['search_op'];
+    }
+
+    $hosts = get_input('hosts');
+    if (preg_match("/^@host/i", "$searchText")) {
+        $searchText = preg_replace('/^@[Hh][Oo][Ss][Tt][Ss]?(.*)/', '$1', $searchText);
+        if ($op) {
+            $h = explode("$op", $searchText);
+            foreach ($h as $host) {
+                $host = preg_replace('/\s+/', '',$host);
+                $hosts[] .= $host;
+                $searchText = preg_replace("/$host/", '', $searchText);
+            }
+            $searchText = preg_replace("/\\$op/", '', $searchText);
+        } else {
+            $hosts[] .= $searchText;
+            $searchText = preg_replace("/$searchText/", '', $searchText);
+        }
+    }
+
+    if (preg_match("/^@notes/i", "$searchText")) {
+        $searchText = preg_replace('/^@[Nn][Oo][Tt][Ee][Ss]?(.*)/', '$1', $searchText);
+        if ($op) {
+            $h = explode("$op", $searchText);
+            foreach ($h as $note) {
+                $note = preg_replace('/\s+/', '',$note);
+                $notes_mask[] .= $note;
+                $searchText = preg_replace("/$note/", '', $searchText);
+            }
+            $searchText = preg_replace("/\\$op/", '', $searchText);
+        } else {
+            $notes_mask[] .= $searchText;
+            $searchText = preg_replace("/$searchText/", '', $searchText);
+        }
     }
 
 
-    // If something goes wrong, search() will return ^'SPX_ERROR'
+
+    // Set these after the matches on hosts and notes above so that the mask is cleaned up by them
+    $searchArr['msg_mask'] = $searchText;
+    $searchArr['notes_mask'] = $notes_mask;
+
+    if ($hosts) {
+        if (!is_array($hosts)) {
+            $hosts = explode(",", $hosts);
+        }
+        $searchArr['hosts'] = $hosts;
+    }
+
+    $sel_hosts = get_input('sel_hosts');
+    if ($sel_hosts) {
+        foreach ($sel_hosts as $host) {
+            $hosts[] .= $host;
+            $qstring .= "&hosts[]=$host";
+        }
+        $searchArr['hosts'] = array_merge($sel_hosts, $hosts);
+    }
+
+    $eids = get_input('eids');
+    if ($eids) {
+        if (!is_array($eids)) {
+            $eids = explode(",", $eids);
+        }
+        $searchArr['eids'] = $eids;
+    }
+
+    $sel_eids = get_input('sel_eid');
+    if ($sel_eids) {
+        foreach ($sel_eids as $eid) {
+            $eids[] .= $eid;
+            $qstring .= "&eids[]=$eid";
+        }
+        $searchArr['eids'] = array_merge($sel_eids, $eids);
+    }
+
+
+    $mnemonics = get_input('mnemonics');
+    if ($mnemonics) {
+        $mnemonics = explode(",", $mnemonics);
+        $searchArr['mnemonics'] = $mnemonics;
+    }
+    $sel_mne = get_input('sel_mne');
+    if ($sel_mne) {
+        if ($mnemonics) {
+            $searchArr['mnemonics'] = array_merge($sel_mne, $mnemonics);
+        } else {
+            $searchArr['mnemonics'] = $sel_mne;
+        }
+    }
+
+
+
+    unset($searchArr['sel_hosts']);
+    unset($searchArr['sel_eid']);
+    unset($searchArr['sel_mne']);
+
+    foreach ($_POST as $i => $value) {
+        if (preg_match("/^jqg_/", "$i")) {
+            $name_val = preg_replace('/jqg_(\w+grid)_(.*)/', '$1,$2', $i);
+            $array = explode(',', $name_val);
+            switch ($array[0]) {
+                case "mnegrid":
+                    $searchArr['mnemonics'][] .= $array[1];
+                break;
+                case "eidgrid":
+                    $searchArr['eids'][] .= $array[1];
+                break;
+                case "hostsgrid":
+                    $array[1] = preg_replace('/_/', '.', $array[1]);
+                    $searchArr['hosts'][] .= $array[1];
+                break;
+            }
+        }
+    }
+    $searchArr['mnemonics'] = array_unique($searchArr['mnemonics']);
+    $searchArr['hosts'] = array_unique($searchArr['hosts']);
+    $searchArr['eids'] = array_unique($searchArr['eids']);
+    $searchArr['programs'] = array_unique($searchArr['programs']);
+
+    foreach ($searchArr['hosts'] as $host) {
+        $qstring .= "&hosts[]=$host";
+    }
+    foreach ($searchArr['eids'] as $eid) {
+        $qstring .= "&eids[]=$eid";
+    }
+    foreach ($searchArr['mnemonics'] as $mne) {
+        $qstring .= "&mnemonics[]=$mne";
+    }
+
+
+    $json_o = search(json_encode($searchArr));
+
+
+    // If something goes wrong, search() will return an error
     if (!preg_match("/^Sphinx Error:/", "$json_o")) {
 
     // Decode returned json object into an array:
     $sphinx_results = json_decode($json_o, true);
-    //echo "<pre>";
-    // die(print_r($sphinx_results));
-    // die("result = '$sphinx_results'");
 
     $total = $sphinx_results['total_found'];
 
     if ($sphinx_results['total_found'] > 0) {
-        //  echo "<pre>\n";
-        //  die(print_r($sphinx_results));
-        //  echo "</pre>\n";
         $where = " where id IN (";
         foreach ( $sphinx_results["matches"] as $doc => $docinfo ) {
             $where .= "'$doc',";
@@ -365,7 +393,6 @@ if ($_SESSION['SPX_ENABLE'] == "1") {
     } else {
         // Negate search since sphinx returned 0 hits
         $where = "WHERE 1<1";
-        //  die(print_r($sphinx_results));
     }
     } else {
         $lzbase = str_replace("html/includes/portlets", "", dirname( __FILE__ ));
@@ -404,7 +431,7 @@ if ($_SESSION['SPX_ENABLE'] == "1") {
         <?php
     }
 } else {
-    $msg_mask = mysql_real_escape_string($msg_mask_get);
+    $msg_mask = mysql_real_escape_string($searchText);
     switch ($msg_mask_oper) {
         case "=":
             $where.= " AND msg='$msg_mask'";  
@@ -432,7 +459,6 @@ if ($_SESSION['SPX_ENABLE'] == "1") {
     }
 }
 
-// Not implemented yet (for graph generation)
 $topx = get_input('topx');
 $qstring .= "&topx=$topx";
 $graphtype = get_input('graphtype');
@@ -566,7 +592,7 @@ if ($count > 0) {
         // echo "<pre>\n";
         // die(print_r($sphinx_results));
         // echo "</pre>\n";
-        $info = "No results within the first $spx_max records. Please try refining your search (such as the date of the event).<br />Sphinx Information: Your indexes were last updated $spx_lastupdate";
+        $info = "No results to dislpay. Please try refining your search (such as the date of the event).<br />Sphinx Information: Your indexes were last updated $spx_lastupdate";
     }
     ?>
         <script type="text/javascript">
@@ -611,6 +637,7 @@ while($row = fetch_array($result)) {
             break;
         default:
     }
+    $qstring = preg_replace('/^&(.*)/', '?$1', $qstring);
     echo "<tr id=\"$sev\">\n";
     // Icon downloaded from http://icons.mysitemyway.com
     echo "<td class=\"s_td\">\n";
@@ -680,9 +707,9 @@ while($row = fetch_array($result)) {
 $postvars = $qstring;
 $qstring = myURL().$qstring;
 if ($_SESSION['DEBUG'] > 0 ) {
-    if (($_SESSION['SPX_ENABLE'] == "1") && ($msg_mask_get !== '')) {
+    if (($_SESSION['SPX_ENABLE'] == "1") && ($searchText !== '')) {
     echo "<pre  class=\"code\">";
-    echo "<b><u>Sphinx Query</u></b><pre class=\"code\">$msg_mask_get</pre><br>\n";
+    echo "<b><u>Sphinx Query</u></b><pre class=\"code\">$searchText</pre><br>\n";
     echo "</pre><br><br>\n";
     }
     if ($_SESSION['SPX_ENABLE'] == "1") {
@@ -711,12 +738,16 @@ if ($_SESSION['DEBUG'] > 0 ) {
     echo "<pre  class=\"code\">";
     echo "$sql\n"; 
     echo "</pre><br><br>\n";
-    echo "<br><br><u><b>Post Variables:</u></b><br>\n";
+    echo "<br><br><u><b>Search Array Variables (".count($searchArr)."):</u></b><br>\n";
+    echo "<pre  class=\"code\">";
+    print_r($searchArr);
+    echo "</pre><br><br>\n";
+    echo "<br><br><u><b>Post Variables (".count($_POST)."):</u></b><br>\n";
     echo "<pre  class=\"code\">";
     print_r($_POST);
     echo "</pre><br><br>\n";
     if ($_GET) {
-    echo "<br><br><u><b>GET Variables:</u></b><br>\n";
+    echo "<br><br><u><b>GET Variables (".count($_GET)."):</u></b><br>\n";
     echo "<pre  class=\"code\">";
     print_r($_GET);
     echo "<br><br>\n";

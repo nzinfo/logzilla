@@ -85,7 +85,7 @@ if ($_SESSION['SHOWCOUNTS'] == "1") {
         <option value="gte">>=</option>
         <option value="lte"><=</option>
         </select>
-        <input type=text class="rounded watermark ui-widget ui-corner-all" name="dupcount" id="dupcount" value="0" size="3" />
+        <input type=text class="rounded ui-widget ui-corner-all" name="dupcount" id="dupcount" value="0" size="3" />
         </td>
     </tr>
     <?php  } ?>

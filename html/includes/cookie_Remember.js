@@ -76,6 +76,7 @@ $(document).ready(function(){
 	setRememberedRadioButtons('q_type','portlet-content_Messages');
 	setRememberedText('q_type','msg_mask');
 	$('#btnReset').click(function(){
+            $(this).effect('explode');
 	if($('#mnemonics-remember-span').attr('class')=='ui-icon ui-icon-circle-check')
 		$('#mnemonics-remember-span').click();
 	if($('#snare_EventId-remember-span').attr('class')=='ui-icon ui-icon-circle-check')
@@ -100,6 +101,7 @@ $(document).ready(function(){
                 opt.selected = opt.defaultSelected;
             });
 	    });
+         location.reload();
 	});
 	
  });
@@ -108,14 +110,18 @@ function uncheckAllCheckBoxes(){
 		if($(this).is(':checked') && $(this).attr('id')!='lo_checkbox')
 			$(this).attr('checked',false);
 	});
-
 }
+
 //to remember  check box 
 function setRememberedCheckboxes(portletName,portletDivName){
 	$("#"+portletDivName+" input:checkbox").each(function(){
 		var checkedArray=$.cookie('portlet_'+portletName+'_allSelected')==null?null:$.cookie('portlet_'+portletName+'_allSelected').split(',');
-	if(existinCookie($(this).attr('value'),checkedArray) &&  $(this).attr('checked') !='checked')
-		$(this).attr('checked','checked');
+	if(existinCookie($(this).attr('value'),checkedArray) && (! $(this).is(':checked'))){
+		$(this).click();
+		if(!$(this).is(':checked'))
+			$(this).attr('checked','checked');
+		
+	}
 	$(this).click(function(){
 		if($.cookie('remember-'+portletName+'-cookie')!=null){
 			var allSelectedCheckboxes=$("#"+portletDivName+" input:checkbox").serializeArray();
@@ -134,8 +140,11 @@ function setRememberedCheckboxesForDialog(portletName,portletDivName,startpositi
 	$("#"+portletDivName+" input:checkbox").each(function(){
 		var checkedArray=$.cookie('portlet_'+portletName+'_allSelected')==null?null:$.cookie('portlet_'+portletName+'_allSelected').split(',');
 	var matchingValue=$(this).attr('id').substring(startpositionForSubString);
-	if(existinCookie(matchingValue,checkedArray) &&  $(this).attr('checked') !='checked')
-		$(this).attr('checked','checked');
+	if(existinCookie(matchingValue,checkedArray) && (! $(this).is(':checked')) ){
+		$(this).click();
+		if(!$(this).is(':checked'))
+			$(this).attr('checked','checked');
+	}
 	$(this).click(function(){
 		if($.cookie('remember-'+portletName+'-cookie')!=null){
 			if($(this).is(':checked')){
@@ -153,8 +162,9 @@ function setRememberedCheckboxesForDialog2(portletName,portletDivName,startposit
 	$("#"+portletDivName+" input:checkbox").each(function(){
 		var checkedArray=$.cookie('portlet_'+portletName+'_allSelected')==null?null:$.cookie('portlet_'+portletName+'_allSelected').split(',');
 	var matchingValue=$(this).attr('id').substring(startpositionForSubString);
-	if(existinCookie(matchingValue,checkedArray) &&  $(this).attr('checked') !='checked')
-		$(this).attr('checked','checked');
+	if(existinCookie(matchingValue,checkedArray) && (!$(this).is(':checked')) ){
+			$(this).attr('checked','checked');
+	}
 	$(this).click(function(){
 		if($.cookie('remember-'+portletName+'-cookie')!=null){
 			var allSelectedCheckboxes=$("#"+portletDivName+" input:checkbox").serializeArray();

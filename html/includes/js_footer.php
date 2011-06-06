@@ -969,6 +969,7 @@ $("#portlet-header_Mnemonics").prepend('<a href="#"><span class="ui-icon ui-icon
 $("#portlet-header_Snare_EventId").prepend('<a href="#"><span class="ui-icon ui-icon-search"></span></a>');
 // **Special** - this will append to the search form on the main page for any checkboxes clicked on the hosts grid
 jQuery("#btnSearch").click( function() { 
+        $(this).effect('explode');
         var hosts = jQuery("#hostsgrid").jqGrid('getGridParam','selarrrow'); 
         var mne = jQuery("#mnegrid").jqGrid('getGridParam','selarrrow'); 
         var eid = jQuery("#eidgrid").jqGrid('getGridParam','selarrrow');
@@ -984,6 +985,7 @@ jQuery("#btnSearch").click( function() {
         }
         }); 
 jQuery("#btnGraph").click( function() { 
+        $(this).effect('explode');
         var hosts = jQuery("#hostsgrid").jqGrid('getGridParam','selarrrow'); 
         var mne = jQuery("#mnegrid").jqGrid('getGridParam','selarrrow'); 
         var eid = jQuery("#eidgrid").jqGrid('getGridParam','selarrrow'); 

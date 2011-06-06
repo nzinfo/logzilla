@@ -1,3 +1,16 @@
+3.2.300 - Multiple
+CD:
+ - rewrote deduplication tests in db_insert
+ - Fixed some minor bugs with cookies
+ - Fixed incorrect masks when drilling into hosts, etc. from the results page.
+ - Lot of cleanup of old code in portlet-table.php from prior to conversion of search() as a function
+ - Fixed minor bug in qstring post processing
+ - Added link and button effects so the user is aware of a click
+ - Added page refresh to 'Reset Cookies' button (otherwise cookies won't reset until next reload)
+ - Added ability to use @host or @notes in the search message text field.
+ - Removed watermark from dupcount
+ - Re-wrote help file for message text searching.
+
 3.1.299 - Minor
  - Minor update to unknown programs
 
