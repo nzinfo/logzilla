@@ -232,7 +232,7 @@ if ($_SESSION['SPX_ENABLE'] == "1") {
     $searchArr['show_suppressed'] = $show_suppressed;
     $searchArr['q_type'] = $q_type;
     $searchArr['page'] = $page;
-    $searchArr['programs'] = $programs;
+    if ($programs) {$searchArr['programs'] = $programs;}
     $searchArr['severities'] = $severities;
     $searchArr['facilities'] = $facilities;
     $searchArr['facilities'] = $facilities;
@@ -281,8 +281,8 @@ if ($_SESSION['SPX_ENABLE'] == "1") {
 
 
     // Set these after the matches on hosts and notes above so that the mask is cleaned up by them
-    $searchArr['msg_mask'] = $searchText;
-    $searchArr['notes_mask'] = $notes_mask;
+    if ($searchText) { $searchArr['msg_mask'] = $searchText;}
+    if ($notes_mask) { $searchArr['notes_mask'] = $notes_mask;}
 
     if ($hosts) {
         if (!is_array($hosts)) {
@@ -351,24 +351,34 @@ if ($_SESSION['SPX_ENABLE'] == "1") {
                 break;
                 case "hostsgrid":
                     $array[1] = preg_replace('/_/', '.', $array[1]);
-                    $searchArr['hosts'][] .= $array[1];
+                $searchArr['hosts'][] .= $array[1];
                 break;
             }
         }
     }
-    $searchArr['mnemonics'] = array_unique($searchArr['mnemonics']);
-    $searchArr['hosts'] = array_unique($searchArr['hosts']);
-    $searchArr['eids'] = array_unique($searchArr['eids']);
-    $searchArr['programs'] = array_unique($searchArr['programs']);
-
-    foreach ($searchArr['hosts'] as $host) {
-        $qstring .= "&hosts[]=$host";
+    if(is_array($searchArr['mnemonics'])) {
+        $searchArr['mnemonics'] = array_unique($searchArr['mnemonics']);
+        foreach ($searchArr['mnemonics'] as $mne) {
+            $qstring .= "&mnemonics[]=$mne";
+        }
     }
-    foreach ($searchArr['eids'] as $eid) {
-        $qstring .= "&eids[]=$eid";
+    if(is_array($searchArr['hosts'])) {
+        $searchArr['hosts'] = array_unique($searchArr['hosts']);
+        foreach ($searchArr['hosts'] as $host) {
+            $qstring .= "&hosts[]=$host";
+        }
     }
-    foreach ($searchArr['mnemonics'] as $mne) {
-        $qstring .= "&mnemonics[]=$mne";
+    if(is_array($searchArr['eids'])) {
+        $searchArr['eids'] = array_unique($searchArr['eids']);
+        foreach ($searchArr['eids'] as $eid) {
+            $qstring .= "&eids[]=$eid";
+        }
+    }
+    if(is_array($searchArr['programs'])) {
+        $searchArr['programs'] = array_unique($searchArr['programs']);
+        foreach ($searchArr['programs'] as $program) {
+            $qstring .= "&programs[]=$program";
+        }
     }
 
 
