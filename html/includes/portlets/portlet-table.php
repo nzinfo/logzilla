@@ -347,21 +347,23 @@ if ($_SESSION['SPX_ENABLE'] == "1") {
     unset($searchArr['sel_eid']);
     unset($searchArr['sel_mne']);
 
-    foreach ($_POST as $i => $value) {
-        if (preg_match("/^jqg_/", "$i")) {
-            $name_val = preg_replace('/jqg_(\w+grid)_(.*)/', '$1,$2', $i);
-            $array = explode(',', $name_val);
-            switch ($array[0]) {
-                case "mnegrid":
-                    $searchArr['mnemonics'][] .= $array[1];
-                break;
-                case "eidgrid":
-                    $searchArr['eids'][] .= $array[1];
-                break;
-                case "hostsgrid":
-                    $array[1] = preg_replace('/_/', '.', $array[1]);
-                $searchArr['hosts'][] .= $array[1];
-                break;
+    if ($_POST) {
+        foreach ($_POST as $i => $value) {
+            if (preg_match("/^jqg_/", "$i")) {
+                $name_val = preg_replace('/jqg_(\w+grid)_(.*)/', '$1,$2', $i);
+                $array = explode(',', $name_val);
+                switch ($array[0]) {
+                    case "mnegrid":
+                        $searchArr['mnemonics'][] .= $array[1];
+                    break;
+                    case "eidgrid":
+                        $searchArr['eids'][] .= $array[1];
+                    break;
+                    case "hostsgrid":
+                        $array[1] = preg_replace('/_/', '.', $array[1]);
+                    $searchArr['hosts'][] .= $array[1];
+                    break;
+                }
             }
         }
     }
