@@ -89,7 +89,7 @@ if ($_SERVER["REQUEST_URI"] == $_SESSION['SITE_URL'] . "index.php") {
         <ul>
         <li><a href="#">Top 10's</a>
             <ul>
-            <li><a href="#">By Count</a>
+            <li><a href="#">Today</a>
                 <ul>
                 <li><a href="<?php echo $_SESSION['SITE_URL']?>?page=Graph&show_suppressed=all&limit=10&orderby=counter&order=DESC&groupby=host_crc&chart_type=pie" onclick="$(this).effect('highlight');">Hosts</a></li>
                 <li><a onclick="$(this).effect('highlight');" href="<?php echo $_SESSION['SITE_URL']?>?page=Graph&show_suppressed=all&limit=10&orderby=counter&order=DESC&groupby=program&chart_type=pie">Programs</a></li>
@@ -101,31 +101,40 @@ if ($_SERVER["REQUEST_URI"] == $_SESSION['SITE_URL'] . "index.php") {
                     <?php } ?>
                 </ul>
             </li>
-            <li><a href="#">By LO</a>
+            <li><a href="#">Yesterday</a>
                 <ul>
-                <li><a onclick="$(this).effect('highlight');" href="<?php echo $_SESSION['SITE_URL']?>?page=Graph&show_suppressed=all&limit=10&orderby=lo&order=DESC&groupby=host_crc&chart_type=pie">Hosts</a></li>
-                <li><a onclick="$(this).effect('highlight');" href="<?php echo $_SESSION['SITE_URL']?>?page=Graph&show_suppressed=all&limit=10&orderby=lo&order=DESC&groupby=program&chart_type=pie">Programs</a></li>
-                <li><a onclick="$(this).effect('highlight');" href="<?php echo $_SESSION['SITE_URL']?>?page=Graph&show_suppressed=all&limit=10&orderby=lo&order=DESC&groupby=severity&chart_type=pie">Severities</a></li>
-                <li><a onclick="$(this).effect('highlight');" href="<?php echo $_SESSION['SITE_URL']?>?page=Graph&show_suppressed=all&limit=10&orderby=lo&order=DESC&groupby=facility&chart_type=pie">Facilities</a></li>
-                <li><a onclick="$(this).effect('highlight');" href="<?php echo $_SESSION['SITE_URL']?>?page=Graph&show_suppressed=all&limit=10&orderby=lo&order=DESC&groupby=mne&chart_type=pie">Cisco Mnemonics</a></li>
+                <li><a onclick="$(this).effect('highlight');" href="<?php echo $_SESSION['SITE_URL']?>?page=Graph&show_suppressed=all&limit=10&orderby=counter&order=DESC&groupby=host_crc&chart_type=pie&lo_checkbox=on&lo=yesterday">Hosts</a></li>
+                <li><a onclick="$(this).effect('highlight');" href="<?php echo $_SESSION['SITE_URL']?>?page=Graph&show_suppressed=all&limit=10&orderby=counter&order=DESC&groupby=program&chart_type=pie&lo_checkbox=on&lo=yesterday">Programs</a></li>
+                <li><a onclick="$(this).effect('highlight');" href="<?php echo $_SESSION['SITE_URL']?>?page=Graph&show_suppressed=all&limit=10&orderby=counter&order=DESC&groupby=severity&chart_type=pie&lo_checkbox=on&lo=yesterday">Severities</a></li>
+                <li><a onclick="$(this).effect('highlight');" href="<?php echo $_SESSION['SITE_URL']?>?page=Graph&show_suppressed=all&limit=10&orderby=counter&order=DESC&groupby=facility&chart_type=pie&lo_checkbox=on&lo=yesterday">Facilities</a></li>
+                <li><a onclick="$(this).effect('highlight');" href="<?php echo $_SESSION['SITE_URL']?>?page=Graph&show_suppressed=all&limit=10&orderby=counter&order=DESC&groupby=mne&chart_type=pie&lo_checkbox=on&lo=yesterday">Cisco Mnemonics</a></li>
+        <?php if($_SESSION['SNARE'] == "1") {?>
+                <li><a onclick="$(this).effect('highlight');" href="<?php echo $_SESSION['SITE_URL']?>?page=Graph&show_suppressed=all&limit=10&orderby=counter&order=DESC&groupby=eid&chart_type=pie&lo_checkbox=on&lo=yesterday">Windows EventId</a></li>
+                    <?php } ?>
                 </ul>
             </li>
-            <li><a href="#">By Facility</a>
+            <li><a href="#">This Week</a>
                 <ul>
-                <li><a onclick="$(this).effect('highlight');" href="<?php echo $_SESSION['SITE_URL']?>?page=Graph&show_suppressed=all&limit=10&orderby=facility&order=DESC&groupby=host_crc&chart_type=pie">Hosts</a></li>
-                <li><a onclick="$(this).effect('highlight');" href="<?php echo $_SESSION['SITE_URL']?>?page=Graph&show_suppressed=all&limit=10&orderby=facility&order=DESC&groupby=program&chart_type=pie">Programs</a></li>
-                <li><a onclick="$(this).effect('highlight');" href="<?php echo $_SESSION['SITE_URL']?>?page=Graph&show_suppressed=all&limit=10&orderby=facility&order=DESC&groupby=severity&chart_type=pie">Severities</a></li>
-                <li><a onclick="$(this).effect('highlight');" href="<?php echo $_SESSION['SITE_URL']?>?page=Graph&show_suppressed=all&limit=10&orderby=facility&order=DESC&groupby=facility&chart_type=pie">Facilities</a></li>
-                <li><a onclick="$(this).effect('highlight');" href="<?php echo $_SESSION['SITE_URL']?>?page=Graph&show_suppressed=all&limit=10&orderby=facility&order=DESC&groupby=mne&chart_type=pie">Cisco Mnemonics</a></li>
+                <li><a onclick="$(this).effect('highlight');" href="<?php echo $_SESSION['SITE_URL']?>?page=Graph&show_suppressed=all&limit=10&orderby=counter&order=DESC&groupby=host_crc&chart_type=pie&lo_checkbox=on&lo=this%20week">Hosts</a></li>
+                <li><a onclick="$(this).effect('highlight');" href="<?php echo $_SESSION['SITE_URL']?>?page=Graph&show_suppressed=all&limit=10&orderby=counter&order=DESC&groupby=program&chart_type=pie&lo_checkbox=on&lo=this%20week">Programs</a></li>
+                <li><a onclick="$(this).effect('highlight');" href="<?php echo $_SESSION['SITE_URL']?>?page=Graph&show_suppressed=all&limit=10&orderby=counter&order=DESC&groupby=severity&chart_type=pie&lo_checkbox=on&lo=this%20week">Severities</a></li>
+                <li><a onclick="$(this).effect('highlight');" href="<?php echo $_SESSION['SITE_URL']?>?page=Graph&show_suppressed=all&limit=10&orderby=counter&order=DESC&groupby=facility&chart_type=pie&lo_checkbox=on&lo=this%20week">Facilities</a></li>
+                <li><a onclick="$(this).effect('highlight');" href="<?php echo $_SESSION['SITE_URL']?>?page=Graph&show_suppressed=all&limit=10&orderby=counter&order=DESC&groupby=mne&chart_type=pie&lo_checkbox=on&lo=this%20week">Cisco Mnemonics</a></li>
+        <?php if($_SESSION['SNARE'] == "1") {?>
+                <li><a onclick="$(this).effect('highlight');" href="<?php echo $_SESSION['SITE_URL']?>?page=Graph&show_suppressed=all&limit=10&orderby=counter&order=DESC&groupby=eid&chart_type=pie&lo_checkbox=on&lo=this%20week">Windows EventId</a></li>
+                    <?php } ?>
                 </ul>
             </li>
-            <li><a href="#">By Severity</a>
+            <li><a href="#">This Month</a>
                 <ul>
-                <li><a onclick="$(this).effect('highlight');" href="<?php echo $_SESSION['SITE_URL']?>?page=Graph&show_suppressed=all&limit=10&orderby=severity&order=DESC&groupby=host_crc&chart_type=pie">Hosts</a></li>
-                <li><a onclick="$(this).effect('highlight');" href="<?php echo $_SESSION['SITE_URL']?>?page=Graph&show_suppressed=all&limit=10&orderby=severity&order=DESC&groupby=program&chart_type=pie">Programs</a></li>
-                <li><a onclick="$(this).effect('highlight');" href="<?php echo $_SESSION['SITE_URL']?>?page=Graph&show_suppressed=all&limit=10&orderby=severity&order=DESC&groupby=severity&chart_type=pie">Severities</a></li>
-                <li><a onclick="$(this).effect('highlight');" href="<?php echo $_SESSION['SITE_URL']?>?page=Graph&show_suppressed=all&limit=10&orderby=severity&order=DESC&groupby=facility&chart_type=pie">Facilities</a></li>
-                <li><a onclick="$(this).effect('highlight');" href="<?php echo $_SESSION['SITE_URL']?>?page=Graph&show_suppressed=all&limit=10&orderby=severity&order=DESC&groupby=mne&chart_type=pie">Cisco Mnemonics</a></li>
+                <li><a onclick="$(this).effect('highlight');" href="<?php echo $_SESSION['SITE_URL']?>?page=Graph&show_suppressed=all&limit=10&orderby=counter&order=DESC&groupby=host_crc&chart_type=pie&lo_checkbox=on&lo=thismonth">Hosts</a></li>
+                <li><a onclick="$(this).effect('highlight');" href="<?php echo $_SESSION['SITE_URL']?>?page=Graph&show_suppressed=all&limit=10&orderby=counter&order=DESC&groupby=program&chart_type=pie&lo_checkbox=on&lo=thismonth">Programs</a></li>
+                <li><a onclick="$(this).effect('highlight');" href="<?php echo $_SESSION['SITE_URL']?>?page=Graph&show_suppressed=all&limit=10&orderby=counter&order=DESC&groupby=severity&chart_type=pie&lo_checkbox=on&lo=thismonth">Severities</a></li>
+                <li><a onclick="$(this).effect('highlight');" href="<?php echo $_SESSION['SITE_URL']?>?page=Graph&show_suppressed=all&limit=10&orderby=counter&order=DESC&groupby=facility&chart_type=pie&lo_checkbox=on&lo=thismonth">Facilities</a></li>
+                <li><a onclick="$(this).effect('highlight');" href="<?php echo $_SESSION['SITE_URL']?>?page=Graph&show_suppressed=all&limit=10&orderby=counter&order=DESC&groupby=mne&chart_type=pie&lo_checkbox=on&lo=thismonth">Cisco Mnemonics</a></li>
+        <?php if($_SESSION['SNARE'] == "1") {?>
+                <li><a onclick="$(this).effect('highlight');" href="<?php echo $_SESSION['SITE_URL']?>?page=Graph&show_suppressed=all&limit=10&orderby=counter&order=DESC&groupby=eid&chart_type=pie&lo_checkbox=on&lo=thismonoth">Windows EventId</a></li>
+                    <?php } ?>
                 </ul>
             </li>
             </ul>

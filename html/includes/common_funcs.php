@@ -878,17 +878,8 @@ function search($json_o, $spx_max=1000,$index="idx_logs idx_delta_logs",$spx_ip=
     if (is_array($eids)) {
         $cl->SetFilter( 'eid', $eids ); 
     }
-    if ($json_a['groupby'] == "mne") {
-        unset($mnes["None"]);
-    }
     if ($json_a['mnemonics']) {
         $cl->SetFilter( 'mne', $mnes ); 
-    }
-    if ($json_a['groupby'] == "mne") {
-        $cl->SetFilter( 'mne', array(mne2crc('None')), true ); 
-    }
-    if ($json_a['groupby'] == "eid") {
-        $cl->SetFilter( 'eid', array(0), true ); 
     }
     if ($json_a['programs']) {
         $cl->SetFilter( 'program', $prgs ); 
@@ -1005,14 +996,31 @@ function search($json_o, $spx_max=1000,$index="idx_logs idx_delta_logs",$spx_ip=
     $cl->setLimits(0,intval($limit), $spx_max);
 
     if ($json_a['groupby']) {
-        $cl->setGroupBy($json_a['groupby'],SPH_GROUPBY_ATTR,"@count $order");
-    }
+        $groupby = $json_a['groupby'];
+        switch ($groupby) {
+            case "mne":
+                $val = mne2crc('None');
+                $cl->SetFilter( 'mne', array($val), true ); 
+            break;
+            case "eid":
+                $cl->SetFilter( 'eid', array(0), true ); 
+            break;
+        }
+        if ($order == "ASC") {
+            $cl->SetSortMode ( SPH_SORT_ATTR_ASC  , $groupby );
+        } else {
+            $cl->SetSortMode ( SPH_SORT_ATTR_DESC  , $groupby );
+        }
+        $cl->setGroupBy($json_a['groupby'],SPH_GROUPBY_ATTR,"$orderby $order");
+    } else {
         $cl->SetSortMode ( SPH_SORT_EXTENDED , "$orderby $order" );
+    }
+
 
 
     // make the query
-    // echo "<pre>";
-    // die(print_r($cl));
+    //  echo "<pre>";
+    //  die(print_r($cl));
     // die($search_string);
     // $cl->Query ("@MSG test", $index);
     $sphinx_results = $cl->Query ($search_string, $index);
