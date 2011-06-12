@@ -97,6 +97,7 @@ switch ($err) {
 ?>
 <script type="text/javascript">
 $(document).ready(function(){
+    var url = "<?php echo ($_SESSION['SITE_URL'])?>";
     $("#license_form").dialog();
 });
 </script>
@@ -117,19 +118,19 @@ $(function() {
     },
         buttons: {
             "Submit": function() {
-            $( this ).dialog( "close" );
             var text = $("#licdata").val();
             text = text.replace(/\+/g, "PLUS");
 // alert(text);
             text = escape(text);
+            if (text) {
             $.get("includes/ajax/lpost.php?txt="+text, function(data){
             $('#message_box').replaceWith('<div id="message_box">'+ data + '</div>');
 
                 });
-            },
-            Cancel: function() {
-                $( this ).dialog( "close" );
+            $( this ).dialog( "close" );
             }
+            window.location = "logout.php";
+            },
         }
     });
 });

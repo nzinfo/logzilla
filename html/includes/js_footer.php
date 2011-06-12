@@ -26,6 +26,10 @@
 <script src="includes/js/paginate.js" type="text/javascript"></script>
 <!-- END Table Sorter -->
 
+<!-- BEGIN Charts -->
+<script type="text/javascript" src="includes/js/hc/js/highcharts.js"></script>
+<!-- END Charts -->
+
 <!-- BEGIN BGI Frame support -->
 <script src="includes/js/jquery/bgiframe-2.1.1.js" type="text/javascript"></script>
 <!-- END BGI Frame support -->

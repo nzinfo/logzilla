@@ -1,3 +1,12 @@
+3.2.303 - Updates
+CD:
+ - Cleanup in portlet-table
+ - Fixes for missing chart data in portlet-charts
+ - Modified quick links for Top charts - menus now contain links for time periods (day, week, month)
+ - Fixed grouping issues in Sphinx when generating certain chart types
+ - Modified license entry screen some to help users clear previously used sessions.
+ - Changed default tail from 25 to 10
+
 3.2.302 - Minor
 CD:
  - Typo in search() function caused invalid parameter error for preg_match

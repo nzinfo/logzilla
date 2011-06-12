@@ -38,6 +38,10 @@ $qstring .= "&show_suppressed=$show_suppressed";
 $spx_max = get_input('spx_max');
 $spx_max = (!empty($spx_max)) ? $spx_max : $_SESSION['SPX_MAX_MATCHES'];
 $qstring .= "&spx_max=$spx_max";
+$groupby = get_input('groupby');
+$qstring .= "&groupby=$groupby";
+$chart_type = get_input('chart_type');
+$qstring .= "&chart_type=$chart_type";
 
 //------------------------------------------------------------
 // START date/time
@@ -114,12 +118,11 @@ $tail = (!empty($tail)) ? $tail : "off";
 $qstring .= "&tail=$tail";
 $limit = get_input('limit');
 $limit = (!empty($limit)) ? $limit : "10";
-$qstring .= "&limit=$limit";
 if (($tail > 0) && ($limit > 25)) {
     ?>
     <script type="text/javascript">
         $(document).ready(function(){
-                $( "<div id='tail_error'><center><br><br>The Maximum result set for the auto refresh page is 25.<br>Any more than that would simply scroll off the page before being seen.<br>Please check your 'limit' setting in the 'Search Options' portlet.</div></center>" ).dialog({
+                $( "<div id='tail_error'><center><br><br>Auto setting tail limit to 10<br>The Maximum result set for the auto refresh page is 25.<br>Any more than that would simply scroll off the page before being seen.<br>Please check your 'limit' setting in the 'Search Options' portlet.</div></center>" ).dialog({
                     modal: true,
                     width: "50%", 
                     height: 240, 
@@ -132,39 +135,45 @@ if (($tail > 0) && ($limit > 25)) {
         }); // end doc ready
     </script>
     <?php
-    $limit = 25;
+    $limit = 10;
 };
+$qstring .= "&limit=$limit";
 
 // portlet-programs
 $programs = get_input('programs');
 if ($programs) {
     foreach ($programs as $program) {
+        if (!preg_match("/^\d+/m", $program)) {
+            $arr[] .= prg2crc($program);
+        }
         $qstring .= "&programs[]=".urlencode($program);
     }
+    $programs = $arr;
 }
 
-// portlet-severities
 $severities = get_input('severities');
 if ($severities) {
-    foreach ($severities as $severity) {
-        if (!preg_match("/^\d+/m", $severity)) {
-            $severity = sev2int($severity);
+    foreach ($severities as $sev) {
+        if (!preg_match("/^\d/", $sev)) {
+            $arr[] .= sev2int($sev);
         }
-        $qstring .= "&severities[]=$severity";
+        $qstring .= "&severities[]=".urlencode($sev);
     }
+    $severities = $arr;
 }
 
-
-// portlet-facilities
 $facilities = get_input('facilities');
 if ($facilities) {
-    foreach ($facilities as $facility) {
-        if (!preg_match("/^\d+/m", $facility)) {
-            $facility = fac2int($facility);
+    foreach ($facilities as $fac) {
+        if (!preg_match("/^\d/", $fac)) {
+            $arr[] .= fac2int($fac);
         }
-        $qstring .= "&facilities[]=$facility";
+        $qstring .= "&facilities[]=".urlencode($fac);
     }
+    $facilities = $arr;
 }
+
+
 
 
 $searchText = get_input('msg_mask');
@@ -220,6 +229,7 @@ if (($dupop) && ($dupop != 'undefined')) {
 }
     
 if ($_SESSION['SPX_ENABLE'] == "1") {
+    $searchArr['chart_type'] = $chart_type;
     $searchArr['lo_checkbox'] = $lo_checkbox;
     $searchArr['lo_date'] = $lo_date;
     $searchArr['lo_time_start'] = $lo_time_start;
@@ -234,7 +244,6 @@ if ($_SESSION['SPX_ENABLE'] == "1") {
     $searchArr['page'] = $page;
     if ($programs) {$searchArr['programs'] = $programs;}
     $searchArr['severities'] = $severities;
-    $searchArr['facilities'] = $facilities;
     $searchArr['facilities'] = $facilities;
     $searchArr['dupop'] = $dupop_orig;
     $searchArr['dupcount'] = $dupcount;
