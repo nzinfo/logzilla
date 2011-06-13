@@ -125,6 +125,7 @@ if ($_SERVER["REQUEST_URI"] == $_SESSION['SITE_URL'] . "index.php") {
                     <?php } ?>
                 </ul>
             </li>
+            <?php if ($_SESSION['RETENTION'] > 27) {?>
             <li><a href="#">This Month</a>
                 <ul>
                 <li><a onclick="$(this).effect('highlight');" href="<?php echo $_SESSION['SITE_URL']?>?page=Graph&show_suppressed=all&limit=10&orderby=counter&order=DESC&groupby=host_crc&chart_type=pie&lo_checkbox=on&lo=thismonth">Hosts</a></li>
@@ -137,6 +138,7 @@ if ($_SERVER["REQUEST_URI"] == $_SESSION['SITE_URL'] . "index.php") {
                     <?php } ?>
                 </ul>
             </li>
+            <?php } ?>
             </ul>
         </li>
                 <li><a onclick="$(this).effect('highlight');" href="<?php echo $_SESSION['SITE_URL']?>?page=Charts">MPx Charts</a></li>
