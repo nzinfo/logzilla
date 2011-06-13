@@ -1,3 +1,8 @@
+3.2.306 - Small Mod to menus
+CD:
+ - Remove "This Month" chart from top 10's if data retention is set to < 28 days
+
+
 3.2.305 - Bugfix
 CD:
  - Forgot to add "today" keyword to top 10's for today's date.
