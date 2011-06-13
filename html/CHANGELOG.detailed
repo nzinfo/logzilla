@@ -1,3 +1,8 @@
+3.2.305 - Bugfix
+CD:
+ - Forgot to add "today" keyword to top 10's for today's date.
+ - Missed filter setup for today's top 10
+
 3.2.304 - Updates
 CD:
  - Change main page portlet fac and sev population to just use the sev and fac tables instead of querying the logs table (much faster).

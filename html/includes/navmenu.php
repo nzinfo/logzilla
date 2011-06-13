@@ -91,13 +91,13 @@ if ($_SERVER["REQUEST_URI"] == $_SESSION['SITE_URL'] . "index.php") {
             <ul>
             <li><a href="#">Today</a>
                 <ul>
-                <li><a href="<?php echo $_SESSION['SITE_URL']?>?page=Graph&show_suppressed=all&limit=10&orderby=counter&order=DESC&groupby=host_crc&chart_type=pie" onclick="$(this).effect('highlight');">Hosts</a></li>
-                <li><a onclick="$(this).effect('highlight');" href="<?php echo $_SESSION['SITE_URL']?>?page=Graph&show_suppressed=all&limit=10&orderby=counter&order=DESC&groupby=program&chart_type=pie">Programs</a></li>
-                <li><a onclick="$(this).effect('highlight');" href="<?php echo $_SESSION['SITE_URL']?>?page=Graph&show_suppressed=all&limit=10&orderby=counter&order=DESC&groupby=severity&chart_type=pie">Severities</a></li>
-                <li><a onclick="$(this).effect('highlight');" href="<?php echo $_SESSION['SITE_URL']?>?page=Graph&show_suppressed=all&limit=10&orderby=counter&order=DESC&groupby=facility&chart_type=pie">Facilities</a></li>
-                <li><a onclick="$(this).effect('highlight');" href="<?php echo $_SESSION['SITE_URL']?>?page=Graph&show_suppressed=all&limit=10&orderby=counter&order=DESC&groupby=mne&chart_type=pie">Cisco Mnemonics</a></li>
+                <li><a href="<?php echo $_SESSION['SITE_URL']?>?page=Graph&show_suppressed=all&limit=10&orderby=counter&order=DESC&groupby=host_crc&chart_type=pie&lo=today" onclick="$(this).effect('highlight');">Hosts</a></li>
+                <li><a onclick="$(this).effect('highlight');" href="<?php echo $_SESSION['SITE_URL']?>?page=Graph&show_suppressed=all&limit=10&orderby=counter&order=DESC&groupby=program&chart_type=pie&lo=today">Programs</a></li>
+                <li><a onclick="$(this).effect('highlight');" href="<?php echo $_SESSION['SITE_URL']?>?page=Graph&show_suppressed=all&limit=10&orderby=counter&order=DESC&groupby=severity&chart_type=pie&lo=today">Severities</a></li>
+                <li><a onclick="$(this).effect('highlight');" href="<?php echo $_SESSION['SITE_URL']?>?page=Graph&show_suppressed=all&limit=10&orderby=counter&order=DESC&groupby=facility&chart_type=pie&lo=today">Facilities</a></li>
+                <li><a onclick="$(this).effect('highlight');" href="<?php echo $_SESSION['SITE_URL']?>?page=Graph&show_suppressed=all&limit=10&orderby=counter&order=DESC&groupby=mne&chart_type=pie&lo=today">Cisco Mnemonics</a></li>
         <?php if($_SESSION['SNARE'] == "1") {?>
-                <li><a onclick="$(this).effect('highlight');" href="<?php echo $_SESSION['SITE_URL']?>?page=Graph&show_suppressed=all&limit=10&orderby=counter&order=DESC&groupby=eid&chart_type=pie">Windows EventId</a></li>
+                <li><a onclick="$(this).effect('highlight');" href="<?php echo $_SESSION['SITE_URL']?>?page=Graph&show_suppressed=all&limit=10&orderby=counter&order=DESC&groupby=eid&chart_type=pie&lo=today">Windows EventId</a></li>
                     <?php } ?>
                 </ul>
             </li>
