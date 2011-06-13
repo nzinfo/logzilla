@@ -1006,11 +1006,6 @@ function search($json_o, $spx_max=1000,$index="idx_logs idx_delta_logs",$spx_ip=
                 $cl->SetFilter( 'eid', array(0), true ); 
             break;
         }
-        if ($order == "ASC") {
-            $cl->SetSortMode ( SPH_SORT_ATTR_ASC  , $groupby );
-        } else {
-            $cl->SetSortMode ( SPH_SORT_ATTR_DESC  , $groupby );
-        }
         $cl->setGroupBy($json_a['groupby'],SPH_GROUPBY_ATTR,"$orderby $order");
     } else {
         $cl->SetSortMode ( SPH_SORT_EXTENDED , "$orderby $order" );

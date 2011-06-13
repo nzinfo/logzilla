@@ -66,6 +66,8 @@ if (!$lo) {
     $qstring .= "&lo_time_start=$lo_time_start";
     $lo_time_end = get_input('lo_time_end');
     $qstring .= "&lo_time_end=$lo_time_end";
+} else {
+    $lo_checkbox = "on";
 }
 // FO
 $filter_fo_start = "";
@@ -97,7 +99,7 @@ if (preg_match("/^\w+/", $lo)) {
     } else {
         $lo_date = date('Y-m-d', strtotime($lo));
     }
-    if ($lo !== "yesterday") {
+    if (($lo !== "yesterday") && ($lo !== "today")) {
         $lo_date .= " to ".date('Y-m-d', strtotime("today"));
     }
     $lo_time_start = "00:00:00";
