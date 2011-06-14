@@ -145,6 +145,8 @@ if ($programs) {
     foreach ($programs as $program) {
         if (!preg_match("/^\d+/m", $program)) {
             $arr[] .= prg2crc($program);
+        } else {
+            $arr[] .= $program;
         }
         $qstring .= "&programs[]=".urlencode($program);
     }
@@ -156,6 +158,8 @@ if ($severities) {
     foreach ($severities as $sev) {
         if (!preg_match("/^\d/", $sev)) {
             $arr[] .= sev2int($sev);
+        } else {
+            $arr[] .= $sev;
         }
         $qstring .= "&severities[]=".urlencode($sev);
     }
@@ -167,6 +171,8 @@ if ($facilities) {
     foreach ($facilities as $fac) {
         if (!preg_match("/^\d/", $fac)) {
             $arr[] .= fac2int($fac);
+        } else {
+            $arr[] .= $fac;
         }
         $qstring .= "&facilities[]=".urlencode($fac);
     }
@@ -242,7 +248,7 @@ if ($_SESSION['SPX_ENABLE'] == "1") {
     $searchArr['show_suppressed'] = $show_suppressed;
     $searchArr['q_type'] = $q_type;
     $searchArr['page'] = $page;
-    if ($programs) {$searchArr['programs'] = $programs;}
+    $searchArr['programs'] = $programs;
     $searchArr['severities'] = $severities;
     $searchArr['facilities'] = $facilities;
     $searchArr['dupop'] = $dupop_orig;
