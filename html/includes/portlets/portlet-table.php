@@ -151,6 +151,7 @@ if ($programs) {
         $qstring .= "&programs[]=".urlencode($program);
     }
     $programs = $arr;
+    $searchArr['programs'] = $programs;
 }
 
 $severities = get_input('severities');
@@ -164,6 +165,7 @@ if ($severities) {
         $qstring .= "&severities[]=".urlencode($sev);
     }
     $severities = $arr;
+    $searchArr['severities'] = $severities;
 }
 
 $facilities = get_input('facilities');
@@ -177,6 +179,7 @@ if ($facilities) {
         $qstring .= "&facilities[]=".urlencode($fac);
     }
     $facilities = $arr;
+    $searchArr['facilities'] = $facilities;
 }
 
 
@@ -248,9 +251,6 @@ if ($_SESSION['SPX_ENABLE'] == "1") {
     $searchArr['show_suppressed'] = $show_suppressed;
     $searchArr['q_type'] = $q_type;
     $searchArr['page'] = $page;
-    $searchArr['programs'] = $programs;
-    $searchArr['severities'] = $severities;
-    $searchArr['facilities'] = $facilities;
     $searchArr['dupop'] = $dupop_orig;
     $searchArr['dupcount'] = $dupcount;
 

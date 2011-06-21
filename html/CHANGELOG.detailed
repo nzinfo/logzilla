@@ -1,3 +1,7 @@
+3.2.308 - Bugfix
+CD:
+ - Empty programs array value caused foreach() error after search results
+
 3.2.307 - Bugfix
 CD:
  - Latest changes excluded post variables for programs, sevs and facilities.
