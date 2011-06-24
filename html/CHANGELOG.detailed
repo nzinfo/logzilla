@@ -1,3 +1,7 @@
+3.2.309 - Minor
+CD:
+ - Added missing files (not used yet)
+
 3.2.308 - Bugfix
 CD:
  - Empty programs array value caused foreach() error after search results
