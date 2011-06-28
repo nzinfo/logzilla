@@ -576,7 +576,7 @@ if ($count > 0) {
         // echo "<pre>\n";
         // die(print_r($sphinx_results));
         // echo "</pre>\n";
-        $info = "No results to dislpay. Please try refining your search (such as the date of the event).<br />Sphinx Information: Your indexes were last updated $spx_lastupdate";
+        $info = "No results to display. Please try refining your search (such as the date of the event).<br />Sphinx Information: Your indexes were last updated $spx_lastupdate";
     }
     ?>
         <script type="text/javascript">
