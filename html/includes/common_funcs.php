@@ -808,21 +808,21 @@ function search($json_o, $spx_max=1000,$index="idx_logs idx_delta_logs",$spx_ip=
         switch($key) {
             // Strings
             case 'msg_mask':
-                $val = $cl->EscapeString ($val);
-                $msg_mask .= $val . " $search_op ";
+                // $val = $cl->EscapeString ($val);
+                $msg_mask .= $val;
                 break;
             case 'notes_mask':
                 foreach ($val as $subkey=>$subval) {
                     // echo "SubKey = $subkey, SubVal = $subval\n";
-                    $subval = $cl->EscapeString ($subval);
-                    $notes_mask .= $subval . " $search_op ";
+                    // $subval = $cl->EscapeString ($subval);
+                    $notes_mask .= $subval;
                 }
                 break;
             case 'hosts':
                 foreach ($val as $subkey=>$subval) {
                     // echo "SubKey = $subkey, SubVal = $subval\n";
-                    $subval = $cl->EscapeString ($subval);
-                    $hosts .= $subval . " $search_op ";
+                    // $subval = $cl->EscapeString ($subval);
+                    $hosts .= $subval;
                 }
                 break;
             case 'mnemonics':
@@ -1014,9 +1014,9 @@ function search($json_o, $spx_max=1000,$index="idx_logs idx_delta_logs",$spx_ip=
 
 
     // make the query
-    //  echo "<pre>";
+      // echo "<pre>";
     //  die(print_r($cl));
-    // die($search_string);
+     // die($search_string);
     // $cl->Query ("@MSG test", $index);
     $sphinx_results = $cl->Query ($search_string, $index);
     $error = $cl->GetLastError();

@@ -1,3 +1,8 @@
+3.2.311 - Mixed
+CD:
+ - Multiple results for sphinx last update would cause an incorrect update time warning.
+ - Incorrect masking in sphinx search was not allowing negative parameters such as ! or -
+
 3.2.310 - Minor
 CD:
  - Fixed typo for "display"

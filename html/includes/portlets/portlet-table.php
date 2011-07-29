@@ -255,8 +255,8 @@ if ($_SESSION['SPX_ENABLE'] == "1") {
     $searchArr['dupcount'] = $dupcount;
 
     // Get the search operator - default is or (|) set in the search() function
-    if (preg_match("/\||&|!/", "$searchText")) {
-        $searchArr['search_op'] = preg_replace ('/.*(\||&|!).*/', '$1', $searchText);
+    if (preg_match("/\||&|!|\-/", "$searchText")) {
+        $searchArr['search_op'] = preg_replace ('/.*(\||&|!|\-).*/', '$1', $searchText);
         $op = $searchArr['search_op'];
     }
 
@@ -596,7 +596,7 @@ if ($count > 0) {
     // CDUKES: Added error check to see if Sphinx is working
     $file = $_SESSION['PATH_LOGS'] . "/sphinx_indexer.log";
     if (is_file($file)) {
-        $line = `tail $file | grep "and completed on "`;
+        $line = `tail -n 1 $file | grep "and completed on "`;
         $spx_lastupdate = getRelativeTime(preg_replace('/.*and completed on (\d+-\d+-\d+) at (\d+:\d+:\d+).*/', '$1 $2', $line));
         if (preg_match("/1969/", "$spx_lastupdate")) {
             $info = "Unable to determine the last Sphinx index time, please make sure that /etc/cron.d/logzilla exists and contains the entry for indexer.sh";
