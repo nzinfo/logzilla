@@ -46,7 +46,7 @@ sub p {
 }
 
 my $version = "3.2";
-my $subversion = ".87";
+my $subversion = ".314";
 
 # Grab the base path
 my $lzbase = getcwd;
@@ -217,6 +217,25 @@ if ($ok =~ /[Yy]/) {
         }
     }
     print "\n";
+    print "Removing old style logzilla config entries from system files...\n";
+    my $fn = "/tmp/etc/syslog-ng/syslog-ng.conf";
+    if ( -e "$fn") {
+        print "syslog-ng:\n";
+        system("cp $fn $fn.pre_logzilla_upgrade");
+        rm_old_config_block("$fn","# http://nms.gdd.net/index.php/Install_Guide_for_LogZilla_v3.2", "# END LogZilla Config for syslog-ng"); 
+    }
+    my $fn = "/tmp/etc/apparmor.d/usr.sbin.mysqld";
+    if ( -e "$fn") {
+        print "Apparmor config:\n";
+        system("cp $fn $fn.pre_logzilla_upgrade");
+        system("perl -i -pe 's/.*logzilla.*//g' $fn");
+    }
+    my $fn = "/tmp/etc/php5/apache2/php.ini";
+    if ( -e "$fn") {
+        print "PHP:\n";
+        system("cp $fn $fn.pre_logzilla_upgrade");
+        system("perl -i -pe 's/zend_extension.*ioncube.*//g' $fn");
+    }
     make_dbuser();
     add_triggers();
     update_settings();
@@ -381,7 +400,7 @@ sub do_install {
 sub update_paths {
     my $search = "/path_to_logzilla";
     print "Updating file paths\n";
-    my @flist = `find ../ -name '*.sh' -o -name '*.pl' -o -name '*.conf' -o -name '*.rc' -o -name 'logzilla.*' -type f | egrep -v 'install.pl|sphinx\/src|\\.svn|\\.lzrc' | xargs grep -l "$search"`;
+    my @flist = `find ../ -name '*.sh' -o -name '*.pl' -o -name '*.conf' -o -name '*.rc' -o -name 'logzilla.*' -type f | egrep -v '^install.pl|sphinx\/src|\\.svn|\\.lzrc' | xargs grep -l "$search"`;
     #print "@flist\n";
     foreach my $file (@flist) {
         chomp $file;
@@ -390,7 +409,7 @@ sub update_paths {
     }
     my $search = "/path_to_logs";
     print "Updating log paths\n";
-    my @flist = `find ../ -name '*.sh' -o -name '*.pl' -o -name '*.conf' -o -name '*.rc' -o -name 'logzilla.*' -type f | egrep -v 'install.pl|sphinx\/src|\\.svn|\\.lzrc' | xargs grep -l "$search"`;
+    my @flist = `find ../ -name '*.sh' -o -name '*.pl' -o -name '*.conf' -o -name '*.rc' -o -name 'logzilla.*' -type f | egrep -v '^install.pl|sphinx\/src|\\.svn|\\.lzrc' | xargs grep -l "$search"`;
     #print "@flist\n";
     foreach my $file (@flist) {
         chomp $file;
@@ -1043,7 +1062,7 @@ sub setup_cron {
 #####################################################
 # Daily export archives
 #####################################################
-0 1 * * * root sh $lzbase/scripts/export.sh
+# 0 1 * * * root sh $lzbase/scripts/export.sh
 
 #####################################################
 # END LogZilla Cron Entries
@@ -1897,5 +1916,29 @@ sub install_license {
             print FILE $answer;
             close FILE;
         }
+    }
+}
+sub rm_old_config_block {
+    my $file = shift;
+    my $start = shift;
+    my $end = shift;
+    if (-f $file) {
+        my @data;
+        open FILE, "<$file";
+        my @lines = <FILE>;
+        close FILE;
+        open my $config, '+<', "$file" or warn "FAILED: $!\n";
+        if (grep(/$start/, @lines)) {
+            while (<$config>) {
+                next if (/$start/../$end/);
+                push (@data, $_);
+            }
+            close $config;
+            open FILE, ">$file" or die "Unable to open $file: $!";
+            print FILE @data;
+            close FILE;
+        }
+    } else {
+        print "$file does not exist\n";
     }
 }
