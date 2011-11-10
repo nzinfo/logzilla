@@ -217,6 +217,10 @@ if ($ok =~ /[Yy]/) {
         }
     }
     print "\n";
+    make_dbuser();
+    add_triggers();
+    update_settings();
+    add_logrotate();
     print "Removing old style logzilla config entries from system files...\n";
     my $fn = "/tmp/etc/syslog-ng/syslog-ng.conf";
     if ( -e "$fn") {
@@ -236,10 +240,6 @@ if ($ok =~ /[Yy]/) {
         system("cp $fn $fn.pre_logzilla_upgrade");
         system("perl -i -pe 's/zend_extension.*ioncube.*//g' $fn");
     }
-    make_dbuser();
-    add_triggers();
-    update_settings();
-    add_logrotate();
     add_syslog_conf();
     setup_cron();
     setup_sudo();
