@@ -1,3 +1,7 @@
+3.2.315 - Minor
+CD:
+ - Bug in syslog-ng.conf file (predefined s_src)
+
 3.2.313 - Uninstall
 CD:
  - Remove "old-style" config entries from system files so that new ones get the new lzconfig tags
