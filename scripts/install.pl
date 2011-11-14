@@ -213,6 +213,28 @@ if ($ok =~ /[Yy]/) {
                 } else {
                     do_upgrade("all");
                 }
+                print "Removing old style logzilla config entries from system files...\n";
+                my $fn = "/tmp/etc/syslog-ng/syslog-ng.conf";
+                if ( -e "$fn") {
+                    print "syslog-ng:\n";
+                    system("cp $fn $fn.pre_logzilla_upgrade");
+                    print "Original file backed up to $fn.pre_logzilla_upgrade\n";
+                    rm_old_config_block("$fn","# http://nms.gdd.net/index.php/Install_Guide_for_LogZilla_v3.2", "# END LogZilla Config for syslog-ng");
+                }
+                my $fn = "/tmp/etc/apparmor.d/usr.sbin.mysqld";
+                if ( -e "$fn") {
+                    print "Apparmor config:\n";
+                    system("cp $fn $fn.pre_logzilla_upgrade");
+                    print "Original file backed up to $fn.pre_logzilla_upgrade\n";
+                    system("perl -i -pe 's/.*logzilla.*//g' $fn");
+                }
+                my $fn = "/tmp/etc/php5/apache2/php.ini";
+                if ( -e "$fn") {
+                    print "PHP:\n";
+                    system("cp $fn $fn.pre_logzilla_upgrade");
+                    print "Original file backed up to $fn.pre_logzilla_upgrade\n";
+                    system("perl -i -pe 's/zend_extension.*ioncube.*//g' $fn");
+                }
             }
         }
     }
@@ -221,25 +243,6 @@ if ($ok =~ /[Yy]/) {
     add_triggers();
     update_settings();
     add_logrotate();
-    print "Removing old style logzilla config entries from system files...\n";
-    my $fn = "/tmp/etc/syslog-ng/syslog-ng.conf";
-    if ( -e "$fn") {
-        print "syslog-ng:\n";
-        system("cp $fn $fn.pre_logzilla_upgrade");
-        rm_old_config_block("$fn","# http://nms.gdd.net/index.php/Install_Guide_for_LogZilla_v3.2", "# END LogZilla Config for syslog-ng"); 
-    }
-    my $fn = "/tmp/etc/apparmor.d/usr.sbin.mysqld";
-    if ( -e "$fn") {
-        print "Apparmor config:\n";
-        system("cp $fn $fn.pre_logzilla_upgrade");
-        system("perl -i -pe 's/.*logzilla.*//g' $fn");
-    }
-    my $fn = "/tmp/etc/php5/apache2/php.ini";
-    if ( -e "$fn") {
-        print "PHP:\n";
-        system("cp $fn $fn.pre_logzilla_upgrade");
-        system("perl -i -pe 's/zend_extension.*ioncube.*//g' $fn");
-    }
     add_syslog_conf();
     setup_cron();
     setup_sudo();
