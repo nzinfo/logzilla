@@ -1,0 +1,508 @@
+<?php
+/*
+ *
+ * Developed by Clayton Dukes <cdukes@cdukes.com>
+ * Copyright (c) 2010 LogZilla, LLC
+ * All rights reserved.
+ * Last updated on 2010-06-23
+ *
+ * Changelog:
+ * 2010-02-28 - created
+ *
+ */
+
+session_start();
+$basePath = dirname( __FILE__ );
+require_once ($basePath . "/../common_funcs.php");
+if ((has_portlet_access($_SESSION['username'], 'Search Results') == TRUE) || ($_SESSION['AUTHTYPE'] == "none")) {
+$dbLink = db_connect_syslog(DBADMIN, DBADMINPW);
+
+//---------------------------------------------------
+// The get_input statements below are used to get
+// POST, GET, COOKIE or SESSION variables.
+// Note that PLURAL words below are arrays.
+//---------------------------------------------------
+
+$today = date("Y-m-d");
+//construct where clause 
+// $where = "WHERE 1=1";
+// Use max(id) for tail page
+// #121 Set limit here and use MAX to just grab the last X rows - much faster
+$limit = get_input('limit');
+$limit = (!empty($limit)) ? $limit : "10";
+$where = "WHERE id >  ((SELECT MAX(id) from ".$_SESSION['TBL_MAIN'] .") - $limit)";
+
+$qstring = '';
+// $page = get_input('page');
+$qstring .= "?page=Results";
+
+$show_suppressed = get_input('show_suppressed');
+$qstring .= "&show_suppressed=$show_suppressed";
+
+//------------------------------------------------------------
+// START date/time
+//------------------------------------------------------------
+// portlet-datepicker 
+$fo_checkbox = get_input('fo_checkbox');
+    $qstring .= "&fo_checkbox=$fo_checkbox";
+$fo_date = get_input('fo_date');
+    $qstring .= "&fo_date=$fo_date";
+$fo_time_start = get_input('fo_time_start');
+    $qstring .= "&fo_time_start=$fo_time_start";
+$fo_time_end = get_input('fo_time_end');
+    $qstring .= "&fo_time_end=$fo_time_end";
+$date_andor = get_input('date_andor');
+    $qstring .= "&date_andor=$date_andor";
+$lo_checkbox = get_input('lo_checkbox');
+    $qstring .= "&lo_checkbox=$lo_checkbox";
+$lo_date = get_input('lo_date');
+    $qstring .= "&lo_date=$lo_date";
+$lo_time_start = get_input('lo_time_start');
+    $qstring .= "&lo_time_start=$lo_time_start";
+$lo_time_end = get_input('lo_time_end');
+    $qstring .= "&lo_time_end=$lo_time_end";
+// FO
+if ($fo_checkbox == "on") {
+    if($fo_date!='') {
+        list($start,$end) = explode(' to ', $fo_date);
+        if($end=='') $end = "$start" ; 
+        if($fo_time_start!=$fo_time_end) {
+            $start .= " $fo_time_start"; 
+            $end .= " $fo_time_end"; 
+        }
+            $where.= " AND fo BETWEEN '$start' AND '$end'";
+    }
+}
+/*
+
+// LO
+$start = "";
+$end = "";
+if ($lo_checkbox == "on") {
+    if($lo_date!='') {
+        list($start,$end) = explode(' to ', $lo_date);
+        if($end=='') $end = "$start" ; 
+        if($lo_time_start!=$lo_time_end) {
+            $start .= " $lo_time_start"; 
+            $end .= " $lo_time_end"; 
+        }
+        $where.= " ".strtoupper($date_andor)." lo BETWEEN '$start' AND '$end'";
+    }
+}
+*/
+//------------------------------------------------------------
+// END date/time
+//------------------------------------------------------------
+
+
+// see if we are tailing
+$tail = get_input('tail');
+if (!$tail) { $tail = "off"; }
+$qstring .= "&tail=$tail";
+
+// Special - this gets posted via javascript since it comes from the hosts grid
+// Form code is somewhere near line 992 of js_footer.php
+$hosts = get_input('hosts');
+// sel_hosts comes from the main page <select>, whereas 'hosts' above this line comes from the grid select via javascript.
+$sel_hosts = get_input('sel_hosts');
+if ($hosts) {
+    $pieces = explode(",", $hosts);
+    foreach ($pieces as $host) {
+        $sel_hosts[] .= $host;
+        $qstring .= "&hosts[]=$host";
+    }
+}
+$hosts = $sel_hosts;
+if ($hosts) {
+    $where .= " AND host IN (";
+    $sph_msg_mask .= " @host ";
+    
+    foreach ($hosts as $host) {
+            $where.= "'$host',";
+            $sph_msg_mask .= "$host|";
+        $qstring .= "&sel_hosts[]=$host";
+    }
+    $where = rtrim($where, ",");
+    $sph_msg_mask = rtrim($sph_msg_mask, "|");
+    $where .= ")";
+    $sph_msg_mask .= " ";
+}
+
+// Special - this gets posted via javascript since it comes from the mnemonics grid
+// Form code is somewhere near line 992 of js_footer.php
+$mnemonics = get_input('mnemonics');
+// sel_mne comes from the main page <select>, whereas 'mnemonics' above this line comes from the grid select via javascript.
+$sel_mne = get_input('sel_mne');
+if ($mnemonics) {
+    $pieces = explode(",", $mnemonics);
+    foreach ($pieces as $mne) {
+        $sel_mne[] .= $mne;
+        $qstring .= "&mnemonics[]=$mne";
+    }
+}
+$mnemonics = $sel_mne;
+if ($mnemonics) {
+    if (!in_array(mne2crc('None'), $mnemonics)) {
+        $where .= " AND mne !='".mne2crc('None')."'";
+    }
+    $where .= " AND mne IN (";
+    $sph_msg_mask .= " @mne ";
+    
+    foreach ($mnemonics as $mne) {
+        if (!preg_match("/^\d+/m", $mne)) {
+            $mne = mne2crc($mne);
+        }
+            $where.= "'$mne',";
+            $sph_msg_mask .= "$mne|";
+        $qstring .= "&sel_mne[]=$mne";
+    }
+    $where = rtrim($where, ",");
+    $sph_msg_mask = rtrim($sph_msg_mask, "|");
+    $where .= ")";
+    $sph_msg_mask .= " ";
+}
+
+// Special - this gets posted via javascript since it comes from the Snare EID grid
+// Form code is somewhere near line 992 of js_footer.php
+$eids = get_input('eids');
+// sel_eid comes from the main page <select>, whereas 'eids' above this line comes from the grid select via javascript.
+$sel_eid = get_input('sel_eid');
+if ($eids) {
+    $pieces = explode(",", $eids);
+    foreach ($pieces as $eid) {
+        $sel_eid[] .= $eid;
+        $qstring .= "&eids[]=$eid";
+    }
+}
+$eids = $sel_eid;
+if ($eids) {
+    if (!in_array('0', $eids)) {
+        $where .= " AND eid > 0";
+    }
+    $where .= " AND eid IN (";
+    $sph_msg_mask .= " @eid ";
+    
+    foreach ($eids as $eid) {
+            $where.= "'$eid',";
+            $sph_msg_mask .= "$eid|";
+        $qstring .= "&sel_eid[]=$eid";
+    }
+    $where = rtrim($where, ",");
+    $sph_msg_mask = rtrim($sph_msg_mask, "|");
+    $where .= ")";
+    $sph_msg_mask .= " ";
+}
+
+// portlet-programs
+$programs = get_input('programs');
+if ($programs) {
+    $where .= " AND program IN (";
+    foreach ($programs as $program) {
+        if (!preg_match("/^\d+/m", $program)) {
+            $program = prg2crc($program);
+        }
+            $where.= "'$program',";
+        $qstring .= "&programs[]=$program";
+    }
+    $where = rtrim($where, ",");
+    $where .= ")";
+}
+
+// portlet-severities
+$severities = get_input('severities');
+if ($severities) {
+    $where .= " AND severity IN (";
+    foreach ($severities as $severity) {
+        if (!preg_match("/^\d+/m", $severity)) {
+            $severity = sev2int($severity);
+        }
+            $where.= "'$severity',";
+        $qstring .= "&severities[]=$severity";
+    }
+    $where = rtrim($where, ",");
+    $where .= ")";
+}
+
+
+// portlet-facilities
+$facilities = get_input('facilities');
+if ($facilities) {
+    $where .= " AND facility IN (";
+    foreach ($facilities as $facility) {
+        if (!preg_match("/^\d+/m", $facility)) {
+            $facility = fac2int($facility);
+        }
+            $where.= "'$facility',";
+        $qstring .= "&facilities[]=$facility";
+    }
+    $where = rtrim($where, ",");
+    $where .= ")";
+}
+
+$qstring .= "&limit=$limit";
+
+// portlet-sphinxquery
+$msg_mask = get_input('msg_mask');
+$msg_mask = preg_replace ('/^Search through .*\sMessages/m', '', $msg_mask);
+$msg_mask_oper = get_input('msg_mask_oper');
+$qstring .= "&msg_mask=$msg_mask&msg_mask_oper=$msg_mask_oper";
+
+$orderby = get_input('orderby');
+$qstring .= "&orderby=$orderby";
+
+$order = get_input('order');
+$qstring .= "&order=$order";
+
+if($msg_mask !== '') {
+        $msg_mask = mysql_real_escape_string($msg_mask);
+                $where.= " AND msg like '%$msg_mask%'";  
+}
+
+/*
+$notes_mask = get_input('notes_mask');
+$notes_mask = preg_replace ('/^Search through .*\sNotes/m', '', $notes_mask);
+$notes_mask_oper = get_input('notes_mask_oper');
+$notes_andor = get_input('notes_andor');
+$qstring .= "&notes_mask=$notes_mask&notes_mask_oper=$notes_mask_oper&notes_andor=$notes_andor";
+if($notes_mask) {
+    switch ($notes_mask_oper) {
+        case "=":
+            $where.= " AND notes='$notes_mask'";  
+        break;
+
+        case "!=":
+            $where.= " AND notes='$notes_mask'";  
+        break;
+
+        case "LIKE":
+            $where.= " AND notes LIKE '%$notes_mask%'";  
+        break;
+
+        case "! LIKE":
+            $where.= " AND notes NOT LIKE '%$notes_mask%'";  
+        break;
+
+        case "RLIKE":
+            $where.= " AND notes RLIKE '$notes_mask'";  
+        break;
+
+        case "! RLIKE":
+            $where.= " AND notes NOT LIKE '$notes_mask'";  
+        break;
+
+        case "EMPTY":
+            $where.= " AND notes = ''";  
+        break;
+
+        case "! EMPTY":
+            $where.= " AND notes != ''";  
+        break;
+    }
+} else {
+    if($notes_mask_oper) {
+        switch ($notes_mask_oper) {
+            case "EMPTY":
+                $where.= " AND notes = ''";  
+            break;
+
+            case "! EMPTY":
+                $where.= " AND notes != ''";  
+            break;
+        }
+    }
+}
+*/
+// portlet-search_options
+$dupop = get_input('dupop');
+$qstring .= "&dupop=$dupop";
+$dupop_orig = $dupop;
+$dupcount = get_input('dupcount');
+$qstring .= "&dupcount=$dupcount";
+if (($dupop) && ($dupop != 'undefined')) {
+    switch ($dupop) {
+        case "gt":
+            $dupop = ">";
+        break;
+
+        case "lt":
+            $dupop = "<";
+        break;
+
+        case "eq":
+            $dupop = "=";
+        break;
+
+        case "gte":
+            $dupop = ">=";
+        break;
+
+        case "lte":
+            $dupop = "<=";
+        break;
+    }
+    $where.= " AND counter $dupop '$dupcount'"; 
+}
+// Not implemented yet (for graph generation)
+$topx = get_input('topx');
+$qstring .= "&topx=$topx";
+$graphtype = get_input('graphtype');
+$qstring .= "&graphtype=$graphtype";
+
+if ($orderby) {
+    // $where.= " ORDER BY $orderby";  
+    // manually set orderby because this is the refresh page
+    $where.= " ORDER BY id";  
+}
+if ($order) {
+    // manually set order because this is the refresh page
+    $where.= " DESC";  
+}
+
+?>
+
+<script type="text/javascript">
+// Remove the header and export button since we're auto-refreshing
+$('.portlet-header').remove();
+$('.XLButtons').remove();
+</script>
+
+<div id="refresh_content">
+<table style="float: center; margin-top: 1%;" id="theTable" cellpadding="0" cellspacing="0" class="no-arrow paginate-<?php echo $_SESSION['PAGINATE']?> max-pages-7 paginationcallback-callbackTest-calculateTotalRating paginationcallback-callbackTest-displayTextInfo sortcompletecallback-callbackTest-calculateTotalRating s_table">
+<thead class="ui-widget-header">
+  <tr class='HeaderRow'>
+  <?php if($_SESSION['SNARE'] == "1") {
+      echo '<th class="s_th">EventId</th>';
+  }?>
+    <th class="s_th">Host</th>
+    <th class="s_th">Facility</th>
+    <th class="s_th">Priority</th>
+    <th class="s_th">Program</th>
+    <th class="s_th">Mnemonic</th>
+    <th class="s_th">Message</th>
+    <?php if ($_SESSION['DEDUP'] == 1) { 
+        echo '<th class="s_th sortable-sortEnglishDateTime">FO</th>'; 
+        echo '<th class="s_th sortable-sortEnglishDateTime">LO</th>';
+        echo '<th class="s_th">Count</th>';
+    } else {
+        echo '<th class="s_th sortable-sortEnglishDateTime">Received</th>';
+    }
+    ?>
+  </tr>
+</thead>
+
+  <tbody>
+  <?php
+  
+switch ($show_suppressed): 
+        case "suppressed":
+                $sql = "SELECT * FROM ".$_SESSION['TBL_MAIN']."_suppressed $where LIMIT $limit";
+        break;
+        case "unsuppressed":
+                $sql = "SELECT * FROM ".$_SESSION['TBL_MAIN']."_unsuppressed $where LIMIT $limit";
+        break;
+        default:
+                $sql = "SELECT * FROM ".$_SESSION['TBL_MAIN'] ." $where LIMIT $limit";
+endswitch;
+
+  
+  $result = perform_query($sql, $dbLink, $_SERVER['PHP_SELF']); 
+  $count = mysql_num_rows($result);
+  if ($count < 1) {
+      $info = "<font color=\"red\">No results match your search criteria</font>";
+      ?>
+          <script type="text/javascript">
+          $("#theTable").html('<?php echo "$info"?>');
+      </script>
+          <?php
+  }
+  ?>
+<?php
+  while($row = fetch_array($result)) { 
+      $msg = htmlentities($row['msg']);
+        switch ($row['severity']) {
+            case '7':
+                $sev = 'sev7';
+                $sev_text = "DEBUG";
+                break;
+            case '6':
+                $sev = 'sev6';
+                $sev_text = "INFO";
+                break;
+            case '5':
+                $sev = 'sev5';
+                $sev_text = "NOTICE";
+                break;
+            case '4':
+                $sev = 'sev4';
+                $sev_text = "WARNING";
+                break;
+            case '3':
+                $sev = 'sev3';
+                $sev_text = "ERROR";
+                break;
+            case '2':
+                $sev = 'sev2';
+                $sev_text = "CRIT";
+                break;
+            case '1':
+                $sev = 'sev1';
+                $sev_text = "ALERT";
+                break;
+            case '0':
+                $sev = 'sev0';
+                $sev_text = "EMERG";
+                break;
+            default:
+        }
+        echo "<tr id=\"$sev\">\n";
+        if($_SESSION['SNARE'] == "1") {
+            if ($row['eid'] > 0) {
+            echo "<td class=\"s_td\"><a href=$_SESSION[SITE_URL]$qstring&eids=$row[eid]>$row[eid]</a></td>\n";
+            } else {
+            echo "<td class=\"s_td\">N/A</td>\n";
+            }
+        }
+        echo "<td class=\"s_td\"><a href=$_SESSION[SITE_URL]$qstring&hosts=$row[host]>$row[host]</a></td>\n";
+        echo "<td class=\"s_td\"><a href=$_SESSION[SITE_URL]$qstring&facilities[]=$row[facility]>".int2fac($row['facility'])."</a></td>\n";
+        echo "<td class=\"s_td $sev\"><a href=$_SESSION[SITE_URL]$qstring&severities[]=$row[severity]>$sev_text</a></td>\n";
+        echo "<td class=\"s_td\"><a href=$_SESSION[SITE_URL]$qstring&programs[]=$row[program]>".crc2prg($row['program'])."</a></td>\n";
+        echo "<td class=\"s_td\"><a href=$_SESSION[SITE_URL]$qstring&mnemonics[]=$row[mne]>".crc2mne($row['mne'])."</a></td>\n";
+        if ($_SESSION['CISCO_MNE_PARSE'] == "1" ) {
+            $msg = preg_replace('/\s:/', ':', $msg);
+            $msg = preg_replace('/.*%(\w+-.*\d-\w+)\s?:/', '$1', $msg);
+        }
+        # CDUKES: [[ticket:41]] - break long text so it doesn't scroll off the page
+        $msg = wordwrap($msg, 90, " <br> ", true);
+        if($_SESSION['MSG_EXPLODE'] == "1") {
+            $explode_url = "";
+            $pieces = explode(" ", $msg);
+            foreach($pieces as $value) {
+            	// url-encoding w/o quot makes sphinx happier
+                $explode_url .= " <a href=\"$_SESSION[SITE_URL]$qstring&msg_mask=".urlencode(trim($value, "\x22"))."\"> ".$value." </a> ";
+            }
+        }
+        // Link to LZECS if info is available
+            if($_SESSION['MSG_EXPLODE'] == "1") {
+                // echo "<td class=\"s_td wide\"><a onclick=\"lzecs(this); return false\" id='$msg' href=\"javascript:void(0);\">[LZECS]&nbsp;&nbsp;</a>$explode_url</td>\n";
+                echo "<td class=\"s_td wide\">$explode_url</td>\n";
+            } else {
+                // echo "<td class=\"s_td wide\"><a onclick=\"lzecs(this); return false\" id='$msg' href=\"javascript:void(0);\">[LZECS]&nbsp;&nbsp;</a>$msg</td>\n";
+                echo "<td class=\"s_td wide\">$msg</td>\n";
+            }
+            if ($_SESSION['DEDUP'] == 1) { 
+                echo "<td class=\"s_td\">$row[fo]</td>\n";
+                echo "<td class=\"s_td\">$row[lo]</td>\n";
+                echo "<td class=\"s_td\"><a href=$_SESSION[SITE_URL]$qstring&dupop=eq&dupcount=$row[counter]>$row[counter]</a></td>\n";
+            } else {
+                echo "<td class=\"s_td\">$row[lo]</td>\n";
+            }
+        echo "</tr>\n";
+    }
+  ?>
+  </tbody>
+  </table>
+  </div>
+<?php } else { 
+    die("Access Denied for user: ".$_SESSION['username']);
+}
+?>
