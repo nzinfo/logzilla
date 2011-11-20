@@ -65,6 +65,7 @@ use Date::Calc;
 use MIME::Lite;
 use Data::Dumper;
 use Benchmark;
+use List::Util qw(sum);
 
 
 $| = 1;
@@ -76,8 +77,8 @@ use vars qw/ %opt /;
 
 # Set command line vars
 my ($debug, $config, $logfile, $verbose, $dbh, $sleep);
-        my $start;
-        my $end;
+my $start;
+my $end;
 
 #
 # Command line options processing
@@ -263,7 +264,7 @@ my $start_time = (time);
 my $end_time;
 my $time_limit = ($start_time + $q_time);
 my $mps_timer_start = $start_time;
-my ($do_msg_mps, $tmp_mps, @mps, $sec);
+my ($do_msg_mps, $tmp_mps, @mps, @mps_avg, $sec);
 my $mps = 1;
 my ($mpm, @mpm, $min);
 my ($mph, @mph, $hr);
@@ -426,8 +427,12 @@ while (my $msg = <STDIN>) {
         foreach my $var (@mps) {
             my ($s,$i) = split(",", $var);
             $db_insert_mpX->execute($s, $i);
+            push(@mps_avg, $mps);
             print STDOUT "Inserting MPS string: $var\n" if ($debug > 1);
         }
+        my $avg = sum(@mps_avg) / @mps_avg;
+        $avg = 0 if ($avg < 1);
+        $db_insert_mpX->execute("mps_avg", $avg);
         #%host_cache = ();
         %program_cache = ();
         %mne_cache = ();
@@ -466,13 +471,20 @@ while (my $msg = <STDIN>) {
         foreach my $var (@mps) {
             my ($s,$i) = split(",", $var);
             $db_insert_mpX->execute($s, $i);
+            push(@mps_avg, $mps);
             print STDOUT "Inserting MPS string: $var\n" if ($debug > 1);
         }
+        my $avg;
+        if (@mps_avg) {
+            $avg = sum(@mps_avg) / @mps_avg;
+        }
+        $avg = 0 if ($avg < 1);
+        $db_insert_mpX->execute("mps_avg", $avg);
         open (DUMP, ">$dumpfile") or die "can't open $dumpfile: $!\n";
         my $arrcnt = scalar @dumparr;
         print LOG "Starting insert: " . strftime("%H:%M:%S", localtime) ."\n" if ($debug > 0);
         print STDOUT "Starting insert: " . strftime("%H:%M:%S", localtime) ."\n" if (($debug > 0) and ($verbose));
-        print STDOUT "Importing $arrcnt messages into the database\n" if ($debug > 0);
+        print STDOUT "$avg: Importing $arrcnt messages into the database\n" if ($debug > 0);
         print LOG "Importing $arrcnt messages into the database\n" if ($debug > 0);
         print DUMP @dumparr;
         undef (@dumparr);
@@ -509,6 +521,7 @@ while (my $msg = <STDIN>) {
         print LOG "\n#######\nCurrent MPS = $mps ($do_msg_mps deduplicated)\n#######\n" if ($debug > 2);
         $mpm += $mps;
         push(@mps, "chart_mps_$sec,$mps");
+        push(@mps_avg, $mps);
         #$db_insert_sum->{TraceLevel} = $debug if (($debug) and ($verbose));
         #$db_insert_sum->execute($mps, $now, $mps);
         if ($#mps == 60) {
@@ -521,6 +534,7 @@ while (my $msg = <STDIN>) {
             $mph += $mpm;
             $mpm = 0;
             @mps = ();
+            @mps_avg = ();
         }
         # Temp: exit after 5 minutes for testing
         #if ($#mpm == 5) {

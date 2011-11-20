@@ -38,6 +38,15 @@ $qstring .= "&show_suppressed=$show_suppressed";
 $spx_max = get_input('spx_max');
 $spx_max = (!empty($spx_max)) ? $spx_max : $_SESSION['SPX_MAX_MATCHES'];
 $qstring .= "&spx_max=$spx_max";
+$spx_ip = get_input('spx_ip');
+$spx_ip = (!empty($spx_ip)) ? $spx_ip : $_SESSION['SPX_SRV'];
+$qstring .= "&spx_ip=$spx_ip";
+$spx_port = get_input('spx_port');
+$spx_port = (!empty($spx_port)) ? $spx_port : $_SESSION['SPX_PORT'];
+$qstring .= "&spx_port=$spx_port";
+$qstring .= "&spx_max=$spx_max";
+$spx_port = intval($spx_port);
+$spx_max = intval($spx_max);
 $groupby = get_input('groupby');
 $qstring .= "&groupby=$groupby";
 $chart_type = get_input('chart_type');
@@ -413,7 +422,7 @@ if ($_SESSION['SPX_ENABLE'] == "1") {
     }
 
 
-    $json_o = search(json_encode($searchArr));
+    $json_o = search(json_encode($searchArr), $spx_max,$index="idx_logs idx_delta_logs",$spx_ip,$spx_port);
 
 
     // If something goes wrong, search() will return an error

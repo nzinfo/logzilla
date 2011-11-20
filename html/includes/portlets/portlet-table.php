@@ -38,6 +38,14 @@ $qstring .= "&show_suppressed=$show_suppressed";
 $spx_max = get_input('spx_max');
 $spx_max = (!empty($spx_max)) ? $spx_max : $_SESSION['SPX_MAX_MATCHES'];
 $qstring .= "&spx_max=$spx_max";
+$spx_ip = get_input('spx_ip');
+$spx_ip = (!empty($spx_ip)) ? $spx_ip : $_SESSION['SPX_SRV'];
+$qstring .= "&spx_ip=$spx_ip";
+$spx_port = get_input('spx_port');
+$spx_port = (!empty($spx_port)) ? $spx_port : $_SESSION['SPX_PORT'];
+$qstring .= "&spx_port=$spx_port";
+$spx_port = intval($spx_port);
+$spx_max = intval($spx_max);
 $groupby = get_input('groupby');
 $qstring .= "&groupby=$groupby";
 $chart_type = get_input('chart_type');
@@ -310,11 +318,15 @@ if ($_SESSION['SPX_ENABLE'] == "1") {
     if ($sel_hosts) {
         foreach ($sel_hosts as $host) {
             $hosts[] .= $host;
-            $qstring .= "&hosts[]=$host";
         }
         $searchArr['hosts'] = array_merge($sel_hosts, $hosts);
     }
-
+    if ($searchArr['hosts'])  {
+		foreach ($searchArr['hosts'] as $host) {
+			$qstring .= "&hosts[]=$host";
+        }
+    }	
+    
     $eids = get_input('eids');
     if ($eids) {
         if (!is_array($eids)) {
@@ -322,16 +334,18 @@ if ($_SESSION['SPX_ENABLE'] == "1") {
         }
         $searchArr['eids'] = $eids;
     }
-
-    $sel_eids = get_input('sel_eid');
+	$sel_eids = get_input('sel_eid');
     if ($sel_eids) {
         foreach ($sel_eids as $eid) {
             $eids[] .= $eid;
-            $qstring .= "&eids[]=$eid";
         }
         $searchArr['eids'] = array_merge($sel_eids, $eids);
     }
-
+	if ($searchArr['eids'])  {
+		foreach ($searchArr['eids'] as $eid) {
+			$qstring .= "&eids[]=$host";
+        }
+    }
 
     $mnemonics = get_input('mnemonics');
     if ($mnemonics) {
@@ -346,8 +360,11 @@ if ($_SESSION['SPX_ENABLE'] == "1") {
             $searchArr['mnemonics'] = $sel_mne;
         }
     }
-
-
+	if ($searchArr['mnemonics'])  {
+		foreach ($searchArr['mnemonics'] as $mnemonic) {
+			$qstring .= "&mnemonics[]=$mnemonic";
+        }
+    }
 
     unset($searchArr['sel_hosts']);
     unset($searchArr['sel_eid']);
@@ -399,7 +416,7 @@ if ($_SESSION['SPX_ENABLE'] == "1") {
     }
 
 
-    $json_o = search(json_encode($searchArr));
+    $json_o = search(json_encode($searchArr), $spx_max,$index="idx_logs idx_delta_logs",$spx_ip,$spx_port);
 
 
     // If something goes wrong, search() will return an error

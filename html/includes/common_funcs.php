@@ -764,7 +764,7 @@ function array_recurse(&$array) {
     }
 }
 
-function search($json_o, $spx_max=1000,$index="idx_logs idx_delta_logs",$spx_ip="127.0.0.1",$spx_port=3312) {
+function search($json_o, $spx_max,$index="idx_logs idx_delta_logs",$spx_ip,$spx_port) {
     $basePath = dirname( __FILE__ );
     require_once ($basePath . "/SPHINX.class.php");
 
@@ -782,7 +782,14 @@ function search($json_o, $spx_max=1000,$index="idx_logs idx_delta_logs",$spx_ip=
      * sphinx port
      *
      */
+	
+	// Grab the settings from the database if not as parameter
+	
+	if ($spx_max == '') { $spx_max = $_SESSION[SPX_MAX_MATCHES] ; }
+	if ($spx_ip == '') { $spx_ip = $_SESSION[SPX_SRV] ; }
+	if ($spx_port == '') { $spx_port = $_SESSION[SPX_PORT] ; }
 
+	 
     $cl = new SphinxClient ();
     $cl->SetServer ( $spx_ip, $spx_port );
 
@@ -821,8 +828,8 @@ function search($json_o, $spx_max=1000,$index="idx_logs idx_delta_logs",$spx_ip=
             case 'hosts':
                 foreach ($val as $subkey=>$subval) {
                     // echo "SubKey = $subkey, SubVal = $subval\n";
-                    // $subval = $cl->EscapeString ($subval);
-                    $hosts .= $subval;
+                    $subval = $cl->EscapeString ($subval);
+                    $hosts .= $subval . $search_op;
                 }
                 break;
             case 'mnemonics':

@@ -39,16 +39,20 @@ $(document).ready(function(){
 
 <?php
 if ($_SERVER["REQUEST_URI"] == $_SESSION['SITE_URL'] . "index.php") {
-    $today = intval(date("my")); 
-    if ($today < 1111) { ?>
+//    $today = intval(date("my")); 
+//    if ($today < 1111) { 
+?>
      <li><a href="includes/whatsnew.php" onclick="return hs.htmlExpand(this, { objectType: 'ajax', align: 'center', headingText: 'LogZilla v3.2 Features', width: 800} )">What's New?</a></li>
-         <?php } else { ?>
-         <script type="text/javascript">
-         $(document).ready(function(){
-                 $('#msgbox_bl').jGrowl('Your version of LogZilla is outdated<br>Please visit <a href="http://www.logzilla.pro" target="_new">logzilla.pro</a> for the latest version.', { sticky: true });
-                 }); // end doc ready
-     </script>
-         <?php }} ?>
+ 
+ <?php 
+// } else { 
+//         <script type="text/javascript">
+//         $(document).ready(function(){
+//                 $('#msgbox_bl').jGrowl('Your version of LogZilla is outdated<br>Please visit <a href="http://www.logzilla.pro" target="_new">logzilla.pro</a> for the latest version.', { sticky: true });
+//                 }); // end doc ready
+//     </script>
+// }
+} ?>
     <!-- BEGIN Top Level with 2nd Level -->
     <li><a href="#">
     <?php 
