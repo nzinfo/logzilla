@@ -1,3 +1,9 @@
+3.2.321 - Regression Merge
+CD:
+ - Added ioncube files to scripts/ioncube
+ - Removed old ioncube files from html/ioncube*
+ - Added uninstall script
+
 3.2.320 - Multiple
 CD:
  - Merge of regression branch into main release branch.
