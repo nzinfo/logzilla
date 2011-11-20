@@ -1,3 +1,99 @@
+3.2.320 - Multiple
+CD:
+ - Merge of regression branch into main release branch.
+ - Fix #203 - Concatenation of hosts during Sphinx query.
+ - Added auto-licensing to installation process.
+
+3.2.1.79 - Licensing
+CD:
+ - Added a strip of 's before passing from web ui (ajax) to licadd.pl
+
+3.2.1.78 - Uninstall
+CD:
+ - Added sphinx searchd stop to uninstall
+
+3.2.1.77 - Licensing
+CD:
+ - Made licensing (licadd.pl) a lot more "user" proof :-)
+ - Fixed bug: hardcoded paths in install.pl
+
+3.2.1.76 - Various
+CD:
+ - Added scripts/uninstall.pl and deleted scripts/cleardatabase.pl (uninstall does that also)
+ - Added license installation option to install.pl
+ - Re-added ioncube files.
+ - Added auto-installation for IONCube files.
+
+3.2.1.39 - bugfix
+TH:
+ - Correcting Bug #145 (dash in hostname gets removed from @host searching)
+
+3.2.1.29 - Sphinx
+CD:
+ - Fixed missing parameters for search();
+ - Fixed intval for spx_port and spx_max assertion errors
+
+3.2.1.28 - install.pl
+CD:
+ - Fix path_to_logs variable during install
+
+3.2.1.27 - typo
+TH:
+ - typo in 3.2.1.26 changes
+
+3.2.1.26 - minor
+TH:
+ - Removing that logzilla is "outdated" after Nov 11th
+
+
+3.2.1.25 - minor
+CD:
+ - Modified numbering in this changelog to match rev numbers in regression branch.
+ - Fix for #170  (limit parameter not set during tail)
+ - Fix for #171  Sparklines not updating
+
+3.2.321 - minor
+TH:
+ - eliminating some hard-coded paths
+
+3.2.320 - Bugfix
+TH:
+ - Bug #168: tail honors mne and eid
+ 
+ 3.2.319 - Bugfix
+TH:
+ - Bug #141: tail should honor hosts filter; no more false negatives on tail
+ 
+3.2.318 - trivial
+TH:
+ - Bug #156: adding ":" in sphinx.conf
+ 
+3.2.317 - Minor
+TH:
+ - Correcting Bug #145
+
+
+3.2.316 - Minor
+TH:
+ - Correcting Bug #147 in all areas
+ 
+3.2.315 - Minor
+TH:
+ - Correcting log path in sphinx.conf
+ 
+ 3.2.315 - Minor
+TH:
+ - explicit "# prefix_fields = msg, notes" in sphinx.conf
+
+3.2.314 - Bugfix
+TH:
+ - Implemented diff rev:8->rev:11 from trunk
+
+
+3.2.313 - Bugfix
+TH:
+ - Implemented diff rev:3->rev:4 from trunk
+
 3.2.311 - Mixed
 CD:
  - Multiple results for sphinx last update would cause an incorrect update time warning.

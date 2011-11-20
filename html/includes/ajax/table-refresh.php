@@ -25,12 +25,13 @@ $dbLink = db_connect_syslog(DBADMIN, DBADMINPW);
 
 $today = date("Y-m-d");
 //construct where clause 
-// $where = "WHERE 1=1";
 // Use max(id) for tail page
 // #121 Set limit here and use MAX to just grab the last X rows - much faster
+// TH: good idea, but gives false negatives is you tail uses "where"
 $limit = get_input('limit');
 $limit = (!empty($limit)) ? $limit : "10";
-$where = "WHERE id >  ((SELECT MAX(id) from ".$_SESSION['TBL_MAIN'] .") - $limit)";
+// $where = "WHERE id >  ((SELECT MAX(id) from ".$_SESSION['TBL_MAIN'] .") - $limit)";
+$where = "WHERE 1=1";
 
 $qstring = '';
 // $page = get_input('page');
@@ -104,93 +105,53 @@ $qstring .= "&tail=$tail";
 // Form code is somewhere near line 992 of js_footer.php
 $hosts = get_input('hosts');
 // sel_hosts comes from the main page <select>, whereas 'hosts' above this line comes from the grid select via javascript.
-$sel_hosts = get_input('sel_hosts');
-if ($hosts) {
-    $pieces = explode(",", $hosts);
-    foreach ($pieces as $host) {
-        $sel_hosts[] .= $host;
-        $qstring .= "&hosts[]=$host";
-    }
-}
-$hosts = $sel_hosts;
 if ($hosts) {
     $where .= " AND host IN (";
-    $sph_msg_mask .= " @host ";
     
     foreach ($hosts as $host) {
             $where.= "'$host',";
-            $sph_msg_mask .= "$host|";
-        $qstring .= "&sel_hosts[]=$host";
+        	$qstring .= "&sel_hosts[]=$host";
     }
     $where = rtrim($where, ",");
-    $sph_msg_mask = rtrim($sph_msg_mask, "|");
     $where .= ")";
-    $sph_msg_mask .= " ";
 }
 
 // Special - this gets posted via javascript since it comes from the mnemonics grid
 // Form code is somewhere near line 992 of js_footer.php
 $mnemonics = get_input('mnemonics');
 // sel_mne comes from the main page <select>, whereas 'mnemonics' above this line comes from the grid select via javascript.
-$sel_mne = get_input('sel_mne');
-if ($mnemonics) {
-    $pieces = explode(",", $mnemonics);
-    foreach ($pieces as $mne) {
-        $sel_mne[] .= $mne;
-        $qstring .= "&mnemonics[]=$mne";
-    }
-}
-$mnemonics = $sel_mne;
 if ($mnemonics) {
     if (!in_array(mne2crc('None'), $mnemonics)) {
         $where .= " AND mne !='".mne2crc('None')."'";
     }
     $where .= " AND mne IN (";
-    $sph_msg_mask .= " @mne ";
-    
+        
     foreach ($mnemonics as $mne) {
         if (!preg_match("/^\d+/m", $mne)) {
             $mne = mne2crc($mne);
         }
-            $where.= "'$mne',";
-            $sph_msg_mask .= "$mne|";
+        $where.= "'$mne',";
         $qstring .= "&sel_mne[]=$mne";
     }
     $where = rtrim($where, ",");
-    $sph_msg_mask = rtrim($sph_msg_mask, "|");
     $where .= ")";
-    $sph_msg_mask .= " ";
 }
 
 // Special - this gets posted via javascript since it comes from the Snare EID grid
 // Form code is somewhere near line 992 of js_footer.php
 $eids = get_input('eids');
 // sel_eid comes from the main page <select>, whereas 'eids' above this line comes from the grid select via javascript.
-$sel_eid = get_input('sel_eid');
-if ($eids) {
-    $pieces = explode(",", $eids);
-    foreach ($pieces as $eid) {
-        $sel_eid[] .= $eid;
-        $qstring .= "&eids[]=$eid";
-    }
-}
-$eids = $sel_eid;
 if ($eids) {
     if (!in_array('0', $eids)) {
         $where .= " AND eid > 0";
     }
     $where .= " AND eid IN (";
-    $sph_msg_mask .= " @eid ";
-    
     foreach ($eids as $eid) {
             $where.= "'$eid',";
-            $sph_msg_mask .= "$eid|";
-        $qstring .= "&sel_eid[]=$eid";
+            $qstring .= "&sel_eid[]=$eid";
     }
     $where = rtrim($where, ",");
-    $sph_msg_mask = rtrim($sph_msg_mask, "|");
     $where .= ")";
-    $sph_msg_mask .= " ";
 }
 
 // portlet-programs

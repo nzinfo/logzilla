@@ -24,8 +24,10 @@ if(num_rows($result)==0){
 } else {
     $line = fetch_array($result);
     $path = $line[0];
-    $cmd = "sudo $path/scripts/licadd.pl '$text'";
+    $text = preg_replace('/\'/', '',$text);
+    $cmd = "echo '$text' | sudo $path/scripts/licadd.pl";
     exec($cmd, $out);
+    // logmsg("CMD: $cmd<br>OUT: $out<br>");
     if ($out[0] == 1) {
         $destination = $_SESSION['SITE_URL']."index.php";
         g_redirect($destination, "JS"); 

@@ -69,7 +69,7 @@ $mnemonics = get_input('mnemonics');
 // sel_mne comes from the main page <select>, whereas 'mnemonics' above this line comes from the grid select via javascript.
 $sel_mne = get_input('sel_mne');
 if ($mnemonics) {
-    $pieces = explode(",", $mnemonics);
+    $pieces = is_array($mnemonics)?$mnemonics:explode(",", $mnemonics); 
     foreach ($pieces as $mne) {
         $sel_mne[] .= $mne;
         $qstring .= "&mnemonics[]=$mne";

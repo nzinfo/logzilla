@@ -23,6 +23,8 @@ use DBI;
 use Date::Calc;
 use Term::ReadLine;
 use File::Copy;
+use Digest::Perl::MD5 'md5_hex';
+use LWP::Simple;
 use Switch;
 
 # not needed here, but might as well warn the user to install it now since db_insert will need them
@@ -46,7 +48,7 @@ sub p {
 }
 
 my $version = "3.2";
-my $subversion = ".311";
+my $subversion = ".320";
 
 # Grab the base path
 my $lzbase = getcwd;
@@ -178,7 +180,7 @@ if ($ok =~ /[Yy]/) {
     $sth->execute;
     while (my @data = $sth->fetchrow_array()) {
         my $ver = $data[0];
-        if ($ver !~ /5\.[19]/) {
+        if ($ver !~ /5\.[1-9]/) {
             print("\n\033[1m\tERROR!\n\033[0m");
             print "LogZilla requires MySQL v5.1 or better.\n";
             print "Your version is $ver\n";
@@ -214,6 +216,28 @@ if ($ok =~ /[Yy]/) {
                     do_upgrade("all");
                 }
             }
+            print "Removing old style logzilla config entries from system files...\n";
+            my $fn = "/etc/syslog-ng/syslog-ng.conf";
+            if ( -e "$fn") {
+                print "syslog-ng:\n";
+                system("cp $fn $fn.pre_logzilla_upgrade");
+                print "Original file backed up to $fn.pre_logzilla_upgrade\n";
+                rm_old_config_block("$fn","# http://nms.gdd.net/index.php/Install_Guide_for_LogZilla_v3.2", "# END LogZilla Config for syslog-ng");
+            }
+            my $fn = "/etc/apparmor.d/usr.sbin.mysqld";
+            if ( -e "$fn") {
+                print "Apparmor config:\n";
+                system("cp $fn $fn.pre_logzilla_upgrade");
+                print "Original file backed up to $fn.pre_logzilla_upgrade\n";
+                system("perl -i -pe 's/.*logzilla.*//g' $fn");
+            }
+            my $fn = "/etc/php5/apache2/php.ini";
+            if ( -e "$fn") {
+                print "PHP:\n";
+                system("cp $fn $fn.pre_logzilla_upgrade");
+                print "Original file backed up to $fn.pre_logzilla_upgrade\n";
+                system("perl -i -pe 's/zend_extension.*ioncube.*//g' $fn");
+            }
         }
     }
     print "\n";
@@ -227,6 +251,8 @@ if ($ok =~ /[Yy]/) {
     setup_apparmor();
     install_sphinx();
     fbutton();
+    add_ioncube();
+    install_license();
 }
 if ($dbhost !~ /localhost|127.0.0.1/) {
     my $file = "$lzbase/scripts/db_insert.pl";
@@ -379,20 +405,23 @@ sub do_install {
 sub update_paths {
     my $search = "/path_to_logzilla";
     print "Updating file paths\n";
-    foreach my $file (qx(grep -RlI $search ../* | egrep -v "install.pl|\\.svn|\\.sql|license.txt|CHANGELOG|html/includes/index.php|\\.logtest|sphinx/src|sphinx/bin|html/ioncube")) {
+    my @flist = `find ../ -name '*.sh' -o -name '*.pl' -o -name '*.conf' -o -name '*.rc' -o -name 'logzilla.*' -type f | egrep -v 'install.pl|sphinx\/src|\\.svn|\\.lzrc' | xargs grep -l "$search"`;
+    #print "@flist\n";
+    foreach my $file (@flist) {
         chomp $file;
         print "Modifying $file\n";
         system "perl -i -pe 's|$search|$lzbase|g' $file" and warn "Could not modify $file $!\n";
     }
     my $search = "/path_to_logs";
     print "Updating log paths\n";
-    foreach my $file (qx(grep -RlI $search ../* | egrep -v "install.pl|.svn|.sql|CHANGELOG")) {
+    my @flist = `find ../ -name '*.sh' -o -name '*.pl' -o -name '*.conf' -o -name '*.rc' -o -name 'logzilla.*' -type f | egrep -v 'install.pl|sphinx\/src|\\.svn|\\.lzrc' | xargs grep -l "$search"`;
+    #print "@flist\n";
+    foreach my $file (@flist) {
         chomp $file;
         print "Modifying $file\n";
         system "perl -i -pe 's|$search|$logpath|g' $file" and warn "Could not modify $file $!\n";
     }
 }
-
 
 sub make_logfiles {
 #Create log files for later use by the server
@@ -925,8 +954,6 @@ sub add_logrotate {
 # system "chown mysql.mysql ../exports" and warn "Could not modify archive directory";   
 
 
-
-
 sub add_syslog_conf {
     print "\n\nAdding LogZilla to syslog-ng\n";
     my $ok  = &p("Ok to continue?", "y");
@@ -934,46 +961,11 @@ sub add_syslog_conf {
         my $file  = &p("Where is your syslog-ng.conf file located?", "/etc/syslog-ng/syslog-ng.conf");
         if (-f "$file") {
             # Check to see if entry already exists
-            my $find = qr/[Ll]og[Zz]illa/;
             open FILE, "<$file";
             my @lines = <FILE>;
             close FILE;
-            if (grep(/$find/, @lines)) {
+            if (grep(/<lzconfig>/, @lines)) {
                 print "\nLogZilla config already exists in $file, skipping add...\n";
-                my $find = qr/lzsub = (\d+)/;
-                if (!grep(/$find/, @lines)) {
-                    print("\n\033[1m\tWARNING!\n\033[0m");
-                    print "An old version of the LogZilla template was detected.\n";
-                    print "\nOLD FORMAT:\n";
-                    print "destination d_logzilla {\n";
-                    print 'program("/var/www/svn/logzilla/scripts/db_insert.pl"';
-                    print "\n";
-                    print 'template("$HOST\t$PRI\t$PROGRAM\t$MSGONLY\n")';
-                    print "\n";
-                    print "template_escape(yes)\n";
-                    print ");\n";
-                    print "};\n";
-
-                    print "\n\nNEW FORMAT:\n";
-                    print "destination d_logzilla {\n";
-                    print 'program("/var/www/svn/logzilla/scripts/db_insert.pl"';
-                    print "\n";
-                    print 'template("$S_YEAR-$S_MONTH-$S_DAY $S_HOUR:$S_MIN:$S_SEC\t$HOST\t$PRI\t$PROGRAM\t$MSGONLY\n")';
-                    print "\n";
-                    print "template_escape(yes)\n";
-                    print ");\n";
-                    print "};\n";
-
-                    print "\n";
-                    print "Install will attempt to alter the line for you, but be sure to verify it after the installation completes.\n";
-                    my $ok  = &p("Modifying $file, ok to continue?", "y");
-                    if ($ok =~ /[Yy]/) {
-                        my $new = '"\$S_YEAR-\$S_MONTH-\$S_DAY \$S_HOUR:\$S_MIN:\$S_SEC\\\t\$HOST\\\t\$PRI\\\t\$PROGRAM\\\t\$MSGONLY\\\n"';
-                        my $old = qw{"\$HOST\\\t\$PRI\\\t\$PROGRAM\\\t\$MSGONLY\\\n"};
-                        #print "perl -i -pe 's|$old|$new|g' $file\n";
-                        system "perl -i -pe 's|$old|$new|g' $file" and warn "Could not modify $file $!\n";
-                    }
-                }
             } else {
                 print "Adding syslog-ng configuration to $file\n";
                 # Find syslog-ng.conf source definition
@@ -988,28 +980,28 @@ sub add_syslog_conf {
                 }
                 my $count = $#sources + 1;
                 if ($count > 1) {
-                    print("\n\033[1m\tWARNING!\n\033[0m");
-                    print"You have more than 1 source defined\nThis can potentially be a bad thing\n";
+                    print"You have more than 1 source defined\n";
                     print "Your source definitions are:\n";
                     foreach my $t (@sources)
-                    { 
+                    {
                         print $t ."\n";
-                    } 
+                    }
                 } else {
                     print "Found $count sources\n";
-                } 
+                }
                 $source  = &p("Which source definition would you like to use?", "$source");
                 if ($source !~ "s_all") {
-                    system "perl -i -pe 's|s_all|$source|g' contrib/system_configs/syslog-ng.conf" and warn "Could not modify contrib/system_configs/syslog-ng.conf $!\n";
+                    system "perl -i -pe 's|s_all|$source|g' contrib/system_configs/syslog-ng.conf" and warn "Could not modify contri
+                    b/system_configs/syslog-ng.conf $!\n";
                 }
-                open(CNF,">>$file") || die("Cannot Open $file: $!"); 
-                open(FILE,"contrib/system_configs/syslog-ng.conf") || die("Cannot Open file: $!"); 
+                open(CNF,">>$file") || die("Cannot Open $file: $!");
+                open(FILE,"contrib/system_configs/syslog-ng.conf") || die("Cannot Open file: $!");
                 my @data = <FILE>;
                 foreach my $line (@data) {
                     print CNF "$line";
                 }
-                close(CNF); 
-                close(FILE); 
+                close(CNF);
+                close(FILE);
             }
         } else {
             print "Unable to locate your syslog-ng.conf file\n";
@@ -1075,7 +1067,7 @@ sub setup_cron {
 #####################################################
 # Daily export archives
 #####################################################
-# 0 1 * * * root sh $lzbase/scripts/export.sh
+0 1 * * * root sh $lzbase/scripts/export.sh
 
 #####################################################
 # END LogZilla Cron Entries
@@ -1091,6 +1083,7 @@ if (-d "$crondir") {
     print FILE $cron;
     close FILE;
     print "Cronfile added to $crondir\n";
+    hup_crond();
 } else {
     print "$crondir does not exist\n";
     print "You will need to manually copy $lzbase/scripts/contrib/system_configs/logzilla.crontab to /etc/cron.d\n";
@@ -1103,7 +1096,6 @@ if (-d "$crondir") {
         print "or use 'crontab -e' as root and paste the contents of $lzbase/scripts/contrib/system_configs/logzilla.crontab into it.\n";
         print "If you add it manually as root's personal crontab, then be sure to remove the \"root\" username from the last entry.\n";
     }
-    hup_crond();
 }
 
 sub setup_sudo {
@@ -1128,25 +1120,25 @@ sub setup_sudo {
             my $webuser = $ps[$#ps];
             my $webuser  = &p("Please provide the username that Apache runs as", "$webuser");
             # Check to see if entry already exists
-            my $find = qr/.*ALL=NOPASSWD:$lzbase\/scripts\/hup\.pl/;
             open SFILE, "<$file";
             my @lines = <SFILE>;
             close SFILE;
-            if (grep(/$find/, @lines)) {
-                print "Line already exists in $file, skipping add...\n";
+            if (grep(/<lzconfig>/, @lines)) {
+                print "Config entry already exists in $file, skipping add...\n";
             } else {
                 my $os = `uname -a`;
                 $os =~ s/.*(ubuntu).*/$1/i;
                 my $now = localtime;
                 open SFILE, ">>$file" or die "cannot open $file for append: $!";
                 print SFILE "\n";
-                print SFILE "# Below added by LogZilla installation on $now\n";
+                print SFILE "# <lzconfig> BEGIN: Added by LogZilla installation on $now\n";
                 print SFILE "# Allows Apache user to HUP the syslog-ng process\n";
                 print SFILE "$webuser ALL=NOPASSWD:$lzbase/scripts/hup.pl\n";
                 print SFILE "# Allows Apache user to apply new licenses from the web interface\n";
                 print SFILE "$webuser ALL=NOPASSWD:$lzbase/scripts/licadd.pl\n";
-                # print SFILE "# Allows Apache user to import data from archive\n";
-                # print SFILE "# $webuser ALL=NOPASSWD:$lzbase/scripts/doimport.sh\n";
+                print SFILE "# Allows Apache user to import data from archive\n";
+                print SFILE "$webuser ALL=NOPASSWD:$lzbase/scripts/doimport.sh\n";
+                print SFILE "# </lzconfig> END: Added by LogZilla installation on $now\n";
                 close SFILE;
                 print "Appended sudoer access for $webuser to $file\n";
                 if ($os !~ /Ubuntu/i) {
@@ -1169,11 +1161,16 @@ sub setup_sudo {
         print "Skipping SUDO setup.\n";
         print "You will need to add the following to your sudoers so that LogZilla has permission to apply changes from the web interface\n";
         print "Note: You should change \"www-data\" below to match the user that runs Apache\n";
+        print "# <lzconfig> BEGIN: Added by LogZilla installation on $now\n";
         print "# Allows Apache user to HUP the syslog-ng process\n";
         print "www-data ALL=NOPASSWD:$lzbase/scripts/hup.pl\n";
         print "www-data ALL=NOPASSWD:$lzbase/scripts/licadd.pl\n";
+        print "www-data ALL=NOPASSWD:$lzbase/scripts/doimport.sh\n";
+        print "# </lzconfig> END: Added by LogZilla installation on $now\n";
+
     }
 }
+
 
 sub kill {
     my $PROGRAM = shift;
@@ -1197,7 +1194,7 @@ sub install_sphinx {
     print "cd $lzbase/sphinx/src\n";
     print "tar xzvf sphinx-0.9.9.tar.gz\n";
     print "cd $lzbase/sphinx/src/sphinx-0.9.9\n";
-    print "./configure --prefix `pwd`/../..\n";
+    print "./configure --enable-id64 --prefix `pwd`/../..\n";
     print "make && make install\n";
     print "cd $lzbase/sphinx\n";
     print "$lzbase/sphinx/bin/searchd -c $lzbase/sphinx/sphinx.conf\n";
@@ -1208,7 +1205,7 @@ sub install_sphinx {
         if ($checkprocess) {
             system("killall searchd");
         }
-        system("rm -f $lzbase/sphinx/data/idx_* && cd $lzbase/sphinx/src && tar xzvf sphinx-0.9.9.tar.gz && cd $lzbase/sphinx/src/sphinx-0.9.9 && ./configure --prefix `pwd`/../.. && make && make install && $lzbase/sphinx/indexer.sh full && $lzbase/sphinx/bin/searchd -c $lzbase/sphinx/sphinx.conf && cd $lzbase/scripts");
+        system("rm -f $lzbase/sphinx/data/idx_* && cd $lzbase/sphinx/src && tar xzvf sphinx-0.9.9.tar.gz && cd $lzbase/sphinx/src/sphinx-0.9.9 && ./configure --enable-id64 --prefix `pwd`/../.. && make && make install && $lzbase/sphinx/indexer.sh full && $lzbase/sphinx/bin/searchd -c $lzbase/sphinx/sphinx.conf && cd $lzbase/scripts");
     } else {
         print "Skipping Sphinx Installation\n";
     }
@@ -1234,7 +1231,7 @@ sub setup_apparmor {
                 open my $config, '+<', "$file" or warn "FAILED: $!\n";
                 my @all = <$config>;
                 seek $config, 0, 0;
-                splice @all, -1, 0, "  /tmp/logzilla_import.txt r,\n  $lzbase/exports/** rw,\n";
+                splice @all, -1, 0, "# <lzconfig> (please do not remove this line)\n  /tmp/logzilla_import.txt r,\n  $lzbase/exports/** rw,\n# </lzconfig> (please do not remove this line)\n";
                 print $config @all;
                 close $config;
             }
@@ -1255,7 +1252,7 @@ sub setup_rclocal {
         my @all = <$config>;
         if (!grep(/sphinx/, @all)) {
             seek $config, 0, 0;
-            splice @all, -1, 0, "$lzbase/sphinx/bin/searchd -c $lzbase/sphinx/sphinx.conf\n";
+            splice @all, -1, 0, "# <lzconfig>\n$lzbase/sphinx/bin/searchd -c $lzbase/sphinx/sphinx.conf\n# </lzconfig>\n";
             print $config @all;
         }
         close $config;
@@ -1852,3 +1849,137 @@ sub colExists {
     }
 }
 
+
+sub add_ioncube {
+    print("\n\033[1m\n\n========================================\033[0m\n");
+    print("\n\033[1m\tIONCube License Manager\n\033[0m");
+    print("\n\033[1m========================================\n\n\033[0m\n\n");
+    print "Extracting IONCube files to /usr/local/ioncube\n";
+    my $arch = `uname -m`;
+    if ($arch =~ /64/) {
+        system("tar xzvf ioncube/ioncube_loaders_lin_x86-64.tar.gz -C /usr/local");
+    } else {
+        system("tar xzvf ioncube/ioncube_loaders_lin_x86.tar.gz -C /usr/local");
+    }
+    my $phpver = `/usr/bin/php -v | head -1`;
+    my $ver = $1 if ($phpver =~ /PHP (\d\.\d)/);
+    if ($ver !~ /[45]\.[04]/) {
+        my $ok  = &p("\nInstall will try to add the license loader to php.ini for you is this ok?", "y");
+        if ($ok =~ /[Yy]/) {
+            my $file = "/etc/php5/apache2/php.ini";
+            if (! -e "$file") {
+                $file  = &p("Please enter the location of your php.ini file", "$file");
+            }
+            if (! -e "$file") {
+                print "unable to locate $file\n";
+            } else {
+                open my $config, '+<', "$file" or warn "FAILED: $!\n";
+                my @all = <$config>;
+                if (!grep(/lzconfig/, @all)) {
+                    seek $config, 0, 0;
+                    splice @all, 1, 0, ";# <lzconfig> (please do not remove this line)\nzend_extension = /usr/local/ioncube/ioncube_loader_lin_$ver.so\n;# </lzconfig> (please do not remove this line)\n";
+                    print $config @all;
+                }
+                close $config;
+
+                if (-e "/etc/init.d/apache2") {
+                    my $ok  = &p("Is it ok to restart Apache to apply changes?", "y");
+                    if ($ok =~ /[Yy]/) {
+                        my $r = `/etc/init.d/apache2 restart`;
+                    } else {
+                        print("\033[1m\n\tPlease be sure to restart your Apache server..\n\033[0m");
+                    }
+                } else {
+                    print("\033[1m\n\tPlease be sure to restart your Apache server..\n\033[0m");
+                }
+            }
+        }
+    } else {
+        print "\nWARNING: Your PHP version ($ver) does not appear to be a candidate for auto-populating the php.ini file.\nPlease read /usr/local/ioncube/README.txt for more information.\n";
+    }
+}
+
+sub install_license {
+
+    print("\n\033[1m\n\n========================================\033[0m\n");
+    print("\n\033[1m\tLicense\n\033[0m");
+    print("\n\033[1m========================================\n\n\033[0m\n\n");
+    print "If you have already ordered your license, install will attempt to connect to the licensing server and download it.\n";
+    print "It is highly recommended that you use this method in order to avoid any possible copy/paste issues with your license.\n";
+    print "If you skip this step, or if something goes wrong, you will still have an opportunity to enter your license in the web interface.\n\n";
+    print "You can also run \"$0 install_license\" at any time.\n";
+    my $ok  = &p("Would you like to attempt automatic license install? (y/n)", "y");
+    if ($ok =~ /[Yy]/) {
+        my @lines = `ifconfig -a`;
+        my ($ip, $mac);
+        for( @lines ) {
+            if (/\s*HWaddr (\S+)/ ) {
+                $mac = $1;
+            }
+            if (/\s*inet addr:([\d.]+)/ ) {
+                $ip = $1;
+                last; # we only want the first interface
+            }
+        }
+        $ip =~ s/[^a-zA-Z0-9]//g;
+        $mac =~ s/[^a-zA-Z0-9]//g;
+        my $hash = md5_hex("$ip$mac");
+        my $url = "http://licserv.logzilla.pro/files/$hash.txt";
+        my $file = "$lzbase/license.txt";
+
+        if (is_success(getstore($url, $file))) {
+            print "License Installed Successfully\n";
+        } else {
+            print "\n\033[1m[ERROR] Failed to download: $url\n\033[0m";
+            my $ok  = &p("Would you like to try pasting your license manually instead? (y/n)", "y");
+            if ($ok =~ /[Yy]/) {
+                my $licfile="$lzbase/license.txt";
+                my $answer;
+                print "Paste your license, be sure to include the <licdata> tags (or type END on a blank line to end):\n";
+                while (<STDIN>) {
+                    if (/<licdata>|BEGIN|Registered/../<\/licdata>|END/) {
+                        next if /^<licdata>|BEGIN/;
+                        $_ =~ s/[\r\n]/\n/g;
+                        $_ = decode($_);
+                        $_ =~ s/PLUS/+/g;
+                        $answer .= $_;
+                        last if /^<\/licdata>|END/;
+                    }
+                    open FILE, ">$licfile" or die "Unable to open $licfile: $!";
+                    print FILE $answer;
+                    close FILE;
+                }
+                sub decode {
+                    my $str = shift;
+                    $str =~ s/%([A-Fa-f0-9]{2})/pack('C', hex($1))/seg;
+                    return $str;
+                }
+            }
+        }
+    }
+}
+
+sub rm_old_config_block {
+    my $file = shift;
+    my $start = shift;
+    my $end = shift;
+    if (-f $file) {
+        my @data;
+        open FILE, "<$file";
+        my @lines = <FILE>;
+        close FILE;
+        open my $config, '+<', "$file" or warn "FAILED: $!\n";
+        if (grep(/$start/, @lines)) {
+            while (<$config>) {
+                next if (/$start/../$end/);
+                push (@data, $_);
+            }
+            close $config;
+            open FILE, ">$file" or die "Unable to open $file: $!";
+            print FILE @data;
+            close FILE;
+        }
+    } else {
+        print "$file does not exist\n";
+    }
+}

@@ -22,36 +22,20 @@ use strict;
 $| = 1;
 
 my $licfile="/path_to_logzilla/license.txt";
-if ($ARGV[0]) {
-    my $txt = $ARGV[0];
-    open FILE, ">$licfile" or die "Unable to open $licfile: $!";
-    print FILE $txt;
-    close FILE;
-
-    open(FILE, $licfile) || die("Could not open file!");
-    my @data =<FILE>;
-    close FILE;
-
-    open FILE, ">$licfile" or die "Unable to open $licfile: $!";
-    foreach my $line (@data) {
-        $line = decode($line);
-        $line =~ s/PLUS/+/g;
-        print FILE $line;
-    }
-    close FILE;
-    print "1\n";
-} else {
-    my $answer;
-    print "Paste your license: (type END to exit)\n";
-    while (<STDIN>) {
-        last if /^END$/;
+print "Paste your license, be sure to include the <licdata> tags:\n";
+my $answer;
+while (<STDIN>) {
+    if (/<licdata>|BEGIN/../<\/licdata>|END/) {
+        next if /^<licdata>|BEGIN/;
+        $_ = decode($_);
+        $_ =~ s/PLUS/+/g;
         $answer .= $_;
+        last if /^<\/licdata>|END/;
     }
     open FILE, ">$licfile" or die "Unable to open $licfile: $!";
     print FILE $answer;
     close FILE;
 }
-
 sub decode {
     my $str = shift;
     $str =~ s/%([A-Fa-f0-9]{2})/pack('C', hex($1))/seg;

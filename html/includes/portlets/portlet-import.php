@@ -54,7 +54,8 @@ $restore_running = is_file($restore_runfile);
 
 // catch all non emty days from the archives table
 
-$sql = "SELECT archive, records FROM archives where records>0 order by archive";
+// desc order of records due user-request
+$sql = "SELECT archive, records FROM archives where records>0 order by archive desc";
 $result = perform_query($sql, $dbLink, $_SERVER['PHP_SELF']); 
 $count = mysql_num_rows($result);
 

@@ -438,6 +438,7 @@ mdraw = function() {
                     };
             } else {
             $('#sparktext').text("No Incoming Messages");
+            $('#ticker').sparkline(data, {width: '0px', height: '30px', type: 'line'});
             };
         });
    	}
