@@ -1,3 +1,7 @@
+3.2.322 - Regression Merge
+CD:
+ - Fix for syslog-ng source call during install
+
 3.2.321 - Regression Merge
 CD:
  - Added ioncube files to scripts/ioncube
