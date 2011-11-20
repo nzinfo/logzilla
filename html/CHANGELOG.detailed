@@ -1,3 +1,7 @@
+3.2.323 - Regression Merge
+CD:
+ - Remove old config entries to use new lz tagged entries
+
 3.2.322 - Regression Merge
 CD:
  - Fix for syslog-ng source call during install
