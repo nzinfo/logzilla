@@ -22,11 +22,12 @@ use strict;
 $| = 1;
 
 my $licfile="/path_to_logzilla/license.txt";
-print "Paste your license, be sure to include the <licdata> tags:\n";
+print "Paste your license, be sure to include the <licdata> tags (or type END on a blank line to end):\n";
 my $answer;
 while (<STDIN>) {
-    if (/<licdata>|BEGIN/../<\/licdata>|END/) {
+    if (/<licdata>|BEGIN|Registered/../<\/licdata>|END/) {
         next if /^<licdata>|BEGIN/;
+        $_ =~ s/[\r\n]/\n/g;
         $_ = decode($_);
         $_ =~ s/PLUS/+/g;
         $answer .= $_;
