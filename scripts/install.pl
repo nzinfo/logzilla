@@ -48,7 +48,7 @@ sub p {
 }
 
 my $version = "3.2";
-my $subversion = ".324";
+my $subversion = ".325";
 
 # Grab the base path
 my $lzbase = getcwd;
@@ -1140,6 +1140,8 @@ sub setup_sudo {
                 print SFILE "$webuser ALL=NOPASSWD:$lzbase/scripts/hup.pl\n";
                 print SFILE "# Allows Apache user to apply new licenses from the web interface\n";
                 print SFILE "$webuser ALL=NOPASSWD:$lzbase/scripts/licadd.pl\n";
+                print SFILE "# Allows Apache user to apply new licenses from the web interface using install.pl\n";
+                print SFILE "$webuser ALL=NOPASSWD:$lzbase/scripts/install.pl install_license\n";
                 print SFILE "# Allows Apache user to import data from archive\n";
                 print SFILE "$webuser ALL=NOPASSWD:$lzbase/scripts/doimport.sh\n";
                 print SFILE "# </lzconfig> END: Added by LogZilla installation on $now\n";

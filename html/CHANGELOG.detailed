@@ -1,3 +1,7 @@
+3.2.325 - Regression Merge
+CD:
+ - Fixed licadd.pl
+
 3.2.324 - Regression Merge
 CD:
  - Added command line 'install.pl install_license'
