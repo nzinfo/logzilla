@@ -48,7 +48,7 @@ sub p {
 }
 
 my $version = "3.2";
-my $subversion = ".323";
+my $subversion = ".324";
 
 # Grab the base path
 my $lzbase = getcwd;
@@ -96,6 +96,10 @@ foreach (@ARGV) {
         }
         case "install_sphinx" {
             install_sphinx();
+            exit;
+        }
+        case "install_license" {
+            install_license();
             exit;
         }
     }
