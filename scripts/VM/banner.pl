@@ -30,8 +30,12 @@ my $banner = qq{
 #######################################################################
 LOGZILLA
 #######################################################################
-This VM is running LogZilla v3.2 on Ubuntu 10.04LTS Server x64
+This VM is running LogZilla v3.2 on Ubuntu 10.10 Server x64
 To obtain an evaluation license, please visit http://www.logzilla.pro
+
+
+
+! READ THIS, IT IS ACTUALLY IMPORTANT!
 
 Timezone:
 This server is configured for Eastern Standard Time (EST)
@@ -39,9 +43,8 @@ You will need to set the timezone to your locale by typing:
 dpkg-reconfigure tzdata
 
 First Bootup:
-Please run:
-cd /path_to_logzilla && svn update && /etc/init.d/syslog-ng restart
-to get the latest source
+Please run "lzupdate" to get the latest software.
+(sudo password is your password, which is "log")
 
 Access:
 The login/password for the shell is log/log
@@ -49,7 +52,7 @@ The login/password for the Web Interface is admin/admin
 $linfo
 
 More Information and Help:
-Please read /path_to_logzilla/VM-README.txt
+Please read /var/www/logzilla/VM-README.txt
 
 Please report any trouble to http://support.logzilla.pro                       
 #######################################################################
