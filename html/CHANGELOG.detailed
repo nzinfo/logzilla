@@ -1,3 +1,7 @@
+3.2.326 - Licensing
+CD:
+ - Added auto-licensing feature from v3.3
+
 3.2.325 - Regression Merge
 CD:
  - Fixed licadd.pl

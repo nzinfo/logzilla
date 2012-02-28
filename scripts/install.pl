@@ -48,7 +48,7 @@ sub p {
 }
 
 my $version = "3.2";
-my $subversion = ".325";
+my $subversion = ".326";
 
 # Grab the base path
 my $lzbase = getcwd;
@@ -1931,7 +1931,7 @@ sub install_license {
         $mac =~ s/[^a-zA-Z0-9]//g;
         my $hash = md5_hex("$ip$mac");
         my $url = "http://licserv.logzilla.pro/files/$hash.txt";
-        my $file = "$lzbase/license.txt";
+        my $file = "$lzbase/html/license.txt";
 
         if (is_success(getstore($url, $file))) {
             print "License Installed Successfully\n";
@@ -1939,7 +1939,7 @@ sub install_license {
             print "\n\033[1m[ERROR] Failed to download: $url\n\033[0m";
             my $ok  = &p("Would you like to try pasting your license manually instead? (y/n)", "y");
             if ($ok =~ /[Yy]/) {
-                my $licfile="$lzbase/license.txt";
+                my $licfile="$lzbase/html/license.txt";
                 my $answer;
                 print "Paste your license, be sure to include the <licdata> tags (or type END on a blank line to end):\n";
                 while (<STDIN>) {
