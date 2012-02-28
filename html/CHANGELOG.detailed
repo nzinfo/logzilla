@@ -1,3 +1,7 @@
+3.2.330 - Licensing
+CD:
+ - Added Apache 500 error check for license
+
 3.2.329 - Licensing
 CD:
  - Added missing license files

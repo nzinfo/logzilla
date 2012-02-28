@@ -134,7 +134,7 @@ if (!is_writable($filename)) {
 			</form>
 		</div>
 		<div id="vworkerSimon-install-success-container" style="display:none;">
-			Your license has been successfully installed, please click finish to login.
+			Your license has been successfully installed<br><b>NOTE:</b> You may need to restart Apache before the new license can be read (Apache will return a 500 internal server error as an indication).
 			<a href="logout.php" id="vworkerSimon-next-button" class="vworkerSimon-btnStyle">Finish</a>
 			<div class="clear"></div> 
 		</div>
