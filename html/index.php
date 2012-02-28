@@ -1,8 +1,8 @@
 <?php
-// Copyright (C) 2005 Clayton Dukes, cdukes@cdukes.com
+// Copyright (C) 2005 Clayton Dukes, cdukes@logzilla.pro
 
 // Check to see if config.php is set, if not we need to run the installer.
-$chk_config = file_get_contents("config/config.php");
+$chk_config = @file_get_contents("config/config.php");
 if (strlen($chk_config) < 300) {
 	echo "<center><h2>\n";
 	echo "Unable to get DB config - have you run scripts/install.pl yet?<br>\n";
@@ -14,16 +14,18 @@ if (strlen($chk_config) < 300) {
 	include_once ("includes/modules/functions.security.php");
 }
 // Check to see if  a license exists.
-$chk_lic = file_get_contents("../license.txt");
-if (strlen($chk_lic) < 300) {
-    $destination = $_SESSION['SITE_URL']."lhelp.php";
-    $destination .= '?err=license';
-    g_redirect($destination, "JS"); 
-    exit;
+$chk_lic = @file_get_contents("license.txt");
+if (!preg_match ('/^Registered/', $chk_lic)) {
+    $chk_lic = @file_get_contents("license.txt");
+    if (!preg_match ('/^Registered/', $chk_lic)) {
+        $addTitle = "License";
+        require 'includes/license.php';
+        exit;
+    }
 }
 
 session_start();
- $_SERVER = cleanArray($_SERVER);
+$_SERVER = cleanArray($_SERVER);
 $_POST = cleanArray($_POST);
 $_GET = cleanArray($_GET);
 $_COOKIE = cleanArray($_COOKIE);
@@ -67,6 +69,10 @@ elseif(strcasecmp($pageId, "login") == 0) {
 elseif(strcasecmp($pageId, "logout") == 0) {
 	$addTitle = "Logout";
 	require 'logout.php';
+}
+elseif(strcasecmp($pageId, "License") == 0) {
+	$addTitle = "License";
+	require 'includes/license.php';
 }
 else {
 	$addTitle = "Welcome to ".$_SESSION['PROGNAME'];

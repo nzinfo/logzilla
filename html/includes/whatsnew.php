@@ -1,5 +1,6 @@
 <?php
 /*
+ * /var/www/logzilla/html/includes/whatsnew.php
  *
  * Developed by Clayton Dukes <cdukes@logzilla.pro>
  * Copyright (c) 2011 logzilla.pro
