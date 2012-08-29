@@ -1,0 +1,18 @@
+# http://nms.gdd.net/index.php/Install_Guide_for_LogZilla_v3.0
+# Sphinx indexer cron times
+# Note: Your setup may require some tweaking depending on expected message rates!
+# Last updated on 2010-06-15
+
+#####################################################
+# Run Sphinx "delta" scans every 5 minutes throughout 
+# the day.
+# Delta indexing should be very fast but you may need
+# to adjust these times on very large systems.
+#####################################################
+*/1 * * * * /path_to_logzilla/sphinx/indexer.sh delta >> /path_to_logs/sphinx_indexer.log 2>&1
+
+
+#####################################################
+## Calls the export procedure and gzips archived data
+#####################################################
+0 1 * * * root sh /path_to_logzilla/scripts/export.sh 
