@@ -1812,6 +1812,13 @@ sub verify_columns {
             $dbh->do("ALTER TABLE $table ADD KEY `rbac` (`rbac_key`); ") or die "Could not update $dbname: $DBI::errstr";
         }
     }
+    # Test for EPX
+    my $table = 'events_per_second';
+    if ( colExists( "$table", "id" ) eq 0 ) {
+        print "Creating $table table...\n";
+        my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/epx.sql`;
+        print "$res\n";
+    }
 }
 
 sub update_version {
