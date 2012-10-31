@@ -1,7 +1,7 @@
 <?php
 
 //
-// $Id: ubertest.php 2765 2011-04-08 13:07:32Z klirichek $
+// $Id: ubertest.php 3169 2012-03-29 00:13:37Z glook $
 //
 
 $sd_managed_searchd	= false;
@@ -107,6 +107,7 @@ if ( !$run )
 
 PublishLocals ( $locals, false );
 GuessIdSize();
+GuessRE2();
 
 if ( $g_locals["malloc-scribble"] )
 {
@@ -282,7 +283,7 @@ if ( $total_tests_failed )
 }
 
 //
-// $Id: ubertest.php 2765 2011-04-08 13:07:32Z klirichek $
+// $Id: ubertest.php 3169 2012-03-29 00:13:37Z glook $
 //
 
 ?>

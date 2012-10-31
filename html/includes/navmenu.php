@@ -345,28 +345,31 @@ mdraw = function() {
             points.splice(0,1);
         travel = 0;
         $.getJSON('includes/ajax/json.sparkline.mps.php', function(data) {
-        // $('.dynamicsparkline').sparkline(data, {width: points.length*20, height: '45px'});
+            // $('.dynamicsparkline').sparkline(data, {width: points.length*20, height: '45px'});
             $('.ticker_text').text("");
             if(data) {
                 // Add sparkline:
                 $('.ticker').sparkline(data, {width: ((data.length - 1) * 2), height: '30px', type: 'line'});
                 // Added average MPS text if data exists:
                 var total = 0;
-                    for(var i = 0; i < data.length; i++){
+                for(var i = 0; i < data.length; i++){
                     var thisVal = parseInt(data[i]);
                     if(!isNaN(thisVal)){
                         total += thisVal;
                     };
                 };
-                var avg = Math.round(total / (data.length - 1));
-                if (isNumber(avg) && (avg >0)){
-                    $('.ticker_text').text('Average Events Per Second: ' + avg);
+                var eps = Math.round(total / (data.length - 1));
+                var epm = Math.round(total / (data.length - 1) * 60 );
+                if (isNumber(eps) && (eps >0)){
+                    $('.ticker_text').text('Average Events Per Second: ' + eps);
+                } else if (isNumber(epm) && (epm>0)) {
+                    $('.ticker_text').text('Average Events Per Minute: ' + epm);
                 } else {
                     $('.ticker_text').text("No Incoming Messages");
-                    };
+                };
             } else {
-            $('.ticker_text').text("No Incoming Messages");
-            $('.ticker').sparkline(data, {width: '0px', height: '30px', type: 'line'});
+                $('.ticker_text').text("No Incoming Messages");
+                $('.ticker').sparkline(data, {width: '0px', height: '30px', type: 'line'});
             };
         });
     }

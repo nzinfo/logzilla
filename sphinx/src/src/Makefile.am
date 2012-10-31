@@ -1,5 +1,5 @@
 SRC_SPHINX = sphinx.cpp sphinxexcerpt.cpp sphinxquery.cpp \
-	sphinxsoundex.cpp sphinxmetaphone.cpp sphinxstemen.cpp sphinxstemru.cpp sphinxstemcz.cpp \
+	sphinxsoundex.cpp sphinxmetaphone.cpp sphinxstemen.cpp sphinxstemru.cpp sphinxstemcz.cpp sphinxstemar.cpp \
 	sphinxutils.cpp md5.cpp sphinxstd.cpp sphinxsort.cpp sphinxexpr.cpp sphinxfilter.cpp \
 	sphinxsearch.cpp sphinxrt.cpp
 
@@ -21,13 +21,14 @@ BUILT_SOURCES = extract-version
 extract-version:
 	/bin/sh svnxrev.sh ..
 
-if USE_LIBSTEMMER
-LIBSTEMMER_LIBS = $(top_srcdir)/libstemmer_c/libstemmer.a
-AM_CPPFLAGS = -I$(top_srcdir)/libstemmer_c/include -DSYSCONFDIR="\"$(sysconfdir)\"" -DDATADIR="\"$(localstatedir)/data\""
+if USE_RE2
+LIBRE2_LIBS = $(top_srcdir)/libre2/obj/libre2.a
+LIBRE2_INC = -I$(top_srcdir)/libre2
 else
-LIBSTEMMER_LIBS =
-AM_CPPFLAGS = -DSYSCONFDIR="\"$(sysconfdir)\"" -DDATADIR="\"$(localstatedir)/data\""
+LIBRE2_LIBS =
+LIBRE2_INC =
 endif
 
-COMMON_LIBS = libsphinx.a $(LIBSTEMMER_LIBS) $(MYSQL_LIBS) $(PGSQL_LIBS)
+AM_CPPFLAGS = $(LIBRE2_INC) -DSYSCONFDIR="\"$(sysconfdir)\"" -DDATADIR="\"$(localstatedir)/data\""
+COMMON_LIBS = libsphinx.a $(LIBSTEMMER_LIBS) $(MYSQL_LIBS) $(PGSQL_LIBS) $(LIBRE2_LIBS)
 LDADD = $(COMMON_LIBS)

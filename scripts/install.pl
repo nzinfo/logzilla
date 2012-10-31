@@ -15,27 +15,27 @@ $| = 1;
 ################################################
 # Help user if Perl mods are missing
 ################################################
-my @mods = (qw(DBI Date::Calc Term::ReadLine File::Copy Digest::MD5 LWP::Simple File::Spec String::CRC32 MIME::Lite IO::Socket::INET Getopt::Long CHI Net::SNMP));
+my @mods = (qw(DBI Date::Calc Term::ReadLine File::Copy Digest::MD5 LWP::Simple File::Spec String::CRC32 MIME::Lite IO::Socket::INET Getopt::Long CHI Net::SNMP Log::Fast Test::mysqld PerlIO::Util Find::Lib MooseX::Params::Validate Test::Deep Test::MockTime ));
 
 foreach my $mod (@mods) {
     ( my $fn = "$mod.pm" ) =~ s|::|/|g;    # Foo::Bar::Baz => Foo/Bar/Baz.pm
     if ( eval { require $fn; 1; } ) {
         ##print "Module $mod loaded ok\n";
     } else {
-        print "You are missing a required Perl Module: $mod\n";
-        my $ok = &getYN( "Shall I attempt to install it for you?", "y" );
-        if ( $ok =~ /[Yy]/ ) {
+        print "You are missing a required Perl Module: $mod\nI will attempt to install it for you.\n";
+        system("(echo o conf prerequisites_policy follow;echo o conf commit)|cpan");
+        #my $ok = &getYN( "Shall I attempt to install it for you?", "y" );
+        #if ( $ok =~ /[Yy]/ ) {
             require CPAN;
             CPAN::install($mod);
-        } else {
-            print "LogZilla requires $mod\n";
-            exit;
-        }
+            #} else {
+            #print "LogZilla requires $mod\n";
+            #exit;
+            #}
     }
 }
 
 
-use feature "switch";
 use Cwd;
 use File::Basename;
 use POSIX;
@@ -55,7 +55,30 @@ require Getopt::Long;
 require Net::SNMP;
 
 
-my ($autoyes);
+
+sub prompt {
+    my ( $prompt, $default ) = @_;
+    my $defaultValue = $default ? "[$default]" : "";
+    print "$prompt $defaultValue: ";
+    chomp( my $input = <STDIN> );
+    return $input ? $input : $default;
+}
+
+my $version    = "4.0";
+my $subversion = ".504";
+
+# Grab the base path
+my $lzbase = getcwd;
+$lzbase =~ s/\/scripts//g;
+my $now = localtime;
+
+my ( $sec, $min, $hour, $curmday, $curmon, $curyear, $wday, $yday, $isdst ) = localtime time;
+$curyear = $curyear + 1900;
+$curmon  = $curmon + 1;
+my ( $year, $mon, $mday ) = Date::Calc::Add_Delta_Days( $curyear, $curmon, $curmday, 1 );
+my $pAdd = "p" . $year . sprintf( "%02d", $mon ) . sprintf( "%02d", $mday );
+my $dateTomorrow = $year . "-" . sprintf( "%02d", $mon ) . "-" . sprintf( "%02d", $mday );
+my ( $dbroot, $dbrootpass, $dbname, $dbtable, $dbhost, $dbport, $dbadmin, $dbadminpw, $siteadmin, $siteadminpw, $email, $sitename, $url, $logpath, $retention, $snare, $j4, $arch, $skipcron, $skipdb, $skipsysng, $skiplogrot, $skipsudo, $skipfb, $skiplic, $sphinx_compile, $sphinx_index, $skip_ioncube,$skipapparmor, $syslogng_conf, $webuser, $syslogng_source, $upgrade, $test, $autoyes );
 
 sub getYN {
     unless ( $autoyes =~ /[Yy]/ ) {
@@ -69,74 +92,56 @@ sub getYN {
     }
 }
 
-sub prompt {
-    my ( $prompt, $default ) = @_;
-    my $defaultValue = $default ? "[$default]" : "";
-    print "$prompt $defaultValue: ";
-    chomp( my $input = <STDIN> );
-    return $input ? $input : $default;
-}
-
-my $version    = "4.0";
-my $subversion = ".406";
-
-# Grab the base path
-my $lzbase = getcwd;
-$lzbase =~ s/\/scripts//g;
-my $now = localtime;
-
-my ( $sec, $min, $hour, $curmday, $curmon, $curyear, $wday, $yday, $isdst ) = localtime time;
-$curyear = $curyear + 1900;
-$curmon  = $curmon + 1;
-my ( $year, $mon, $mday ) = Date::Calc::Add_Delta_Days( $curyear, $curmon, $curmday, 1 );
-my $pAdd = "p" . $year . sprintf( "%02d", $mon ) . sprintf( "%02d", $mday );
-my $dateTomorrow = $year . "-" . sprintf( "%02d", $mon ) . "-" . sprintf( "%02d", $mday );
-my ( $dbroot, $dbrootpass, $dbname, $dbtable, $dbhost, $dbport, $dbadmin, $dbadminpw, $siteadmin, $siteadminpw, $email, $sitename, $url, $logpath, $retention, $snare, $j4, $arch, $skipcron, $skipdb, $skipsysng, $skiplogrot, $skipsudo, $skipfb, $skiplic, $sphinx_compile, $sphinx_index, $skip_ioncube,$skipapparmor, $syslogng_conf, $webuser, $syslogng_source, $upgrade );
-
 # The command line args below are really just for me so I don't have to keep going through extra steps to test 1 thing.
 # But you can use them if you want :-)
-foreach (@ARGV) {
-    given ($_) {
-        when ("update_paths") {
-            update_paths();
-            exit;
-        }
-        when ("genconfig") {
-            genconfig();
-            exit;
-        }
-        when ("add_logrotate") {
-            add_logrotate();
-            exit;
-        }
-        when ("add_syslog_conf") {
-            add_syslog_conf();
-            exit;
-        }
-        when ("setup_cron") {
-            setup_cron();
-            exit;
-        }
-        when ("setup_sudo") {
-            setup_sudo();
-            exit;
-        }
-        when ("setup_apparmor") {
-            setup_apparmor();
-            exit;
-        }
-        when ("install_sphinx") {
-            install_sphinx();
-            exit;
-        }
-        when ("install_license") {
-            install_license();
-            exit;
-        }
-        when ("install_ioncube") {
-            add_ioncube();
-            exit;
-        }
+foreach my $arg (@ARGV) {
+    if($arg eq "update_paths") {
+        update_paths();
+        exit;
+    }
+    elsif($arg eq "genconfig") {
+        genconfig();
+        exit;
+    }
+    elsif($arg eq "add_logrotate") {
+        add_logrotate();
+        exit;
+    }
+    elsif($arg eq "add_syslog_conf") {
+        add_syslog_conf();
+        exit;
+    }
+    elsif($arg eq "setup_cron") {
+        setup_cron();
+        exit;
+    }
+    elsif($arg eq "setup_sudo") {
+        setup_sudo();
+        exit;
+    }
+    elsif($arg eq "setup_apparmor") {
+        setup_apparmor();
+        exit;
+    }
+    elsif($arg eq "install_sphinx") {
+        install_sphinx();
+        exit;
+    }
+    elsif($arg eq "install_license") {
+        install_license();
+        exit;
+    }
+    elsif($arg eq "install_ioncube") {
+        add_ioncube();
+        exit;
+    }
+    elsif($arg eq "test") {
+        run_tests();
+        exit;
+    }
+    elsif($arg eq "insert_test") {
+        insert_test();
+        exit;
     }
 }
 
@@ -153,31 +158,12 @@ print("\n\033[1m\tLogZilla End User License\n\033[0m");
 print("\n\033[1m========================================\n\n\033[0m\n\n");
 
 # Display the end-user license agreement
-sub show_EULA {
-    if ( $skiplic =~ /[Yy]/ ) {
-        print "You've agreed to the license using the .lzrc method, skipping...\n";
-    } else {
-        my $pager = $ENV{PAGER} || 'less' || 'more';
-        system( $pager, './EULA.txt' ) == 0 or die "$pager call failed: $?";
-        print "\n\n";
-    }
-}
-
 if ( $skiplic =~ /[Yy]/ ) {
     print "You've agreed to the license using the .lzrc method, skipping...\n";
 } else {
-    my $ok = &getYN( "You must read and accept the End User License Agreement to continue.\nContinue? (yes/no)", "n" );
-    if ( $ok !~ /[Yy]/ ) {
-        print "Please try again when you are ready to accept.\n";
-        exit 1;
-    } else {
-        &show_EULA;
-    }
-    my $ok = &getYN( "Do you accept? (yes/no)", "n" );
-    if ( $ok !~ /[Yy]/ ) {
-        print "Please try again when you are ready to accept.\n";
-        exit 1;
-    }
+    #my $pager = $ENV{PAGER} || 'less' || 'more';
+    #system( $pager, "$lzbase/scripts/EULA.txt" ) == 0 or die "$pager call failed: $?";
+    &EULA;
 }
 
 print("\n\033[1m\n\n========================================\033[0m\n");
@@ -219,8 +205,16 @@ my $sock = IO::Socket::INET->new(
     Proto    => "tcp" );
 my $localip = $sock->sockhost;
 
+if ( $dbhost !~ /localhost|127.0.0.1/ ) {
+    my $file = "$lzbase/scripts/log_processor";
+    system("perl -i -pe 's/LOAD DATA INFILE/LOAD DATA LOCAL INFILE/g' $file");
+}
+
 if ( !-d "$logpath" ) {
     mkdir "$logpath";
+}
+if ( !-d "$lzbase/data" ) {
+    mkdir "$lzbase/data";
 }
 
 # Create mysql .cnf file
@@ -238,6 +232,7 @@ chmod 0400, "$lzbase/scripts/sql/lzmy.cnf";
 update_paths();
 make_logfiles();
 genconfig();
+
 
 if ( $skipdb !~ /[Yy]/ ) {
     print "All data will be installed into the $dbname database\n";
@@ -301,13 +296,13 @@ if ( $skipdb !~ /[Yy]/ ) {
     do_procs();
     update_version();
 }
-insert_test();
 add_logrotate()   unless $skiplogrot =~ /[Yy]/;
 add_syslog_conf() unless $skipsysng  =~ /[Yy]/;
 setup_cron()      unless $skipcron   =~ /[Yy]/;
 setup_sudo()      unless $skipsudo   =~ /[Yy]/;
 setup_apparmor()  unless $skipapparmor   =~ /[Yy]/;
 install_sphinx()  unless $sphinx_compile   =~ /[Nn]/;
+insert_test();
 if ($sphinx_index   =~ /[Yy]/) {
     print "Starting Sphinx search daemon and re-indexing data...\n";
     system("(rm -f $lzbase/sphinx/data/* && cd $lzbase/sphinx && ./indexer.sh full)");
@@ -315,27 +310,8 @@ if ($sphinx_index   =~ /[Yy]/) {
 fbutton()         unless $skipfb       =~ /[Yy]/;
 add_ioncube()     unless $skip_ioncube =~ /[Yy]/;
 install_license() unless $skiplic      =~ /[Yy]/;
+run_tests()       unless $test    =~ /[Nn]/;
 
-if ( $dbhost !~ /localhost|127.0.0.1/ ) {
-    my $file = "$lzbase/scripts/db_insert.pl";
-    open( FILE, "$file" );
-    my @data = <FILE>;
-    close(FILE);
-    open( FILE, ">$file" ) || die("Cannot Open $file: $!");
-    foreach my $line (@data) {
-        chomp $line;
-        if ( $line =~ /^(my.*=.*LOAD DATA) (INFILE.*)/ ) {
-
-            #print "Altering $line:\n$1 LOCAL $2\n";
-            print FILE "$1 LOCAL $2\n";
-        } elsif ( $line =~ /^(my.*"DBI:mysql.*;)(mysql_read_default_group=logzilla;")/ ) {
-            print FILE $1 . "mysql_local_infile=1;" . $2 . "\n";
-        } else {
-            print FILE "$line\n";
-        }
-    }
-    close(FILE);
-}
 setup_rclocal();
 hup_syslog();
 
@@ -347,10 +323,10 @@ sub make_archive_tables {
         exit;
     }
 
-    # Insert archives table
-    #[[ticket:315]]
-    # Can't overwrite current archives on upgrade. We'll copy the existing table to old, then replace into new table.
-    if (tblExists("archives") eq 1) {
+# Insert archives table
+#[[ticket:315]]
+# Can't overwrite current archives on upgrade. We'll copy the existing table to old, then replace into new table.
+    if ( tblExists("archives") eq 1 ) {
         copy_old_archives();
     } else {
         my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/archives.sql`;
@@ -387,15 +363,8 @@ sub do_install {
         counter int(11) NOT NULL DEFAULT '1',
         fo datetime NOT NULL,
         lo datetime NOT NULL,
-        notes varchar(255) NOT NULL,
+        notes varchar(255) NOT NULL DEFAULT '',
         PRIMARY KEY (id,lo),
-        KEY facility (facility),
-        KEY severity (severity),
-        KEY host (host),
-        KEY mne (mne),
-        KEY eid (eid),
-        KEY program (program),
-        KEY suppress (suppress),
         KEY lo (lo),
         KEY fo (fo),
         KEY id (id)
@@ -403,7 +372,7 @@ sub do_install {
         " ) or die "Could not create $dbtable table: $DBI::errstr";
 
     # Create sphinx table
-    if ($upgrade !~ /[Yy][Ee][Ss]/) {
+    if ( $upgrade !~ /[Yy][Ee][Ss]/ ) {
         my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/sph_counter.sql`;
         print $res;
     }
@@ -442,6 +411,10 @@ sub do_install {
     my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/banned_ips.sql`;
     print $res;
 
+    # Create epx tables
+    my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/epx.sql`;
+    print $res;
+
     # Create email alerts table
     do_email_alerts();
 
@@ -462,7 +435,7 @@ sub do_install {
     print $res;
 
     # Insert ui_layout data
-    if (tblExists("ui_layout") eq 1) {
+    if ( tblExists("ui_layout") eq 1 ) {
         upgrade_ui_layout();
     } else {
         my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/ui_layout.sql`;
@@ -485,7 +458,7 @@ sub do_install {
     print $res;
 
     # Insert rbac table
-    if (tblExists("rbac") eq 1) {
+    if ( tblExists("rbac") eq 1 ) {
         copy_old_rbac();
     } else {
         my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/rbac.sql`;
@@ -560,6 +533,7 @@ sub genconfig {
     DEFINE('DBHOST', '$dbhost');
     DEFINE('DBPORT', '$dbport');
     DEFINE('LOG_PATH', '$logpath');
+    DEFINE('DATA_DIR', '$lzbase/data');
     DEFINE('MYSQL_QUERY_LOG', '$logpath/mysql_query.log');
     DEFINE('PATHTOLOGZILLA', '$lzbase');
     DEFINE('SPHINXHOST', '127.0.0.1'); // NOT 'localhost'! Else it will connect to local socket instead
@@ -662,7 +636,6 @@ sub do_events {
         $event
         " ) or die "Could not create event: cacheEid: $DBI::errstr";
     $sth->execute;
-
 
     $dbh->do( "
         CREATE EVENT `log_arch_daily_event` ON SCHEDULE EVERY 1 DAY STARTS date_add(date_add(date(now()), interval 1 day),interval 180 second) ON COMPLETION NOT PRESERVE ENABLE DO call log_arch_daily_proc();
@@ -770,20 +743,20 @@ sub do_procs {
         " ) or die "Could not create partition events: $DBI::errstr";
     $sth->execute;
 
-    # No longer used
-    #my $event = qq{
-    #CREATE PROCEDURE logs_add_archive_proc()
-    #SQL SECURITY DEFINER
-    #COMMENT 'Creates archive for old messages' 
-    #BEGIN    
-    #INSERT INTO `logs_archive` SELECT * FROM `$dbtable` 
-    #WHERE `$dbtable`.`lo` < DATE_SUB(CURDATE(), INTERVAL (SELECT value from settings WHERE name='RETENTION') DAY);
-    #END 
-    #};
-    #my $sth = $dbh->prepare( "
-    #$event
-    #" ) or die "Could not create partition events: $DBI::errstr";
-    #$sth->execute;
+# No longer used
+#my $event = qq{
+#CREATE PROCEDURE logs_add_archive_proc()
+#SQL SECURITY DEFINER
+#COMMENT 'Creates archive for old messages'
+#BEGIN
+#INSERT INTO `logs_archive` SELECT * FROM `$dbtable`
+#WHERE `$dbtable`.`lo` < DATE_SUB(CURDATE(), INTERVAL (SELECT value from settings WHERE name='RETENTION') DAY);
+#END
+#};
+#my $sth = $dbh->prepare( "
+#$event
+#" ) or die "Could not create partition events: $DBI::errstr";
+#$sth->execute;
 
     # CDUKES: [[ticket:17]]
     my $event = qq{
@@ -858,7 +831,6 @@ sub do_procs {
         " ) or die "Could not enable the Global event scheduler: $DBI::errstr";
     $sth->execute;
 
-
     #    $dbh->do("
     #        DROP PROCEDURE IF EXISTS `log_arch_mnthly_proc`;
     #        ") or die "$DBI::errstr";
@@ -870,6 +842,7 @@ sub do_procs {
     system "perl -i -pe 's| logs | $dbtable |g' sql/procedures.sql" and warn "Could not modify sql/procedures.sql $!\n";
     my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/procedures.sql`;
     print $res;
+
     # Now create the events that trigger these procs
     do_events();
 }
@@ -1010,7 +983,7 @@ sub update_settings {
 
     # Insert settings data
     # use copy_old settings so upgraders don't get overwritten
-    if (tblExists("settings") eq 1) {
+    if ( tblExists("settings") eq 1 ) {
         copy_old_settings();
     } else {
         my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/settings.sql`;
@@ -1100,6 +1073,7 @@ sub add_logrotate {
 
 # [[ticket:10]] Modifies the exports dir to he correct user
 system "chown mysql.mysql ../exports" and warn "Could not modify archive directory";
+
 # [[ticket:300]] chown scripts also
 system "chown mysql.mysql $lzbase/scripts/export.sh" and warn "Could not set permission on $lzbase/scripts/export.sh";
 system "chown mysql.mysql $lzbase/scripts/import.sh" and warn "Could not set permission on $lzbase/scripts/import.sh";
@@ -1182,13 +1156,15 @@ sub setup_cron {
 
     if ( $ok =~ /[Yy]/ ) {
         my $minute;
+
 # due hourly views cron can always run every minute
 #        my $sml = &getYN( "\n\nWill this copy of LogZilla be used to process more than 1 Million messages per day?\nNote: Your answer here only determines how often to run indexing.", "n" );
 #        if ( $sml =~ /[Yy]/ ) {
 #            $minute = 5;
 #        } else {
-            $minute = 1;
-#        }
+        $minute = 1;
+
+        #        }
         my $cron = qq{
 #####################################################
 # BEGIN LogZilla Cron Entries
@@ -1266,7 +1242,8 @@ sub setup_sudo {
             if ( not $webuser ) {
                 my $webuser = &prompt( "Please provide the username that Apache runs as", "$webuser" );
             }
-            # since we have $webuser here, let's go ahead and chown the files needed for licensing
+
+# since we have $webuser here, let's go ahead and chown the files needed for licensing
             system "chown $webuser.$webuser $lzbase/html/includes/ajax/license.log" and warn "Could not chown license.log";
             system "chown $webuser.$webuser $lzbase/html/" and warn "Could not chown html/";
 
@@ -1343,8 +1320,9 @@ sub kill {
 }
 
 sub install_sphinx {
+
     # [[ticket:306]]
-    my $now = strftime('%Y-%m-%d %H:%M:%S', localtime);
+    my $now   = strftime( '%Y-%m-%d %H:%M:%S', localtime );
     my $procs = `cat /proc/cpuinfo | grep ^proce | wc -l`;
     my $arch  = `uname -m`;
     if ( $procs > 3 ) {
@@ -1376,8 +1354,8 @@ sub install_sphinx {
             system("kill -9 $checkprocess");
         }
         system("cd $lzbase/sphinx/src && ./configure --enable-id64 --with-syslog --prefix `pwd`/.. && $makecmd");
-    	print "Starting Sphinx search daemon and re-indexing data...\n";
-	system("(rm -f $lzbase/sphinx/data/* && cd $lzbase/sphinx && ./indexer.sh full)");
+        print "Starting Sphinx search daemon and re-indexing data...\n";
+        system("(rm -f $lzbase/sphinx/data/* && cd $lzbase/sphinx && ./indexer.sh full)");
     } else {
         print "Skipping Sphinx Installation\n";
     }
@@ -1404,7 +1382,7 @@ sub setup_apparmor {
                 open my $config, '+<', "$file" or warn "FAILED: $!\n";
                 my @all = <$config>;
                 seek $config, 0, 0;
-                splice @all, -1, 0, "# <lzconfig> (please do not remove this line)\n  /tmp/logzilla_import.txt r,\n  $lzbase/exports/** rw,\n# </lzconfig> (please do not remove this line)\n";
+                splice @all, -1, 0, "# <lzconfig> (please do not remove this line)\n  /tmp/logzilla_import.txt r,\n  $lzbase/exports/** rw,\n  /tmp/** r,\n# </lzconfig> (please do not remove this line)\n";
                 print $config @all;
                 close $config;
             }
@@ -1585,32 +1563,79 @@ sub do_upgrade {
     my $rev = shift;
     print("\n\033[1m\tUpgrading, please be patient!\nIf you have a large DB, this could take a long time...\n\033[0m");
     my $dbh = db_connect( $dbname, $lzbase, $dbroot, $dbrootpass );
-    given ($rev) {
-        when ("0") {
-            print "You are running an unsupported version of LogZilla (<3.1)\n";
-            print "An attempt will be made to upgrade to $version$subversion...\n";
-            my $ok = &getYN( "Continue? (yes/no)", "y" );
-            if ( $ok =~ /[Yy]/ ) {
-                add_snare_to_logtable();
-                do_programs();
-                tbl_add_severities();
-                tbl_add_facilities();
-                create_snare_table();
-                do_email_alerts();
-                update_procs();
-                make_archive_tables();
-                make_dbuser();
-                add_table_triggers();
-
-                if ( colExists( "logs", "priority" ) eq 1 ) {
-                    tbl_logs_alter_from_30();
-                }
-                print "\n\tUpgrade complete, continuing installation...\n\n";
-            }
-        }
-        when ("1122") {
-            print "Upgrading Database from v3.1.122 to $version$subversion...\n";
+    if ( $rev eq "0" ) {
+        print "You are running an unsupported version of LogZilla (<3.1)\n";
+        print "An attempt will be made to upgrade to $version$subversion...\n";
+        my $ok = &getYN( "Continue? (yes/no)", "y" );
+        if ( $ok =~ /[Yy]/ ) {
             add_snare_to_logtable();
+            do_programs();
+            tbl_add_severities();
+            tbl_add_facilities();
+            create_snare_table();
+            do_email_alerts();
+            update_procs();
+            make_archive_tables();
+            make_dbuser();
+            add_table_triggers();
+
+            if ( colExists( "logs", "priority" ) eq 1 ) {
+                tbl_logs_alter_from_30();
+            }
+            print "\n\tUpgrade complete, continuing installation...\n\n";
+        }
+    }
+    elsif ( $rev eq "1122" ) {
+        print "Upgrading Database from v3.1.122 to $version$subversion...\n";
+        add_snare_to_logtable();
+        create_snare_table();
+        do_email_alerts();
+        update_procs();
+        make_archive_tables();
+        make_dbuser();
+        add_table_triggers();
+        print "\n\tUpgrade complete, continuing installation...\n\n";
+
+    }
+    elsif ( $rev eq "php-syslog-ng" ) {
+        print "You are running an unsupported version of LogZilla (Php-syslog-ng v2.x)\n";
+        print "An attempt will be made to upgrade to $version$subversion...\n";
+        my $ok = &getYN( "Continue? (yes/no)", "y" );
+        if ( $ok =~ /[Yy]/ ) {
+            add_snare_to_logtable();
+            do_programs();
+            tbl_add_severities();
+            tbl_add_facilities();
+            create_snare_table();
+            do_email_alerts();
+            update_procs();
+            make_dbuser();
+            add_table_triggers();
+
+            if ( colExists( "logs", "priority" ) eq 1 ) {
+                tbl_logs_alter_from_299();
+            }
+            make_partitions();
+            make_archive_tables();
+            print "\n\tUpgrade complete, continuing installation...\n\n";
+        }
+    }
+    elsif ( $rev eq "32" ) {
+        update_procs();
+        make_archive_tables();
+        make_dbuser();
+        add_table_triggers();
+        print "\n\tUpgrade complete, continuing installation...\n\n";
+    }
+    elsif ( $rev eq "all" ) {
+        print "Your version is not an officially supported upgrade.\n";
+        print "An attempt will be made to upgrade to $version$subversion...\n";
+        my $ok = &getYN( "Continue? (yes/no)", "y" );
+        if ( $ok =~ /[Yy]/ ) {
+            add_snare_to_logtable();
+            do_programs();
+            tbl_add_severities();
+            tbl_add_facilities();
             create_snare_table();
             do_email_alerts();
             update_procs();
@@ -1618,69 +1643,21 @@ sub do_upgrade {
             make_dbuser();
             add_table_triggers();
             print "\n\tUpgrade complete, continuing installation...\n\n";
-
-        }
-        when ("php-syslog-ng") {
-            print "You are running an unsupported version of LogZilla (Php-syslog-ng v2.x)\n";
-            print "An attempt will be made to upgrade to $version$subversion...\n";
-            my $ok = &getYN( "Continue? (yes/no)", "y" );
-            if ( $ok =~ /[Yy]/ ) {
-                add_snare_to_logtable();
-                do_programs();
-                tbl_add_severities();
-                tbl_add_facilities();
-                create_snare_table();
-                do_email_alerts();
-                update_procs();
-                make_dbuser();
-                add_table_triggers();
-
-                if ( colExists( "logs", "priority" ) eq 1 ) {
-                    tbl_logs_alter_from_299();
-                }
-                make_partitions();
-                make_archive_tables();
-                print "\n\tUpgrade complete, continuing installation...\n\n";
-            }
-        }
-        when ("32") {
-            update_procs();
-            make_archive_tables();
-            make_dbuser();
-            add_table_triggers();
-            print "\n\tUpgrade complete, continuing installation...\n\n";
-        }
-        when ("all") {
-            print "Your version is not an officially supported upgrade.\n";
-            print "An attempt will be made to upgrade to $version$subversion...\n";
-            my $ok = &getYN( "Continue? (yes/no)", "y" );
-            if ( $ok =~ /[Yy]/ ) {
-                add_snare_to_logtable();
-                do_programs();
-                tbl_add_severities();
-                tbl_add_facilities();
-                create_snare_table();
-                do_email_alerts();
-                update_procs();
-                make_archive_tables();
-                make_dbuser();
-                add_table_triggers();
-                print "\n\tUpgrade complete, continuing installation...\n\n";
-            }
-        }
-        when (2) {
-            print "Attempting upgrade from php-syslog-ng (v2.x) to LogZilla (v3.x)\n";
-            print "Not Implemented yet...sorry\n";
-            exit;
-        }
-        default {
-            print "Your version is not a candidate for upgrade.\n";
-            exit;
         }
     }
+    elsif ( $rev eq 2 ) {
+        print "Attempting upgrade from php-syslog-ng (v2.x) to LogZilla (v3.x)\n";
+        print "Not Implemented yet...sorry\n";
+        exit;
+    }
+    else {
+        print "Your version is not a candidate for upgrade.\n";
+        exit;
+    }
     update_help();
+
     # Insert ui_layout data
-    if (tblExists("ui_layout") eq 1) {
+    if ( tblExists("ui_layout") eq 1 ) {
         upgrade_ui_layout();
     } else {
         my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/ui_layout.sql`;
@@ -1765,10 +1742,10 @@ sub add_snare_to_logtable {
 
 sub create_snare_table {
     my $dbh = db_connect( $dbname, $lzbase, $dbroot, $dbrootpass );
-    if (tblExists("snare_eid") eq 1) {
+    if ( tblExists("snare_eid") eq 1 ) {
         copy_old_snare();
     } else {
-    print "Adding SNARE table...\n";
+        print "Adding SNARE table...\n";
         my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/snare_eid.sql`;
     }
 }
@@ -1794,11 +1771,12 @@ sub copy_old_archives {
 }
 
 sub verify_columns {
+
 # As of v4.0, we will just do this for all columns regardless of install or upgrade to make sure they exist.
     my $dbh = db_connect( $dbname, $lzbase, $dbroot, $dbrootpass );
     print "Verifying Table Columns...\n";
-    my @tables = ('hosts', 'programs', 'snare_eid', 'mne');
-    my @cols = ('lastseen', 'seen', 'hidden');
+    my @tables = ( 'hosts', 'programs', 'snare_eid', 'mne' );
+    my @cols = ( 'lastseen', 'seen', 'hidden' );
     foreach (@tables) {
         print "Validating $_ table:\n";
         my $table = $_;
@@ -1809,25 +1787,24 @@ sub verify_columns {
         }
         foreach (@cols) {
             my $col = $_;
-        print "Validating $table.$col\n";
+            print "Validating $table.$col\n";
             if ( colExists( "$table", "$col" ) ne 1 ) {
                 print "Updating $table $col column...\n";
-                given ($col) {
-                    when ("lastseen") {
-                        $dbh->do("ALTER TABLE $table ADD `lastseen` datetime NOT NULL default '2012-01-01 00:00:00'; ") or die "Could not update $dbname: $DBI::errstr";
-                    }
-                    when ("seen") {
-                        $dbh->do("ALTER TABLE $table ADD `seen` int(10) unsigned NOT NULL DEFAULT '1'; ") or die "Could not update $dbname: $DBI::errstr";
-                    }
-                    when ("hidden") {
-                        $dbh->do("ALTER TABLE $table ADD `hidden` enum('false','true') DEFAULT 'false'; ") or die "Could not update $dbname: $DBI::errstr";
-                    }
+                if ( $col eq "lastseen" ) {
+                    $dbh->do("ALTER TABLE $table ADD `lastseen` datetime NOT NULL default '2012-01-01 00:00:00'; ") or die "Could not update $dbname: $DBI::errstr";
+                }
+                elsif ( $col eq "seen" ) {
+                    $dbh->do("ALTER TABLE $table ADD `seen` int(10) unsigned NOT NULL DEFAULT '1'; ") or die "Could not update $dbname: $DBI::errstr";
+                }
+                elsif ( $col eq "hidden" ) {
+                    $dbh->do("ALTER TABLE $table ADD `hidden` enum('false','true') DEFAULT 'false'; ") or die "Could not update $dbname: $DBI::errstr";
                 }
             }
         }
     }
+
     # Test for RBAC
-    my @tables = ('hosts', 'users');
+    my @tables = ( 'hosts', 'users' );
     foreach (@tables) {
         my $table = $_;
         if ( colExists( "$table", "rbac_key" ) eq 0 ) {
@@ -2000,24 +1977,25 @@ sub tbl_logs_alter_from_299 {
 
 sub do_email_alerts {
     my $dbh = db_connect( $dbname, $lzbase, $dbroot, $dbrootpass );
-    if (tblExists("triggers") eq 0) {
+    if ( tblExists("triggers") eq 0 ) {
         print "Adding Email Alerts...\n";
         my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/triggers.sql`;
     } else {
         print "Updating Email Alerts...\n";
-    if ( colExists( "triggers", "description" ) eq 0 ) {
-        $dbh->do("ALTER TABLE triggers ADD `description` varchar(255) NOT NULL DEFAULT ''") or die "Could not update $dbtable: $DBI::errstr";
-    }
-    if ( colExists( "triggers", "to" ) eq 1 ) {
-        $dbh->do("ALTER TABLE triggers CHANGE `to` `mailto` varchar (255)") or die "Could not update $dbtable: $DBI::errstr";
-    }
-    if ( colExists( "triggers", "from" ) eq 1 ) {
-        $dbh->do("ALTER TABLE triggers CHANGE `from` `mailfrom` varchar (255)") or die "Could not update $dbtable: $DBI::errstr";
-    }
-    if ( colExists( "triggers", "disabled" ) eq 0 ) {
-        $dbh->do("ALTER TABLE triggers ADD `disabled` enum('Yes','No') NOT NULL DEFAULT 'Yes'") or die "Could not update $dbtable: $DBI::errstr";
-    }
-     #continue
+        if ( colExists( "triggers", "description" ) eq 0 ) {
+            $dbh->do("ALTER TABLE triggers ADD `description` varchar(255) NOT NULL DEFAULT ''") or die "Could not update $dbtable: $DBI::errstr";
+        }
+        if ( colExists( "triggers", "to" ) eq 1 ) {
+            $dbh->do("ALTER TABLE triggers CHANGE `to` `mailto` varchar (255)") or die "Could not update $dbtable: $DBI::errstr";
+        }
+        if ( colExists( "triggers", "from" ) eq 1 ) {
+            $dbh->do("ALTER TABLE triggers CHANGE `from` `mailfrom` varchar (255)") or die "Could not update $dbtable: $DBI::errstr";
+        }
+        if ( colExists( "triggers", "disabled" ) eq 0 ) {
+            $dbh->do("ALTER TABLE triggers ADD `disabled` enum('Yes','No') NOT NULL DEFAULT 'Yes'") or die "Could not update $dbtable: $DBI::errstr";
+        }
+
+        #continue
         $dbh->do("RENAME TABLE triggers TO triggers_orig") or die "Could not update $dbname: $DBI::errstr";
         my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/triggers.sql`;
         print $res;
@@ -2025,9 +2003,10 @@ sub do_email_alerts {
         $dbh->do("DROP TABLE triggers_orig") or die "Could not update $dbname: $DBI::errstr";
     }
 }
+
 sub do_programs {
     my $dbh = db_connect( $dbname, $lzbase, $dbroot, $dbrootpass );
-    if (tblExists("programs") eq 0) {
+    if ( tblExists("programs") eq 0 ) {
         print "Adding Programs Table...\n";
         my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/programs.sql`;
     } else {
@@ -2041,7 +2020,7 @@ sub do_programs {
 }
 
 sub tbl_add_severities {
-    if (tblExists("severities") eq 0) {
+    if ( tblExists("severities") eq 0 ) {
         print "Adding Severities Table...\n";
         my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/severities.sql`;
         print $res;
@@ -2049,7 +2028,7 @@ sub tbl_add_severities {
 }
 
 sub tbl_add_facilities {
-    if (tblExists("facilities") eq 0) {
+    if ( tblExists("facilities") eq 0 ) {
         print "Adding Facilities Table...\n";
         my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/facilities.sql`;
         print $res;
@@ -2110,7 +2089,7 @@ sub update_procs {
     print $res;
 
     # Insert rbac table
-    if (tblExists("rbac") eq 1) {
+    if ( tblExists("rbac") eq 1 ) {
         copy_old_rbac();
     } else {
         my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/rbac.sql`;
@@ -2119,13 +2098,8 @@ sub update_procs {
 }
 
 sub insert_test {
-    my $dbh = db_connect( $dbname, $lzbase, $dbroot, $dbrootpass );
     print "Inserting first message as a test ...\n";
-    my $sql = ("SELECT * FROM $dbtable LIMIT 1");
-    my (@row) = $dbh->selectrow_array("$sql");
-    if ( not $row[0]  ) {
-        system("printf '$now\ttest\t190\tLogZilla\tLogZilla Installation - Test Message\n' | /var/www/logzilla/scripts/db_insert.pl -d1 -v");
-    }
+        system("$lzbase/scripts/test/genlog -hn 1 -n 1 | $lzbase/scripts/log_processor -d 1 -v");
 }
 
 sub colExists {
@@ -2135,6 +2109,7 @@ sub colExists {
     my $sth   = $dbh->column_info( undef, $dbname, $table, '%' );
     my $ref   = $sth->fetchall_arrayref;
     my @cols  = map { $_->[3] } @$ref;
+
     #print "DEB: looking for $col\n";
     #print "DEB: @cols\n";
     if ( grep( /\b$col\b/, @cols ) ) {
@@ -2146,9 +2121,9 @@ sub colExists {
 
 sub tblExists {
     my $tbl = shift;
-    my $dbh   = db_connect( $dbname, $lzbase, $dbroot, $dbrootpass );
-    my $sth=$dbh->table_info(undef, undef, $tbl, "TABLE");
-    if ($sth->fetch) {
+    my $dbh = db_connect( $dbname, $lzbase, $dbroot, $dbrootpass );
+    my $sth = $dbh->table_info( undef, undef, $tbl, "TABLE" );
+    if ( $sth->fetch ) {
         return 1;
     } else {
         return 0;
@@ -2229,8 +2204,8 @@ sub install_license {
         $ip  =~ s/[^a-zA-Z0-9]//g;
         $mac =~ s/[^a-zA-Z0-9]//g;
         my $hash = md5_hex("$ip$mac");
-	
-	print "requesting license file for IP $ip and MAC $mac through hash $hash\n"; #for debugging purposes only
+
+        print "requesting license file for IP $ip and MAC $mac through hash $hash\n"; #for debugging purposes only
 
         my $url  = "http://licserv.logzilla.pro/files/$hash.txt";
         my $file = "$lzbase/html/license.txt";
@@ -2265,5 +2240,162 @@ sub rm_config_block {
         close FILE;
     } else {
         print "$file does not exist\n";
+    }
+}
+
+sub run_tests {
+    print("\n\033[1m\n\n========================================\033[0m\n");
+    print("\n\033[1m\tPost-Install Self Tests\n\033[0m");
+    print("\n\033[1m========================================\n\n\033[0m\n\n");
+    print("\n\033[1m\n\n/*---------------------*/\033[0m\n");
+    print("\033[1m     Usability Tests\n\033[0m");
+    print("\033[1m/*---------------------*/\n\n\033[0m\n\n");
+    opendir( DIR, "$lzbase/t/log_processor" );
+    foreach my $file ( sort { $a <=> $b } readdir(DIR) )
+    {
+
+        if ( $file =~ /\d+/ ) {
+            print "Running test: $file\n";
+            my $cmd = `$lzbase/t/log_processor/$file`;
+            print "$cmd\n";
+        }
+    }
+    closedir(DIR);
+    print("\n\033[1m\n\n/*---------------------*/\033[0m\n");
+    print("\033[1m    Performance Tests\n\033[0m");
+    print("\033[1m/*---------------------*/\n\n\033[0m\n\n");
+    opendir( DIR, "$lzbase/t/log_processor/perf" );
+    foreach my $file ( sort { $a <=> $b } readdir(DIR) )
+    {
+
+        if ( $file =~ /\d+/ ) {
+            print "Running test: $file\n";
+            my $cmd = `$lzbase/t/log_processor/perf/$file`;
+            print "$cmd\n";
+        }
+    }
+    closedir(DIR);
+}
+
+sub EULA {
+    print <<EOF;
+
+SOFTWARE LICENSE & SUPPORT SUBSCRIPTION AGREEMENT STANDARD TERMS AND CONDITIONS
+
+THIS SOFTWARE LICENSE AND SUPPORT SUBSCRIPTION AGREEMENT (this "Agreement") is entered into and effective as of the date you ("Customer") receive the licensed Software which it accompanies (the "Effective Date").
+
+THE PROVISIONS OF THIS AGREEMENT ALLOCATE THE RISKS BETWEEN CUSTOMER AND LOGZILLA.  
+ 
+1.  Definitions.  
+
+"Development Use" means use of the Software by customer to design, develop and/or test new applications for Production Use.
+"Documentation" means LogZilla's current user manuals, operating instructions and installation guides generally provided with the Software to its licensees. 
+"Maintenance Release" means Upgrades and Updates (as defined in the attached Exhibit A) to the Software which are made available to licensees pursuant to the standard Support Services Terms and Conditions.  
+"Order" means the document by which Software and Support Services are ordered by Customer.  The Order shall reference and be solely governed by this Agreement.  The Order may be electronic (via Logzilla's web portal) or written.
+"Production Use" means using the Software with Customer's applications for internal business purposes only, which may include third party customers' access to or use of such applications.  Production Use does not include the right to reproduce the software for sublicensing, resale, or distribution, including without limitation, operation on a time sharing or service bureau basis or distributing the software as part of an ASP, VAR, OEM, distributor or reseller arrangement.
+"Software" means the object code versions of the Software described on an Order and the related Documentation. 
+"Support Services" means technical support for Software under LogZilla's then-current policies. LogZilla's current, standard Support Services Terms and Conditions are attached hereto. 
+"Subscription Term" means the first year after the Effective Date of this Agreement and a related Order, including any applicable renewal terms.
+"Territory" means the United States and any additional territories explicitly agreed to by the parties, as set forth on an Order. 
+
+2.  License. 
+a. License Grant.  LogZilla grants Customer a fee-bearing, non-exclusive and non-transferable (except as permitted herein) license to use the Software and the Documentation, solely for Customer's Development Use and/or Production Use, as specified in an Order, subject to the terms and conditions of this Agreement and the following limitations: (i) Customer may not copy the Software, except for archival or disaster recovery purposes, and if Customer does copy for these purposes, Customer will preserve any proprietary rights notices on the Software and  place such notices on any and all copies Customer has made or makes; (ii) Customer agrees not to lease, rent or sublicense the Software to any third party, or otherwise use it except as permitted in this Agreement; (iii) Customer may modify the Software as it deems fit for its own internal purposes.  Title, ownership rights and all intellectual property rights in and to the Software shall remain the sole and exclusive property of LogZilla. LogZilla retains all rights not expressly granted to Customer in this Agreement.
+
+b.  Consultant Use of Software.  Customer may permit its third party consultants to access and use the Software solely for Customer's operations permitted hereunder, provided that said consultants have signed an agreement with Customer protecting LogZilla's intellectual property with terms no less stringent than the terms and conditions of this Agreement, and that Customer ensures that any such consultant's use of the Software complies with the terms of this Agreement.
+
+c.  Audit.   LogZilla may, at any time during the term of this Agreement and with thirty (30) days prior written notice, request and gain access to Customer's premises, subject to Customer's reasonable security procedures, for the limited purpose of conducting an audit to verify that Customer is in compliance with this Agreement.  Customer will promptly grant such access and cooperate with LogZilla in the audit.  The audit will be restricted in scope, manner and duration to that reasonably necessary to achieve its purpose and not disrupt Customer's operations.  Customer shall be liable for promptly remedying any underpayments revealed during the audit.  If the audit reveals an underpayment discrepancy in excess of five per cent (5%), Customer will also be liable for the costs of the audit.
+
+3.  Confidential Information.  By virtue of this Agreement, the parties may have access to information that is confidential to one another ("Confidential Information").  Confidential Information shall be limited to the Software, the terms and pricing under this Agreement, and all information clearly identified as confidential.  A party's Confidential Information shall not include information that: (i) is or becomes a part of the public domain through no act or omission of the other party; (ii) was in the other party's lawful possession prior to the disclosure and had not been obtained by the other party either directly or indirectly from the disclosing party; (iii) is lawfully disclosed to the other party by a third party without restriction on disclosure; or (iv) is independently developed by the other party. The parties agree to hold each other's Confidential Information in confidence during the term of this Agreement and for a period of two (2) years after termination of this Agreement.  The parties agree, unless required by law, not to make each other's Confidential Information available in any form to any third party for any purpose other than the implementation of this Agreement.  LogZilla may reasonably use Customer's name and a description of Customer's use of the Software for its investor relations and marketing purposes, unless Customer provides written notice to LogZilla that it may not do so.
+
+4.  Payments, Shipments and Taxes.  The total non-refundable (subject to Articles 5(b) and 6(b)(iii)), non-cancelable license and Support Services fees for each Order will be due and payable within thirty (30) days from the date of LogZilla's invoice.  The terms and conditions of this Agreement shall prevail regardless of any preprinted or conflicting terms on a purchase order, other correspondence, and any and all verbal communication. Customer will pay all sales, use, VAT, and other consumption taxes, personal property taxes and other taxes (other than those based on LogZilla's net income) unless Customer furnishes satisfactory proof of exemption.  LogZilla may assess interest charges of one percent (1%) per month for late payments.
+
+5.  Limited Warranty.   
+
+a.  Exclusive Warranty.  For a period of ninety (90) days after delivery of the Software, LogZilla warrants that the Software shall materially conform to the Documentation.  LogZilla does not warrant that operation of the Software will be uninterrupted or "bug" free.
+
+b.  Remedies.  If LogZilla breaches the foregoing warranty and Customer promptly notifies LogZilla in writing of the nature of the breach, LogZilla shall make commercially reasonable efforts to promptly repair or replace the non-conforming Software without charge.  If, after a reasonable opportunity to cure, LogZilla does not repair or replace the non-conforming Software, Customer must return the Software and Documentation to LogZilla, or certify in writing that all copies have been destroyed, and LogZilla will refund the license fees it received from Customer for the Software.  This is Customer's sole and exclusive remedy for breach of the exclusive warranty in Article 5(a).
+
+c.  Disclaimer of Warranty.  THE FOREGOING WARRANTY IS EXCLUSIVE AND IN LIEU OF ALL OTHER WARRANTIES, EXPRESS OR IMPLIED, INCLUDING WARRANTIES OF FITNESS FOR A PARTICULAR PURPOSE, NONINFRINGEMENT, AND MERCHANTABILITY. 
+
+6.  Intellectual Property Indemnification.
+
+a.  Defense.  If a third party claims that Customer's use of the Software infringes any United States patent, copyright, trademark or trade secret, Customer must promptly notify LogZilla in writing.  LogZilla will defend Customer against such claim if Customer reasonably cooperates with LogZilla and allows LogZilla to control the defense and all related settlement negotia¬tions, and then LogZilla will indemnify Customer from and against any damages finally awarded for such infringement.
+
+b.  Injunctive Relief.  If an injunction is sought or obtained against Customer's use of the Software as a result of a third party infringement claim, LogZilla may, at its sole option and expense, (i) procure for Customer the right to continue using the affected Software, (ii) replace or modify the affected Software with functionally equivalent software so that it does not infringe, or, if either (i) or (ii) is not commercially feasible,  (iii) terminate the licenses and refund the license fees received from Customer for the affected Software less a pro rata usage charge based on Customer's prior use, if applicable. 
+
+c.  Disclaimer of Liability.  LogZilla shall have no liability for any third party claim of infringement based upon (i) use of other than the then current, unaltered version of the applicable Software, unless the infringing portion is also in the then current, unaltered release; (ii) use, operation or combination of the applicable Soft¬ware with any programs, data, equip¬ment or documentation that is not deemed by LogZilla to work in conjunction with the Software, if such infringement would have been avoided but for such use,  operation or combination; or (iii) any third party software. The foregoing constitutes the entire liability of LogZilla, and Customer's sole and exclusive remedy with respect to any third party claims of infringement of such intellectual property rights.
+
+7.  Limitation of Liability.  
+
+a.  Limitation.  LogZilla's aggregate liability to Customer for damages concerning performance or nonperformance by LogZilla or in any way related to this Agreement, and regardless of whether the claim for such damages is based in contract, tort, strict liability, or otherwise, shall not exceed the license fees received by LogZilla from Customer for the affected Software for the twelve (12) month period preceding the occurrence of such liability.
+
+b.  No Consequential Damages.  In no event shall LogZilla be liable for any indirect, incidental, special, punitive or consequential damages, including without limitation damages for lost data or lost profits, even if LogZilla has been advised as to the possibility of such damages.  
+
+8.  Term and Termination.  This Agreement, including Exhibit A and any Order(s), will continue for the duration set forth in any Order(s) and will automatically renew in one (1) year increments unless either party terminates the Agreement by providing written notice to the other at least thirty (30) days prior to the anniversary of the Effective Date. Either party will be in default if it declares bankruptcy or otherwise fails to perform any of its duties or obligations and does not undertake an effort to substan¬tially cure such default within thirty (30) days after written notice is given to the defaulting party, except that any breach of Article 3 shall be grounds for immediate termination.  In the event of default, the non-defaulting party may terminate this Agree¬ment by providing written notice of termination to the defaulting party.  If Customer is the defaulting party, Customer must promptly, at LogZilla's direction, destroy or return all affected Software and Documentation.  Upon termination of this Agreement for non-default, the provisions of Articles 1, 2, 3, 4, 5(c), 6(c), 7, 8 and 10 will survive.   Upon termination of this Agreement for default, the provisions of Articles 1, 3, 4, 5(c), 6(c), 7, 8 and 10 will survive.
+
+9.  Subscription Term & Support Services.
+
+a.  Support Services.  Support Services are included as part of this subscription Agreement.  Support Services ordered by Customer will be provided under LogZilla's Support Services policies in effect on the date Support Services are ordered.  LogZilla's Support Services policies as of the Effective Date are attached hereto as Exhibit A.  Except as otherwise provided herein, Support Services fees paid are nonrefundable.
+
+b.  Renewal of Subscription Term.  At the expiration of each Subscription Term, Customer may continue to receive license rights and Support Services in one (1) year increments under LogZilla's then current fees and policies.  LogZilla shall provide Customer reasonable notice of subscription fees due.  If Customer elects not to renew the subscription, Customer shall notify LogZilla of its intent not to renew at least thirty (30) days prior to the end of the applicable Subscription Term.  Reinstatement fees may apply under LogZilla's policies when Customer reinstates its subscription. 
+
+10. General.  
+
+a.  Force Majeure.  Neither party shall be liable for any delay or failure in performance due to causes beyond its reasonable control.
+
+b.  Export Compliance.  Customer may not download or otherwise export or re-export the Software or any underlying information or technology except in full compliance with all United States and other applicable laws and regulations. 
+
+c.  Assignment.  Customer may not assign this Agreement without LogZilla's prior written consent which will not be unreasonably withheld.  
+
+d.  Severability.  If any part of this Agreement is held to be unenforceable, in whole or in part, such holding will not affect the validity of the other parts of the Agreement. 
+
+e.  Waiver.  The waiver of a breach of any provision of this Agreement will not operate or be interpreted as a waiver of any other or subsequent breach.  
+
+f.  Notices.  All notices permitted or required under this Agreement shall be in writing and shall be delivered in person, by facsimile, overnight courier service or mailed by first class, registered or certified mail, postage prepaid, to the address of the party specified above or such other address as either party may specify in writing, Attention: Office of the General Counsel.   Such notice shall be deemed to have been given upon receipt. 
+
+g.  Governing Law.  This Agreement will be governed by both the substantive and procedural laws of North Carolina, U.S.A., excluding its conflict of law rules and the United Nations Convention for the International Sale of Goods.  
+
+h.  United States Government Rights.  The Software provided under this Agreement is commercial computer software developed exclusively at private expense, and is in all respects the proprietary data belonging solely to LogZilla or its licensors. 
+
+Department of Defense Customers: If the Software is acquired by or on behalf of agencies or units of the Department of Defense (DOD), then, pursuant to DOD FAR Supplement Section 227.7202 and its successors (48 C.F.R. 227.7202) the Government's right to use, reproduce or disclose the Software and any accompanying Documentation acquired under this Agreement is subject to the restrictions of this Agreement. 
+
+Civilian Agency  Customers: If the Software is acquired by or on behalf of civilian agencies of the United States Government, then, pursuant to FAR Section 12.212 and its successors (48 C.F.R. 12.212), the Government's right to use, reproduce or disclose the Software and any accompanying Documentation acquired under this Agreement is subject to the restrictions of this Agreement. 
+
+
+ 
+
+ENTIRE AGREEMENT.  Any amendment or modification to the Agreement must be in writing signed by both parties. This Agreement constitutes the entire agreement and supersedes all prior or contemporaneous oral or written agreements regarding the subject matter hereof.  Customer agrees that (i) any and all Orders will be governed by these Standard Terms and Conditions and (ii) the appropriate fees will be timely paid.  The terms and conditions of this Agreement shall prevail regardless of any preprinted or conflicting terms on Orders.  
+
+ 
+    EXHIBIT A
+END USER SUPPORT SERVICES ADDENDUM
+    STANDARD TERMS AND CONDITIONS
+
+ 
+1.  Definitions.
+
+"Error" means either (a) a failure of the Software to conform to the specifications set forth in the Documentation, resulting in the inability to use, or restriction in the use of, the Software, and/or (b) a problem requiring new procedures, clarifications, additional information and/or requests for product enhancements.
+
+"Update" means either a software modification or addition that, when made or added to the Software, corrects the Error, or a procedure or routine that, when observed in the regular operation of the Software, eliminates the practical adverse effect of the Error on Customer.
+
+"Upgrade" means a revision of the Software released by LogZilla to its end user customers generally, during the Support Services Term, to add new and different functions or to increase the capacity of the Software.  Upgrade does not include the release of a new product or added features for which there may be a separate charge. 
+
+2.  LogZilla Customer Support Services. On the Order, Customer may select either (a) LogZilla Production Support for Production Use licenses or (b) LogZilla Development Support for Development Use licenses.  Each includes Maintenance Releases and support.  Subject to additional terms and conditions, Customer may also order customized Support Options and/or Mission Critical Support.
+ 
+3.  Updates.   LogZilla will make commercially reasonable efforts to provide an Update designed to solve or by-pass a reported Error. If such Error has been corrected in a Maintenance Release, Customer must install and implement the applicable Maintenance Release; otherwise, the Update may be provided in the form of a temporary fix, procedure or routine, to be used until a Maintenance Release containing the permanent Update is available. Customer shall reasonably determine the priority level of Errors, pursuant to the following protocols.  
+
+After Customer provides LogZilla with notice of an Error, LogZilla will make commercial best efforts to begin working on a solution to the reported Error within 12 hours.
+
+4.  Maintenance Releases and Upgrades.  During the Support Services Term, LogZilla shall make Maintenance Releases available to Customer if, as and when LogZilla makes any such Maintenance Releases generally available to its customers.   If a question arises as to whether a product offering is an Upgrade or a new product or feature, LogZilla's categorization will govern, provided that LogZilla treats the product offering as a new product or feature for its end user customers generally.
+5.  Conditions for Providing Support.  LogZilla's obligation to provide Support Services is conditioned upon the following:  (a) Customer makes reasonable efforts to correct the Error after consulting with LogZilla; (b) Customer provides LogZilla with sufficient information and resources to correct the Error either at LogZilla's Customer Support Center or via remote access to Customer's site, as well as access to the personnel, hardware, and any additional software involved in discovering the Error; (c) Customer promptly installs all Maintenance Releases; and (d) Customer procures, installs and maintains all equipment, telephone lines, communication interfaces and other hardware necessary to operate the Software.
+6.  Exclusions from LogZilla's Support Services.  LogZilla is not obligated to provide Support Services in the following situations: (a) the Software has been changed, modified or damaged (except if under the direct supervision of LogZilla); (b) the Error is caused by Customer's negligence, hardware malfunction or other causes beyond the reasonable control of LogZilla; (c) the Error is caused by third party software not licensed through LogZilla; (d) Customer has not installed and implemented Maintenance Release(s) so that the Software is a version supported by LogZilla; or (e) Customer has not paid the Support Services fees when due.
+7.  Termination of Support Services. LogZilla reserves the right to discontinue the Support Services should LogZilla, in its sole discretion, determine that continued support for any Software is no longer economically practicable. LogZilla will give Customer at least three (3) months prior written notice of any such discontinuance of Support Services and will refund any unaccrued Support Services fees Customer may have prepaid with respect to the affected Software.  LogZilla shall have no obligation to support or maintain any version of the Software except (i) the then current version of the Software, and (ii) the immediately preceding version of the Software for a period of six (6) months after it is first superseded. LogZilla reserves the right to suspend performance of the Support Services if Customer fails to pay any amount that is payable to LogZilla under the Agreement within thirty (30) days after such amount becomes due.
+8.  Customer Feedback.  Customer is not required to, but is encouraged to, provide comprehensive data to LogZilla in connection with any reported Error, including any attempts at bug fixes that Customer may have made, so that the Error may be fixed as soon as practicable and that code-based solutions may be incorporated into future iterations of the Software.\n
+EOF
+    print "Do you accept the LogZilla License Terms? (yes/no)";
+        chomp( my $input = <STDIN> );
+    if ( $input !~ /[Yy]/ ) {
+        print "Please try again when you are ready to accept.\n";
+        exit 1;
     }
 }

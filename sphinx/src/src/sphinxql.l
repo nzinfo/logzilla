@@ -32,6 +32,7 @@ SPACE				[ \t\n\r]
 <ccomment>.			{ }
 <ccomment>"*/"		{ BEGIN(INITIAL); }
 
+"AGENT"				{ YYSTOREBOUNDS; return TOK_AGENT; }
 "AND"				{ YYSTOREBOUNDS; return TOK_AND; }
 "AS"				{ YYSTOREBOUNDS; return TOK_AS; }
 "ASC"				{ YYSTOREBOUNDS; return TOK_ASC; }
@@ -41,6 +42,7 @@ SPACE				[ \t\n\r]
 "BETWEEN"			{ YYSTOREBOUNDS; return TOK_BETWEEN; }
 "BY"				{ YYSTOREBOUNDS; return TOK_BY; }
 "CALL"				{ YYSTOREBOUNDS; return TOK_CALL; }
+"CHARACTER"			{ YYSTOREBOUNDS; return TOK_CHARACTER; }
 "COLLATION"			{ YYSTOREBOUNDS; return TOK_COLLATION; }
 "COMMIT"			{ YYSTOREBOUNDS; return TOK_COMMIT; }
 "COMMITTED"			{ YYSTOREBOUNDS; return TOK_COMMITTED; }
@@ -59,6 +61,8 @@ SPACE				[ \t\n\r]
 "FUNCTION"			{ YYSTOREBOUNDS; return TOK_FUNCTION; }
 "GLOBAL"			{ YYSTOREBOUNDS; return TOK_GLOBAL; }
 "GROUP"				{ YYSTOREBOUNDS; return TOK_GROUP; }
+"GROUPBY"			{ YYSTOREBOUNDS; return TOK_GROUPBY; }
+"GROUP_CONCAT"		{ YYSTOREBOUNDS; return TOK_GROUP_CONCAT; }
 "ID"				{ YYSTOREBOUNDS; return TOK_ID; }
 "IN"				{ YYSTOREBOUNDS; return TOK_IN; }
 "INDEX"				{ YYSTOREBOUNDS; return TOK_INDEX; }
@@ -77,6 +81,7 @@ SPACE				[ \t\n\r]
 "NOT"				{ YYSTOREBOUNDS; return TOK_NOT; }
 "NULL"				{ YYSTOREBOUNDS; return TOK_NULL; }
 "OPTION"			{ YYSTOREBOUNDS; return TOK_OPTION; }
+"OPTIMIZE"			{ YYSTOREBOUNDS; return TOK_OPTIMIZE; }
 "OR"				{ YYSTOREBOUNDS; return TOK_OR; }
 "ORDER"				{ YYSTOREBOUNDS; return TOK_ORDER; }
 "RAND"				{ YYSTOREBOUNDS; return TOK_RAND; }
@@ -99,6 +104,7 @@ SPACE				[ \t\n\r]
 "TO"				{ YYSTOREBOUNDS; return TOK_TO; }
 "TRANSACTION"		{ YYSTOREBOUNDS; return TOK_TRANSACTION; }
 "TRUE"				{ YYSTOREBOUNDS; return TOK_TRUE; }
+"TRUNCATE"			{ YYSTOREBOUNDS; return TOK_TRUNCATE; }
 "UNCOMMITTED"		{ YYSTOREBOUNDS; return TOK_UNCOMMITTED; }
 "UPDATE"			{ YYSTOREBOUNDS; return TOK_UPDATE; }
 "VALUES"			{ YYSTOREBOUNDS; return TOK_VALUES; }
@@ -116,8 +122,9 @@ SPACE				[ \t\n\r]
 
 '([^'\\]|\\.|\\\\)*'	{ YYSTOREBOUNDS; SqlUnescape ( lvalp->m_sValue, yytext, yyleng ); return TOK_QUOTED_STRING; }
 
-{DIGIT}*\.{DIGIT}*	{ YYSTOREBOUNDS; lvalp->m_sValue = yytext; lvalp->m_fValue = (float)strtod ( yytext, NULL ); return TOK_CONST_FLOAT; }
-{DIGIT}+			{ YYSTOREBOUNDS; lvalp->m_sValue = yytext; lvalp->m_iValue = strtoll ( yytext, NULL, 10 ); return TOK_CONST_INT; }
+{DIGIT}+\.{DIGIT}*	{ YYSTOREBOUNDS; lvalp->m_sValue = yytext; lvalp->m_fValue = (float)strtod ( yytext, NULL ); return TOK_CONST_FLOAT; }
+\.{DIGIT}+			{ YYSTOREBOUNDS; lvalp->m_sValue = yytext; lvalp->m_fValue = (float)strtod ( yytext, NULL ); return TOK_CONST_FLOAT; }
+{DIGIT}+			{ YYSTOREBOUNDS; lvalp->m_sValue = yytext; lvalp->m_iValue = (int64_t)strtoull ( yytext, NULL, 10 ); return TOK_CONST_INT; }
 
 "@id"				{ YYSTOREBOUNDS; lvalp->m_sValue = yytext; return TOK_ATIDENT; }
 "@weight"			{ YYSTOREBOUNDS; lvalp->m_sValue = yytext; return TOK_ATIDENT; }

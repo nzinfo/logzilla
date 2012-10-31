@@ -1,5 +1,5 @@
 //
-// $Id: sphinxstem.h 3087 2012-01-30 23:07:35Z shodan $
+// $Id: sphinxstem.h 3107 2012-02-13 21:53:12Z shodan $
 //
 
 //
@@ -39,6 +39,9 @@ void	stem_cz_init ();
 /// stem lowercase Czech word
 void	stem_cz ( BYTE * pWord );
 
+/// stem Arabic word in UTF-8 encoding
+void	stem_ar_utf8 ( BYTE * word );
+
 /// calculate soundex in-place if the word is lowercase English letters only;
 /// do nothing if it's not
 void	stem_soundex ( BYTE * pWord );
@@ -49,5 +52,5 @@ void	stem_dmetaphone ( BYTE * pWord, bool bUTF8 );
 #endif // _sphinxstem_
 
 //
-// $Id: sphinxstem.h 3087 2012-01-30 23:07:35Z shodan $
+// $Id: sphinxstem.h 3107 2012-02-13 21:53:12Z shodan $
 //

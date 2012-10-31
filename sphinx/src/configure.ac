@@ -1,7 +1,7 @@
 dnl Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.59)
-AC_INIT([sphinx], [2.0.4], [shodan(at)sphinxsearch.com])
+AC_INIT([sphinx], [2.1.0], [shodan(at)sphinxsearch.com])
 
 dnl --------------------------------------------------------------------------
 
@@ -114,7 +114,7 @@ AC_SEARCH_LIBS([XML_Parse],[expat],[have_libexpat=yes],[have_libexpat=no])
 AC_SEARCH_LIBS([iconv],[iconv],[have_libiconv=yes],[have_libiconv=no])
 AC_SEARCH_LIBS([inflate],[z],[have_lz=yes],[have_lz=no])
 AC_SEARCH_LIBS([logf],[m])
-AC_CHECK_FUNCS([dup2 gethostbyname gettimeofday memmove memset select socket strcasecmp strchr strerror strncasecmp strstr strtol logf pread])
+AC_CHECK_FUNCS([dup2 gethostbyname gettimeofday memmove memset select socket strcasecmp strchr strerror strncasecmp strstr strtol logf pread poll])
 AC_CHECK_FUNCS([backtrace backtrace_symbols])
 
 # most systems require the program be linked with librt library to use
@@ -259,59 +259,83 @@ AC_ARG_WITH([mysql],
             AC_HELP_STRING([--with-mysql], [compile with MySQL support (default is enabled)]),
             [ac_cv_use_mysql=$withval], [ac_cv_use_mysql=yes]
 )
-AC_MSG_CHECKING([whether to compile with MySQL support])
-if test x$ac_cv_use_mysql != xno; then
-	AC_MSG_RESULT([yes])
-    AC_CHECK_MYSQL([$ac_cv_use_mysql])
-    AC_DEFINE(USE_MYSQL,1,[Define to 1 if you want to compile with MySQL support])
-    AC_SUBST([MYSQL_LIBS])
-    AC_SUBST([MYSQL_CFLAGS])
-else
-	AC_MSG_RESULT([no])
-fi
-AM_CONDITIONAL(USE_MYSQL, test x$ac_cv_use_mysql != xno)
 
 # check if we should statically link the mysql library
 AC_ARG_WITH([static-mysql], 
             AC_HELP_STRING([--with-static-mysql], [link statically with MySQL library (default is no)]),
             [ac_cv_use_static_mysql=$withval], [ac_cv_use_static_mysql=no]
 )
-AC_MSG_CHECKING([whether to link statically with MySQL support])
-if test x$ac_cv_use_mysql != xno; then
-if test x$ac_cv_use_static_mysql != xno; then
-	AC_CHECK_MYSQL([$ac_cv_use_static_mysql])
-	MYSQL_LIBS=`echo $MYSQL_LIBS | sed -e 's/\-Bdynamic/\-Bstatic/g'`
-	MYSQL_LIBS="-Wl,-Bstatic $MYSQL_LIBS -Wl,-Bdynamic"
-	AC_MSG_RESULT([yes])
+
+AC_MSG_CHECKING([whether to compile with MySQL support])
+if test  x$ac_cv_use_static_mysql != xno -o x$ac_cv_use_mysql != xno
+then
+	if test x$ac_cv_use_static_mysql != xno ; then
+		AC_MSG_RESULT([static])
+    	AC_CHECK_MYSQL([$ac_cv_use_static_mysql])
+		MYSQL_LIBS=`echo $MYSQL_LIBS | sed -e "sX-lmysqlclientX\$MYSQL_PKGLIBDIR/libmysqlclient.aXg"`
+	else
+		AC_MSG_RESULT([dynamic])
+		AC_CHECK_MYSQL([$ac_cv_use_mysql])
+	fi
+    AC_DEFINE(USE_MYSQL,1,[Define to 1 if you want to compile with MySQL support])
+    AC_SUBST([MYSQL_LIBS])
+    AC_SUBST([MYSQL_CFLAGS])
 else
 	AC_MSG_RESULT([no])
 fi
-fi
+AM_CONDITIONAL(USE_MYSQL, test x$ac_cv_use_mysql != xno -o x$ac_cv_use_static_mysql != xno )
+
+dnl ---
+
+AC_ARG_WITH([syslog],
+    AC_HELP_STRING([--with-syslog], [compile with possibility to use syslog for logging (default is yes)]),
+    [ac_cv_use_syslog=$withval], [ac_cv_use_syslog=yes]
+)
+AC_MSG_CHECKING([for Syslog])
+if test [ $ac_cv_use_syslog != no ]; then
+    if test [ $have_syslog_h = yes ]; then
+        AC_DEFINE([USE_SYSLOG],1,[define to use POSIX Syslog for logging])
+        AC_MSG_RESULT([yes])
+    else
+        AC_MSG_RESULT([no])
+    fi
+else
+    AC_MSG_RESULT([disabled])
+fi    
 
 # check if we should compile with PostgreSQL support
 AC_ARG_WITH([pgsql],
             AC_HELP_STRING([--with-pgsql], [compile with PostgreSQL support (default is disabled)]),
             [ac_cv_use_pgsql=$withval], [ac_cv_use_pgsql=no]
 )
+# check if we should statically link the PostgreSQL library
+AC_ARG_WITH([static-pgsql], 
+            AC_HELP_STRING([--with-static-pgsql], [link statically with PostgreSQL library (default is no)]),
+            [ac_cv_use_static_pgsql=$withval], [ac_cv_use_static_pgsql=no]
+)
 AC_MSG_CHECKING([whether to compile with PostgreSQL support])
-if test x$ac_cv_use_pgsql != xno; then
-	AC_MSG_RESULT([yes])
-    AC_CHECK_PGSQL([$ac_cv_use_pgsql])
+if test x$ac_cv_use_static_pgsql != xno -o x$ac_cv_use_pgsql != xno
+then
+	if test x$ac_cv_use_static_pgsql != xno ; then
+		AC_MSG_RESULT([static])
+		AC_CHECK_PGSQL([$ac_cv_use_static_pgsql])
+		PGSQL_LIBS=`echo $PGSQL_LIBS | sed -e "sX-lpqX$PGSQL_PKGLIBDIR/libpq.aXg"`
+	else
+		AC_MSG_RESULT([dynamic])
+		AC_CHECK_PGSQL([ac_cv_use_pgsql])
+	fi
     AC_DEFINE(USE_PGSQL,1,[Define to 1 if you want to compile with PostgreSQL support])
     AC_SUBST([PGSQL_LIBS])
     AC_SUBST([PGSQL_CFLAGS])
 else
 	AC_MSG_RESULT([no])
 fi
-AM_CONDITIONAL(USE_PGSQL, test x$ac_cv_use_pgsql != xno)
+AM_CONDITIONAL(USE_PGSQL, test x$ac_cv_use_pgsql != xno -o x$ac_cv_use_satic_pgsql != xno )
 
 # add macports include directory
 if (echo $MYSQL_LIBS | grep -q -- -L/opt/local/lib); then
    MYSQL_CFLAGS="$MYSQL_CFLAGS -I/opt/local/include"
 fi
-
-# we can now set preprocessor flags for both C and C++ compilers
-CPPFLAGS="$CPPFLAGS $MYSQL_CFLAGS $PGSQL_CFLAGS"
 
 dnl ---
 
@@ -337,22 +361,50 @@ AC_ARG_WITH([libstemmer],
 
 AC_MSG_CHECKING([whether to compile with libstemmer support])
 if test x$ac_cv_use_libstemmer != xno; then
-	if test -d libstemmer_c && test -f libstemmer_c/include/libstemmer.h; then
-		AC_MSG_RESULT([yes])
-		AC_DEFINE(USE_LIBSTEMMER, 1, [libstemmer support])
+	ac_cv_use_internal_libstemmer=no
+	AC_CHECK_LIBSTEMMER([$ac_cv_use_libstemmer])
+	if test x$ac_cv_use_internal_libstemmer != xno ; then
+		AC_MSG_RESULT([yes, static internal])
 	else
-		AC_MSG_ERROR([missing libstemmer sources from libstemmer_c.
-
-Please download the C version of libstemmer library from
-http://snowball.tartarus.org/ and extract its sources over libstemmer_c/
-subdirectory in order to build Sphinx with libstemmer support.
-])
+		AC_MSG_RESULT([yes, external])
 	fi
+	AC_DEFINE(USE_LIBSTEMMER, 1, [libstemmer support])
+	AC_SUBST([LIBSTEMMER_LIBS])
+	AC_SUBST([LIBSTEMMER_CFLAGS])
 else
 	AC_MSG_RESULT([no])
 	AC_DEFINE(USE_LIBSTEMMER, 0, [libstemmer support])
 fi
 AM_CONDITIONAL(USE_LIBSTEMMER, test x$ac_cv_use_libstemmer != xno)
+AM_CONDITIONAL(USE_INTERNAL_LIBSTEMMER, test x$ac_cv_use_internal_libstemmer != xno)
+
+
+dnl ---
+
+# we can now set preprocessor flags for both C and C++ compilers
+CPPFLAGS="$CPPFLAGS $MYSQL_CFLAGS $PGSQL_CFLAGS $LIBSTEMMER_CFLAGS"
+
+
+dnl ---
+
+AC_ARG_WITH([re2],
+	AC_HELP_STRING([--with-re2], [compile with re2 library support (default is disabled)]),
+	[ac_cv_use_re2=$withval], [ac_cv_use_re2=no]
+)
+
+AC_MSG_CHECKING([whether to compile with re2 library support])
+if test x$ac_cv_use_re2 != xno; then
+	if test -d libre2 && test -f libre2/re2/re2.h; then
+		AC_MSG_RESULT([yes])
+		AC_DEFINE(USE_RE2, 1, [RE2 library support])
+	else
+		AC_MSG_ERROR([missing re2 sources from libre2])
+	fi
+else
+	AC_MSG_RESULT([no])
+	AC_DEFINE(USE_RE2, 0, [re2 library support])
+fi
+AM_CONDITIONAL(USE_RE2, test x$ac_cv_use_re2 != xno)
 
 dnl ---
 
@@ -445,10 +497,24 @@ fi
 
 dnl ---
 
+AC_MSG_CHECKING([whether to enable c++ memory routines override])
+sph_enable_mem_override=yes
+AC_ARG_ENABLE([mem-override],
+    [   --enable-mem-override        enable to override std c++ mem routines in production build (default is yes). Disabling may help in some rare cases as statically linking with mysql on Mac OS X Lion.],
+    [sph_enable_mem_override=$enableval])
+if test x$sph_enable_mem_override != xno; then
+    AC_MSG_RESULT([yes])
+else
+    AC_DEFINE(SPH_DONT_OVERRIDE_MEMROUTINES, 1, [Disable overriding of c++ memory routines])
+    AC_MSG_RESULT([no])
+fi
+
+dnl --- 
+
 
 AC_ARG_WITH([syslog],
-	AC_HELP_STRING([--with-syslog], [compile with possibility to use syslog for logging (default is no)]),
-	[ac_cv_use_syslog=$withval], [ac_cv_use_syslog=no]
+	AC_HELP_STRING([--with-syslog], [compile with possibility to use syslog for logging (default is yes)]),
+	[ac_cv_use_syslog=$withval], [ac_cv_use_syslog=yes]
 )
 AC_MSG_CHECKING([for Syslog])
 if test [ $ac_cv_use_syslog != no ]; then

@@ -1,5 +1,5 @@
 //
-// $Id: spelldump.cpp 3087 2012-01-30 23:07:35Z shodan $
+// $Id: spelldump.cpp 3095 2012-02-03 18:51:16Z tomat $
 //
 
 //
@@ -1191,5 +1191,5 @@ int main ( int iArgs, char ** dArgs )
 }
 
 //
-// $Id: spelldump.cpp 3087 2012-01-30 23:07:35Z shodan $
+// $Id: spelldump.cpp 3095 2012-02-03 18:51:16Z tomat $
 //

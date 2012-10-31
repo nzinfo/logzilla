@@ -1,5 +1,5 @@
 //
-// $Id: indexer.cpp 3087 2012-01-30 23:07:35Z shodan $
+// $Id: indexer.cpp 3320 2012-08-03 07:53:08Z tomat $
 //
 
 //
@@ -36,6 +36,7 @@
 bool			g_bQuiet		= false;
 bool			g_bProgress		= true;
 bool			g_bPrintQueries	= false;
+bool			g_bKeepAttrs	= false;
 
 const char *	g_sBuildStops	= NULL;
 int				g_iTopStops		= 100;
@@ -50,8 +51,8 @@ int				g_iMaxFileFieldBuffer	= 1024*1024;
 
 ESphOnFileFieldError	g_eOnFileFieldError = FFE_IGNORE_FIELD;
 
-const int		EXT_COUNT = 8;
-const char *	g_dExt[EXT_COUNT] = { "sph", "spa", "spi", "spd", "spp", "spm", "spk", "sps" };
+const int		EXT_COUNT = 9;
+const char *	g_dExt[EXT_COUNT] = { "sph", "spa", "spi", "spd", "spp", "spm", "spk", "sps", "spe" };
 
 char			g_sMinidump[256];
 
@@ -193,13 +194,16 @@ public:
 	virtual SphWordID_t	GetWordID ( const BYTE * pWord, int iLen, bool );
 
 	virtual void		LoadStopwords ( const char *, ISphTokenizer * ) {}
-	virtual bool		LoadWordforms ( const char *, ISphTokenizer *, const char * ) { return true; }
-	virtual bool		SetMorphology ( const char *, bool, CSphString & ) { return true; }
+	virtual void		LoadStopwords ( const CSphVector<SphWordID_t> & ) {}
+	virtual void		WriteStopwords ( CSphWriter & ) {}
+	virtual bool		LoadWordforms ( const CSphVector<CSphString> &, const CSphEmbeddedFiles *, ISphTokenizer *, const char * ) { return true; }
+	virtual void		WriteWordforms ( CSphWriter & ) {}
+	virtual bool		SetMorphology ( const char *, bool ) { return true; }
 
 	virtual void		Setup ( const CSphDictSettings & tSettings ) { m_tSettings = tSettings; }
 	virtual const CSphDictSettings & GetSettings () const { return m_tSettings; }
 	virtual const CSphVector <CSphSavedFile> & GetStopwordsFileInfos () { return m_dSWFileInfos; }
-	virtual const CSphSavedFile & GetWordformsFileInfo () { return m_tWFFileInfo; }
+	virtual const CSphVector <CSphSavedFile> & GetWordformsFileInfos () { return m_dWFFileInfos; }
 	virtual const CSphMultiformContainer * GetMultiWordforms () const { return NULL; }
 
 	virtual bool IsStopWord ( const BYTE * ) const { return false; }
@@ -219,7 +223,7 @@ protected:
 	// fake setttings
 	CSphDictSettings			m_tSettings;
 	CSphVector <CSphSavedFile>	m_dSWFileInfos;
-	CSphSavedFile				m_tWFFileInfo;
+	CSphVector <CSphSavedFile>	m_dWFFileInfos;
 };
 
 
@@ -285,25 +289,6 @@ void ShowProgress ( const CSphIndexProgress * pProgress, bool bPhaseEnd )
 	fflush ( stdout );
 }
 
-static void Logger ( ESphLogLevel eLevel, const char * sFmt, va_list ap )
-{
-	if ( eLevel>=SPH_LOG_DEBUG )
-		return;
-
-	switch ( eLevel )
-	{
-		case SPH_LOG_FATAL: fprintf ( stdout, "FATAL: " ); break;
-		case SPH_LOG_WARNING: fprintf ( stdout, "WARNING: " ); break;
-		case SPH_LOG_INFO: fprintf ( stdout, "WARNING: " ); break;
-		case SPH_LOG_DEBUG: // yes, I know that this branch will never execute because of the condition above.
-		case SPH_LOG_VERBOSE_DEBUG:
-		case SPH_LOG_VERY_VERBOSE_DEBUG: fprintf ( stdout, "DEBUG: " ); break;
-	}
-
-	vfprintf ( stdout, sFmt, ap );
-	fprintf ( stdout, "\n" );
-}
-
 /////////////////////////////////////////////////////////////////////////////
 
 /// parse multi-valued attr definition
@@ -336,7 +321,7 @@ bool ParseMultiAttr ( const char * sBuf, CSphColumnInfo & tAttr, const char * sS
 	LOC_SPACE0(); LOC_TOK();
 	if ( LOC_TOKEQ("uint") )				tAttr.m_eAttrType = SPH_ATTR_UINT32SET;
 	else if ( LOC_TOKEQ("timestamp") )		tAttr.m_eAttrType = SPH_ATTR_UINT32SET;
-	else if ( LOC_TOKEQ("bigint") )			tAttr.m_eAttrType = SPH_ATTR_UINT64SET;
+	else if ( LOC_TOKEQ("bigint") )			tAttr.m_eAttrType = SPH_ATTR_INT64SET;
 	else									LOC_ERR ( "attr type ('uint' or 'timestamp' or 'bigint')", sTok );
 
 	// handle ATTR-NAME
@@ -407,7 +392,8 @@ bool ParseMultiAttr ( const char * sBuf, CSphColumnInfo & tAttr, const char * sS
 	for ( CSphVariant * pVal = hSource(_key); pVal; pVal = pVal->m_pNext ) \
 		_arg.Add ( pVal->cstr() );
 
-void SqlAttrsConfigure ( CSphSourceParams_SQL & tParams, const CSphVariant * pHead, ESphAttr eAttrType, const char * sSourceName, bool bIndexedAttr=false )
+void SqlAttrsConfigure ( CSphSourceParams_SQL & tParams, const CSphVariant * pHead,
+	ESphAttr eAttrType, const char * sSourceName, bool bIndexedAttr = false )
 {
 	for ( const CSphVariant * pCur = pHead; pCur; pCur= pCur->m_pNext )
 	{
@@ -779,7 +765,8 @@ CSphSource * SpawnSourceXMLPipe ( const CSphConfigSection & hSource, const char 
 			fprintf ( stdout, "ERROR: source '%s': xmlpipe2 should only be used with charset_type=utf-8\n", sSourceName );
 		}
 #else
-		fprintf ( stdout, "WARNING: source '%s': xmlpipe2 support NOT compiled in. To use xmlpipe2, install missing XML libraries, reconfigure, and rebuild Sphinx\n", sSourceName );
+		fprintf ( stdout, "WARNING: source '%s': xmlpipe2 support NOT compiled in. To use xmlpipe2, "
+			"install missing XML libraries, reconfigure, and rebuild Sphinx\n", sSourceName );
 #endif
 	} else
 	{
@@ -822,7 +809,8 @@ CSphSource * SpawnSource ( const CSphConfigSection & hSource, const char * sSour
 
 	if ( hSource["type"]=="xmlpipe" && bWordDict )
 	{
-		fprintf ( stdout, "ERROR: source '%s': type xmlpipe incompatible with dict=keywords option use xmlpipe2 instead; skipping.\n", sSourceName );
+		fprintf ( stdout, "ERROR: source '%s': type xmlpipe incompatible with dict=keywords option;"
+			" use xmlpipe2 instead; skipping.\n", sSourceName );
 		return NULL;
 	}
 
@@ -843,7 +831,8 @@ CSphSource * SpawnSource ( const CSphConfigSection & hSource, const char * sSour
 // INDEXING
 //////////////////////////////////////////////////////////////////////////
 
-bool DoIndex ( const CSphConfigSection & hIndex, const char * sIndexName, const CSphConfigType & hSources, bool bVerbose, FILE * fpDumpRows )
+bool DoIndex ( const CSphConfigSection & hIndex, const char * sIndexName,
+	const CSphConfigType & hSources, bool bVerbose, FILE * fpDumpRows )
 {
 	// check index type
 	bool bPlain = true;
@@ -895,16 +884,22 @@ bool DoIndex ( const CSphConfigSection & hIndex, const char * sIndexName, const 
 		}
 	}
 
+	// configure early
+	// (need bigram settings to spawn a proper indexing tokenizer)
+	CSphString sError;
+	CSphIndexSettings tSettings;
+	if ( !sphConfIndex ( hIndex, tSettings, sError ) )
+		sphDie ( "index '%s': %s", sIndexName, sError.cstr() );
+
 	///////////////////
 	// spawn tokenizer
 	///////////////////
 
-	CSphString sError;
 	CSphTokenizerSettings tTokSettings;
 	if ( !sphConfTokenizer ( hIndex, tTokSettings, sError ) )
 		sphDie ( "index '%s': %s", sIndexName, sError.cstr() );
 
-	ISphTokenizer * pTokenizer = ISphTokenizer::Create ( tTokSettings, sError );
+	ISphTokenizer * pTokenizer = ISphTokenizer::Create ( tTokSettings, NULL, sError );
 	if ( !pTokenizer )
 		sphDie ( "index '%s': %s", sIndexName, sError.cstr() );
 
@@ -922,30 +917,36 @@ bool DoIndex ( const CSphConfigSection & hIndex, const char * sIndexName, const 
 	CSphDict * pDict = NULL;
 	CSphDictSettings tDictSettings;
 
+	// setup filters
 	if ( !g_sBuildStops )
 	{
-		ISphTokenizer * pTokenFilter = NULL;
+		// multiforms filter
 		sphConfDictionary ( hIndex, tDictSettings );
 
-		// FIXME! no support for infixes in keywords dict yet
-		if ( tDictSettings.m_bWordDict && bInfix )
-		{
-			tDictSettings.m_bWordDict = false;
-			fprintf ( stdout, "WARNING: min_infix_len is not supported yet with dict=keywords; using dict=crc\n" );
-		}
-
 		pDict = tDictSettings.m_bWordDict
-			? sphCreateDictionaryKeywords ( tDictSettings, pTokenizer, sError, sIndexName )
-			: sphCreateDictionaryCRC ( tDictSettings, pTokenizer, sError, sIndexName );
+			? sphCreateDictionaryKeywords ( tDictSettings, NULL, pTokenizer, sIndexName )
+			: sphCreateDictionaryCRC ( tDictSettings, NULL, pTokenizer, sIndexName );
 		if ( !pDict )
+			sphDie ( "index '%s': unable to create dictionary", sIndexName );
+
+		pTokenizer = ISphTokenizer::CreateMultiformFilter ( pTokenizer, pDict->GetMultiWordforms () );
+
+		// bigram filter
+		pTokenizer = ISphTokenizer::CreateBigramFilter ( pTokenizer, tSettings.m_eBigramIndex, tSettings.m_sBigramWords, sError );
+		if ( !pTokenizer )
 			sphDie ( "index '%s': %s", sIndexName, sError.cstr() );
-
-		if ( !sError.IsEmpty () )
-			fprintf ( stdout, "WARNING: index '%s': %s\n", sIndexName, sError.cstr() );
-
-		pTokenFilter = ISphTokenizer::CreateTokenFilter ( pTokenizer, pDict->GetMultiWordforms () );
-		pTokenizer = pTokenFilter ? pTokenFilter : pTokenizer;
 	}
+
+	ISphFieldFilter * pFieldFilter = NULL;
+	CSphFieldFilterSettings tFilterSettings;
+	if ( sphConfFieldFilter ( hIndex, tFilterSettings, sError ) )
+	{
+		tFilterSettings.m_bUTF8 = tTokSettings.m_iType!=TOKENIZER_SBCS;
+		pFieldFilter = sphCreateFieldFilter ( tFilterSettings, sError );
+	}
+
+	if ( !sError.IsEmpty () )
+		fprintf ( stdout, "WARNING: index '%s': %s\n", sIndexName, sError.cstr() );
 
 	// boundary
 	bool bInplaceEnable = hIndex.GetInt ( "inplace_enable", 0 )!=0;
@@ -1005,7 +1006,6 @@ bool DoIndex ( const CSphConfigSection & hIndex, const char * sIndexName, const 
 	// parse all sources
 	CSphVector<CSphSource*> dSources;
 	bool bGotAttrs = false;
-	bool bGotJoinedFields = false;
 	bool bSpawnFailed = false;
 
 	for ( CSphVariant * pSourceName = hIndex("source"); pSourceName; pSourceName = pSourceName->m_pNext )
@@ -1026,9 +1026,6 @@ bool DoIndex ( const CSphConfigSection & hIndex, const char * sIndexName, const 
 
 		if ( pSource->HasAttrsConfigured() )
 			bGotAttrs = true;
-
-		if ( pSource->HasJoinedFields() )
-			bGotJoinedFields = true;
 
 		// strip_html, index_html_attrs
 		CSphString sError;
@@ -1055,6 +1052,7 @@ bool DoIndex ( const CSphConfigSection & hIndex, const char * sIndexName, const 
 		}
 
 		pSource->SetTokenizer ( pTokenizer );
+		pSource->SetFieldFilter ( pFieldFilter );
 		pSource->SetDumpRows ( fpDumpRows );
 		dSources.Add ( pSource );
 	}
@@ -1102,12 +1100,22 @@ bool DoIndex ( const CSphConfigSection & hIndex, const char * sIndexName, const 
 				continue;
 			}
 			while ( dSources[i]->IterateDocument ( sError ) && dSources[i]->m_tDocInfo.m_iDocID )
+			{
 				while ( dSources[i]->IterateHits ( sError ) )
 				{
 				}
+				if ( !sError.IsEmpty() )
+				{
+					fprintf ( stdout, "ERROR: index '%s': %s\n", sIndexName, sError.cstr() );
+					sError = "";
+				}
+			}
+			if ( !sError.IsEmpty() )
+				fprintf ( stdout, "ERROR: index '%s': %s\n", sIndexName, sError.cstr() );
 		}
 		tDict.Save ( g_sBuildStops, g_iTopStops, g_bBuildFreqs );
 
+		SafeDelete ( pFieldFilter );
 		SafeDelete ( pTokenizer );
 
 	} else
@@ -1131,10 +1139,6 @@ bool DoIndex ( const CSphConfigSection & hIndex, const char * sIndexName, const 
 			exit ( 1 );
 		}
 
-		CSphString sError;
-		CSphIndexSettings tSettings;
-		if ( !sphConfIndex ( hIndex, tSettings, sError ) )
-			sphDie ( "index '%s': %s.", sIndexName, sError.cstr() );
 		tSettings.m_bVerbose = bVerbose;
 
 		if ( tSettings.m_bIndexExactWords && !pDict->HasMorphology () )
@@ -1155,18 +1159,27 @@ bool DoIndex ( const CSphConfigSection & hIndex, const char * sIndexName, const 
 			exit ( 1 );
 		}
 
-		if ( bGotJoinedFields && tSettings.m_eDocinfo==SPH_DOCINFO_INLINE )
-		{
-			fprintf ( stdout, "FATAL: index '%s': got joined fields, but docinfo is 'inline' (fix your config file).\n", sIndexName );
-			exit ( 1 );
-		}
-
 		pIndex->SetProgressCallback ( ShowProgress );
 		if ( bInplaceEnable )
+		{
 			pIndex->SetInplaceSettings ( iHitGap, iDocinfoGap, fRelocFactor, fWriteFactor );
+			if ( g_bKeepAttrs )
+			{
+				fprintf ( stdout, "WARNING: index '%s': inplace_enable=1: --keep-attrs has no effect, ignoring\n", sIndexName );
+				g_bKeepAttrs = false;
+			}
+		}
 
+		if ( g_bKeepAttrs && tSettings.m_eDocinfo==SPH_DOCINFO_INLINE )
+		{
+			fprintf ( stdout, "WARNING: index '%s': docinfo=inline: --keep-attrs has no effect, ignoring\n", sIndexName );
+			g_bKeepAttrs = false;
+		}
+
+		pIndex->SetFieldFilter ( pFieldFilter );
 		pIndex->SetTokenizer ( pTokenizer );
 		pIndex->SetDictionary ( pDict );
+		pIndex->SetKeepAttrs ( g_bKeepAttrs );
 		pIndex->Setup ( tSettings );
 
 		bOK = pIndex->Build ( dSources, g_iMemLimit, g_iWriteBuffer )!=0;
@@ -1297,10 +1310,10 @@ bool DoMerge ( const CSphConfigSection & hDst, const char * sDst,
 	int iExt;
 	for ( iExt=0; iExt<EXT_COUNT; iExt++ )
 	{
-		snprintf ( sFrom, sizeof(sFrom), "%s.%s.tmp", sPath, g_dExt[iExt] );
+		snprintf ( sFrom, sizeof(sFrom), "%s.tmp.%s", sPath, g_dExt[iExt] );
 		sFrom [ sizeof(sFrom)-1 ] = '\0';
 
-		if ( g_bRotate )
+		if ( bRotate )
 			snprintf ( sTo, sizeof(sTo), "%s.new.%s", sPath, g_dExt[iExt] );
 		else
 			snprintf ( sTo, sizeof(sTo), "%s.%s", sPath, g_dExt[iExt] );
@@ -1508,8 +1521,6 @@ bool SendRotate ( int iPID, bool bForce )
 
 int main ( int argc, char ** argv )
 {
-	sphSetLogger ( Logger );
-
 	const char * sOptConfig = NULL;
 	bool bMerge = false;
 	CSphVector<CSphFilterSettings> dMergeDstFilters;
@@ -1541,8 +1552,8 @@ int main ( int argc, char ** argv )
 			dMergeDstFilters.Add();
 			dMergeDstFilters.Last().m_eType = SPH_FILTER_RANGE;
 			dMergeDstFilters.Last().m_sAttrName = argv[i+1];
-			dMergeDstFilters.Last().m_uMinValue = (SphAttr_t) strtoull ( argv[i+2], NULL, 10 );
-			dMergeDstFilters.Last().m_uMaxValue = (SphAttr_t) strtoull ( argv[i+3], NULL, 10 );
+			dMergeDstFilters.Last().m_iMinValue = strtoll ( argv[i+2], NULL, 10 );
+			dMergeDstFilters.Last().m_iMaxValue = strtoll ( argv[i+3], NULL, 10 );
 			i += 3;
 
 		} else if ( strcasecmp ( argv[i], "--buildstops" )==0 && (i+2)<argc )
@@ -1598,6 +1609,10 @@ int main ( int argc, char ** argv )
 		{
 			g_bPrintQueries = true;
 
+		} else if ( strcasecmp ( argv[i], "--keep-attrs" )==0 )
+		{
+			g_bKeepAttrs = true;
+
 		} else
 		{
 			break;
@@ -1645,10 +1660,11 @@ int main ( int argc, char ** argv )
 				"\t\t\tfilter 'dst-index' on merge, keep only those documents\n"
 				"\t\t\twhere 'attr' is between 'min' and 'max' (inclusive)\n"
 				"--merge-klists\n"
-				"--merge-killlists\tmerge src and dst kill-lists (default is to\n"
-				"\t\t\tapply src kill-list to dst index)\n"
+				"--merge-killlists\tmerge src and dst k-lists (default is to discard them\n"
+				"\t\t\tafter merge; note that src k-list applies anyway)\n"
 				"--dump-rows <FILE>\tdump indexed rows into FILE\n"
 				"--print-queries\t\tprint SQL queries (for debugging)\n"
+				"--keep-attrs\t\tretain attributes from the old index"
 				"\n"
 				"Examples:\n"
 				"indexer --quiet myidx1\treindex 'myidx1' defined in 'sphinx.conf'\n"
@@ -1664,6 +1680,7 @@ int main ( int argc, char ** argv )
 		return 1;
 	}
 
+	sphBacktraceSetBinaryName ( argv[0] );
 	SetSignalHandlers();
 
 	///////////////
@@ -1822,5 +1839,5 @@ int main ( int argc, char ** argv )
 }
 
 //
-// $Id: indexer.cpp 3087 2012-01-30 23:07:35Z shodan $
+// $Id: indexer.cpp 3320 2012-08-03 07:53:08Z tomat $
 //

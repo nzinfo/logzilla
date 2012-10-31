@@ -56,8 +56,8 @@ am__objects_1 = sphinx.$(OBJEXT) sphinxexcerpt.$(OBJEXT) \
 	sphinxquery.$(OBJEXT) sphinxsoundex.$(OBJEXT) \
 	sphinxmetaphone.$(OBJEXT) sphinxstemen.$(OBJEXT) \
 	sphinxstemru.$(OBJEXT) sphinxstemcz.$(OBJEXT) \
-	sphinxutils.$(OBJEXT) md5.$(OBJEXT) sphinxstd.$(OBJEXT) \
-	sphinxsort.$(OBJEXT) sphinxexpr.$(OBJEXT) \
+	sphinxstemar.$(OBJEXT) sphinxutils.$(OBJEXT) md5.$(OBJEXT) \
+	sphinxstd.$(OBJEXT) sphinxsort.$(OBJEXT) sphinxexpr.$(OBJEXT) \
 	sphinxfilter.$(OBJEXT) sphinxsearch.$(OBJEXT) \
 	sphinxrt.$(OBJEXT)
 am_libsphinx_a_OBJECTS = $(am__objects_1)
@@ -67,11 +67,11 @@ PROGRAMS = $(bin_PROGRAMS) $(noinst_PROGRAMS)
 am_indexer_OBJECTS = indexer.$(OBJEXT)
 indexer_OBJECTS = $(am_indexer_OBJECTS)
 indexer_LDADD = $(LDADD)
-@USE_LIBSTEMMER_TRUE@am__DEPENDENCIES_1 =  \
-@USE_LIBSTEMMER_TRUE@	$(top_srcdir)/libstemmer_c/libstemmer.a
-am__DEPENDENCIES_2 =
+am__DEPENDENCIES_1 =
+@USE_RE2_TRUE@am__DEPENDENCIES_2 = $(top_srcdir)/libre2/obj/libre2.a
 am__DEPENDENCIES_3 = libsphinx.a $(am__DEPENDENCIES_1) \
-	$(am__DEPENDENCIES_2) $(am__DEPENDENCIES_2)
+	$(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1) \
+	$(am__DEPENDENCIES_2)
 indexer_DEPENDENCIES = $(am__DEPENDENCIES_3)
 am_indextool_OBJECTS = indextool.$(OBJEXT)
 indextool_OBJECTS = $(am_indextool_OBJECTS)
@@ -144,6 +144,8 @@ LDFLAGS = @LDFLAGS@
 LIBOBJS = @LIBOBJS@
 LIBRT = @LIBRT@
 LIBS = @LIBS@
+LIBSTEMMER_CFLAGS = @LIBSTEMMER_CFLAGS@
+LIBSTEMMER_LIBS = @LIBSTEMMER_LIBS@
 LTLIBOBJS = @LTLIBOBJS@
 MAINT = @MAINT@
 MAKEINFO = @MAKEINFO@
@@ -211,7 +213,7 @@ top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 SRC_SPHINX = sphinx.cpp sphinxexcerpt.cpp sphinxquery.cpp \
-	sphinxsoundex.cpp sphinxmetaphone.cpp sphinxstemen.cpp sphinxstemru.cpp sphinxstemcz.cpp \
+	sphinxsoundex.cpp sphinxmetaphone.cpp sphinxstemen.cpp sphinxstemru.cpp sphinxstemcz.cpp sphinxstemar.cpp \
 	sphinxutils.cpp md5.cpp sphinxstd.cpp sphinxsort.cpp sphinxexpr.cpp sphinxfilter.cpp \
 	sphinxsearch.cpp sphinxrt.cpp
 
@@ -224,11 +226,12 @@ spelldump_SOURCES = spelldump.cpp
 indextool_SOURCES = indextool.cpp
 tests_SOURCES = tests.cpp
 BUILT_SOURCES = extract-version
-@USE_LIBSTEMMER_FALSE@LIBSTEMMER_LIBS = 
-@USE_LIBSTEMMER_TRUE@LIBSTEMMER_LIBS = $(top_srcdir)/libstemmer_c/libstemmer.a
-@USE_LIBSTEMMER_FALSE@AM_CPPFLAGS = -DSYSCONFDIR="\"$(sysconfdir)\"" -DDATADIR="\"$(localstatedir)/data\""
-@USE_LIBSTEMMER_TRUE@AM_CPPFLAGS = -I$(top_srcdir)/libstemmer_c/include -DSYSCONFDIR="\"$(sysconfdir)\"" -DDATADIR="\"$(localstatedir)/data\""
-COMMON_LIBS = libsphinx.a $(LIBSTEMMER_LIBS) $(MYSQL_LIBS) $(PGSQL_LIBS)
+@USE_RE2_FALSE@LIBRE2_LIBS = 
+@USE_RE2_TRUE@LIBRE2_LIBS = $(top_srcdir)/libre2/obj/libre2.a
+@USE_RE2_FALSE@LIBRE2_INC = 
+@USE_RE2_TRUE@LIBRE2_INC = -I$(top_srcdir)/libre2
+AM_CPPFLAGS = $(LIBRE2_INC) -DSYSCONFDIR="\"$(sysconfdir)\"" -DDATADIR="\"$(localstatedir)/data\""
+COMMON_LIBS = libsphinx.a $(LIBSTEMMER_LIBS) $(MYSQL_LIBS) $(PGSQL_LIBS) $(LIBRE2_LIBS)
 LDADD = $(COMMON_LIBS)
 all: $(BUILT_SOURCES)
 	$(MAKE) $(AM_MAKEFLAGS) all-am
@@ -354,6 +357,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/sphinxsort.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/sphinxsoundex.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/sphinxstd.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/sphinxstemar.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/sphinxstemcz.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/sphinxstemen.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/sphinxstemru.Po@am__quote@

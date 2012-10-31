@@ -1,3 +1,32 @@
+4.25.504 - Bug
+CD:
+ - #381 - Fix for css Prev/Next bug
+
+4.25.494 - Install
+CD:
+ - Possible fix for error 13 (permission denied to /tmp) during first test
+
+4.25.493 - Kickstart
+CD:
+ - Added kickstart script for Ubuntu Server 12.04.1 LTS
+
+4.0.492 - Testing
+CD:
+ - Modified install to use genlog for first test instead of printf
+
+4.0.491 - Autoinstall
+CD:
+ - Fixed autoyes and eula in install.pl
+
+4.0.490 - Beta tests
+CD:
+ - Added tests located in t/log_processor to install.pl
+ - #380 Worked on MySQL LOCAL INFILE in install.pl (still not working)
+
+4.0.487 - Merge RRD branch to Beta branch
+CD:
+ - Updated install dependencies for new code branch
+
 4.0.406 - Bugfix
 CD:
  - #358 - Import status not updating correctly.
@@ -18,6 +47,10 @@ CD:
 CD:
  - #339 - Fix for French Snare Agent and non-printing charsets
  
+4.0.388 - Bugfix
+CD:
+ - #338 - Some email addresses get translated as html entities
+
 4.0.388 - Bugfix
 CD:
  - #338 - Some email addresses get translated as html entities

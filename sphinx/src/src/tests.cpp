@@ -1,5 +1,5 @@
 //
-// $Id: tests.cpp 3130 2012-03-01 07:43:56Z tomat $
+// $Id: tests.cpp 3337 2012-08-14 23:45:54Z shodan $
 //
 
 //
@@ -82,7 +82,7 @@ ISphTokenizer * CreateTestTokenizer ( bool bUTF8, DWORD uMode )
 	CSphTokenizerSettings tSettings;
 	tSettings.m_iType = bUTF8 ? TOKENIZER_UTF8 : TOKENIZER_SBCS;
 	tSettings.m_iMinWordLen = 2;
-	ISphTokenizer * pTokenizer = ISphTokenizer::Create ( tSettings, sError );
+	ISphTokenizer * pTokenizer = ISphTokenizer::Create ( tSettings, NULL, sError );
 	if (!( uMode & TOK_NO_DASH ))
 	{
 		assert ( pTokenizer->SetCaseFolding ( "-, 0..9, A..Z->a..z, _, a..z, U+80..U+FF", sError ) );
@@ -94,7 +94,7 @@ ISphTokenizer * CreateTestTokenizer ( bool bUTF8, DWORD uMode )
 	}
 	pTokenizer->EnableQueryParserMode ( true );
 	if ( uMode & TOK_EXCEPTIONS )
-		assert ( pTokenizer->LoadSynonyms ( g_sTmpfile, sError ) );
+		assert ( pTokenizer->LoadSynonyms ( g_sTmpfile, NULL, sError ) );
 
 	if ( uMode & TOK_ESCAPED )
 	{
@@ -243,9 +243,7 @@ void TestTokenizer ( bool bUTF8 )
 		// test short word callbacks
 		printf ( "%s for short token handling\n", sPrefix );
 		ISphTokenizer * pShortTokenizer = pTokenizer->Clone ( bEscaped );
-
-		CSphRemapRange tStar ( '*', '*', '*' );
-		pShortTokenizer->AddCaseFolding ( tStar );
+		pShortTokenizer->AddPlainChar ( '*' );
 
 		CSphTokenizerSettings tSettings = pShortTokenizer->GetSettings();
 		tSettings.m_iMinWordLen = 5;
@@ -389,13 +387,11 @@ void TestTokenizer ( bool bUTF8 )
 	assert ( !pTokenizer->TokenIsBlendedPart() );
 
 	// blended/special vs query mode vs modifier.. hell, this is complicated
-	CSphRemapRange tModifier ( '=', '=', '=' );
-
 	SafeDelete ( pTokenizer );
 	pTokenizer = CreateTestTokenizer ( bUTF8, TOK_NO_DASH );
 	assert ( pTokenizer->SetBlendChars ( "., -", sError ) );
 	pTokenizer->AddSpecials ( "-" );
-	pTokenizer->AddCaseFolding ( tModifier );
+	pTokenizer->AddPlainChar ( '=' );
 	pTokenizer->EnableQueryParserMode ( true );
 	assert ( pTokenizer->SetBlendMode ( "trim_none, skip_pure", sError ) );
 
@@ -450,7 +446,7 @@ void BenchTokenizer ( bool bUTF8 )
 		ISphTokenizer * pTokenizer = bUTF8 ? sphCreateUTF8Tokenizer () : sphCreateSBCSTokenizer ();
 		pTokenizer->SetCaseFolding ( "-, 0..9, A..Z->a..z, _, a..z", sError );
 		if ( iRun==2 )
-			pTokenizer->LoadSynonyms ( g_sTmpfile, sError );
+			pTokenizer->LoadSynonyms ( g_sTmpfile, NULL, sError );
 		pTokenizer->AddSpecials ( "!-" );
 
 		const int iPasses = 10;
@@ -467,7 +463,8 @@ void BenchTokenizer ( bool bUTF8 )
 		iTokens /= iPasses;
 		tmTime /= iPasses;
 
-		printf ( "run %d: %d bytes, %d tokens, %d.%03d ms, %.3f MB/sec\n", iRun, iData, iTokens, (int)(tmTime/1000), (int)(tmTime%1000), float(iData)/tmTime );
+		printf ( "run %d: %d bytes, %d tokens, %d.%03d ms, %.3f MB/sec\n", iRun, iData, iTokens,
+			(int)(tmTime/1000), (int)(tmTime%1000), float(iData)/tmTime );
 		SafeDeleteArray ( sData );
 	}
 }
@@ -775,7 +772,7 @@ CSphString ReconstructNode ( const XQNode_t * pNode, const CSphSchema & tSchema 
 		const CSphVector<XQKeyword_t> & dWords = pNode->m_dWords;
 		ARRAY_FOREACH ( i, dWords )
 			sRes.SetSprintf ( "%s %s", sRes.cstr(), dWords[i].m_sWord.cstr() );
-		sRes.Chop ();
+		sRes.Trim ();
 
 		switch ( pNode->GetOp() )
 		{
@@ -834,8 +831,6 @@ CSphString ReconstructNode ( const XQNode_t * pNode, const CSphSchema & tSchema 
 
 void TestQueryParser ()
 {
-	CSphString sTmp;
-
 	CSphSchema tSchema;
 	CSphColumnInfo tCol;
 	tCol.m_sName = "title"; tSchema.m_dFields.Add ( tCol );
@@ -843,7 +838,7 @@ void TestQueryParser ()
 
 	CSphDictSettings tDictSettings;
 	CSphScopedPtr<ISphTokenizer> pTokenizer ( sphCreateSBCSTokenizer () );
-	CSphScopedPtr<CSphDict> pDict ( sphCreateDictionaryCRC ( tDictSettings, pTokenizer.Ptr(), sTmp, "query" ) );
+	CSphScopedPtr<CSphDict> pDict ( sphCreateDictionaryCRC ( tDictSettings, NULL, pTokenizer.Ptr(), "query" ) );
 	assert ( pTokenizer.Ptr() );
 	assert ( pDict.Ptr() );
 
@@ -854,7 +849,7 @@ void TestQueryParser ()
 
 	CSphString sError;
 	assert ( CreateSynonymsFile ( NULL ) );
-	assert ( pTokenizer->LoadSynonyms ( g_sTmpfile, sError ) );
+	assert ( pTokenizer->LoadSynonyms ( g_sTmpfile, NULL, sError ) );
 
 	struct QueryTest_t
 	{
@@ -902,8 +897,9 @@ void TestQueryParser ()
 	{
 		printf ( "testing query parser, test %d/%d... ", i+1, nTests );
 
+		CSphIndexSettings tSettings;
 		XQQuery_t tQuery;
-		sphParseExtendedQuery ( tQuery, dTest[i].m_sQuery, pTokenizer.Ptr(), &tSchema, pDict.Ptr(), 1 );
+		sphParseExtendedQuery ( tQuery, dTest[i].m_sQuery, pTokenizer.Ptr(), &tSchema, pDict.Ptr(), tSettings );
 
 		CSphString sReconst = ReconstructNode ( tQuery.m_pRoot, tSchema );
 		if ( sReconst!=dTest[i].m_sReconst )
@@ -1639,7 +1635,7 @@ public:
 	bool Connect ( CSphString & ) { return true; }
 	void Disconnect () {}
 	bool HasAttrsConfigured () { return true; }
-	bool IterateStart ( CSphString & ) { m_tDocInfo.Reset ( m_tSchema.GetRowSize() ); return true; }
+	bool IterateStart ( CSphString & ) { m_tDocInfo.Reset ( m_tSchema.GetRowSize() ); m_iPlainFieldsLength = m_tSchema.m_dFields.GetLength(); return true; }
 	bool IterateMultivaluedStart ( int, CSphString & ) { return false; }
 	bool IterateMultivaluedNext () { return false; }
 	bool IterateFieldMVAStart ( int, CSphString & ) { return false; }
@@ -1723,7 +1719,7 @@ void TestRTWeightBoundary ()
 		CSphDictSettings tDictSettings;
 
 		ISphTokenizer * pTok = sphCreateUTF8Tokenizer();
-		CSphDict * pDict = sphCreateDictionaryCRC ( tDictSettings, pTok, sError, "weight" );
+		CSphDict * pDict = sphCreateDictionaryCRC ( tDictSettings, NULL, pTok, "weight" );
 
 		CSphColumnInfo tCol;
 		CSphSchema tSrcSchema;
@@ -1878,7 +1874,7 @@ public:
 	bool Connect ( CSphString & ) { return true; }
 	void Disconnect () {}
 	bool HasAttrsConfigured () { return true; }
-	bool IterateStart ( CSphString & ) { m_tDocInfo.Reset ( m_tSchema.GetRowSize() ); return true; }
+	bool IterateStart ( CSphString & ) { m_tDocInfo.Reset ( m_tSchema.GetRowSize() ); m_iPlainFieldsLength = m_tSchema.m_dFields.GetLength(); return true; }
 	bool IterateMultivaluedStart ( int, CSphString & ) { return false; }
 	bool IterateMultivaluedNext () { return false; }
 	bool IterateFieldMVAStart ( int, CSphString & ) { return false; }
@@ -1898,7 +1894,7 @@ void TestRTSendVsMerge ()
 	CSphDictSettings tDictSettings;
 
 	ISphTokenizer * pTok = sphCreateUTF8Tokenizer();
-	CSphDict * pDict = sphCreateDictionaryCRC ( tDictSettings, pTok, sError, "rt" );
+	CSphDict * pDict = sphCreateDictionaryCRC ( tDictSettings, NULL, pTok, "rt" );
 
 	CSphColumnInfo tCol;
 	CSphSchema tSrcSchema;
@@ -2003,7 +1999,7 @@ void TestSentenceTokenizer()
 	tSettings.m_iMinWordLen = 1;
 
 	CSphString sError;
-	ISphTokenizer * pTok = ISphTokenizer::Create ( tSettings, sError );
+	ISphTokenizer * pTok = ISphTokenizer::Create ( tSettings, NULL, sError );
 
 	assert ( pTok->SetCaseFolding ( "-, 0..9, A..Z->a..z, _, a..z, U+80..U+FF", sError ) );
 //	assert ( pTok->SetBlendChars ( "., &", sError ) ); // NOLINT
@@ -2214,6 +2210,162 @@ void BenchStemmer ()
 	SafeDeleteArray ( pRaw );
 }
 
+//////////////////////////////////////////////////////////////////////////
+
+void TestWildcards()
+{
+	printf ( "testing wildcards... " );
+	assert ( sphWildcardMatch ( "abc", "abc" ) );
+	assert ( sphWildcardMatch ( "abc", "?bc" ) );
+	assert ( sphWildcardMatch ( "abc", "a?c" ) );
+	assert ( sphWildcardMatch ( "abc", "ab?" ) );
+	assert ( !sphWildcardMatch ( "abc", "?ab" ) );
+	assert ( sphWildcardMatch ( "abac", "a*c" ) );
+	assert ( sphWildcardMatch ( "abac", "a*?c" ) );
+	assert ( sphWildcardMatch ( "abac", "a*??c" ) );
+	assert ( sphWildcardMatch ( "abac", "a?*?c" ) );
+	assert ( !sphWildcardMatch ( "abac", "a*???c" ) );
+	assert ( sphWildcardMatch ( "abac", "a?a?" ) );
+	assert ( !sphWildcardMatch ( "abac", "a?a??" ) );
+	assert ( !sphWildcardMatch ( "abac", "a??a" ) );
+	assert ( sphWildcardMatch ( "abracadabra", "a*" ) );
+	assert ( sphWildcardMatch ( "abracadabra", "a*a" ) );
+	assert ( !sphWildcardMatch ( "abracadabra", "a*c" ) );
+	assert ( sphWildcardMatch ( "abracadabra", "?b*r?" ) );
+	assert ( sphWildcardMatch ( "abracadabra", "?b*r*" ) );
+	assert ( sphWildcardMatch ( "abracadabra", "?b*r*r*" ) );
+	assert ( sphWildcardMatch ( "abracadabra", "*a*a*a*" ) );
+	assert ( sphWildcardMatch ( "abracadabra", "*a*a*a*a*a*" ) );
+	assert ( !sphWildcardMatch ( "a", "a*a?" ) );
+	assert ( !sphWildcardMatch ( "abracadabra", "*a*a*a*a*a?" ) );
+	assert ( sphWildcardMatch ( "car", "car%" ) );
+	assert ( sphWildcardMatch ( "cars", "car%" ) );
+	assert ( sphWildcardMatch ( "card", "car%" ) );
+	assert ( !sphWildcardMatch ( "carded", "car%" ) );
+	assert ( sphWildcardMatch ( "abc", "abc%" ) );
+	assert ( sphWildcardMatch ( "abcd", "abc%" ) );
+	assert ( !sphWildcardMatch ( "abcde", "abc%" ) );
+	assert ( sphWildcardMatch ( "ab", "a%b" ) );
+	assert ( sphWildcardMatch ( "acb", "a%b" ) );
+	assert ( !sphWildcardMatch ( "acdb", "a%b" ) );
+	assert ( sphWildcardMatch ( "abc", "a%bc" ) );
+	assert ( sphWildcardMatch ( "abbc", "a%bc" ) );
+	assert ( !sphWildcardMatch ( "abbbc", "a%bc" ) );
+	assert ( sphWildcardMatch ( "ab", "a%%b" ) );
+	assert ( sphWildcardMatch ( "axb", "a%%b" ) );
+	assert ( sphWildcardMatch ( "axyb", "a%%b" ) );
+	assert ( !sphWildcardMatch ( "axyzb", "a%%b" ) );
+	printf ( "ok\n" );
+}
+
+//////////////////////////////////////////////////////////////////////////
+
+void TestLog2()
+{
+	printf ( "testing integer log2 implementation... " );
+	assert ( sphLog2(1)==1 );
+	assert ( sphLog2(2)==2 );
+	assert ( sphLog2(3)==2 );
+	assert ( sphLog2(4)==3 );
+	assert ( sphLog2(5)==3 );
+	assert ( sphLog2(6)==3 );
+	assert ( sphLog2(7)==3 );
+	assert ( sphLog2(8)==4 );
+	assert ( sphLog2(9)==4 );
+	assert ( sphLog2(10)==4 );
+	assert ( sphLog2(65535)==16 );
+	assert ( sphLog2(65536)==17 );
+	assert ( sphLog2 ( 0xffffffffUL )==32 );
+	assert ( sphLog2 ( 0x100000000ULL )==33 );
+	assert ( sphLog2 ( 0x100000001ULL )==33 );
+	assert ( sphLog2 ( 0x1ffffffffULL )==33 );
+	assert ( sphLog2 ( 0x200000000ULL )==34 );
+	assert ( sphLog2 ( 0xffffffffffffffffULL )==64 );
+	assert ( sphLog2 ( 0xfffffffffffffffeULL )==64 );
+	assert ( sphLog2 ( 0xefffffffffffffffULL )==64 );
+	assert ( sphLog2 ( 0x7fffffffffffffffULL )==63 );
+	printf ( "ok\n" );
+}
+
+void BenchLog2()
+{
+	printf ( "benchmarking rand... " );
+
+	const int NRUNS = 100*1000*1000;
+	volatile int iRes = 0;
+	int64_t t;
+
+	sphSrand ( 0 );
+	t = sphMicroTimer();
+	for ( int i=0; i<NRUNS; i++ )
+		iRes += sphRand();
+	t = sphMicroTimer() - t;
+	printf ( "%d msec, res %d\n", (int)( t/1000 ), iRes );
+
+	printf ( "benchmarking rand+log2... " );
+	sphSrand ( 0 );
+	t = sphMicroTimer();
+	for ( int i=0; i<NRUNS; i++ )
+		iRes += sphLog2 ( sphRand() );
+	t = sphMicroTimer() - t;
+	printf ( "%d msec, res %d\n", (int)( t/1000 ), iRes );
+
+	exit(0);
+}
+
+//////////////////////////////////////////////////////////////////////////
+
+void TestArabicStemmer()
+{
+	printf ( "testing arabic stemmer... " );
+
+	// a few words, cross-verified using NLTK implementation
+	char * dTests[] =
+	{
+		"\xd8\xb0\xd9\x87\xd8\xa8\xd8\xaa\0", "\xd8\xb0\xd9\x87\xd8\xa8\0",
+		"\xd8\xa7\xd9\x84\xd8\xb7\xd8\xa7\xd9\x84\xd8\xa8\xd8\xa9\0", "\xd8\xb7\xd9\x84\xd8\xa8\0",
+		"\xd8\xa7\xd9\x84\xd8\xb5\xd8\xba\xd9\x8a\xd8\xb1\xd8\xa9\0", "\xd8\xb5\xd8\xba\xd8\xb1\0",
+		"\xd8\xa7\xd9\x84\xd9\x89\0", "\xd8\xa7\xd9\x84\xd9\x89\0",
+		"\xd8\xa7\xd9\x84\xd9\x85\xd8\xaf\xd8\xb1\xd8\xb3\xd8\xa9\0", "\xd8\xaf\xd8\xb1\xd8\xb3\0",
+		"\xd9\x88\xd8\xaf\xd8\xb1\xd8\xb3\xd8\xaa\0", "\xd8\xaf\xd8\xb1\xd8\xb3\0",
+		"\xd8\xa7\xd9\x84\xd8\xaf\xd8\xb1\xd9\x88\xd8\xb3\0", "\xd8\xaf\xd8\xb1\xd8\xb3\0",
+		"\xd8\xac\xd9\x85\xd9\x8a\xd8\xb9\xd9\x87\xd8\xa7\0", "\xd8\xac\xd9\x85\xd8\xb9\0",
+		"\xd9\x88\xd8\xad\xd9\x8a\xd9\x86\0", "\xd9\x88\xd8\xad\xd9\x86\0",
+		// "\xd8\xac\xd8\xa7\xd8\xa1\0", "\xd8\xac\xd8\xa7\xd8\xa1\0",
+		"\xd9\x88\xd9\x82\xd8\xaa\0", "\xd9\x88\xd9\x82\xd8\xaa\0",
+		// "\xd8\xa7\xd9\x84\xd8\xa7\xd8\xae\xd8\xaa\xd8\xa8\xd8\xa7\xd8\xb1\0", "\xd8\xae\xd8\xa8\xd8\xb1\0",
+		"\xd9\x86\xd8\xac\xd8\xad\xd8\xaa\0", "\xd9\x86\xd8\xac\xd8\xad\0",
+		"\xd8\xb7\xd8\xa7\xd9\x84\xd8\xa8\xd8\xaa\xd9\x86\xd8\xa7\0", "\xd8\xb7\xd9\x84\xd8\xa8\0",
+		"\xd8\xa8\xd8\xa7\xd9\x85\xd8\xaa\xd9\x8a\xd8\xa7\xd8\xb2\0", "\xd9\x85\xd9\x8a\xd8\xb2\0",
+		"\xd8\xa7\xd9\x84\xd9\x85\xd8\xaf\xd8\xa7\xd8\xb1\xd8\xb3\0", "\xd8\xaf\xd8\xb1\xd8\xb3\0",
+		"\xd9\x84\xd9\x87\xd8\xa7\0", "\xd9\x84\xd9\x87\xd8\xa7\0",
+		"\xd8\xaf\xd9\x88\xd8\xb1\0", "\xd8\xaf\xd9\x88\xd8\xb1\0",
+		"\xd9\x83\xd8\xa8\xd9\x8a\xd8\xb1\0", "\xd9\x83\xd8\xa8\xd8\xb1\0",
+		"\xd9\x81\xd9\x8a\0", "\xd9\x81\xd9\x8a\0",
+		"\xd8\xaa\xd8\xb9\xd9\x84\xd9\x8a\xd9\x85\0", "\xd8\xb9\xd9\x84\xd9\x85\0",
+		"\xd8\xa7\xd8\xa8\xd9\x86\xd8\xa7\xd9\x8a\xd9\x86\xd8\xa7\0", "\xd8\xa8\xd9\x86\xd9\x8a\0",
+		// "\xd8\xa7\xd9\x84\xd8\xa7\xd8\xad\xd8\xa8\xd8\xa7\xd8\xa1\0", "\xd8\xad\xd8\xa8\xd8\xa1\0",
+	};
+
+	for ( int i=0; i<sizeof(dTests)/sizeof(char*); i+=2 )
+	{
+		char sBuf[64];
+		strcpy ( sBuf, dTests[i] );
+		stem_ar_utf8 ( (BYTE*)sBuf );
+		assert ( strcmp ( sBuf, dTests[i+1] )==0 );
+	}
+
+	char sTest1[16] = "\xD9\x80\xD9\x80\xD9\x80\xD9\x80\0abcdef";
+	char sRef1[16] = "\0\0\0\0\0\0\0\0\0abcdef";
+
+	stem_ar_utf8 ( (BYTE*)sTest1 );
+	assert ( memcmp ( sTest1, sRef1, sizeof(sTest1) )==0 );
+
+	printf ( "ok\n" );
+}
+
+//////////////////////////////////////////////////////////////////////////
+
 int main ()
 {
 	// threads should be initialized before memory allocations
@@ -2234,6 +2386,7 @@ int main ()
 	BenchExpr ();
 	BenchLocators ();
 	BenchThreads ();
+	BenchLog2();
 #else
 	TestQueryParser ();
 	TestStripper ();
@@ -2249,6 +2402,9 @@ int main ()
 	TestRTSendVsMerge ();
 	TestSentenceTokenizer ();
 	TestSpanSearch ();
+	TestWildcards();
+	TestLog2();
+	TestArabicStemmer();
 #endif
 
 	unlink ( g_sTmpfile );
@@ -2257,5 +2413,5 @@ int main ()
 }
 
 //
-// $Id: tests.cpp 3130 2012-03-01 07:43:56Z tomat $
+// $Id: tests.cpp 3337 2012-08-14 23:45:54Z shodan $
 //

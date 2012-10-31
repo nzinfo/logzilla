@@ -1,5 +1,5 @@
 //
-// $Id: sphinxrt.h 3125 2012-02-28 15:39:55Z shodan $
+// $Id: sphinxrt.h 3189 2012-04-17 18:54:07Z tomat $
 //
 
 //
@@ -30,7 +30,7 @@ public:
 
 	/// insert/update document in current txn
 	/// fails in case of two open txns to different indexes
-	virtual bool AddDocument ( int iFields, const char ** ppFields, const CSphMatch & tDoc, bool bReplace, const char ** ppStr, const CSphVector<DWORD> & dMvas, CSphString & sError ) = 0;
+	virtual bool AddDocument ( int iFields, const char ** ppFields, const CSphMatch & tDoc, bool bReplace, const char ** ppStr, const CSphVector<DWORD> & dMvas, CSphString & sError, CSphString & sWarning ) = 0;
 
 	/// insert/update document in current txn
 	/// fails in case of two open txns to different indexes
@@ -57,6 +57,11 @@ public:
 
 	/// attach a disk chunk to current index
 	virtual bool AttachDiskIndex ( CSphIndex * pIndex, CSphString & sError ) = 0;
+
+	/// truncate index (that is, kill all data)
+	virtual bool Truncate ( CSphString & sError ) = 0;
+
+	virtual void Optimize ( volatile bool * pForceTerminate, ThrottleState_t * pThrottle ) = 0;
 };
 
 /// initialize subsystem
@@ -69,7 +74,7 @@ bool sphRTSchemaConfigure ( const CSphConfigSection & hIndex, CSphSchema * pSche
 void sphRTDone ();
 
 /// RT index factory
-ISphRtIndex * sphCreateIndexRT ( const CSphSchema & tSchema, const char * sIndexName, DWORD uRamSize, const char * sPath, bool bKeywordDict );
+ISphRtIndex * sphCreateIndexRT ( const CSphSchema & tSchema, const char * sIndexName, int64_t iRamSize, const char * sPath, bool bKeywordDict );
 
 /// Get current txn index
 ISphRtIndex * sphGetCurrentIndexRT();
@@ -89,5 +94,5 @@ void sphReplayBinlog ( const SmallStringHash_T<CSphIndex*> & hIndexes, DWORD uRe
 #endif // _sphinxrt_
 
 //
-// $Id: sphinxrt.h 3125 2012-02-28 15:39:55Z shodan $
+// $Id: sphinxrt.h 3189 2012-04-17 18:54:07Z tomat $
 //

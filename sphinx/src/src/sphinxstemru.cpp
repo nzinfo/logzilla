@@ -1,5 +1,5 @@
 //
-// $Id: sphinxstemru.cpp 3087 2012-01-30 23:07:35Z shodan $
+// $Id: sphinxstemru.cpp 3095 2012-02-03 18:51:16Z tomat $
 //
 
 //
@@ -125,5 +125,5 @@ void stem_ru_init ()
 }
 
 //
-// $Id: sphinxstemru.cpp 3087 2012-01-30 23:07:35Z shodan $
+// $Id: sphinxstemru.cpp 3095 2012-02-03 18:51:16Z tomat $
 //

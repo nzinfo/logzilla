@@ -1,5 +1,5 @@
 //
-// $Id: testrt.cpp 3130 2012-03-01 07:43:56Z tomat $
+// $Id: testrt.cpp 3244 2012-06-02 23:14:19Z shodan $
 //
 
 //
@@ -23,7 +23,7 @@
 #pragma message("Automatically linking with psapi.lib")
 #endif
 
-const int	COMMIT_STEP = 1;
+int			COMMIT_STEP = 1;
 float		g_fTotalMB = 0.0f;
 
 void SetupIndexing ( CSphSource_MySQL * pSrc, const CSphSourceParams_MySQL & tParams )
@@ -81,12 +81,14 @@ void DoIndexing ( CSphSource * pSrc, ISphRtIndex * pIndex )
 	{
 		if ( !pSrc->IterateDocument ( sError ) )
 			sphDie ( "iterate-document failed: %s", sError.cstr() );
-		ISphHits * pHitsNext = pSrc->IterateHits ( sError );
-		if ( !sError.IsEmpty() )
-			sphDie ( "iterate-hits failed: %s", sError.cstr() );
 
 		if ( pSrc->m_tDocInfo.m_iDocID )
+		{
+			ISphHits * pHitsNext = pSrc->IterateHits ( sError );
+			if ( !sError.IsEmpty() )
+				sphDie ( "iterate-hits failed: %s", sError.cstr() );
 			pIndex->AddDocument ( pHitsNext, pSrc->m_tDocInfo, NULL, dMvas, sError );
+		}
 
 		if ( ( pSrc->GetStats().m_iTotalDocuments % COMMIT_STEP )==0 || !pSrc->m_tDocInfo.m_iDocID )
 		{
@@ -170,8 +172,11 @@ void IndexingThread ( void * pArg )
 }
 
 
-int main ()
+int main ( int argc, char ** argv )
 {
+	if ( argc==2 )
+		COMMIT_STEP = atoi ( argv[1] );
+
 	// threads should be initialized before memory allocations
 	char cTopOfMainStack;
 	sphThreadInit();
@@ -181,12 +186,14 @@ int main ()
 	CSphDictSettings tDictSettings;
 
 	ISphTokenizer * pTok = sphCreateUTF8Tokenizer();
-	CSphDict * pDict = sphCreateDictionaryCRC ( tDictSettings, pTok, sError, "rt1" );
-	CSphSource * pSrc = SpawnSource ( "SELECT id, channel_id, UNIX_TIMESTAMP(published) published, title, UNCOMPRESS(content) content FROM posting WHERE id<=10000 AND id%2=0", pTok, pDict );
+	CSphDict * pDict = sphCreateDictionaryCRC ( tDictSettings, NULL, pTok, "rt1" );
+	CSphSource * pSrc = SpawnSource ( "SELECT id, channel_id, UNIX_TIMESTAMP(published) published, "
+		"title, UNCOMPRESS(content) content FROM posting WHERE id<=10000 AND id%2=0", pTok, pDict );
 
 	ISphTokenizer * pTok2 = sphCreateUTF8Tokenizer();
-	CSphDict * pDict2 = sphCreateDictionaryCRC ( tDictSettings, pTok, sError, "rt2" );
-	CSphSource * pSrc2 = SpawnSource ( "SELECT id, channel_id, UNIX_TIMESTAMP(published) published, title, UNCOMPRESS(content) content FROM posting WHERE id<=10000 AND id%2=1", pTok2, pDict2 );
+	CSphDict * pDict2 = sphCreateDictionaryCRC ( tDictSettings, NULL, pTok, "rt2" );
+	CSphSource * pSrc2 = SpawnSource ( "SELECT id, channel_id, UNIX_TIMESTAMP(published) published, "
+		"title, UNCOMPRESS(content) content FROM posting WHERE id<=10000 AND id%2=1", pTok2, pDict2 );
 
 	CSphSchema tSrcSchema;
 	if ( !pSrc->UpdateSchema ( &tSrcSchema, sError ) )
@@ -220,7 +227,8 @@ int main ()
 
 #if 0
 	// update
-	tParams.m_sQuery = "SELECT id, channel_id, UNIX_TIMESTAMP(published) published, title, UNCOMPRESS(content) content FROM rt2 WHERE id<=10000";
+	tParams.m_sQuery = "SELECT id, channel_id, UNIX_TIMESTAMP(published) published, title, "
+		"UNCOMPRESS(content) content FROM rt2 WHERE id<=10000";
 	SetupIndexing ( pSrc, tParams );
 	DoIndexing ( pSrc, pIndex );
 #endif
@@ -262,5 +270,5 @@ int main ()
 }
 
 //
-// $Id: testrt.cpp 3130 2012-03-01 07:43:56Z tomat $
+// $Id: testrt.cpp 3244 2012-06-02 23:14:19Z shodan $
 //

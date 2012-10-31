@@ -1,5 +1,5 @@
 //
-// $Id: sphinxexpr.cpp 3129 2012-03-01 07:18:52Z tomat $
+// $Id: sphinxexpr.cpp 3366 2012-08-31 17:01:47Z shodan $
 //
 
 //
@@ -213,6 +213,8 @@ struct Expr_GetConst_c : public ISphExpr
 	float m_fValue;
 	explicit Expr_GetConst_c ( float fValue ) : m_fValue ( fValue ) {}
 	virtual float Eval ( const CSphMatch & ) const { return m_fValue; }
+	virtual int IntEval ( const CSphMatch & ) const { return (int)m_fValue; }
+	virtual int64_t Int64Eval ( const CSphMatch & ) const { return (int64_t)m_fValue; }
 };
 
 
@@ -257,6 +259,83 @@ struct Expr_GetStrConst_c : public ISphExpr
 	virtual float Eval ( const CSphMatch & ) const { assert ( 0 ); return 0; }
 	virtual int IntEval ( const CSphMatch & ) const { assert ( 0 ); return 0; }
 	virtual int64_t Int64Eval ( const CSphMatch & ) const { assert ( 0 ); return 0; }
+};
+
+
+struct Expr_GetZonespanlist_c : public ISphExpr
+{
+	CSphString m_sVal;
+	int m_iLen;
+	CSphVector<int> * m_pData;
+
+	explicit Expr_GetZonespanlist_c ()
+		: m_iLen ( 0 )
+		, m_pData ( NULL )
+	{}
+
+	virtual int StringEval ( const CSphMatch &tMatch, const BYTE ** ppStr ) const
+	{
+		assert ( ppStr );
+		if ( !m_pData )
+		{
+			*ppStr = NULL;
+			return 0;
+		}
+		CSphString sValue = "";
+		const int* pValues = &(*m_pData)[tMatch.m_iTag];
+		int iSize = *pValues++;
+		for ( int i=0; i<(iSize/2); ++i )
+		{
+			sValue.SetSprintf ( "%s %d:%d", sValue.cstr(), pValues[0]+1, pValues[1]+1 );
+			pValues+=2;
+		}
+		*ppStr = (const BYTE *) sValue.Leak();
+		return sValue.Length();
+	}
+
+	virtual float Eval ( const CSphMatch & ) const { assert ( 0 ); return 0; }
+	virtual int IntEval ( const CSphMatch & ) const { assert ( 0 ); return 0; }
+	virtual int64_t Int64Eval ( const CSphMatch & ) const { assert ( 0 ); return 0; }
+	virtual void SetupExtraData ( ISphExtra * pData )
+	{
+		pData->ExtraData ( EXTRA_GET_DATA_ZONESPANS, (void**)&m_pData );
+	}
+};
+
+
+struct Expr_GetRankFactors_c : public ISphExpr
+{
+	/// hash type MUST BE IN SYNC with RankerState_Export_fn in sphinxsearch.cpp
+	CSphOrderedHash < CSphString, SphDocID_t, IdentityHash_fn, 256 > * m_pFactors;
+
+	explicit Expr_GetRankFactors_c ()
+		: m_pFactors ( NULL )
+	{}
+
+	virtual int StringEval ( const CSphMatch & tMatch, const BYTE ** ppStr ) const
+	{
+		assert ( m_pFactors );
+		assert ( ppStr );
+
+		CSphString * sVal = (*m_pFactors) ( tMatch.m_iDocID );
+		if ( !sVal )
+		{
+			*ppStr = NULL;
+			return 0;
+		}
+		int iLen = sVal->Length();
+		*ppStr = (const BYTE*)sVal->Leak();
+		m_pFactors->Delete ( tMatch.m_iDocID );
+		return iLen;
+	}
+
+	virtual float Eval ( const CSphMatch & ) const { assert ( 0 ); return 0; }
+	virtual int IntEval ( const CSphMatch & ) const { assert ( 0 ); return 0; }
+	virtual int64_t Int64Eval ( const CSphMatch & ) const { assert ( 0 ); return 0; }
+	virtual void SetupExtraData ( ISphExtra * pData )
+	{
+		pData->ExtraData ( EXTRA_GET_DATA_RANKFACTORS, (void**)&m_pFactors );
+	}
 };
 
 
@@ -317,6 +396,11 @@ struct Expr_Arglist_c : public ISphExpr
 		return true;
 	}
 
+	virtual ISphExpr * GetArg ( int i ) const
+	{
+		return m_dArgs[i];
+	}
+
 	virtual float Eval ( const CSphMatch & ) const
 	{
 		assert ( 0 && "internal error: Eval() must not be explicitly called on arglist" );
@@ -343,13 +427,19 @@ struct Expr_Unary_c : public ISphExpr
 	virtual void GetDependencyColumns ( CSphVector<int> & dColumns ) const { m_pFirst->GetDependencyColumns ( dColumns ); }
 };
 
+
 struct Expr_Crc32_c : public Expr_Unary_c
 {
 	explicit Expr_Crc32_c ( ISphExpr * pFirst ) { m_pFirst = pFirst; }
 	virtual float Eval ( const CSphMatch & tMatch ) const { return (float)IntEval ( tMatch ); }
-	virtual int IntEval ( const CSphMatch & tMatch ) const { const BYTE * pStr; return sphCRC32 ( pStr, m_pFirst->StringEval ( tMatch, &pStr ) ); }
+	virtual int IntEval ( const CSphMatch & tMatch ) const
+	{
+		const BYTE * pStr;
+		return sphCRC32 ( pStr, m_pFirst->StringEval ( tMatch, &pStr ) );
+	}
 	virtual int64_t Int64Eval ( const CSphMatch & tMatch ) const { return IntEval ( tMatch ); }
 };
+
 
 static inline int Fibonacci ( int i )
 {
@@ -363,8 +453,9 @@ static inline int Fibonacci ( int i )
 		f0 += f1; // f_j
 		f1 += f0; // f_{j+1}
 	}
-	return (i&1) ? f1 : f0;
+	return ( i & 1 ) ? f1 : f0;
 }
+
 
 struct Expr_Fibonacci_c : public Expr_Unary_c
 {
@@ -373,6 +464,79 @@ struct Expr_Fibonacci_c : public Expr_Unary_c
 	virtual float Eval ( const CSphMatch & tMatch ) const { return (float)IntEval ( tMatch ); }
 	virtual int IntEval ( const CSphMatch & tMatch ) const { return Fibonacci ( m_pFirst->IntEval ( tMatch ) ); }
 	virtual int64_t Int64Eval ( const CSphMatch & tMatch ) const { return IntEval ( tMatch ); }
+};
+
+
+struct Expr_ToString_c : public Expr_Unary_c
+{
+protected:
+	ESphAttr	m_eArg;
+
+public:
+	Expr_ToString_c ( ISphExpr * pArg, ESphAttr eArg )
+	{
+		m_pFirst = pArg;
+		m_eArg = eArg;
+	}
+
+	virtual float Eval ( const CSphMatch & ) const
+	{
+		assert ( 0 );
+		return 0.0f;
+	}
+
+	virtual int StringEval ( const CSphMatch & tMatch, const BYTE ** ppStr ) const
+	{
+		CSphString sBuf;
+		switch ( m_eArg )
+		{
+			case SPH_ATTR_INTEGER:	sBuf.SetSprintf ( "%u", m_pFirst->IntEval ( tMatch ) ); break;
+			case SPH_ATTR_BIGINT:	sBuf.SetSprintf ( INT64_FMT, m_pFirst->Int64Eval ( tMatch ) ); break;
+			case SPH_ATTR_FLOAT:	sBuf.SetSprintf ( "%f", m_pFirst->Eval ( tMatch ) ); break;
+			case SPH_ATTR_UINT32SET:
+			case SPH_ATTR_INT64SET:
+				{
+					const DWORD * pValues = m_pFirst->MvaEval ( tMatch );
+					if ( !pValues || !*pValues )
+						break;
+
+					DWORD nValues = *pValues++;
+					assert (!( m_eArg==SPH_ATTR_INT64SET && ( nValues & 1 ) ));
+
+					// OPTIMIZE? minibuffer on stack, less allocs, manual formatting vs printf, etc
+					if ( m_eArg==SPH_ATTR_UINT32SET )
+					{
+						while ( nValues-- )
+						{
+							if ( sBuf.cstr() )
+								sBuf.SetSprintf ( "%s,%u", sBuf.cstr(), *pValues++ );
+							else
+								sBuf.SetSprintf ( "%u", *pValues++ );
+						}
+					} else
+					{
+						for ( ; nValues; nValues-=2, pValues+=2 )
+						{
+							if ( sBuf.cstr() )
+								sBuf.SetSprintf ( "%s,"INT64_FMT, sBuf.cstr(), MVA_UPSIZE ( pValues ) );
+							else
+								sBuf.SetSprintf ( INT64_FMT, MVA_UPSIZE ( pValues ) );
+						}
+					}
+				}
+				break;
+			default:
+				assert ( 0 && "unhandled arg type in TO_STRING()" );
+				break;
+		}
+		if ( sBuf.IsEmpty() )
+		{
+			*ppStr = NULL;
+			return 0;
+		}
+		*ppStr = (const BYTE *) sBuf.Leak();
+		return strlen ( (const char*) *ppStr );
+	}
 };
 
 //////////////////////////////////////////////////////////////////////////
@@ -511,25 +675,57 @@ DECLARE_BINARY_POLY ( Expr_Or,		FIRST!=0.0f || SECOND!=0.0f,		IFINT ( INTFIRST |
 
 //////////////////////////////////////////////////////////////////////////
 
+/// boring base stuff
+struct ExprThreeway_c : public ISphExpr
+{
+	ISphExpr * m_pFirst;
+	ISphExpr * m_pSecond;
+	ISphExpr * m_pThird;
+
+	ExprThreeway_c ( ISphExpr * pFirst, ISphExpr * pSecond, ISphExpr * pThird )
+		: m_pFirst ( pFirst )
+		, m_pSecond ( pSecond )
+		, m_pThird ( pThird )
+	{}
+
+	~ExprThreeway_c()
+	{
+		SafeRelease ( m_pFirst );
+		SafeRelease ( m_pSecond );
+		SafeRelease ( m_pThird );
+	}
+
+	virtual void SetMVAPool ( const DWORD * pMvaPool )
+	{
+		m_pFirst->SetMVAPool ( pMvaPool );
+		m_pSecond->SetMVAPool ( pMvaPool );
+		m_pThird->SetMVAPool ( pMvaPool );
+	}
+
+	virtual void SetStringPool ( const BYTE * pStrings )
+	{
+		m_pFirst->SetStringPool ( pStrings );
+		m_pSecond->SetStringPool ( pStrings );
+		m_pThird->SetStringPool ( pStrings );
+	}
+
+	virtual void GetDependencyColumns ( CSphVector<int> & dColumns ) const
+	{
+		m_pFirst->GetDependencyColumns ( dColumns );
+		m_pSecond->GetDependencyColumns ( dColumns );
+		m_pThird->GetDependencyColumns ( dColumns );
+	}
+};
+
 #define DECLARE_TERNARY(_classname,_expr,_expr2,_expr3) \
-	struct _classname : public ISphExpr \
+	struct _classname : public ExprThreeway_c \
 	{ \
-		ISphExpr * m_pFirst; \
-		ISphExpr * m_pSecond; \
-		ISphExpr * m_pThird; \
-		_classname ( ISphExpr * pFirst, ISphExpr * pSecond, ISphExpr * pThird ) : m_pFirst ( pFirst ), m_pSecond ( pSecond ), m_pThird ( pThird ) {} \
-		~_classname () { SafeRelease ( m_pFirst ); SafeRelease ( m_pSecond ); SafeRelease ( m_pThird ); } \
-		virtual void SetMVAPool ( const DWORD * pMvaPool ) { m_pFirst->SetMVAPool ( pMvaPool ); m_pSecond->SetMVAPool ( pMvaPool ); m_pThird->SetMVAPool ( pMvaPool ); } \
-		virtual void SetStringPool ( const BYTE * pStrings ) { m_pFirst->SetStringPool ( pStrings ); m_pSecond->SetStringPool ( pStrings ); m_pThird->SetStringPool ( pStrings ); } \
+		_classname ( ISphExpr * pFirst, ISphExpr * pSecond, ISphExpr * pThird ) \
+			: ExprThreeway_c ( pFirst, pSecond, pThird ) {} \
+		\
 		virtual float Eval ( const CSphMatch & tMatch ) const { return _expr; } \
 		virtual int IntEval ( const CSphMatch & tMatch ) const { return _expr2; } \
 		virtual int64_t Int64Eval ( const CSphMatch & tMatch ) const { return _expr3; } \
-		virtual void GetDependencyColumns ( CSphVector<int> & dColumns ) const \
-		{ \
-			m_pFirst->GetDependencyColumns ( dColumns ); \
-			m_pSecond->GetDependencyColumns ( dColumns ); \
-			m_pThird->GetDependencyColumns ( dColumns ); \
-		} \
 	};
 
 DECLARE_TERNARY ( Expr_If_c,	( FIRST!=0.0f ) ? SECOND : THIRD,	INTFIRST ? INTSECOND : INTTHIRD,	INT64FIRST ? INT64SECOND : INT64THIRD )
@@ -537,13 +733,6 @@ DECLARE_TERNARY ( Expr_Madd_c,	FIRST*SECOND+THIRD,					INTFIRST*INTSECOND + INTT
 DECLARE_TERNARY ( Expr_Mul3_c,	FIRST*SECOND*THIRD,					INTFIRST*INTSECOND*INTTHIRD,		INT64FIRST*INT64SECOND*INT64THIRD )
 
 //////////////////////////////////////////////////////////////////////////
-
-#if USE_WINDOWS
-void localtime_r ( const time_t * clock, struct tm * res )
-{
-	*res = *localtime ( clock ); // FIXME?!
-}
-#endif
 
 #define DECLARE_TIMESTAMP(_classname,_expr) \
 	DECLARE_UNARY_TRAITS ( _classname, (float)IntEval(tMatch) ) \
@@ -572,7 +761,7 @@ DECLARE_TIMESTAMP ( Expr_YearMonthDay_c,	(s.tm_year+1900)*10000+(s.tm_mon+1)*100
 /// known functions
 enum Func_e
 {
-	FUNC_NOW,
+	FUNC_NOW=0,
 
 	FUNC_ABS,
 	FUNC_CEIL,
@@ -608,7 +797,14 @@ enum Func_e
 	FUNC_IN,
 	FUNC_BITDOT,
 
-	FUNC_GEODIST
+	FUNC_GEODIST,
+	FUNC_EXIST,
+	FUNC_POLY2D,
+	FUNC_GEOPOLY2D,
+	FUNC_CONTAINS,
+	FUNC_ZONESPANLIST,
+	FUNC_TO_STRING,
+	FUNC_RANKFACTORS
 };
 
 
@@ -659,8 +855,134 @@ static FuncDesc_t g_dFuncs[] =
 	{ "in",				-1, FUNC_IN,			SPH_ATTR_INTEGER },
 	{ "bitdot",			-1, FUNC_BITDOT,		SPH_ATTR_NONE },
 
-	{ "geodist",		4,	FUNC_GEODIST,		SPH_ATTR_FLOAT }
+	{ "geodist",		4,	FUNC_GEODIST,		SPH_ATTR_FLOAT },
+	{ "exist",			2,	FUNC_EXIST,			SPH_ATTR_NONE },
+	{ "poly2d",			-1,	FUNC_POLY2D,		SPH_ATTR_POLY2D },
+	{ "geopoly2d",		-1,	FUNC_GEOPOLY2D,		SPH_ATTR_POLY2D },
+	{ "contains",		3,	FUNC_CONTAINS,		SPH_ATTR_INTEGER },
+	{ "zonespanlist",	0,	FUNC_ZONESPANLIST,	SPH_ATTR_STRINGPTR },
+	{ "to_string",		1,	FUNC_TO_STRING,		SPH_ATTR_STRINGPTR },
+	{ "rankfactors",	0,	FUNC_RANKFACTORS,	SPH_ATTR_STRINGPTR }
 };
+
+
+// helper to generate input data for gperf
+// run this, run gperf, that will generate a C program
+// copy dAsso from asso_values in that C source
+// copy dIndexes from the program output
+#if 0
+int HashGen()
+{
+	printf ( "struct func { char *name; int num; };\n%%%%\n" );
+	for ( int i=0; i<sizeof(g_dFuncs)/sizeof(g_dFuncs[0]); i++ )
+		printf ( "%s, %d\n", g_dFuncs[i].m_sName, i );
+	printf ( "%%%%\n" );
+	printf ( "void main()\n" );
+	printf ( "{\n" );
+	printf ( "\tint i;\n" );
+	printf ( "\tfor ( i=0; i<=MAX_HASH_VALUE; i++ )\n" );
+	printf ( "\t\tprintf ( \"%%d,%%s\", wordlist[i].name[0] ? wordlist[i].num : -1, (i%%10)==9 ? \"\\n\" : \" \" );\n" );
+	printf ( "}\n" );
+	printf ( "// gperf -Gt 1.p > 1.c\n" );
+	exit ( 0 );
+	return 0;
+}
+
+static int G_HASHGEN = HashGen();
+#endif
+
+
+// FIXME? can remove this by preprocessing the assoc table
+static inline BYTE FuncHashLower ( BYTE u )
+{
+	return ( u>='A' && u<='Z' ) ? ( u | 0x20 ) : u;
+}
+
+
+static int FuncHashLookup ( const char * sKey )
+{
+	static BYTE dAsso[] =
+	{
+		64, 64, 64, 64, 64, 64, 64, 64, 64, 64,
+		64, 64, 64, 64, 64, 64, 64, 64, 64, 64,
+		64, 64, 64, 64, 64, 64, 64, 64, 64, 64,
+		64, 64, 64, 64, 64, 64, 64, 64, 64, 64,
+		64, 64, 64, 64, 64, 64, 64, 64, 64, 64,
+		64, 64, 64, 64, 64, 64, 64, 64, 64, 64,
+		64, 64, 64, 64, 64, 64, 64, 64, 64, 64,
+		64, 64, 64, 64, 64, 64, 64, 64, 64, 64,
+		64, 64, 64, 64, 64, 64, 64, 64, 64, 64,
+		64, 64, 64, 64, 64, 5, 64, 0, 0, 20,
+		35, 0, 20, 5, 64, 5, 64, 64, 0, 0,
+		0, 5, 15, 35, 0, 15, 40, 40, 64, 40,
+		10, 0, 5, 64, 64, 64, 64, 64, 64, 64,
+		64, 64, 64, 64, 64, 64, 64, 64, 64, 64,
+		64, 64, 64, 64, 64, 64, 64, 64, 64, 64,
+		64, 64, 64, 64, 64, 64, 64, 64, 64, 64,
+		64, 64, 64, 64, 64, 64, 64, 64, 64, 64,
+		64, 64, 64, 64, 64, 64, 64, 64, 64, 64,
+		64, 64, 64, 64, 64, 64, 64, 64, 64, 64,
+		64, 64, 64, 64, 64, 64, 64, 64, 64, 64,
+		64, 64, 64, 64, 64, 64, 64, 64, 64, 64,
+		64, 64, 64, 64, 64, 64, 64, 64, 64, 64,
+		64, 64, 64, 64, 64, 64, 64, 64, 64, 64,
+		64, 64, 64, 64, 64, 64, 64, 64, 64, 64,
+		64, 64, 64, 64, 64, 64, 64, 64, 64, 64,
+		64, 64, 64, 64, 64, 64
+	};
+
+	const BYTE * s = (const BYTE*) sKey;
+	int iHash = strlen ( sKey );
+	switch ( iHash )
+	{
+		default:		iHash += dAsso [ FuncHashLower ( s[2] ) ];
+		case 2:			iHash += dAsso [ FuncHashLower ( s[1] ) ];
+		case 1:			iHash += dAsso [ FuncHashLower ( s[0] ) ];
+		case 0:
+						break;
+	}
+
+	static int dIndexes[] = {
+		-1, -1, 6, -1, 17, -1, -1, 28, 20, 18,
+		16, 37, 19, 21, 7, 8, 11, 30, 1, 33,
+		31, -1, 35, 4, 12, -1, 32, 24, 9, 2,
+		3, -1, -1, 34, 14, -1, -1, -1, 15, 25,
+		-1, -1, -1, 5, 26, 13, -1, -1, 0, 23,
+		-1, 29, -1, 27, 10, -1, -1, -1, -1, 36,
+		-1, -1, -1, 22
+	};
+
+	if ( iHash<0 || iHash>=(int)(sizeof(dIndexes)/sizeof(dIndexes[0])) )
+		return -1;
+
+	int iFunc = dIndexes[iHash];
+	if ( iFunc>=0 && strcasecmp ( g_dFuncs[iFunc].m_sName, sKey )==0 )
+		return iFunc;
+	return -1;
+}
+
+
+static int FuncHashCheck()
+{
+	for ( int i=0; i<(int)(sizeof(g_dFuncs)/sizeof(g_dFuncs[0])); i++ )
+	{
+		CSphString sKey ( g_dFuncs[i].m_sName );
+		sKey.ToLower();
+		if ( FuncHashLookup ( sKey.cstr() )!=i )
+			sphDie ( "INTERNAL ERROR: lookup for %s() failed, rebuild function hash", sKey.cstr() );
+		sKey.ToUpper();
+		if ( FuncHashLookup ( sKey.cstr() )!=i )
+			sphDie ( "INTERNAL ERROR: lookup for %s() failed, rebuild function hash", sKey.cstr() );
+	}
+	if ( FuncHashLookup("")!=-1 )
+		sphDie ( "INTERNAL ERROR: lookup for empty-func-name succeeded, rebuild function hash" );
+	if ( FuncHashLookup("A")!=-1 )
+		sphDie ( "INTERNAL ERROR: lookup for A() succeeded, rebuild function hash" );
+	return 1;
+}
+
+
+static int G_FUNC_HASH_CHECK = FuncHashCheck();
 
 //////////////////////////////////////////////////////////////////////////
 
@@ -728,9 +1050,10 @@ struct ExprNode_t
 	int				m_iLeft;
 	int				m_iRight;
 
-	ExprNode_t () : m_iToken ( 0 ), m_eRetType ( SPH_ATTR_NONE ), m_eArgType ( SPH_ATTR_NONE ), m_iLocator ( -1 ), m_iLeft ( -1 ), m_iRight ( -1 ) {}
+	ExprNode_t () : m_iToken ( 0 ), m_eRetType ( SPH_ATTR_NONE ), m_eArgType ( SPH_ATTR_NONE ),
+		m_iLocator ( -1 ), m_iLeft ( -1 ), m_iRight ( -1 ) {}
 
-	float FloatVal()
+	float FloatVal() const
 	{
 		assert ( m_iToken==TOK_CONST_INT || m_iToken==TOK_CONST_FLOAT );
 		return ( m_iToken==TOK_CONST_INT ) ? (float)m_iConst : m_fConst;
@@ -749,6 +1072,7 @@ public:
 	ExprParser_t ( CSphSchema * pExtra, ISphExprHook * pHook )
 		: m_pHook ( pHook )
 		, m_pExtra ( pExtra )
+		, m_bHasZonespanlist ( false )
 	{}
 
 							~ExprParser_t ();
@@ -770,6 +1094,7 @@ protected:
 	int						AddNodeAttr ( int iTokenType, uint64_t uAttrLocator );
 	int						AddNodeID ();
 	int						AddNodeWeight ();
+	int						AddNodeGroupby ();
 	int						AddNodeOp ( int iOp, int iLeft, int iRight );
 	int						AddNodeFunc ( int iFunc, int iLeft, int iRight=-1 );
 	int						AddNodeUdf ( int iCall, int iArg );
@@ -794,6 +1119,9 @@ private:
 
 	int						m_iConstNow;
 
+public:
+	bool					m_bHasZonespanlist;
+
 private:
 	int						GetToken ( YYSTYPE * lvalp );
 
@@ -816,6 +1144,8 @@ private:
 	ISphExpr *				CreateGeodistNode ( int iArgs );
 	ISphExpr *				CreateBitdotNode ( int iArgsNode, CSphVector<ISphExpr *> & dArgs );
 	ISphExpr *				CreateUdfNode ( int iCall, ISphExpr * pLeft );
+	ISphExpr *				CreateExistNode ( const ExprNode_t & tNode );
+	ISphExpr *				CreateContainsNode ( const ExprNode_t & tNode );
 };
 
 //////////////////////////////////////////////////////////////////////////
@@ -884,7 +1214,7 @@ int ExprParser_t::ParseAttr ( int iAttr, const char* sTok, YYSTYPE * lvalp )
 	{
 	case SPH_ATTR_FLOAT:		iRes = TOK_ATTR_FLOAT;	break;
 	case SPH_ATTR_UINT32SET:	iRes = TOK_ATTR_MVA32; break;
-	case SPH_ATTR_UINT64SET:	iRes = TOK_ATTR_MVA64; break;
+	case SPH_ATTR_INT64SET:		iRes = TOK_ATTR_MVA64; break;
 	case SPH_ATTR_STRING:		iRes = TOK_ATTR_STRING; break;
 	case SPH_ATTR_INTEGER:
 	case SPH_ATTR_TIMESTAMP:
@@ -902,6 +1232,12 @@ int ExprParser_t::ParseAttr ( int iAttr, const char* sTok, YYSTYPE * lvalp )
 	return iRes;
 }
 
+
+static inline bool IsDigit ( char c )
+{
+	return c>='0' && c<='9';
+}
+
 /// a lexer of my own
 /// returns token id and fills lvalp on success
 /// returns -1 and fills sError on failure
@@ -913,7 +1249,7 @@ int ExprParser_t::GetToken ( YYSTYPE * lvalp )
 	if ( !*m_pCur ) return 0;
 
 	// check for constant
-	if ( isdigit ( *m_pCur ) )
+	if ( IsDigit ( m_pCur[0] ) )
 		return ParseNumeric ( lvalp, &m_pCur );
 
 	// check for field, function, or magic name
@@ -933,6 +1269,7 @@ int ExprParser_t::GetToken ( YYSTYPE * lvalp )
 		if ( sTok=="@weight" )		return TOK_ATWEIGHT;
 		if ( sTok=="id" )			return TOK_ID;
 		if ( sTok=="weight" )		return TOK_WEIGHT;
+		if ( sTok=="groupby" )		return TOK_GROUPBY;
 		if ( sTok=="distinct" )		return TOK_DISTINCT;
 		if ( sTok=="@geodist" )
 		{
@@ -976,12 +1313,12 @@ int ExprParser_t::GetToken ( YYSTYPE * lvalp )
 			return ParseAttr ( iAttr, sTok.cstr(), lvalp );
 
 		// check for function
-		sTok.ToLower();
-		for ( int i=0; i<int(sizeof(g_dFuncs)/sizeof(g_dFuncs[0])); i++ )
-			if ( sTok==g_dFuncs[i].m_sName )
+		int iFunc = FuncHashLookup ( sTok.cstr() );
+		if ( iFunc>=0 )
 		{
-			lvalp->iFunc = i;
-			return g_dFuncs[i].m_eFunc==FUNC_IN ? TOK_FUNC_IN : TOK_FUNC;
+			assert ( !strcasecmp ( g_dFuncs[iFunc].m_sName, sTok.cstr() ) );
+			lvalp->iFunc = iFunc;
+			return g_dFuncs[iFunc].m_eFunc==FUNC_IN ? TOK_FUNC_IN : TOK_FUNC;
 		}
 
 		// ask hook
@@ -1336,16 +1673,16 @@ void ExprParser_t::Optimize ( int iNode )
 		float fArg = pLeft->m_iToken==TOK_CONST_FLOAT ? pLeft->m_fConst : float(pLeft->m_iConst);
 		switch ( g_dFuncs[pRoot->m_iFunc].m_eFunc )
 		{
-			case FUNC_ABS:		pRoot->m_iToken = TOK_CONST_FLOAT; pRoot->m_fConst = fabs(fArg); break;
-			case FUNC_CEIL:		pRoot->m_iToken = TOK_CONST_FLOAT; pRoot->m_fConst = float(ceil(fArg)); break;
-			case FUNC_FLOOR:	pRoot->m_iToken = TOK_CONST_FLOAT; pRoot->m_fConst = float(floor(fArg)); break;
-			case FUNC_SIN:		pRoot->m_iToken = TOK_CONST_FLOAT; pRoot->m_fConst = float(sin(fArg)); break;
-			case FUNC_COS:		pRoot->m_iToken = TOK_CONST_FLOAT; pRoot->m_fConst = float(cos(fArg)); break;
-			case FUNC_LN:		pRoot->m_iToken = TOK_CONST_FLOAT; pRoot->m_fConst = float(log(fArg)); break;
-			case FUNC_LOG2:		pRoot->m_iToken = TOK_CONST_FLOAT; pRoot->m_fConst = float(log(fArg)*M_LOG2E); break;
-			case FUNC_LOG10:	pRoot->m_iToken = TOK_CONST_FLOAT; pRoot->m_fConst = float(log(fArg)*M_LOG10E); break;
-			case FUNC_EXP:		pRoot->m_iToken = TOK_CONST_FLOAT; pRoot->m_fConst = float(exp(fArg)); break;
-			case FUNC_SQRT:		pRoot->m_iToken = TOK_CONST_FLOAT; pRoot->m_fConst = float(sqrt(fArg)); break;
+			case FUNC_ABS:		pRoot->m_iToken = TOK_CONST_FLOAT; pRoot->m_iLeft = -1; pRoot->m_fConst = fabs(fArg); break;
+			case FUNC_CEIL:		pRoot->m_iToken = TOK_CONST_FLOAT; pRoot->m_iLeft = -1; pRoot->m_fConst = float(ceil(fArg)); break;
+			case FUNC_FLOOR:	pRoot->m_iToken = TOK_CONST_FLOAT; pRoot->m_iLeft = -1; pRoot->m_fConst = float(floor(fArg)); break;
+			case FUNC_SIN:		pRoot->m_iToken = TOK_CONST_FLOAT; pRoot->m_iLeft = -1; pRoot->m_fConst = float(sin(fArg)); break;
+			case FUNC_COS:		pRoot->m_iToken = TOK_CONST_FLOAT; pRoot->m_iLeft = -1; pRoot->m_fConst = float(cos(fArg)); break;
+			case FUNC_LN:		pRoot->m_iToken = TOK_CONST_FLOAT; pRoot->m_iLeft = -1; pRoot->m_fConst = float(log(fArg)); break;
+			case FUNC_LOG2:		pRoot->m_iToken = TOK_CONST_FLOAT; pRoot->m_iLeft = -1; pRoot->m_fConst = float(log(fArg)*M_LOG2E); break;
+			case FUNC_LOG10:	pRoot->m_iToken = TOK_CONST_FLOAT; pRoot->m_iLeft = -1; pRoot->m_fConst = float(log(fArg)*M_LOG10E); break;
+			case FUNC_EXP:		pRoot->m_iToken = TOK_CONST_FLOAT; pRoot->m_iLeft = -1; pRoot->m_fConst = float(exp(fArg)); break;
+			case FUNC_SQRT:		pRoot->m_iToken = TOK_CONST_FLOAT; pRoot->m_iLeft = -1; pRoot->m_fConst = float(sqrt(fArg)); break;
 			default:			break;
 		}
 		return;
@@ -1365,6 +1702,16 @@ void ExprParser_t::Optimize ( int iNode )
 	{
 		pRoot->m_iToken = TOK_ATTR_SINT;
 		pRoot->m_tLocator = pLeft->m_tLocator;
+	}
+
+	// NEG(const)
+	if ( pRoot->m_iToken==TOK_NEG && IsConst(pLeft) )
+	{
+		pRoot->m_iToken = pLeft->m_iToken;
+		if ( pRoot->m_iToken==TOK_CONST_INT )
+			pRoot->m_iConst = -pLeft->m_iConst;
+		else
+			pRoot->m_fConst = -pLeft->m_fConst;
 	}
 }
 
@@ -1484,7 +1831,11 @@ public:
 
 	virtual void SetMVAPool ( const DWORD * pPool ) { ARRAY_FOREACH ( i, m_dArgs ) m_dArgs[i]->SetMVAPool ( pPool ); }
 	virtual void SetStringPool ( const BYTE * pPool ) { ARRAY_FOREACH ( i, m_dArgs ) m_dArgs[i]->SetStringPool ( pPool ); }
-	virtual void GetDependencyColumns ( CSphVector<int> & dDeps ) const { ARRAY_FOREACH ( i, m_dArgs ) m_dArgs[i]->GetDependencyColumns ( dDeps ); }
+	virtual void GetDependencyColumns ( CSphVector<int> & dDeps ) const
+	{
+		ARRAY_FOREACH ( i, m_dArgs )
+			m_dArgs[i]->GetDependencyColumns ( dDeps );
+	}
 };
 
 
@@ -1560,6 +1911,427 @@ ISphExpr * ExprParser_t::CreateUdfNode ( int iCall, ISphExpr * pLeft )
 }
 
 
+ISphExpr * ExprParser_t::CreateExistNode ( const ExprNode_t & tNode )
+{
+	assert ( m_dNodes[tNode.m_iLeft].m_iToken==',' );
+	int iAttrName = m_dNodes[tNode.m_iLeft].m_iLeft;
+	int iAttrDefault = m_dNodes[tNode.m_iLeft].m_iRight;
+	assert ( iAttrName>=0 && iAttrName<m_dNodes.GetLength()
+		&& iAttrDefault>=0 && iAttrDefault<m_dNodes.GetLength() );
+
+	int iNameStart = (int)( m_dNodes[iAttrName].m_iConst>>32 );
+	int iNameLen = (int)( m_dNodes[iAttrName].m_iConst & 0xffffffffUL );
+	// skip head and tail non attribute name symbols
+	while ( m_sExpr[iNameStart]!='\0' && ( m_sExpr[iNameStart]=='\'' || m_sExpr[iNameStart]==' ' ) && iNameLen )
+	{
+		iNameStart++;
+		iNameLen--;
+	}
+	while ( m_sExpr[iNameStart+iNameLen-1]!='\0'
+		&& ( m_sExpr[iNameStart+iNameLen-1]=='\'' || m_sExpr[iNameStart+iNameLen-1]==' ' )
+		&& iNameLen )
+	{
+		iNameLen--;
+	}
+
+	if ( iNameLen<=0 )
+	{
+		m_sCreateError.SetSprintf ( "first EXIST() argument must be valid string" );
+		return NULL;
+	}
+
+	assert ( iNameStart>=0 && iNameLen>0 && iNameStart+iNameLen<=(int)strlen ( m_sExpr ) );
+
+	CSphString sAttr ( m_sExpr+iNameStart, iNameLen );
+	int iLoc = m_pSchema->GetAttrIndex ( sAttr.cstr() );
+	if ( iLoc>=0 )
+	{
+		const CSphAttrLocator & tLoc = m_pSchema->GetAttr ( iLoc ).m_tLocator;
+		if ( tNode.m_eRetType==SPH_ATTR_FLOAT )
+			return new Expr_GetFloat_c ( tLoc, iLoc );
+		else
+			return new Expr_GetInt_c ( tLoc, iLoc );
+	} else
+	{
+		if ( tNode.m_eRetType==SPH_ATTR_INTEGER )
+			return new Expr_GetIntConst_c ( (int)m_dNodes[iAttrDefault].m_iConst );
+		else if ( tNode.m_eRetType==SPH_ATTR_BIGINT )
+			return new Expr_GetInt64Const_c ( m_dNodes[iAttrDefault].m_iConst );
+		else
+			return new Expr_GetConst_c ( m_dNodes[iAttrDefault].m_fConst );
+	}
+}
+
+//////////////////////////////////////////////////////////////////////////
+
+static inline bool IsNumeric ( ESphAttr eType )
+{
+	return eType==SPH_ATTR_INTEGER || eType==SPH_ATTR_BIGINT || eType==SPH_ATTR_FLOAT;
+}
+
+
+class Expr_Contains_c : public ISphExpr
+{
+protected:
+	ISphExpr * m_pLat;
+	ISphExpr * m_pLon;
+
+	static bool Contains ( float x, float y, int n, const float * p )
+	{
+		bool bIn = false;
+		for ( int ii=0; ii<n; ii+=2 )
+		{
+			// get that edge
+			float ax = p[ii];
+			float ay = p[ii+1];
+			float bx = ( ii==n-2 ) ? p[0] : p[ii+2];
+			float by = ( ii==n-2 ) ? p[1] : p[ii+3];
+
+			// check point vs edge
+			float t1 = (x-ax)*(by-ay);
+			float t2 = (y-ay)*(bx-ax);
+			if ( t1==t2 )
+			{
+				// so AP and AB are colinear
+				// because (AP dot (-AB.y, AB.x)) aka (t1-t2) is 0
+				// check (AP dot AB) vs (AB dot AB) then
+				float t3 = (x-ax)*(bx-ax) + (y-ay)*(by-ay); // AP dot AP
+				float t4 = (bx-ax)*(bx-ax) + (by-ay)*(by-ay); // AB dot AB
+				if ( t3>=0 && t3<=t4 )
+					return true;
+			}
+
+			// count edge crossings
+			if ( ( ay>y )!=(by>y) )
+				if ( ( t1<t2 ) ^ ( by<ay ) )
+					bIn = !bIn;
+		}
+		return bIn;
+	}
+
+public:
+	Expr_Contains_c ( ISphExpr * pLat, ISphExpr * pLon )
+		: m_pLat ( pLat )
+		, m_pLon ( pLon )
+	{}
+
+	~Expr_Contains_c()
+	{
+		SafeRelease ( m_pLat );
+		SafeRelease ( m_pLon );
+	}
+
+	virtual float Eval ( const CSphMatch & tMatch ) const
+	{
+		return (float)IntEval ( tMatch );
+	}
+
+	virtual int64_t Int64Eval ( const CSphMatch & tMatch ) const
+	{
+		return IntEval ( tMatch );
+	}
+
+	virtual void GetDependencyColumns ( CSphVector<int> & dColumns ) const
+	{
+		m_pLat->GetDependencyColumns ( dColumns );
+		m_pLon->GetDependencyColumns ( dColumns );
+	}
+
+	// FIXME! implement SetStringPool?
+};
+
+
+static inline double sphSqr ( double v )
+{
+	return v * v;
+}
+
+
+static inline float CalcGeodist ( float fPointLat, float fPointLon, float fAnchorLat, float fAnchorLon )
+{
+	const double R = 6384000;
+	double dlat = fPointLat - fAnchorLat;
+	double dlon = fPointLon - fAnchorLon;
+	double a = sphSqr ( sin ( dlat/2 ) ) + cos ( fPointLat ) * cos ( fAnchorLat ) * sphSqr ( sin ( dlon/2 ) );
+	double c = 2*asin ( Min ( 1, sqrt(a) ) );
+	return (float)(R*c);
+}
+
+
+static inline void GeoTesselate ( CSphVector<float> & dIn )
+{
+	// conversion between degrees and radians
+	static const float TO_RAD = (float)( 3.14159265358979323846 / 180.0 );
+	static const float TO_DEG = (float)( 180.0 / 3.14159265358979323846 );
+
+	// 1 minute of latitude, max
+	// (it varies from 1842.9 to 1861.57 at 0 to 90 respectively)
+	static const float LAT_MINUTE = 1861.57f;
+
+	// 1 minute of longitude in metres, at different latitudes
+	static const float LON_MINUTE[] =
+	{
+		1855.32f, 1848.31f, 1827.32f, 1792.51f, // 0, 5, 10, 15
+		1744.12f, 1682.50f, 1608.10f, 1521.47f, // 20, 25, 30, 35
+		1423.23f, 1314.11f, 1194.93f, 1066.57f, // 40, 45, 50, 55
+		930.00f, 786.26f, 636.44f, 481.70f, // 60, 65 70, 75
+		323.22f, 162.24f, 0.0f // 80, 85, 90
+	};
+
+	// tesselation threshold
+	// FIXME! make this configurable?
+	static const float TESSELATE_TRESH = 500000.0f; // 500 km, error under 150m or 0.03%
+
+	CSphVector<float> dOut;
+	for ( int i=0; i<dIn.GetLength(); i+=2 )
+	{
+		// add the current vertex in any event
+		dOut.Add ( dIn[i] );
+		dOut.Add ( dIn[i+1] );
+
+		// get edge lat/lon, convert to radians
+		bool bLast = ( i==dIn.GetLength()-2 );
+		float fLat1 = dIn[i];
+		float fLon1 = dIn[i+1];
+		float fLat2 = dIn [ bLast ? 0 : (i+2) ];
+		float fLon2 = dIn [ bLast ? 1 : (i+3) ];
+
+		// quick rough geodistance estimation
+		float fMinLat = Min ( fLat1, fLat2 );
+		int iLatBand = (int) floor ( fabs ( fMinLat ) / 5.0f );
+		iLatBand = iLatBand % 18;
+
+		float d = 60.0f*( LAT_MINUTE*fabs ( fLat1-fLat2 ) + LON_MINUTE [ iLatBand ]*fabs ( fLon1-fLon2 ) );
+		if ( d<=TESSELATE_TRESH )
+			continue;
+
+		// convert to radians
+		// FIXME! make units configurable
+		fLat1 *= TO_RAD;
+		fLon1 *= TO_RAD;
+		fLat2 *= TO_RAD;
+		fLon2 *= TO_RAD;
+
+		// compute precise geodistance
+		d = CalcGeodist ( fLat1, fLon1, fLat2, fLon2 );
+		if ( d<=TESSELATE_TRESH )
+			continue;
+		int iSegments = (int) ceil ( d / TESSELATE_TRESH );
+
+		// compute arc distance
+		// OPTIMIZE! maybe combine with CalcGeodist?
+		d = acos ( sin(fLat1)*sin(fLat2) + cos(fLat1)*cos(fLat2)*cos(fLon1-fLon2) );
+		const float isd = 1.0f / sin(d);
+		const float clat1 = cos(fLat1);
+		const float slat1 = sin(fLat1);
+		const float clon1 = cos(fLon1);
+		const float slon1 = sin(fLon1);
+		const float clat2 = cos(fLat2);
+		const float slat2 = sin(fLat2);
+		const float clon2 = cos(fLon2);
+		const float slon2 = sin(fLon2);
+
+		for ( int j=1; j<iSegments; j++ )
+		{
+			float f = float(j) / float(iSegments); // needed distance fraction
+			float a = sin ( (1-f)*d ) * isd;
+			float b = sin ( f*d ) * isd;
+			float x = a*clat1*clon1 + b*clat2*clon2;
+			float y = a*clat1*slon1 + b*clat2*slon2;
+			float z = a*slat1 + b*slat2;
+			dOut.Add ( (float)( TO_DEG * atan2 ( z, sqrt ( x*x+y*y ) ) ) );
+			dOut.Add ( (float)( TO_DEG * atan2 ( y, x ) ) );
+		}
+	}
+
+	// swap 'em results
+	dIn.SwapData ( dOut );
+}
+
+
+class Expr_ContainsConstvec_c : public Expr_Contains_c
+{
+protected:
+	CSphVector<float> m_dPoly;
+	float m_fMinX;
+	float m_fMinY;
+	float m_fMaxX;
+	float m_fMaxY;
+
+public:
+	Expr_ContainsConstvec_c ( ISphExpr * pLat, ISphExpr * pLon, const CSphVector<int> & dNodes, const ExprNode_t * pNodes, bool bGeoTesselate )
+		: Expr_Contains_c ( pLat, pLon )
+	{
+		// copy polygon data
+		assert ( dNodes.GetLength()>=6 );
+		m_dPoly.Resize ( dNodes.GetLength() );
+
+		ARRAY_FOREACH ( i, dNodes )
+			m_dPoly[i] = pNodes[dNodes[i]].FloatVal();
+
+		// handle (huge) geosphere polygons
+		if ( bGeoTesselate )
+			GeoTesselate ( m_dPoly );
+
+		// compute bbox
+		m_fMinX = m_fMaxX = m_dPoly[0];
+		for ( int i=2; i<m_dPoly.GetLength(); i+=2 )
+		{
+			m_fMinX = Min ( m_fMinX, m_dPoly[i] );
+			m_fMaxX = Max ( m_fMaxX, m_dPoly[i] );
+		}
+
+		m_fMinY = m_fMaxY = m_dPoly[1];
+		for ( int i=3; i<m_dPoly.GetLength(); i+=2 )
+		{
+			m_fMinY = Min ( m_fMinY, m_dPoly[i] );
+			m_fMaxY = Max ( m_fMaxY, m_dPoly[i] );
+		}
+	}
+
+	virtual int IntEval ( const CSphMatch & tMatch ) const
+	{
+		// eval args, do bbox check
+		float fLat = m_pLat->Eval(tMatch);
+		if ( fLat<m_fMinX || fLat>m_fMaxX )
+			return 0;
+
+		float fLon = m_pLon->Eval(tMatch);
+		if ( fLon<m_fMinY || fLon>m_fMaxY )
+			return 0;
+
+		// do the polygon check
+		return Contains ( fLat, fLon, m_dPoly.GetLength(), m_dPoly.Begin() );
+	}
+};
+
+
+class Expr_ContainsExprvec_c : public Expr_Contains_c
+{
+protected:
+	mutable CSphVector<float> m_dPoly;
+	CSphVector<ISphExpr*> m_dExpr;
+
+public:
+	Expr_ContainsExprvec_c ( ISphExpr * pLat, ISphExpr * pLon, CSphVector<ISphExpr*> dExprs )
+		: Expr_Contains_c ( pLat, pLon )
+	{
+		m_dExpr.SwapData ( dExprs );
+		m_dPoly.Resize ( m_dExpr.GetLength() );
+	}
+
+	~Expr_ContainsExprvec_c()
+	{
+		ARRAY_FOREACH ( i, m_dExpr )
+			SafeRelease ( m_dExpr[i] );
+	}
+
+	virtual int IntEval ( const CSphMatch & tMatch ) const
+	{
+		ARRAY_FOREACH ( i, m_dExpr )
+			m_dPoly[i] = m_dExpr[i]->Eval ( tMatch );
+		return Contains ( m_pLat->Eval(tMatch), m_pLon->Eval(tMatch), m_dPoly.GetLength(), m_dPoly.Begin() );
+	}
+};
+
+
+class Expr_ContainsStrattr_c : public Expr_Contains_c
+{
+protected:
+	ISphExpr * m_pStr;
+	bool m_bGeo;
+
+public:
+	Expr_ContainsStrattr_c ( ISphExpr * pLat, ISphExpr * pLon, ISphExpr * pStr, bool bGeo )
+		: Expr_Contains_c ( pLat, pLon )
+	{
+		m_pStr = pStr;
+		m_bGeo = bGeo;
+	}
+
+	~Expr_ContainsStrattr_c()
+	{
+		SafeRelease ( m_pStr );
+	}
+
+	static void ParsePoly ( const char * p, int iLen, CSphVector<float> & dPoly )
+	{
+		const char * pMax = p+iLen;
+		while ( p<pMax )
+		{
+			if ( isdigit(p[0]) || ( p+1<pMax && p[0]=='-' && isdigit(p[1]) ) )
+				dPoly.Add ( (float)strtod ( p, (char**)&p ) );
+			else
+				p++;
+		}
+	}
+
+	virtual int IntEval ( const CSphMatch & tMatch ) const
+	{
+		const char * pStr;
+		int iLen = m_pStr->StringEval ( tMatch, (const BYTE **)&pStr );
+
+		CSphVector<float> dPoly;
+		ParsePoly ( pStr, iLen, dPoly );
+		if ( dPoly.GetLength()<6 )
+			return 0;
+		// OPTIMIZE? add quick bbox check too?
+
+		if ( m_bGeo )
+			GeoTesselate ( dPoly );
+		return Contains ( m_pLat->Eval(tMatch), m_pLon->Eval(tMatch), dPoly.GetLength(), dPoly.Begin() );
+	}
+
+	virtual void SetStringPool ( const BYTE * pPool )
+	{
+		Expr_Contains_c::SetStringPool ( pPool );
+		m_pStr->SetStringPool ( pPool );
+	}
+};
+
+
+ISphExpr * ExprParser_t::CreateContainsNode ( const ExprNode_t & tNode )
+{
+	// get and check them args
+	const ExprNode_t & tArglist = m_dNodes [ tNode.m_iLeft ];
+	const int iPoly = m_dNodes [ tArglist.m_iLeft ].m_iLeft;
+	const int iLat = m_dNodes [ tArglist.m_iLeft ].m_iRight;
+	const int iLon = tArglist.m_iRight;
+	assert ( IsNumeric ( m_dNodes[iLat].m_eRetType ) );
+	assert ( IsNumeric ( m_dNodes[iLat].m_eRetType ) );
+	assert ( m_dNodes[iPoly].m_eRetType==SPH_ATTR_POLY2D );
+
+	// create evaluator
+	// gotta handle an optimized constant poly case
+	CSphVector<int> dPolyArgs;
+	GatherArgNodes ( m_dNodes[iPoly].m_iLeft, dPolyArgs );
+
+	bool bGeoTesselate = ( m_dNodes[iPoly].m_iToken==TOK_FUNC && m_dNodes[iPoly].m_iFunc==FUNC_GEOPOLY2D );
+
+	if ( dPolyArgs.GetLength()==1 && m_dNodes[dPolyArgs[0]].m_iToken==TOK_ATTR_STRING )
+	{
+		return new Expr_ContainsStrattr_c ( CreateTree(iLat), CreateTree(iLon),
+			CreateTree ( dPolyArgs[0] ), bGeoTesselate );
+	}
+
+	bool bConst = ARRAY_ALL ( bConst, dPolyArgs, IsConst ( &m_dNodes [ dPolyArgs[_all] ] ) );
+	if ( bConst )
+	{
+		// POLY2D(numeric-consts)
+		return new Expr_ContainsConstvec_c ( CreateTree(iLat), CreateTree(iLon),
+			dPolyArgs, m_dNodes.Begin(), bGeoTesselate );
+	} else
+	{
+		// POLY2D(generic-exprs)
+		CSphVector<ISphExpr*> dExprs ( dPolyArgs.GetLength() );
+		ARRAY_FOREACH ( i, dExprs )
+			dExprs[i] = CreateTree ( dPolyArgs[i] );
+		return new Expr_ContainsExprvec_c ( CreateTree(iLat), CreateTree(iLon), dExprs );
+	}
+}
+
+//////////////////////////////////////////////////////////////////////////
+
 /// fold nodes subtree into opcodes
 ISphExpr * ExprParser_t::CreateTree ( int iNode )
 {
@@ -1573,11 +2345,20 @@ ISphExpr * ExprParser_t::CreateTree ( int iNode )
 	bool bSkipRight = false;
 	if ( tNode.m_iToken==TOK_FUNC )
 	{
-		Func_e eFunc = g_dFuncs[tNode.m_iFunc].m_eFunc;
-		if ( eFunc==FUNC_GEODIST || eFunc==FUNC_IN )
-			bSkipLeft = true;
-		if ( eFunc==FUNC_IN )
+		switch ( g_dFuncs[tNode.m_iFunc].m_eFunc )
+		{
+		case FUNC_IN:
+		case FUNC_EXIST:
 			bSkipRight = true;
+			// no break
+		case FUNC_GEODIST:
+		case FUNC_CONTAINS:
+		case FUNC_ZONESPANLIST:
+		case FUNC_RANKFACTORS:
+			bSkipLeft = true;
+		default:
+			break;
+		}
 	}
 
 	ISphExpr * pLeft = bSkipLeft ? NULL : CreateTree ( tNode.m_iLeft );
@@ -1693,6 +2474,19 @@ ISphExpr * ExprParser_t::CreateTree ( int iNode )
 					case FUNC_BITDOT:	return CreateBitdotNode ( tNode.m_iLeft, dArgs );
 
 					case FUNC_GEODIST:	return CreateGeodistNode ( tNode.m_iLeft );
+					case FUNC_EXIST:	return CreateExistNode ( tNode );
+					case FUNC_CONTAINS:	return CreateContainsNode ( tNode );
+
+					case FUNC_POLY2D:
+					case FUNC_GEOPOLY2D:break; // just make gcc happy
+
+					case FUNC_ZONESPANLIST:
+						m_bHasZonespanlist = true;
+						return new Expr_GetZonespanlist_c ();
+					case FUNC_TO_STRING:
+						return new Expr_ToString_c ( dArgs[0], m_dNodes [ tNode.m_iLeft ].m_eRetType );
+					case FUNC_RANKFACTORS:
+						return new Expr_GetRankFactors_c();
 				}
 				assert ( 0 && "unhandled function id" );
 				break;
@@ -1738,10 +2532,25 @@ protected:
 	T ExprEval ( ISphExpr * pArg, const CSphMatch & tMatch ) const;
 };
 
-template<> int Expr_ArgVsSet_c<int>::ExprEval ( ISphExpr * pArg, const CSphMatch & tMatch ) const			{ return pArg->IntEval ( tMatch ); }
-template<> DWORD Expr_ArgVsSet_c<DWORD>::ExprEval ( ISphExpr * pArg, const CSphMatch & tMatch ) const		{ return (DWORD)pArg->IntEval ( tMatch ); }
-template<> float Expr_ArgVsSet_c<float>::ExprEval ( ISphExpr * pArg, const CSphMatch & tMatch ) const		{ return pArg->Eval ( tMatch ); }
-template<> int64_t Expr_ArgVsSet_c<int64_t>::ExprEval ( ISphExpr * pArg, const CSphMatch & tMatch ) const	{ return pArg->Int64Eval ( tMatch ); }
+template<> int Expr_ArgVsSet_c<int>::ExprEval ( ISphExpr * pArg, const CSphMatch & tMatch ) const
+{
+	return pArg->IntEval ( tMatch );
+}
+
+template<> DWORD Expr_ArgVsSet_c<DWORD>::ExprEval ( ISphExpr * pArg, const CSphMatch & tMatch ) const
+{
+	return (DWORD)pArg->IntEval ( tMatch );
+}
+
+template<> float Expr_ArgVsSet_c<float>::ExprEval ( ISphExpr * pArg, const CSphMatch & tMatch ) const
+{
+	return pArg->Eval ( tMatch );
+}
+
+template<> int64_t Expr_ArgVsSet_c<int64_t>::ExprEval ( ISphExpr * pArg, const CSphMatch & tMatch ) const
+{
+	return pArg->Int64Eval ( tMatch );
+}
 
 
 /// arg-vs-constant-set
@@ -1799,7 +2608,7 @@ public:
 	/// evaluate arg, return interval id
 	virtual int IntEval ( const CSphMatch & tMatch ) const
 	{
-		T val = ExprEval ( this->m_pArg, tMatch ); // 'this' fixes gcc braindamage
+		T val = this->ExprEval ( this->m_pArg, tMatch ); // 'this' fixes gcc braindamage
 		ARRAY_FOREACH ( i, this->m_dValues ) // FIXME! OPTIMIZE! perform binary search here
 			if ( val<this->m_dValues[i] )
 				return i;
@@ -1830,7 +2639,7 @@ public:
 	/// evaluate arg, return interval id
 	virtual int IntEval ( const CSphMatch & tMatch ) const
 	{
-		T val = ExprEval ( this->m_pArg, tMatch ); // 'this' fixes gcc braindamage
+		T val = this->ExprEval ( this->m_pArg, tMatch ); // 'this' fixes gcc braindamage
 		ARRAY_FOREACH ( i, m_dTurnPoints )
 			if ( val < Expr_ArgVsSet_c<T>::ExprEval ( m_dTurnPoints[i], tMatch ) )
 				return i;
@@ -1876,7 +2685,7 @@ public:
 	/// evaluate arg, check if the value is within set
 	virtual int IntEval ( const CSphMatch & tMatch ) const
 	{
-		T val = ExprEval ( this->m_pArg, tMatch ); // 'this' fixes gcc braindamage
+		T val = this->ExprEval ( this->m_pArg, tMatch ); // 'this' fixes gcc braindamage
 		return this->m_dValues.BinarySearch ( val )!=NULL;
 	}
 
@@ -1919,12 +2728,12 @@ public:
 
 /// IN() evaluator, MVA attribute vs. constant values
 template < bool MVA64 >
-class Expr_MVAIn_c : public Expr_ArgVsConstSet_c<uint64_t>
+class Expr_MVAIn_c : public Expr_ArgVsConstSet_c<int64_t>
 {
 public:
 	/// pre-sort values for binary search
 	Expr_MVAIn_c ( const CSphAttrLocator & tLoc, int iLocator, ConstList_c * pConsts, UservarIntSet_c * pUservar )
-		: Expr_ArgVsConstSet_c<uint64_t> ( NULL, pConsts )
+		: Expr_ArgVsConstSet_c<int64_t> ( NULL, pConsts )
 		, m_tLocator ( tLoc )
 		, m_iLocator ( iLocator )
 		, m_pMvaPool ( NULL )
@@ -1977,8 +2786,8 @@ int Expr_MVAIn_c<false>::MvaEval ( const DWORD * pMva ) const
 	DWORD uLen = *pMva++;
 	const DWORD * pMvaMax = pMva+uLen;
 
-	const uint64_t * pFilter = m_pUservar ? (uint64_t*)m_pUservar->Begin() : m_dValues.Begin();
-	const uint64_t * pFilterMax = pFilter + ( m_pUservar ? m_pUservar->GetLength() : m_dValues.GetLength() );
+	const int64_t * pFilter = m_pUservar ? m_pUservar->Begin() : m_dValues.Begin();
+	const int64_t * pFilterMax = pFilter + ( m_pUservar ? m_pUservar->GetLength() : m_dValues.GetLength() );
 
 	const DWORD * L = pMva;
 	const DWORD * R = pMvaMax - 1;
@@ -2009,26 +2818,26 @@ int Expr_MVAIn_c<true>::MvaEval ( const DWORD * pMva ) const
 	assert ( ( uLen%2 )==0 );
 	const DWORD * pMvaMax = pMva+uLen;
 
-	const uint64_t * pFilter = m_pUservar ? (uint64_t*)m_pUservar->Begin() : m_dValues.Begin();
-	const uint64_t * pFilterMax = pFilter + ( m_pUservar ? m_pUservar->GetLength() : m_dValues.GetLength() );
+	const int64_t * pFilter = m_pUservar ? m_pUservar->Begin() : m_dValues.Begin();
+	const int64_t * pFilterMax = pFilter + ( m_pUservar ? m_pUservar->GetLength() : m_dValues.GetLength() );
 
-	const uint64_t * L = (const uint64_t *)pMva;
-	const uint64_t * R = (const uint64_t *)( pMvaMax - 2 );
+	const int64_t * L = (const int64_t *)pMva;
+	const int64_t * R = (const int64_t *)( pMvaMax - 2 );
 	for ( ; pFilter < pFilterMax; pFilter++ )
 	{
 		while ( L<=R )
 		{
-			const uint64_t * pVal = L + (R - L) / 2;
-			uint64_t uMva = MVA_UPSIZE ( (const DWORD *)pVal );
+			const int64_t * pVal = L + (R - L) / 2;
+			int64_t iMva = MVA_UPSIZE ( (const DWORD *)pVal );
 
-			if ( *pFilter > uMva )
+			if ( *pFilter > iMva )
 				L = pVal + 1;
-			else if ( *pFilter < uMva )
+			else if ( *pFilter < iMva )
 				R = pVal - 1;
 			else
 				return 1;
 		}
-		R = (const uint64_t *) ( pMvaMax - 2 );
+		R = (const int64_t *) ( pMvaMax - 2 );
 	}
 	return 0;
 }
@@ -2110,18 +2919,6 @@ public:
 };
 
 //////////////////////////////////////////////////////////////////////////
-
-static inline double sphSqr ( double v ) { return v * v; }
-
-static inline float CalcGeodist ( float fPointLat, float fPointLon, float fAnchorLat, float fAnchorLon )
-{
-	const double R = 6384000;
-	double dlat = fPointLat - fAnchorLat;
-	double dlon = fPointLon - fAnchorLon;
-	double a = sphSqr ( sin ( dlat/2 ) ) + cos ( fPointLat ) * cos ( fAnchorLat ) * sphSqr ( sin ( dlon/2 ) );
-	double c = 2*asin ( Min ( 1, sqrt(a) ) );
-	return (float)(R*c);
-}
 
 /// geodist() - attr point, constant anchor
 class Expr_GeodistAttrConst_c: public ISphExpr
@@ -2551,7 +3348,7 @@ int ExprParser_t::AddNodeAttr ( int iTokenType, uint64_t uAttrLocator )
 
 	if ( iTokenType==TOK_ATTR_FLOAT )			tNode.m_eRetType = SPH_ATTR_FLOAT;
 	else if ( iTokenType==TOK_ATTR_MVA32 )		tNode.m_eRetType = SPH_ATTR_UINT32SET;
-	else if ( iTokenType==TOK_ATTR_MVA64 )		tNode.m_eRetType = SPH_ATTR_UINT64SET;
+	else if ( iTokenType==TOK_ATTR_MVA64 )		tNode.m_eRetType = SPH_ATTR_INT64SET;
 	else if ( iTokenType==TOK_ATTR_STRING )		tNode.m_eRetType = SPH_ATTR_STRING;
 	else if ( tNode.m_tLocator.m_iBitCount>32 )	tNode.m_eRetType = SPH_ATTR_BIGINT;
 	else										tNode.m_eRetType = SPH_ATTR_INTEGER;
@@ -2574,6 +3371,14 @@ int ExprParser_t::AddNodeWeight ()
 	return m_dNodes.GetLength()-1;
 }
 
+int ExprParser_t::AddNodeGroupby ()
+{
+	ExprNode_t & tNode = m_dNodes.Add ();
+	tNode.m_iToken = TOK_GROUPBY;
+	tNode.m_eRetType = SPH_ATTR_INTEGER; /// will be corrected later, using context.
+	return m_dNodes.GetLength()-1;
+}
+
 int ExprParser_t::AddNodeOp ( int iOp, int iLeft, int iRight )
 {
 	ExprNode_t & tNode = m_dNodes.Add ();
@@ -2583,6 +3388,18 @@ int ExprParser_t::AddNodeOp ( int iOp, int iLeft, int iRight )
 	tNode.m_eRetType = SPH_ATTR_FLOAT; // default to float
 	if ( iOp==TOK_NEG )
 	{
+		// special case, NEG(const)
+		ExprNode_t & tArg = m_dNodes[iLeft];
+		if ( tArg.m_iToken==TOK_CONST_INT || tArg.m_iToken==TOK_CONST_FLOAT )
+		{
+			if ( tArg.m_iToken==TOK_CONST_INT )
+				tArg.m_iConst = -tArg.m_iConst;
+			else
+				tArg.m_fConst = -tArg.m_fConst;
+			m_dNodes.Pop();
+			return iLeft;
+		}
+
 		// NEG just inherits the type
 		tNode.m_eArgType = m_dNodes[iLeft].m_eRetType;
 		tNode.m_eRetType = tNode.m_eArgType;
@@ -2652,7 +3469,7 @@ int ExprParser_t::AddNodeFunc ( int iFunc, int iLeft, int iRight )
 	Func_e eFunc = g_dFuncs[iFunc].m_eFunc;
 
 	// check args count
-	if ( iRight<0 )
+	if ( iRight<0 || eFunc==FUNC_IN )
 	{
 		int iExpectedArgc = g_dFuncs[iFunc].m_iArgs;
 		int iArgc = 0;
@@ -2677,9 +3494,9 @@ int ExprParser_t::AddNodeFunc ( int iFunc, int iLeft, int iRight )
 	// check for string args
 	// most builtin functions take numeric args only
 	bool bGotString = false, bGotMva = false;
+	CSphVector<ESphAttr> dRetTypes;
 	if ( iRight<0 )
 	{
-		CSphVector<ESphAttr> dRetTypes;
 		GatherArgRetTypes ( iLeft, dRetTypes );
 		ARRAY_FOREACH ( i, dRetTypes )
 		{
@@ -2687,12 +3504,12 @@ int ExprParser_t::AddNodeFunc ( int iFunc, int iLeft, int iRight )
 			bGotMva |= ( dRetTypes[i]==SPH_ATTR_UINT32SET || dRetTypes[i]==SPH_ATTR_UINT32SET );
 		}
 	}
-	if ( bGotString && eFunc!=FUNC_CRC32 )
+	if ( bGotString && !( eFunc==FUNC_CRC32 || eFunc==FUNC_EXIST || eFunc==FUNC_POLY2D || eFunc==FUNC_GEOPOLY2D ) )
 	{
 		m_sParserError.SetSprintf ( "%s() arguments can not be string", g_dFuncs[iFunc].m_sName );
 		return -1;
 	}
-	if ( bGotMva && eFunc!=FUNC_IN )
+	if ( bGotMva && !(eFunc==FUNC_IN || eFunc==FUNC_TO_STRING ) )
 	{
 		m_sParserError.SetSprintf ( "%s() arguments can not be MVA", g_dFuncs[iFunc].m_sName );
 		return -1;
@@ -2713,6 +3530,26 @@ int ExprParser_t::AddNodeFunc ( int iFunc, int iLeft, int iRight )
 		}
 	}
 
+	if ( eFunc==FUNC_EXIST )
+	{
+		int iExistLeft = m_dNodes[iLeft].m_iLeft;
+		int iExistRight = m_dNodes[iLeft].m_iRight;
+		bool bIsLeftGood = ( m_dNodes[iExistLeft].m_eRetType==SPH_ATTR_STRING );
+		ESphAttr eRight = m_dNodes[iExistRight].m_eRetType;
+		bool bIsRightGood = ( eRight==SPH_ATTR_INTEGER || eRight==SPH_ATTR_TIMESTAMP || eRight==SPH_ATTR_ORDINAL || eRight==SPH_ATTR_BOOL
+			|| eRight==SPH_ATTR_FLOAT || eRight==SPH_ATTR_BIGINT || eRight==SPH_ATTR_WORDCOUNT );
+
+		if ( !bIsLeftGood || !bIsRightGood )
+		{
+			if ( bIsRightGood )
+				m_sParserError.SetSprintf ( "first EXIST() argument must be string" );
+			else
+				m_sParserError.SetSprintf ( "ill-formed EXIST" );
+			return -1;
+		}
+	}
+
+
 	// check that first SINT or timestamp family arg is integer
 	if ( eFunc==FUNC_SINT || eFunc==FUNC_DAY || eFunc==FUNC_MONTH || eFunc==FUNC_YEAR || eFunc==FUNC_YEARMONTH || eFunc==FUNC_YEARMONTHDAY
 		|| eFunc==FUNC_FIBONACCI )
@@ -2722,6 +3559,56 @@ int ExprParser_t::AddNodeFunc ( int iFunc, int iLeft, int iRight )
 		{
 			m_sParserError.SetSprintf ( "%s() argument must be integer", g_dFuncs[iFunc].m_sName );
 			return -1;
+		}
+	}
+
+	// check that CONTAINS args are poly, float, float
+	if ( eFunc==FUNC_CONTAINS )
+	{
+		assert ( dRetTypes.GetLength()==3 );
+		if ( dRetTypes[0]!=SPH_ATTR_POLY2D )
+		{
+			m_sParserError.SetSprintf ( "1st CONTAINS() argument must be a 2D polygon (see POLY2D)" );
+			return -1;
+		}
+		if ( !IsNumeric ( dRetTypes[1] ) || !IsNumeric ( dRetTypes[2] ) )
+		{
+			m_sParserError.SetSprintf ( "2nd and 3rd CONTAINS() arguments must be numeric" );
+			return -1;
+		}
+	}
+
+	// check POLY2D args
+	if ( eFunc==FUNC_POLY2D || eFunc==FUNC_GEOPOLY2D )
+	{
+		if ( dRetTypes.GetLength()==1 )
+		{
+			// handle 1 arg version, POLY2D(string-attr)
+			if ( dRetTypes[0]!=SPH_ATTR_STRING )
+			{
+				m_sParserError.SetSprintf ( "%s() argument must be a string attribute", g_dFuncs[iFunc].m_sName );
+				return -1;
+			}
+		} else if ( dRetTypes.GetLength()<6 )
+		{
+			// handle 2..5 arg versions, invalid
+			m_sParserError.SetSprintf ( "bad %s() argument count, must be either 1 (string) or 6+ (x/y pairs list)", g_dFuncs[iFunc].m_sName );
+			return -1;
+
+		} else
+		{
+			// handle 6+ arg version, POLY2D(xy-list)
+			if ( dRetTypes.GetLength() & 1 )
+			{
+				m_sParserError.SetSprintf ( "bad %s() argument count, must be even", g_dFuncs[iFunc].m_sName );
+				return -1;
+			}
+			ARRAY_FOREACH ( i, dRetTypes )
+				if ( !IsNumeric ( dRetTypes[i] ) )
+			{
+				m_sParserError.SetSprintf ( "%s() argument %d must be numeric", g_dFuncs[iFunc].m_sName, 1+i );
+				return -1;
+			}
 		}
 	}
 
@@ -2737,6 +3624,14 @@ int ExprParser_t::AddNodeFunc ( int iFunc, int iLeft, int iRight )
 	// fixup return type in a few special cases
 	if ( eFunc==FUNC_MIN || eFunc==FUNC_MAX || eFunc==FUNC_MADD || eFunc==FUNC_MUL3 || eFunc==FUNC_ABS || eFunc==FUNC_IDIV )
 		tNode.m_eRetType = tNode.m_eArgType;
+
+	if ( eFunc==FUNC_EXIST )
+	{
+		int iExistRight = m_dNodes[iLeft].m_iRight;
+		ESphAttr eType = m_dNodes[iExistRight].m_eRetType;
+		tNode.m_eArgType = eType;
+		tNode.m_eRetType = eType;
+	}
 
 	if ( eFunc==FUNC_BIGINT && tNode.m_eRetType==SPH_ATTR_FLOAT )
 		tNode.m_eRetType = SPH_ATTR_FLOAT; // enforce if we can; FIXME! silently ignores BIGINT() on floats; should warn or raise an error
@@ -2812,7 +3707,7 @@ int ExprParser_t::AddNodeUdf ( int iCall, int iArg )
 				case SPH_ATTR_UINT32SET:
 					eRes = SPH_UDF_TYPE_UINT32SET;
 					break;
-				case SPH_ATTR_UINT64SET:
+				case SPH_ATTR_INT64SET:
 					eRes = SPH_UDF_TYPE_UINT64SET;
 					break;
 				default:
@@ -2958,7 +3853,8 @@ struct HookCheck_fn
 };
 
 
-ISphExpr * ExprParser_t::Parse ( const char * sExpr, const CSphSchema & tSchema, ESphAttr * pAttrType, bool * pUsesWeight, CSphString & sError )
+ISphExpr * ExprParser_t::Parse ( const char * sExpr, const CSphSchema & tSchema,
+	ESphAttr * pAttrType, bool * pUsesWeight, CSphString & sError )
 {
 	m_sLexerError = "";
 	m_sParserError = "";
@@ -2986,7 +3882,7 @@ ISphExpr * ExprParser_t::Parse ( const char * sExpr, const CSphSchema & tSchema,
 
 	// deduce return type
 	ESphAttr eAttrType = m_dNodes[m_iParsed].m_eRetType;
-	assert ( eAttrType==SPH_ATTR_INTEGER || eAttrType==SPH_ATTR_BIGINT || eAttrType==SPH_ATTR_FLOAT );
+// assert ( IsNumeric ( eAttrType ) );
 
 	// perform optimizations
 	Optimize ( m_iParsed );
@@ -3017,7 +3913,7 @@ ISphExpr * ExprParser_t::Parse ( const char * sExpr, const CSphSchema & tSchema,
 		int64_t iExprStack = sphGetStackUsed() + iMaxHeight*SPH_EXPRNODE_STACK_SIZE;
 		if ( sphMyStackSize()<=iExprStack )
 		{
-			sError.SetSprintf ( "query too complex, not enough stack (thread_stack_size=%dK or higher required)",
+			sError.SetSprintf ( "query too complex, not enough stack (thread_stack=%dK or higher required)",
 				(int)( ( iExprStack + 1024 - ( iExprStack%1024 ) ) / 1024 ) );
 			return NULL;
 		}
@@ -3262,7 +4158,8 @@ bool sphUDFDrop ( const char * szFunc, CSphString & sError )
 			pFunc->m_bToDrop = false;
 			g_tUdfMutex.Unlock();
 
-			sError.SetSprintf ( "DROP timed out in (still got %d users after waiting for %d seconds); please retry", pFunc->m_iUserCount, UDF_DROP_TIMEOUT_SEC );
+			sError.SetSprintf ( "DROP timed out in (still got %d users after waiting for %d seconds); please retry",
+				pFunc->m_iUserCount, UDF_DROP_TIMEOUT_SEC );
 			return false;
 		}
 	}
@@ -3289,13 +4186,17 @@ bool sphUDFDrop ( const char * szFunc, CSphString & sError )
 //////////////////////////////////////////////////////////////////////////
 
 /// parser entry point
-ISphExpr * sphExprParse ( const char * sExpr, const CSphSchema & tSchema, ESphAttr * pAttrType, bool * pUsesWeight, CSphString & sError, CSphSchema * pExtra, ISphExprHook * pHook )
+ISphExpr * sphExprParse ( const char * sExpr, const CSphSchema & tSchema, ESphAttr * pAttrType, bool * pUsesWeight,
+						CSphString & sError, CSphSchema * pExtra, ISphExprHook * pHook, bool * pZonespanlist )
 {
 	// parse into opcodes
 	ExprParser_t tParser ( pExtra, pHook );
-	return tParser.Parse ( sExpr, tSchema, pAttrType, pUsesWeight, sError );
+	ISphExpr * bRes = tParser.Parse ( sExpr, tSchema, pAttrType, pUsesWeight, sError );
+	if ( pZonespanlist )
+		*pZonespanlist = tParser.m_bHasZonespanlist;
+	return bRes;
 }
 
 //
-// $Id: sphinxexpr.cpp 3129 2012-03-01 07:18:52Z tomat $
+// $Id: sphinxexpr.cpp 3366 2012-08-31 17:01:47Z shodan $
 //

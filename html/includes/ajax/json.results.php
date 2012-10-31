@@ -221,8 +221,10 @@ while ( $aRow = mysql_fetch_array( $rResult ) )
         {
             // cdukes: #338 - added htmlentities();
             /* #339 - Force utf-8 for msg column on foreign languages*/
+            /* #362 - PHP's utf8_convert caused proiblems with IE9.
+               As a result, I had to write a special function to check for utf-8, then convert if not */
             $msg = htmlentities($aRow[ $aColumns[$i] ]);
-            $row[] = utf8_encode($msg);
+            $row[] = utfconvert($msg);
         }
         else if ( $aColumns[$i] != ' ' )
         {

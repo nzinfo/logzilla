@@ -2,29 +2,38 @@
 /*
  *
  * Developed by Clayton Dukes <cdukes@logzilla.pro>
- * Copyright (c) 2010 LogZilla, LLC
+ * Copyright (c) 2010-2012 LogZilla, LLC
  * All rights reserved.
- * Last updated on 2010-06-15
+ * Last updated on 2012-09-25
  *
  * Changelog:
  * 2009-12-06 - created
+ * 2012-09-14 - moved to RRD file
+ * 2012-09-25 - moved back to MySQL :-)
  *
  */
-
 @session_start();
 $basePath = dirname( __FILE__ );
 require_once ($basePath . "/../common_funcs.php");
 $dbLink = db_connect_syslog(DBADMIN, DBADMINPW);
 
-// -------------------------
-// Get Messages Per Second and return to JSON
-// -------------------------
-$sql = "SELECT value as count FROM cache WHERE name LIKE 'chart_mps_%' AND updatetime >= NOW() - INTERVAL 59 SECOND";
+$to = time();
+$from = $to - 60;
+
+$sql = 
+    "SELECT ts_from, count " .
+    "FROM events_per_second " .
+    "WHERE name = 'msg' " .
+    "AND ts_from > $from " .
+    "AND ts_from <= $to";
+
 $queryresult = perform_query($sql, $dbLink, $_SERVER['PHP_SELF']);
+
+$values = array_fill( $from, 60, 0 );
 while ($line = fetch_array($queryresult)) {
-    $num[] = intval($line['count']);
+    $values[$line['ts_from']] = intval($line['count']);
 }
-if ($num[0] > 0) {
-    echo json_encode($num);
-}
+
+echo(json_encode(array_values($values)));
+
 ?>
