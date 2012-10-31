@@ -64,8 +64,8 @@ sub prompt {
     return $input ? $input : $default;
 }
 
-my $version    = "4.0";
-my $subversion = ".504";
+my $version    = "4.25";
+my $subversion = ".336";
 
 # Grab the base path
 my $lzbase = getcwd;
@@ -1820,7 +1820,7 @@ sub verify_columns {
         print "$res\n";
     }
     # fix for notes column not having the default value set in LogZilla v4.25
-    $dbh->do("ALTER TABLE $dbtable MODIFY `notes` varchar(255) NOT NULL DEFAULT '';") or die "Could not update $dbname: $DBI::errstr";
+    $dbh->do("ALTER TABLE logs MODIFY `notes` varchar(255) NOT NULL DEFAULT '';") or die "Could not update $dbname: $DBI::errstr";
 }
 
 sub update_version {

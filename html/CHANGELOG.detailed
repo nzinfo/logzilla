@@ -1,5 +1,9 @@
 4.25.504 - Bug
 CD:
+ - Fix #369 - Missing partition auto-create fails on month boundaries
+
+4.25.504 - Bug
+CD:
  - #381 - Fix for css Prev/Next bug
 
 4.25.494 - Install
