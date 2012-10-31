@@ -1819,6 +1819,8 @@ sub verify_columns {
         my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/epx.sql`;
         print "$res\n";
     }
+    # fix for notes column not having the default value set in LogZilla v4.25
+    $dbh->do("ALTER TABLE $dbtable MODIFY `notes` varchar(255) NOT NULL DEFAULT '';") or die "Could not update $dbname: $DBI::errstr";
 }
 
 sub update_version {
