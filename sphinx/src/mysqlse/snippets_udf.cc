@@ -1,5 +1,5 @@
 //
-// $Id: snippets_udf.cc 3087 2012-01-30 23:07:35Z shodan $
+// $Id: snippets_udf.cc 3095 2012-02-03 18:51:16Z tomat $
 //
 
 //
@@ -787,5 +787,5 @@ void sphinx_snippets_deinit ( UDF_INIT * pUDF )
 }
 
 //
-// $Id: snippets_udf.cc 3087 2012-01-30 23:07:35Z shodan $
+// $Id: snippets_udf.cc 3095 2012-02-03 18:51:16Z tomat $
 //

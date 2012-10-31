@@ -1,5 +1,5 @@
 //
-// $Id: search.cpp 3087 2012-01-30 23:07:35Z shodan $
+// $Id: search.cpp 3291 2012-07-13 06:30:37Z glook $
 //
 
 //
@@ -152,6 +152,8 @@ int main ( int argc, char ** argv )
 
 	#undef OPT
 
+	tzset();
+
 	if ( bStdin )
 	{
 		int iPos = 0, iLeft = sizeof(sQuery)-1;
@@ -256,7 +258,7 @@ int main ( int argc, char ** argv )
 		tQuery.m_sQuery = sQuery;
 		CSphQueryResult * pResult = NULL;
 
-		CSphIndex * pIndex = sphCreateIndexPhrase ( NULL, hIndex["path"].cstr() );
+		CSphIndex * pIndex = sphCreateIndexPhrase ( sIndexName, hIndex["path"].cstr() );
 		pIndex->SetEnableStar ( hIndex.GetInt("enable_star")!=0 );
 		pIndex->SetWordlistPreload ( hIndex.GetInt("ondisk_dict")==0 );
 
@@ -357,7 +359,7 @@ int main ( int argc, char ** argv )
 					const CSphColumnInfo & tAttr = pResult->m_tSchema.GetAttr(j);
 					fprintf ( stdout, ", %s=", tAttr.m_sName.cstr() );
 
-					if ( tAttr.m_eAttrType==SPH_ATTR_UINT32SET || tAttr.m_eAttrType==SPH_ATTR_UINT64SET )
+					if ( tAttr.m_eAttrType==SPH_ATTR_UINT32SET || tAttr.m_eAttrType==SPH_ATTR_INT64SET )
 					{
 						fprintf ( stdout, "(" );
 						SphAttr_t iIndex = tMatch.GetAttr ( tAttr.m_tLocator );
@@ -365,7 +367,7 @@ int main ( int argc, char ** argv )
 						{
 							const DWORD * pValues = pResult->m_pMva + iIndex;
 							int iValues = *pValues++;
-							if ( tAttr.m_eAttrType==SPH_ATTR_UINT64SET )
+							if ( tAttr.m_eAttrType==SPH_ATTR_INT64SET )
 							{
 								assert ( ( iValues%2 )==0 );
 								for ( int k=0; k<iValues; k+=2, pValues+=2 )
@@ -468,5 +470,5 @@ int main ( int argc, char ** argv )
 }
 
 //
-// $Id: search.cpp 3087 2012-01-30 23:07:35Z shodan $
+// $Id: search.cpp 3291 2012-07-13 06:30:37Z glook $
 //

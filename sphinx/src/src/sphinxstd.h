@@ -1,5 +1,5 @@
 //
-// $Id: sphinxstd.h 3129 2012-03-01 07:18:52Z tomat $
+// $Id: sphinxstd.h 3364 2012-08-29 18:27:19Z shodan $
 //
 
 //
@@ -83,7 +83,11 @@ typedef int __declspec("SAL_nokernel") __declspec("SAL_nodriver") __prefast_flag
 #if _WIN32
 
 #define WIN32_LEAN_AND_MEAN
+#define NOMINMAX
 #include <windows.h>
+
+#include <intrin.h> // for bsr
+#pragma intrinsic(_BitScanReverse)
 
 #define strcasecmp			strcmpi
 #define strncasecmp			_strnicmp
@@ -171,6 +175,7 @@ STATIC_SIZE_ASSERT ( int64_t, 8 );
 
 #define SPH_DEBUG_LEAKS			0
 #define SPH_ALLOCS_PROFILER		0
+#define SPH_DEBUG_BACKTRACES 0 // will add not only file/line, but also full backtrace
 
 #if SPH_DEBUG_LEAKS || SPH_ALLOCS_PROFILER
 
@@ -206,13 +211,17 @@ void			sphMemStatMMapDel ( int64_t iSize );
 #undef new
 #define new		new(__FILE__,__LINE__)
 
-#endif // SPH_DEBUG_LEAKS || SPH_ALLOCS_PROFILER
-
+#if USE_RE2
+void			operator delete ( void * pPtr ) throw ();
+void			operator delete [] ( void * pPtr ) throw ();
+#else
 /// delete for my new
 void			operator delete ( void * pPtr );
 
 /// delete for my new
 void			operator delete [] ( void * pPtr );
+#endif
+#endif // SPH_DEBUG_LEAKS || SPH_ALLOCS_PROFILER
 
 /////////////////////////////////////////////////////////////////////////////
 // HELPERS
@@ -238,15 +247,27 @@ void			sphDie ( const char * sMessage, ... ) __attribute__ ( ( format ( printf, 
 void			sphSetDieCallback ( SphDieCallback_t pfDieCallback );
 
 /// how much bits do we need for given int
-inline int		sphLog2 ( uint64_t iValue )
+inline int sphLog2 ( uint64_t uValue )
 {
+#if USE_WINDOWS
+	DWORD uRes;
+	if ( BitScanReverse ( &uRes, (DWORD)( uValue>>32 ) ) )
+		return 33+uRes;
+	BitScanReverse ( &uRes, DWORD(uValue) );
+	return 1+uRes;
+#elif __GNUC__
+	if ( !uValue )
+		return 0;
+	return 64 - __builtin_clzl(uValue);
+#else
 	int iBits = 0;
-	while ( iValue )
+	while ( uValue )
 	{
-		iValue >>= 1;
+		uValue >>= 1;
 		iBits++;
 	}
 	return iBits;
+#endif
 }
 
 /// float vs dword conversion
@@ -590,9 +611,9 @@ T * sphBinarySearch ( T * pStart, T * pEnd, const PRED & tPred, U tRef )
 
 	while ( pEnd-pStart>1 )
 	{
-		if ( tRef<tPred(*pStart) || tRef>tPred(*pEnd) )
+		if ( tRef<tPred(*pStart) || tPred(*pEnd)<tRef )
 			break;
-		assert ( tRef>tPred(*pStart) );
+		assert ( tPred(*pStart)<tRef );
 		assert ( tRef<tPred(*pEnd) );
 
 		T * pMid = pStart + (pEnd-pStart)/2;
@@ -1477,7 +1498,7 @@ public:
 	inline bool operator == ( const char * t ) const
 	{
 		if ( !t || !m_sValue )
-			return ( !t && !m_sValue );
+			return ( ( !t && !m_sValue ) || ( !t && m_sValue && !*m_sValue ) || ( !m_sValue && t && !*t ) );
 		return strcmp ( m_sValue, t )==0;
 	}
 
@@ -1509,6 +1530,12 @@ public:
 		{
 			m_sValue = NULL;
 		}
+	}
+
+	CSphString ( const char * sValue, int iLen )
+		: m_sValue ( NULL )
+	{
+		SetBinary ( sValue, iLen );
 	}
 
 	const CSphString & operator = ( const CSphString & rhs )
@@ -1628,7 +1655,7 @@ public:
 		return strncmp ( m_sValue+iVal-iPrefix, sPrefix, iPrefix )==0;
 	}
 
-	void Chop ()
+	void Trim ()
 	{
 		if ( m_sValue )
 		{
@@ -1651,6 +1678,14 @@ public:
 		char * pBuf = m_sValue;
 		m_sValue = NULL;
 		return pBuf;
+	}
+
+	// opposite to Leak()
+	void Adopt ( char ** sValue )
+	{
+		SafeDeleteArray ( m_sValue );
+		m_sValue = *sValue;
+		*sValue = NULL;
 	}
 
 	bool operator < ( const CSphString & b ) const
@@ -1772,6 +1807,7 @@ public:
 	T *				Ptr () const				{ return m_pPtr; }
 	CSphScopedPtr &	operator = ( T * pPtr )		{ SafeDelete ( m_pPtr ); m_pPtr = pPtr; return *this; }
 	T *				LeakPtr ()					{ T * pPtr = m_pPtr; m_pPtr = NULL; return pPtr; }
+	void			Reset ()					{ SafeDelete ( m_pPtr ); }
 
 protected:
 	T *				m_pPtr;
@@ -1892,7 +1928,8 @@ public:
 		if ( m_pData==MAP_FAILED )
 		{
 			if ( m_iLength>0x7fffffffUL )
-				sError.SetSprintf ( "mmap() failed: %s (length="INT64_FMT" is over 2GB, impossible on some 32-bit systems)", strerror(errno), (int64_t)m_iLength );
+				sError.SetSprintf ( "mmap() failed: %s (length="INT64_FMT" is over 2GB, impossible on some 32-bit systems)",
+					strerror(errno), (int64_t)m_iLength );
 			else
 				sError.SetSprintf ( "mmap() failed: %s (length="INT64_FMT")", strerror(errno), (int64_t)m_iLength );
 			m_iLength = 0;
@@ -2460,10 +2497,43 @@ public:
 		assert ( iIndex<m_iElements );
 		m_pData [ iIndex>>5 ] |= ( 1UL<<( iIndex&31 ) ); // NOLINT
 	}
+
+	void BitClear ( int iIndex )
+	{
+		assert ( iIndex>=0 );
+		assert ( iIndex<m_iElements );
+		m_pData [ iIndex>>5 ] &= ~( 1UL<<( iIndex&31 ) ); // NOLINT
+	}
+};
+
+/// generic COM-like uids
+enum ExtraData_e
+{
+	EXTRA_GET_DATA_ZONESPANS,
+	EXTRA_GET_DATA_ZONESPANLIST,
+	EXTRA_GET_DATA_RANKFACTORS,
+	EXTRA_SET_MVAPOOL,
+	EXTRA_SET_STRINGPOOL
+};
+
+/// generic COM-like interface
+class ISphExtra
+{
+public:
+	virtual						~ISphExtra () {}
+	inline bool					ExtraData	( ExtraData_e eType, void** ppData )
+	{
+		return ExtraDataImpl ( eType, ppData );
+	}
+private:
+	virtual bool ExtraDataImpl ( ExtraData_e, void** )
+	{
+		return false;
+	}
 };
 
 #endif // _sphinxstd_
 
 //
-// $Id: sphinxstd.h 3129 2012-03-01 07:18:52Z tomat $
+// $Id: sphinxstd.h 3364 2012-08-29 18:27:19Z shodan $
 //

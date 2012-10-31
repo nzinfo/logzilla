@@ -29,6 +29,7 @@
 %token <tInt>			TOK_INT
 %token <tFieldLimit>	TOK_FIELDLIMIT
 %token <iZoneVec>		TOK_ZONE
+%token <iZoneVec>		TOK_ZONESPAN
 %token					TOK_BEFORE
 %token					TOK_SENTENCE
 %token					TOK_PARAGRAPH
@@ -62,6 +63,7 @@ tok_limiter:
 	// empty
 	| TOK_FIELDLIMIT			{ pParser->SetFieldSpec ( $1.dMask, $1.iMaxPos ); }
 	| TOK_ZONE				{ pParser->SetZoneVec ( $1 ); }
+	| TOK_ZONESPAN				{ pParser->SetZoneVec ( $1, true ); }
 	;
 
 beforelist:
@@ -90,7 +92,7 @@ atom:
 	| '"' phrase '"'					{ $$ = $2; if ( $$ ) { assert ( $$->m_dWords.GetLength() ); $$->SetOp ( SPH_QUERY_PHRASE); } }
 	| '"' phrase '"' '~' TOK_INT		{ $$ = $2; if ( $$ ) { assert ( $$->m_dWords.GetLength() ); $$->SetOp ( SPH_QUERY_PROXIMITY ); $$->m_iOpArg = $5.iValue; } }
 	| '"' phrase '"' '/' TOK_INT		{ $$ = $2; if ( $$ ) { assert ( $$->m_dWords.GetLength() ); $$->SetOp ( SPH_QUERY_QUORUM ); $$->m_iOpArg = $5.iValue; } }
-	| '(' expr ')'						{ $$ = $2; if ( $$ ) $$->m_dSpec.Hide(); pParser->m_dStateSpec.Reset(); }
+	| '(' expr ')'						{ $$ = $2; }
 
 	;
 

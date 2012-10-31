@@ -1,0 +1,284 @@
+#!/usr/bin/perl
+
+# Used to install LogZilla on a new Ubuntu 12.04.1 LTS x64 server
+
+use strict;
+use warnings;
+use Getopt::Long;
+
+
+my $os = `lsb_release -d -s`;
+if ($os !~ /Ubuntu 12/) {
+    print("\033[1mThis tool will only run on Ubuntu 12.x!\n\033[0m");
+    exit;
+}
+
+my $login = (getpwuid $>);
+print "You must run this script as root.\nTry \"sudo su -\" to login as root\n" if $login ne 'root';
+
+# Command line options
+my $options = {
+	debug => 0,
+	verbose => 0,
+	lzroot => "/var/www/logzilla",
+	help => 0,
+	spx_compile => 1,
+	checkout => 1,
+	install => 1,
+	prereqs => 1,
+	apache => 1,
+	ng => 1,
+	license => 1,
+	cpan => 1,
+	agree => 0,
+	vmbanner => 0,
+};
+sub usage_and_exit {
+my( $exit_code ) = @_;
+my $myname = $0;
+$myname =~ s{.*/}{}; # leave just program name without path
+print STDERR qq{
+This program is used to install LogZilla v4.x onto a fresh OS installation of Ubuntu 12.04.1 LTS x64 only.
+Using it for anything else may break the install.
+Usage: $myname [-hdvl] 
+-h        : this (help) message
+-d        : debug level (0-5) (0 = disabled [default])
+-v        : Also print results to STDERR
+-b        : set the base directory for logzilla (defaults to $options->{lzroot})
+-vmb      : Create console boot banner (for VMWare deployments) (default 0)
+-s        : Compile Sphinx (default 1)
+-c        : Checkout SVN (default 1)
+-i        : Install LogZilla (default 1)
+-p        : Install System Prerequisites (default 1)
+-a        : Set up Apache (default 1)
+-ng       : Set up syslog-ng (default 1)
+-cp       : Set CPAN autoconfig (default 1)
+-agree    : Agree to the license terms and to this install method (default 0)
+Example: ./$myname -d 1 -v -base "/var/www/logzilla" -s 0 -c 0 -i 0 -p 0 -a 0 -ng 0 -lic 0 -agree 1
+};
+	exit($exit_code);
+}
+
+GetOptions(
+		'debug|d=i'            => \$options->{debug},
+		'help|h!'              => \$options->{help},
+		'verbose|v!'           => \$options->{verbose},
+		'base|b=s'           => \$options->{lzroot},
+		'spx_compile|s=i'           => \$options->{spx_compile},
+		'checkout|c=i'           => \$options->{checkout},
+		'install|i=i'           => \$options->{install},
+		'prereqs|p=i'           => \$options->{prereqs},
+		'apache|a=i'           => \$options->{apache},
+		'ng|ng=i'           => \$options->{ng},
+		'license|lic=i'           => \$options->{license},
+		'cpan|cp=i'           => \$options->{cpan},
+		'agree=i'           => \$options->{agree},
+		'vmbanner|vmb=i'           => \$options->{vmbanner},
+	  ) or usage_and_exit(1); # got some invalid options
+
+if( $options->{help} ) {
+	usage_and_exit(0);
+}
+if( $options->{agree} eq 0 ) {
+print "\n\n################################################################################\n";
+print("\033[1mWARNING!\n\033[0m");
+print("\033[1mThis script was contributed to auto-install on Ubuntu 12.04.1 LTS Server x_64!\n\033[0m");
+print("\033[1mYou must agree to the LogZilla license terms by using -agree 1\n\033[0m");
+print("\033[1mBe sure you understand the implications of using this script before running it.\n\033[0m");
+print "################################################################################\n";
+	usage_and_exit(0);
+}
+
+my $cmd;
+# Install Prereq's
+if ($options->{prereqs} > 0) {
+	print "Making sure OS is up to date...\n";
+	 system("apt-get update && apt-get -y upgrade");
+	print "Installing system prerequisites 1 of 9\n";
+	 system("apt-get -y install build-essential apache2 mysql-server php5 libmysqlclient-dev syslog-ng php5-cli libapache2-mod-php5 subversion ssmtp");
+	print "Installing system prerequisites 2 of 9\n";
+	 system("apt-get -y install linux-headers-\$(uname -r)");
+	print "Installing system prerequisites 3 of 9\n";
+	 system("apt-get -y install php5-mysql php5-gd php5-json");
+	print "Installing system prerequisites 4 of 9\n";
+	 system("apt-get -y install libdate-calc-perl libfile-tail-perl libdbd-mysql-perl libmime-lite-perl libdata-random-perl");
+	print "Installing system prerequisites 5 of 9\n";
+	 system("apt-get -y install libstring-crc32-perl libmoose-perl libnet-snmp-perl libwww-perl libdigest-md5-file-perl");
+	print "Installing system prerequisites 6 of 9\n";
+	 system("apt-get -y install libchi-perl 2>&1");
+	print "Installing system prerequisites 7 of 9\n";
+	 system("apt-get -y install libfind-lib-perl 2>&1");
+	print "Installing system prerequisites 8 of 8\n";
+	 system("apt-get -y install libmoosex-params-validate-perl librrdtool-oo-perl 2>&1");
+	print "Installing system prerequisites 9 of 9\n";
+	 system("apt-get -y install libtest-deep-perl libtest-mocktime-perl libberkeleydb-perl libfile-slurp-perl libdigest-crc-perl libdevel-nytprof-perl 2>&1");
+}
+################################################
+# Help if Perl mods are missing
+################################################
+if ($options->{cpan} > 0) {
+system("(echo o conf prerequisites_policy follow;echo o conf commit)|cpan");
+}
+my @mods = (qw(DBI Date::Calc Term::ReadLine File::Copy Digest::MD5 LWP::Simple File::Spec String::CRC32 MIME::Lite IO::Socket::INET Getopt::Long CHI Net::SNMP Log::Fast Test::mysqld PerlIO::Util));
+
+foreach my $mod (@mods) {
+    ( my $fn = "$mod.pm" ) =~ s|::|/|g;    # Foo::Bar::Baz => Foo/Bar/Baz.pm
+    if ( eval { require $fn; 1; } ) {
+    } else {
+        print "Installing required Perl module: $mod\n";
+            require CPAN;
+            CPAN::install($mod);
+    }
+}
+
+
+# Download code from subversion
+if ($options->{checkout} > 0) {
+	my ($svnroot, $install_dir) = $options->{lzroot} =~ /(.*)\/(.*)$/;
+	print "Downloading LogZilla\n";
+	 system("cd $svnroot && svn co https://subversion.assembla.com/svn/logzilla.2/trunk/ $install_dir 2>&1");
+}
+
+# Create the .lzrc file
+my $rcfn = $options->{lzroot} . "/scripts/.lzrc";
+print "Creating .lzrc at $rcfn\n";
+open FILE, ">$rcfn" or die $!;
+print FILE <<EOF;
+#------------------# 
+# basic properties # 
+#------------------# 
+\$dbroot = "root"; 
+\$dbrootpass = "mysql"; 
+\$dbname = "syslog"; 
+\$dbhost = "localhost"; 
+\$dbport = "3306"; 
+\$dbadmin = "syslogadmin"; # DO NOT USE ROOT HERE OR YOU WILL LOSE DB PERMISSIONS ON OTHER DB'S!
+\$dbadminpw = "syslogadmin"; 
+\$siteadmin = "admin"; 
+\$siteadminpw = "admin"; 
+\$email = "root\\\@localhost"; 
+\$sitename = "LogZilla Server"; 
+\$url = "/"; 
+\$logpath = "/var/log/logzilla"; 
+\$retention = "7"; 
+\$snare = "Y";
+\$syslogng_conf = "/etc/syslog-ng/syslog-ng.conf";
+\$syslogng_source = "s_logzilla";
+\$webuser = "www-data";
+\$skipdb = "N";
+\$skipcron = "N";
+\$skipsysng = "N";
+\$skiplogrot = "N";
+\$skipsudo = "N";
+\$skipapparmor = "N";
+\$skipfb = "N";
+\$sphinx_compile = "N";
+\$sphinx_index = "Y";
+\$skip_ioncube = "N";
+\$skiplic = "Y";
+\$autoyes = "Y";
+EOF
+close FILE;
+print "Editing .lzrc\n";
+if ($options->{spx_compile} > 0) {
+	 system("perl -i -pe 's|\\\$sphinx_compile = \"N\"|\\\$sphinx_compile = \"Y\"|g' $options->{lzroot}/scripts/.lzrc 2>&1");
+} else {
+	 system("perl -i -pe 's|\\\$sphinx_compile = \"Y\"|\\\$sphinx_compile = \"N\"|g' $options->{lzroot}/scripts/.lzrc 2>&1");
+}
+
+# Customization for this script and a fresh syslog-ng install
+if ($options->{ng} > 0) {
+	print "Modifying syslog-ng template";
+	 system("perl -i -pe 's|destination df_logzilla {|source s_logzilla { udp(); };\ndestination df_logzilla {|g' $options->{lzroot}/scripts/contrib/system_configs/syslog-ng.conf 2>&1");
+		 system("perl -i -pe 's|MYSOURCE|s_logzilla|g' $options->{lzroot}/scripts/contrib/system_configs/syslog-ng.conf 2>&1");
+	}
+
+# Install LogZilla
+	if ($options->{install} > 0) {
+		print "Installing LogZilla\n";
+		 system("(cd $options->{lzroot}/scripts && echo \"q\"| ./install) 2>&1");
+	}
+
+# Set up Apache
+	if ($options->{apache} > 0) {
+		print "Setting up Apache\n";
+		my $file = "/etc/apache2/apache2.conf";
+		if ( -e "$file" ) {
+			open my $config, '+<', "$file" or warn "FAILED: $!\n";
+			my @arr = <$config>;
+			if ( !grep( /logzilla/, @arr ) ) {
+				 system("perl -i -pe 's|#ServerRoot \"/etc/apache2\"|#ServerRoot \"/etc/apache2\"\nServerName \"logzilla\"|g' /etc/apache2/apache2.conf 2>&1");
+			}
+		}
+		 system("cp $options->{lzroot}/scripts/contrib/system_configs/logzilla.apache /etc/apache2/sites-available/default 2>&1");
+		 system("service apache2 restart 2>&1");
+	}
+
+# Chown to the web user
+	print "Changing $options->{lzroot}/html to Apache user\n";
+	 system("cd $options->{lzroot} && chown -R www-data:www-data html/ 2>&1");
+
+# Modify the .lzrc so that sphinx_compile is disabled on subsequent upgrades
+	print "Disabling Sphinx compile for future upgrades\n";
+	 system("perl -i -pe 's|\\\$sphinx_compile = \"Y\"|\\\$sphinx_compile = \"N\"|g' $options->{lzroot}/scripts/.lzrc 2>&1");
+	 system("perl -i -pe 's|\\\$skiplic = \"Y\"|\\\$skiplic = \"N\"|g' $options->{lzroot}/scripts/.lzrc 2>&1");
+
+	if ($options->{vmbanner} > 0) {
+	print "Adding banner to system startup (/etc/rc.local)\n";
+		my $file = "/etc/rc.local";
+		if ( -e "$file" ) {
+			open my $config, '+<', "$file" or warn "FAILED: $!\n";
+			my @arr = <$config>;
+			if ( !grep( /banner/, @arr ) ) {
+	 system("perl -i -pe 's|cd /var/www/logzilla/sphinx && bin/searchd|cd $options->{lzroot}/scripts/VM && ./bootup.sh|g' /etc/rc.local 2>&1");
+}
+ }
+}
+
+# Create bash aliases file
+my @arr;
+	my $file = "/root/.bash_aliases";
+		if ( -e "$file" ) {
+	open my $aliases, '+<', "$file" or warn "FAILED: $!\n";
+	@arr = <$aliases>;
+}
+	if ( !grep( /logzilla/, @arr ) ) {
+		print "Creating bash aliases at $file\n";
+		open FILE, ">>$file" or die $!;
+		print FILE <<EOF;
+export LZ='/var/www/logzilla'
+export MY_ADMIN='root'
+export MY_ADMIN_PWD='mysql'
+# OS Related
+alias df='df -h'
+alias diff='diff -Nur'
+alias dir='ls --color=auto --format=vertical'
+alias du='du -h'
+alias ll='ls --color -lh'
+alias ls='ls --color=auto'
+alias pa='ps -efwwwww | grep -v grep | grep \$1'
+alias vi='vim'
+
+# MySQL Related
+alias mysql='mysql -u\$MY_ADMIN -p\$MY_ADMIN_PWD'
+alias mysqladmin='mysqladmin -u\$MY_ADMIN -p\$MY_ADMIN_PWD'
+alias mysqlcheck='mysqlcheck -u\$MY_ADMIN -p\$MY_ADMIN_PWD --auto-repair'
+alias mysqldump='mysqldump -u\$MY_ADMIN -p\$MY_ADMIN_PWD'
+alias mysqlreport='mysqlreport --user=\$MY_ADMIN --password=\$MY_ADMIN_PWD'
+alias mysqlshow='mysqldump -u\$MY_ADMIN -p\$MY_ADMIN_PWD'
+alias mytop='mytop -u\$MY_ADMIN -p\$MY_ADMIN_PWD'
+
+# LogZilla related
+alias mysqltuner='\$LZ/scripts/tools/mysqltuner.pl --user \$MY_ADMIN --pass \$MY_ADMIN_PWD'
+alias summary='\$LZ/scripts/tools/summary'
+alias lzupdate='(printf "\n\n\tIf conflicts occur during update, select tc (theirs conflict) then run \$LZ/scripts/upgrade.\n" && cd \$LZ && sudo svn update)'
+
+# Sphinx shortcuts
+alias myspx='mysql -h0 -P9306'
+alias spx_full='(cd \$LZ/sphinx && ./indexer.sh full)'
+alias spx_delta='(cd \$LZ/sphinx && ./indexer.sh delta)'
+alias spx_stop='(cd \$LZ/sphinx && bin/searchd --stop)'
+alias spx_start='(cd \$LZ/sphinx && bin/searchd)'
+EOF
+}
+print "All Done\n";

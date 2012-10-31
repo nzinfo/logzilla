@@ -1,5 +1,5 @@
 //
-// $Id: sphinxquery.h 3114 2012-02-21 14:52:21Z klirichek $
+// $Id: sphinxquery.h 3303 2012-07-25 13:34:20Z tomat $
 //
 
 //
@@ -76,14 +76,14 @@ enum XQOperator_e
 	SPH_QUERY_PARAGRAPH
 };
 
-// the limit of field or zone
+// the limit of field or zone or zonespan
 struct XQLimitSpec_t
 {
 	bool					m_bFieldSpec;	///< whether field spec was already explicitly set
-	bool					m_bInvisible;	///< totally ignore this set
 	CSphSmallBitvec			m_dFieldMask;	///< fields mask (spec part)
 	int						m_iFieldMaxPos;	///< max position within field (spec part)
 	CSphVector<int>			m_dZones;		///< zone indexes in per-query zones list
+	bool					m_bZoneSpan;	///< if we need to hits within only one span
 
 public:
 	XQLimitSpec_t ()
@@ -93,16 +93,11 @@ public:
 
 	inline void Reset ()
 	{
-		m_bInvisible = false;
 		m_bFieldSpec = false;
 		m_iFieldMaxPos = 0;
+		m_bZoneSpan = false;
 		m_dFieldMask.Set();
 		m_dZones.Reset();
-	}
-
-	inline void Hide ()
-	{
-		m_bInvisible = true;
 	}
 
 	XQLimitSpec_t ( const XQLimitSpec_t& dLimit )
@@ -122,12 +117,12 @@ public:
 			SetFieldSpec ( dLimit.m_dFieldMask, dLimit.m_iFieldMaxPos );
 
 		if ( dLimit.m_dZones.GetLength() )
-			SetZoneSpec ( dLimit.m_dZones );
+			SetZoneSpec ( dLimit.m_dZones, dLimit.m_bZoneSpan );
 
 		return *this;
 	}
 public:
-	void SetZoneSpec ( const CSphVector<int> & dZones );
+	void SetZoneSpec ( const CSphVector<int> & dZones, bool bZoneSpan );
 	void SetFieldSpec ( const CSphSmallBitvec& uMask, int iMaxPos );
 };
 
@@ -158,7 +153,7 @@ public:
 
 public:
 	/// ctor
-	explicit XQNode_t ( const XQLimitSpec_t& dSpec )
+	explicit XQNode_t ( const XQLimitSpec_t & dSpec )
 		: m_pParent ( NULL )
 		, m_eOp ( SPH_QUERY_AND )
 		, m_iOrder ( 0 )
@@ -189,7 +184,7 @@ public:
 	void SetFieldSpec ( const CSphSmallBitvec& uMask, int iMaxPos );
 
 	/// setup zone limits
-	void SetZoneSpec ( const CSphVector<int> & dZones );
+	void SetZoneSpec ( const CSphVector<int> & dZones, bool bZoneSpan=false );
 
 	/// copy field/zone limits from another node
 	void CopySpecs ( const XQNode_t * pSpecs );
@@ -250,7 +245,8 @@ public:
 	void Check ( bool bRoot )
 	{
 		assert ( bRoot || !IsEmpty() ); // empty leaves must be removed from the final tree; empty root is allowed
-		assert (!( m_dWords.GetLength() && m_eOp!=SPH_QUERY_AND && m_eOp!=SPH_QUERY_PHRASE && m_eOp!=SPH_QUERY_PROXIMITY && m_eOp!=SPH_QUERY_QUORUM )); // words are only allowed in these node types
+		assert (!( m_dWords.GetLength() && m_eOp!=SPH_QUERY_AND && m_eOp!=SPH_QUERY_PHRASE
+			&& m_eOp!=SPH_QUERY_PROXIMITY && m_eOp!=SPH_QUERY_QUORUM )); // words are only allowed in these node types
 		assert (!( m_dWords.GetLength()==1 && m_eOp!=SPH_QUERY_AND )); // 1-word leaves must be of AND type
 
 		ARRAY_FOREACH ( i, m_dChildren )
@@ -268,11 +264,15 @@ struct XQQuery_t : public ISphNoncopyable
 
 	CSphVector<CSphString>	m_dZones;
 	XQNode_t *				m_pRoot;
+	bool					m_bNeedSZlist;
+	bool					m_bSingleWord;
 
 	/// ctor
 	XQQuery_t ()
 	{
 		m_pRoot = NULL;
+		m_bNeedSZlist = false;
+		m_bSingleWord = false;
 	}
 
 	/// dtor
@@ -287,7 +287,10 @@ struct XQQuery_t : public ISphNoncopyable
 /// parses the query and returns the resulting tree
 /// return false and fills tQuery.m_sParseError on error
 /// WARNING, parsed tree might be NULL (eg. if query was empty)
-bool	sphParseExtendedQuery ( XQQuery_t & tQuery, const char * sQuery, const ISphTokenizer * pTokenizer, const CSphSchema * pSchema, CSphDict * pDict, int iStopwordStep );
+/// lots of arguments here instead of simply the index pointer, because
+/// a) we do not always have an actual real index class, and
+/// b) might need to tweak stuff even we do
+bool	sphParseExtendedQuery ( XQQuery_t & tQuery, const char * sQuery, const ISphTokenizer * pTokenizer, const CSphSchema * pSchema, CSphDict * pDict, const CSphIndexSettings & tSettings );
 
 /// analyse vector of trees and tag common parts of them (to cache them later)
 int		sphMarkCommonSubtrees ( int iXQ, const XQQuery_t * pXQ );
@@ -295,5 +298,5 @@ int		sphMarkCommonSubtrees ( int iXQ, const XQQuery_t * pXQ );
 #endif // _sphinxquery_
 
 //
-// $Id: sphinxquery.h 3114 2012-02-21 14:52:21Z klirichek $
+// $Id: sphinxquery.h 3303 2012-07-25 13:34:20Z tomat $
 //

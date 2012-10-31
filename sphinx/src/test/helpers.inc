@@ -1,7 +1,7 @@
 <?php
 
 //
-// $Id: helpers.inc 3122 2012-02-28 08:57:13Z klirichek $
+// $Id: helpers.inc 3303 2012-07-25 13:34:20Z tomat $
 //
 
 ini_set ( "display_errors", 1 );
@@ -244,7 +244,7 @@ function StartSearchd ( $config_file, $error_file, $pidfile, &$error, $use_watch
 		if ( !$ok )
 		{
 			$tm = ( MyMicrotime() - $start );
-			printf ( "\nWARNING: can't connect to daemon on startup for %.1f sec\t\t\t\n", $tm );
+			printf ( "\nWARNING: can't connect to daemon on startup for %.3f sec\t\t\t\n", $tm );
 		}
 	}
 
@@ -1486,6 +1486,10 @@ class SphinxConfig
 		if ( !is_array ( $this->_results_model [ $this->SubtestNo() ] ) )
 			return;
 
+		fwrite ( $fp, "Run settings:\n" );
+		$this->WriteDiff ( $fp );
+		fwrite ( $fp, "\n" );
+
 		foreach ( $this->_results_model [ $this->SubtestNo() ] as $ref )
 		{
 			$cur = $this->_results[$nquery];
@@ -1703,7 +1707,7 @@ class SphinxConfig
 				$idx = "index ".$match[$idxname][0];
 				if ( $match[$parent][0] != "" )
 					$idx .= " : ".$match[$parent][0];
-				$idx .= "\n{\n";
+				$idx .= "\n{\n\tdict = keywords\n";
 
 				$lines = explode("\n", $match[$content][0]);
 				$justcopy = false;
@@ -1774,6 +1778,9 @@ class SphinxConfig
 		}
 		else // for rt indexes we need to clean up all index files before the run.
 		{
+			// remove binlog files if any
+			$this->EraseIndexFiles ( 'data/binlog' );
+			
 			$pattern = "/.*?index\s+\S*?(\s*\:\s*\S*?)?\s*\{(.*?)\}.*?/s";
 			preg_match_all ( $pattern, $config, $matches, PREG_SET_ORDER | PREG_OFFSET_CAPTURE );
 			// parse indexes
@@ -2032,7 +2039,7 @@ function CopyDirContents ( $from, $to )
 
 function CheckConfig ( $config, $path )
 {
-	global $g_id64, $windows;
+	global $g_id64, $g_re2, $windows;
 	
 	if ( $config->Requires("id64") && !$g_id64 )
 	{
@@ -2055,6 +2062,12 @@ function CheckConfig ( $config, $path )
 	if ( $config->Requires("non-rt") && $config->IsRt() )
 	{
 		printf ( "SKIPPING %s, %s - explicitly non-RT test skipped in RT mode\n", $path, $config->Name () );
+		return false;
+	}
+
+	if ( $config->Requires("re2") && !$g_re2 )
+	{
+		printf ( "SKIPPING %s, %s - compile with regexp support to run this test\n", $path, $config->Name () );
 		return false;
 	}
 
@@ -2374,5 +2387,5 @@ function RunTest ( $test_dir, $skipdemo, $usemarks )
 }
 
 //
-// $Id: helpers.inc 3122 2012-02-28 08:57:13Z klirichek $
+// $Id: helpers.inc 3303 2012-07-25 13:34:20Z tomat $
 //

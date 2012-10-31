@@ -1,5 +1,5 @@
 //
-// $Id: sphinxstd.cpp 3130 2012-03-01 07:43:56Z tomat $
+// $Id: sphinxstd.cpp 3272 2012-06-23 16:51:07Z shodan $
 //
 
 //
@@ -67,9 +67,13 @@ struct CSphMemHeader
 {
 	DWORD			m_uMagic;
 	const char *	m_sFile;
+#if SPH_DEBUG_BACKTRACES
+	const char *	m_sBacktrace;
+#endif
 	int				m_iLine;
 	size_t			m_iSize;
 	int				m_iAllocId;
+	BYTE *			m_pPointer;
 	CSphMemHeader *	m_pNext;
 	CSphMemHeader *	m_pPrev;
 };
@@ -96,9 +100,20 @@ void * sphDebugNew ( size_t iSize, const char * sFile, int iLine, bool bArray )
 	CSphMemHeader * pHeader = (CSphMemHeader*) pBlock;
 	pHeader->m_uMagic = bArray ? MEMORY_MAGIC_ARRAY : MEMORY_MAGIC_PLAIN;
 	pHeader->m_sFile = sFile;
+#if SPH_DEBUG_BACKTRACES
+	const char * sTrace = DoBacktrace ( 0, 3 );
+	if ( sTrace )
+	{
+		char * pTrace = (char*) ::malloc ( strlen(sTrace) + 1 );
+		strcpy ( pTrace, sTrace ); //NOLINT
+		pHeader->m_sBacktrace = pTrace;
+	} else
+		pHeader->m_sBacktrace = NULL;
+#endif
 	pHeader->m_iLine = iLine;
 	pHeader->m_iSize = iSize;
 	pHeader->m_iAllocId = ++g_iAllocsId;
+	pHeader->m_pPointer = pBlock;
 	pHeader->m_pNext = g_pAllocs;
 	pHeader->m_pPrev = NULL;
 	if ( g_pAllocs )
@@ -180,6 +195,11 @@ void sphDebugDelete ( void * pPtr, bool bArray )
 	g_iCurAllocs--;
 	g_iCurBytes -= pHeader->m_iSize;
 
+#if SPH_DEBUG_BACKTRACES
+	if ( pHeader->m_sBacktrace )
+		::free ( (void*) pHeader->m_sBacktrace );
+#endif
+
 #if SPH_DEBUG_DOFREE
 	::free ( pHeader );
 #endif
@@ -219,8 +239,12 @@ void sphAllocsDump ( int iFile, int iSinceID )
 		pHeader && pHeader->m_iAllocId > iSinceID;
 		pHeader = pHeader->m_pNext )
 	{
-		sphSafeInfo ( iFile, "alloc %d at %s(%d): %d bytes\n", pHeader->m_iAllocId,
-			pHeader->m_sFile, pHeader->m_iLine, (int)pHeader->m_iSize );
+		sphSafeInfo ( iFile, "alloc %d at %s(%d): 0x%0p %d bytes\n", pHeader->m_iAllocId,
+			pHeader->m_sFile, pHeader->m_iLine, pHeader->m_pPointer, (int)pHeader->m_iSize );
+
+#if SPH_DEBUG_BACKTRACES
+		sphSafeInfo ( iFile, "Backtrace:\n%s\n", pHeader->m_sBacktrace );
+#endif
 
 		iTotalBytes += pHeader->m_iSize;
 		iTotal++;
@@ -586,6 +610,7 @@ void sphMemStatDump ( int iFD )
 //////////////////////////////////////////////////////////////////////////////
 
 #else
+#ifndef SPH_DONT_OVERRIDE_MEMROUTINES
 
 void * operator new ( size_t iSize )
 {
@@ -604,19 +629,28 @@ void * operator new [] ( size_t iSize )
 	return pResult;
 }
 
+#if USE_RE2
+void operator delete ( void * pPtr ) throw ()
+#else
 void operator delete ( void * pPtr )
+#endif
 {
 	if ( pPtr )
 		::free ( pPtr );
 }
 
 
+#if USE_RE2
+void operator delete [] ( void * pPtr ) throw ()
+#else
 void operator delete [] ( void * pPtr )
+#endif
 {
 	if ( pPtr )
 		::free ( pPtr );
 }
 
+#endif // SPH_DONT_OVERRIDE_MEMROUTINES
 #endif // SPH_ALLOCS_PROFILER
 #endif // SPH_DEBUG_LEAKS
 
@@ -746,6 +780,7 @@ CSphProcessSharedMutex::CSphProcessSharedMutex ( int iExtraSize )
 	if ( iRes )
 	{
 		m_sError.SetSprintf ( "pthread_mutexattr_setpshared, errno = %d", iRes );
+		pthread_mutexattr_destroy ( &tAttr );
 		return;
 	}
 
@@ -753,16 +788,26 @@ CSphProcessSharedMutex::CSphProcessSharedMutex ( int iExtraSize )
 	if ( !m_pStorage.Alloc ( sizeof(pthread_mutex_t) + iExtraSize, sError, sWarning ) )
 	{
 		m_sError.SetSprintf ( "storage.alloc, error='%s', warning='%s'", sError.cstr(), sWarning.cstr() );
+		pthread_mutexattr_destroy ( &tAttr );
 		return;
 	}
 
 	m_pMutex = (pthread_mutex_t*) m_pStorage.GetWritePtr ();
 	iRes = pthread_mutex_init ( m_pMutex, &tAttr );
+	
 	if ( iRes )
 	{
 		m_sError.SetSprintf ( "pthread_mutex_init, errno=%d ", iRes );
+		pthread_mutexattr_destroy ( &tAttr );
 		m_pMutex = NULL;
 		m_pStorage.Reset ();
+		return;
+	}
+
+	iRes = pthread_mutexattr_destroy ( &tAttr );
+	if ( iRes )
+	{
+		m_sError.SetSprintf ( "pthread_mutexattr_destroy, errno = %d", iRes );
 		return;
 	}
 }
@@ -826,7 +871,7 @@ bool CSphProcessSharedMutex::TimedLock ( int tmSpin ) const
 	if ( iRes==EBUSY )
 		iRes = pthread_mutex_trylock ( m_pMutex );
 
-	return iRes!=0;
+	return iRes==0;
 #endif // HAVE_PTHREAD_MUTEX_TIMEDLOCK && HAVE_CLOCK_GETTIME
 #endif // USE_WINDOWS
 }
@@ -1319,5 +1364,5 @@ bool CSphRwlock::Unlock ()
 #endif
 
 //
-// $Id: sphinxstd.cpp 3130 2012-03-01 07:43:56Z tomat $
+// $Id: sphinxstd.cpp 3272 2012-06-23 16:51:07Z shodan $
 //

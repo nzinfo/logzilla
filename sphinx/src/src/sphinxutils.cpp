@@ -1,5 +1,5 @@
 //
-// $Id: sphinxutils.cpp 3109 2012-02-19 14:13:20Z shodan $
+// $Id: sphinxutils.cpp 3366 2012-08-31 17:01:47Z shodan $
 //
 
 //
@@ -18,6 +18,7 @@
 
 #include "sphinx.h"
 #include "sphinxutils.h"
+#include "sphinxint.h"
 #include <ctype.h>
 #include <fcntl.h>
 #include <errno.h>
@@ -33,9 +34,12 @@
 #else
 #include <sys/wait.h>
 #include <signal.h>
+#include <glob.h>
 #endif
 
-/////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////
+// STRING FUNCTIONS
+//////////////////////////////////////////////////////////////////////////
 
 static char * ltrim ( char * sLine )
 {
@@ -60,9 +64,137 @@ static char * trim ( char * sLine )
 	return ltrim ( rtrim ( sLine ) );
 }
 
+
+void sphSplit ( CSphVector<CSphString> & dOut, const char * sIn )
+{
+	if ( !sIn )
+		return;
+
+	const char * p = (char*)sIn;
+	while ( *p )
+	{
+		// skip non-alphas
+		while ( (*p) && !sphIsAlpha(*p) )
+			p++;
+		if ( !(*p) )
+			break;
+
+		// this is my next token
+		assert ( sphIsAlpha(*p) );
+		const char * sNext = p;
+		while ( sphIsAlpha(*p) )
+			p++;
+		if ( sNext!=p )
+			dOut.Add().SetBinary ( sNext, p-sNext );
+	}
+}
+
+
+static inline bool IsWild ( char c )
+{
+	return c=='*' || c=='?' || c=='%';
+}
+
+
+bool sphWildcardMatch ( const char * sString, const char * sPattern )
+{
+	if ( !sString || !sPattern )
+		return false;
+
+	const char * s = sString;
+	const char * p = sPattern;
+	while ( *s )
+	{
+		switch ( *p )
+		{
+		case '?':
+			// match any character
+			s++;
+			p++;
+			break;
+
+		case '%':
+			// gotta match either 0 or 1 characters
+			// well, lets look ahead and see what we need to match next
+			p++;
+
+			// just a shortcut, %* can be folded to just *
+			if ( *p=='*' )
+				break;
+
+			// plain char after a hash? check the non-ambiguous cases
+			if ( !IsWild(*p) )
+			{
+				if ( s[0]!=*p )
+				{
+					// hash does not match 0 chars
+					// check if we can match 1 char, or it's a no-match
+					if ( s[1]!=*p )
+						return false;
+					s++;
+					break;
+				} else
+				{
+					// hash matches 0 chars
+					// check if we could ambiguously match 1 char too, though
+					if ( s[1]!=*p )
+						break;
+					// well, fall through to "scan both options" route
+				}
+			}
+
+			// could not decide yet
+			// so just recurse both options
+			if ( sphWildcardMatch ( s, p ) )
+				return true;
+			if ( sphWildcardMatch ( s+1, p ) )
+				return true;
+			return false;
+
+		case '*':
+			// skip all the extra stars and question marks
+			for ( p++; *p=='*' || *p=='?'; p++ )
+				if ( *p=='?' )
+				{
+					s++;
+					if ( !*s )
+						return p[1]=='\0';
+				}
+
+				// short-circuit trailing star
+				if ( !*p )
+					return true;
+
+				// so our wildcard expects a real character
+				// scan forward for its occurrences and recurse
+				for ( ;; )
+				{
+					if ( !*s )
+						return false;
+					if ( *s==*p && sphWildcardMatch ( s+1, p+1 ) )
+						return true;
+					s++;
+				}
+				break;
+
+		default:
+			// default case, strict match
+			if ( *s++!=*p++ )
+				return false;
+			break;
+		}
+	}
+
+	// string done
+	// pattern should be either done too, or a trailing star, or a trailing hash
+	return p[0]=='\0'
+		|| ( p[0]=='*' && p[1]=='\0' )
+		|| ( p[0]=='%' && p[1]=='\0' );
+}
+
 //////////////////////////////////////////////////////////////////////////
 
-int CSphConfigSection::GetSize ( const char * sKey, int iDefault ) const
+int64_t CSphConfigSection::GetSize64 ( const char * sKey, int64_t iDefault ) const
 {
 	CSphVariant * pEntry = (*this)( sKey );
 	if ( !pEntry )
@@ -95,18 +227,24 @@ int CSphConfigSection::GetSize ( const char * sKey, int iDefault ) const
 	if ( !*sErr )
 	{
 		iRes *= iScale;
-		if ( iRes>INT_MAX )
-		{
-			sphWarning ( "'%s = %s' clamped to INT_MAX", sKey, pEntry->cstr() );
-			iRes = INT_MAX;
-		}
 	} else
 	{
 		sphWarning ( "'%s = %s' parse error '%s'", sKey, pEntry->cstr(), sErr );
 		iRes = iDefault;
 	}
 
-	return (int)iRes;
+	return iRes;
+}
+
+int CSphConfigSection::GetSize ( const char * sKey, int iDefault ) const
+{
+	int64_t iSize = GetSize64 ( sKey, iDefault );
+	if ( iSize>INT_MAX )
+	{
+		iSize = INT_MAX;
+		sphWarning ( "'%s = "INT64_FMT"' clamped to %d(INT_MAX)", sKey, iSize, INT_MAX );
+	}
+	return (int)iSize;
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -205,7 +343,8 @@ static KeyDesc_t g_dKeysIndex[] =
 	{ "stopwords",				0, NULL },
 	{ "synonyms",				KEY_DEPRECATED, "exceptions" },
 	{ "exceptions",				0, NULL },
-	{ "wordforms",				0, NULL },
+	{ "wordforms",				KEY_LIST, NULL },
+	{ "embedded_limit",			0, NULL },
 	{ "min_word_len",			0, NULL },
 	{ "charset_type",			0, NULL },
 	{ "charset_table",			0, NULL },
@@ -225,6 +364,7 @@ static KeyDesc_t g_dKeysIndex[] =
 	{ "agent",					KEY_LIST, NULL },
 	{ "agent_blackhole",		KEY_LIST, NULL },
 	{ "agent_connect_timeout",	0, NULL },
+	{ "ha_strategy",			0, NULL	},
 	{ "agent_query_timeout",	0, NULL },
 	{ "html_strip",				0, NULL },
 	{ "html_index_attrs",		0, NULL },
@@ -256,6 +396,10 @@ static KeyDesc_t g_dKeysIndex[] =
 	{ "index_sp",				0, NULL },
 	{ "index_zones",			0, NULL },
 	{ "blend_mode",				0, NULL },
+	{ "regexp_filter",			KEY_LIST, NULL },
+	{ "bigram_freq_words",		0, NULL },
+	{ "bigram_index",			0, NULL },
+	{ "index_field_lengths",	0, NULL },
 	{ NULL,						0, NULL }
 };
 
@@ -318,6 +462,12 @@ static KeyDesc_t g_dKeysSearchd[] =
 	{ "collation_libc_locale",	0, NULL },
 	{ "watchdog",				0, NULL },
 	{ "prefork_rotation_throttle", 0, NULL },
+	{ "snippets_file_prefix",	0, NULL },
+	{ "sphinxql_state",			0, NULL },
+	{ "rt_merge_iops",			0, NULL },
+	{ "rt_merge_maxiosize",		0, NULL },
+	{ "ha_ping_interval",		0, NULL },
+	{ "ha_period_karma",		0, NULL },
 	{ NULL,						0, NULL }
 };
 
@@ -426,7 +576,8 @@ bool CSphConfigParser::ValidateKey ( const char * sKey )
 	// warn about deprecate keys
 	if ( pDesc->m_iFlags & KEY_DEPRECATED )
 		if ( ++m_iWarnings<=WARNS_THRESH )
-			fprintf ( stdout, "WARNING: key '%s' is deprecated in %s line %d; use '%s' instead.\n", sKey, m_sFileName.cstr(), m_iLine, pDesc->m_sExtra );
+			fprintf ( stdout, "WARNING: key '%s' is deprecated in %s line %d; use '%s' instead.\n",
+				sKey, m_sFileName.cstr(), m_iLine, pDesc->m_sExtra );
 
 	// warn about list/non-list keys
 	if (!( pDesc->m_iFlags & KEY_LIST ))
@@ -711,7 +862,18 @@ bool CSphConfigParser::Parse ( const char * sFileName, const char * pBuffer )
 			if ( isspace(*p) )				continue;
 			if ( *p=='#' )					{ LOC_PUSH ( S_SKIP2NL ); continue; }
 			if ( !sToken[0] )				{ LOC_ERROR ( "internal error (empty token in S_TYPE)" ); }
-			if ( IsPlainSection(sToken) )	{ if ( !AddSection ( sToken, sToken ) ) break; sToken[0] = '\0'; LOC_POP (); LOC_PUSH ( S_SEC ); LOC_PUSH ( S_CHR ); iCh = '{'; LOC_BACK(); continue; }
+			if ( IsPlainSection(sToken) )
+			{
+				if ( !AddSection ( sToken, sToken ) )
+					break;
+				sToken[0] = '\0';
+				LOC_POP();
+				LOC_PUSH ( S_SEC );
+				LOC_PUSH ( S_CHR );
+				iCh = '{';
+				LOC_BACK();
+				continue;
+			}
 			if ( IsNamedSection(sToken) )	{ m_sSectionType = sToken; sToken[0] = '\0'; LOC_POP (); LOC_PUSH ( S_SECNAME ); LOC_BACK(); continue; }
 											LOC_ERROR2 ( "invalid section type '%s'", sToken );
 		}
@@ -848,8 +1010,7 @@ bool CSphConfigParser::Parse ( const char * sFileName, const char * pBuffer )
 
 bool sphConfTokenizer ( const CSphConfigSection & hIndex, CSphTokenizerSettings & tSettings, CSphString & sError )
 {
-	// charset_type
-	CSphScopedPtr<ISphTokenizer> pTokenizer ( NULL );
+	tSettings.m_iNgramLen = Max ( hIndex.GetInt ( "ngram_len" ), 0 );
 
 	if ( !hIndex("charset_type") || hIndex["charset_type"]=="sbcs" )
 	{
@@ -857,7 +1018,14 @@ bool sphConfTokenizer ( const CSphConfigSection & hIndex, CSphTokenizerSettings 
 
 	} else if ( hIndex["charset_type"]=="utf-8" )
 	{
-		tSettings.m_iType = hIndex("ngram_chars") ? TOKENIZER_NGRAM : TOKENIZER_UTF8;
+		tSettings.m_iType = TOKENIZER_UTF8;
+		if ( hIndex ( "ngram_chars" ) )
+		{
+			if ( tSettings.m_iNgramLen )
+				tSettings.m_iType = TOKENIZER_NGRAM;
+			else
+				sphWarning ( "ngram_chars specified, but ngram_len=0; IGNORED" );
+		}
 
 	} else
 	{
@@ -868,7 +1036,6 @@ bool sphConfTokenizer ( const CSphConfigSection & hIndex, CSphTokenizerSettings 
 	tSettings.m_sCaseFolding = hIndex.GetStr ( "charset_table" );
 	tSettings.m_iMinWordLen = Max ( hIndex.GetInt ( "min_word_len" ), 0 );
 	tSettings.m_sNgramChars = hIndex.GetStr ( "ngram_chars" );
-	tSettings.m_iNgramLen = Max ( hIndex.GetInt ( "ngram_len" ), 0 );
 	tSettings.m_sSynonymsFile = hIndex.GetStr ( "exceptions" ); // new option name
 	if ( tSettings.m_sSynonymsFile.IsEmpty() )
 		tSettings.m_sSynonymsFile = hIndex.GetStr ( "synonyms" ); // deprecated option name
@@ -888,8 +1055,81 @@ void sphConfDictionary ( const CSphConfigSection & hIndex, CSphDictSettings & tS
 {
 	tSettings.m_sMorphology = hIndex.GetStr ( "morphology" );
 	tSettings.m_sStopwords = hIndex.GetStr ( "stopwords" );
-	tSettings.m_sWordforms = hIndex.GetStr ( "wordforms" );
 	tSettings.m_iMinStemmingLen = hIndex.GetInt ( "min_stemming_len", 1 );
+
+	for ( CSphVariant * pWordforms = hIndex("wordforms"); pWordforms; pWordforms = pWordforms->m_pNext )
+	{
+		if ( !pWordforms->cstr() || !*pWordforms->cstr() )
+			continue;
+
+		CSphVector<CSphString> dFilesFound;
+
+#if USE_WINDOWS
+		WIN32_FIND_DATA tFFData;
+		const char * sLastSlash = NULL;
+		for ( const char * s = pWordforms->cstr(); *s; s++ )
+			if ( *s=='/' || *s=='\\' )
+				sLastSlash = s;
+
+		CSphString sPath;
+		if ( sLastSlash )
+			sPath = pWordforms->SubString ( 0, sLastSlash - pWordforms->cstr() + 1 );
+
+		HANDLE hFind = FindFirstFile ( pWordforms->cstr(), &tFFData );
+		if ( hFind!=INVALID_HANDLE_VALUE )
+		{
+			if ( !sPath.IsEmpty() )
+			{
+				dFilesFound.Resize ( dFilesFound.GetLength()+1 );
+				dFilesFound.Last().SetSprintf ( "%s%s", sPath.cstr(), tFFData.cFileName );
+			} else
+				dFilesFound.Add ( tFFData.cFileName );
+
+			while ( FindNextFile ( hFind, &tFFData )!=0 )
+			{
+				if ( !sPath.IsEmpty() )
+				{
+					dFilesFound.Resize ( dFilesFound.GetLength()+1 );
+					dFilesFound.Last().SetSprintf ( "%s%s", sPath.cstr(), tFFData.cFileName );
+				} else
+					dFilesFound.Add ( tFFData.cFileName );
+			}
+
+			FindClose ( hFind );
+		}
+#else
+		glob_t tGlob;
+		glob ( pWordforms->cstr(), GLOB_MARK | GLOB_NOSORT, NULL, &tGlob );
+		if ( tGlob.gl_pathv )
+			for ( int i = 0; i < (int)tGlob.gl_pathc; i++ )
+			{
+				const char * szPathName = tGlob.gl_pathv[i];
+				if ( !szPathName )
+					continue;
+
+				int iLen = strlen ( szPathName );
+				if ( !iLen || szPathName[iLen-1]=='/' )
+					continue;
+
+				dFilesFound.Add ( szPathName );
+			}
+
+		globfree ( &tGlob );
+#endif
+		dFilesFound.Sort();
+		ARRAY_FOREACH ( i, dFilesFound )
+			tSettings.m_dWordforms.Add ( dFilesFound[i] );
+	}
+
+	// remove duplicate wordform files
+	for ( int i = tSettings.m_dWordforms.GetLength()-1; i>=0; i-- )
+		for ( int j = i-1; j>=0; j-- )
+			if ( tSettings.m_dWordforms[i]==tSettings.m_dWordforms[j] )
+			{
+				fprintf ( stdout, "WARNING: duplicate wordform file found '%s' : ignoring\n", tSettings.m_dWordforms[i].cstr() );
+				tSettings.m_dWordforms.Remove(j);
+				i--;
+			}
 
 	if ( hIndex("dict") )
 	{
@@ -901,6 +1141,25 @@ void sphConfDictionary ( const CSphConfigSection & hIndex, CSphDictSettings & tS
 	}
 }
 
+#if USE_RE2
+bool sphConfFieldFilter ( const CSphConfigSection & hIndex, CSphFieldFilterSettings & tSettings, CSphString & )
+{
+	// regular expressions
+	tSettings.m_dRegexps.Resize ( 0 );
+	for ( CSphVariant * pFilter = hIndex("regexp_filter"); pFilter; pFilter = pFilter->m_pNext )
+		tSettings.m_dRegexps.Add ( pFilter->cstr() );
+
+	return tSettings.m_dRegexps.GetLength() > 0;
+}
+#else
+bool sphConfFieldFilter ( const CSphConfigSection & hIndex, CSphFieldFilterSettings &, CSphString & sError )
+{
+	if ( hIndex ( "regexp_filter" ) )
+		sError.SetSprintf ( "regexp_filter specified but no regexp support compiled" );
+
+	return false;
+}
+#endif
 
 bool sphConfIndex ( const CSphConfigSection & hIndex, CSphIndexSettings & tSettings, CSphString & sError )
 {
@@ -911,6 +1170,8 @@ bool sphConfIndex ( const CSphConfigSection & hIndex, CSphIndexSettings & tSetti
 	tSettings.m_bIndexExactWords = hIndex.GetInt ( "index_exact_words" )!=0;
 	tSettings.m_iOvershortStep = Min ( Max ( hIndex.GetInt ( "overshort_step", 1 ), 0 ), 1 );
 	tSettings.m_iStopwordStep = Min ( Max ( hIndex.GetInt ( "stopword_step", 1 ), 0 ), 1 );
+	tSettings.m_iEmbeddedLimit = hIndex.GetSize ( "embedded_limit", 16384 );
+	tSettings.m_bIndexFieldLens = hIndex.GetInt ( "index_field_lengths" )!=0;
 
 	// prefix/infix fields
 	CSphString sFields;
@@ -950,6 +1211,13 @@ bool sphConfIndex ( const CSphConfigSection & hIndex, CSphIndexSettings & tSetti
 		if ( tSettings.m_dInfixFields.Contains ( tSettings.m_dPrefixFields[i] ) )
 	{
 		sError.SetSprintf ( "field '%s' marked both as prefix and infix", tSettings.m_dPrefixFields[i].cstr() );
+		return false;
+	}
+
+	bool bWordDict = ( strcmp ( hIndex.GetStr ( "dict", "" ), "keywords" )==0 );
+	if ( hIndex("type") && hIndex["type"]=="rt" && ( tSettings.m_iMinInfixLen>0 || tSettings.m_iMinPrefixLen>0 ) && !bWordDict )
+	{
+		sError.SetSprintf ( "RT indexes support prefixes and infixes with only dict=keywords" );
 		return false;
 	}
 
@@ -1004,6 +1272,36 @@ bool sphConfIndex ( const CSphConfigSection & hIndex, CSphIndexSettings & tSetti
 	tSettings.m_bIndexSP = ( hIndex.GetInt ( "index_sp" )!=0 );
 	tSettings.m_sZones = hIndex.GetStr ( "index_zones" );
 
+	// bigrams
+	tSettings.m_eBigramIndex = SPH_BIGRAM_NONE;
+	if ( hIndex("bigram_index") )
+	{
+		CSphString & s = hIndex["bigram_index"];
+		s.ToLower();
+		if ( s=="all" )
+			tSettings.m_eBigramIndex = SPH_BIGRAM_ALL;
+		else if ( s=="first_freq" )
+			tSettings.m_eBigramIndex = SPH_BIGRAM_FIRSTFREQ;
+		else if ( s=="both_freq" )
+			tSettings.m_eBigramIndex = SPH_BIGRAM_BOTHFREQ;
+		else
+		{
+			sError.SetSprintf ( "unknown bigram_index=%s (must be all, first_freq, or both_freq)", s.cstr() );
+			return false;
+		}
+	}
+
+	tSettings.m_sBigramWords = hIndex.GetStr ( "bigram_freq_words" );
+	tSettings.m_sBigramWords.Trim();
+
+	bool bEmptyOk = tSettings.m_eBigramIndex==SPH_BIGRAM_NONE || tSettings.m_eBigramIndex==SPH_BIGRAM_ALL;
+	if ( bEmptyOk!=tSettings.m_sBigramWords.IsEmpty() )
+	{
+		sError.SetSprintf ( "bigram_index=%s, bigram_freq_words must%s be empty", hIndex["bigram_index"].cstr(),
+			bEmptyOk ? "" : " not" );
+		return false;
+	}
+
 	// all good
 	return true;
 }
@@ -1019,7 +1317,7 @@ bool sphFixupIndexSettings ( CSphIndex * pIndex, const CSphConfigSection & hInde
 		if ( !sphConfTokenizer ( hIndex, tSettings, sError ) )
 			return false;
 
-		ISphTokenizer * pTokenizer = ISphTokenizer::Create ( tSettings, sError );
+		ISphTokenizer * pTokenizer = ISphTokenizer::Create ( tSettings, NULL, sError );
 		if ( !pTokenizer )
 			return false;
 
@@ -1033,18 +1331,20 @@ bool sphFixupIndexSettings ( CSphIndex * pIndex, const CSphConfigSection & hInde
 		if ( pIndex->m_bId32to64 )
 			tSettings.m_bCrc32 = true;
 		sphConfDictionary ( hIndex, tSettings );
-		CSphDict * pDict = sphCreateDictionaryCRC ( tSettings, pIndex->GetTokenizer (), sError, pIndex->GetName() );
+		CSphDict * pDict = sphCreateDictionaryCRC ( tSettings, NULL, pIndex->GetTokenizer (), pIndex->GetName() );
 		if ( !pDict )
+		{
+			sphWarning ( "index '%s': unable to create dictionary", pIndex->GetName() );
 			return false;
+		}
 
 		pIndex->SetDictionary ( pDict );
 	}
 
 	if ( bTokenizerSpawned )
 	{
-		ISphTokenizer * pTokenizer = pIndex->LeakTokenizer ();
-		ISphTokenizer * pTokenFilter = ISphTokenizer::CreateTokenFilter ( pTokenizer, pIndex->GetDictionary ()->GetMultiWordforms () );
-		pIndex->SetTokenizer ( pTokenFilter ? pTokenFilter : pTokenizer );
+		pIndex->SetTokenizer ( ISphTokenizer::CreateMultiformFilter ( pIndex->LeakTokenizer(),
+			pIndex->GetDictionary()->GetMultiWordforms () ) );
 	}
 
 	if ( !pIndex->IsStripperInited () )
@@ -1062,8 +1362,27 @@ bool sphFixupIndexSettings ( CSphIndex * pIndex, const CSphConfigSection & hInde
 		pIndex->Setup ( tSettings );
 	}
 
-	pIndex->PostSetup();
+	// exact words fixup, needed for RT indexes
+	// cloned from indexer, remove somehow?
+	CSphDict * pDict = pIndex->GetDictionary();
+	assert ( pDict );
 
+	CSphIndexSettings tSettings = pIndex->GetSettings ();
+	if ( tSettings.m_bIndexExactWords && !pDict->HasMorphology() )
+	{
+		tSettings.m_bIndexExactWords = false;
+		pIndex->Setup ( tSettings );
+		fprintf ( stdout, "WARNING: no morphology, index_exact_words=1 has no effect, ignoring\n" );
+	}
+
+	if ( pDict->GetSettings().m_bWordDict && pDict->HasMorphology() && tSettings.m_iMinPrefixLen && !tSettings.m_bIndexExactWords )
+	{
+		tSettings.m_bIndexExactWords = true;
+		pIndex->Setup ( tSettings );
+		fprintf ( stdout, "WARNING: dict=keywords and prefixes and morphology enabled, forcing index_exact_words=1\n" );
+	}
+
+	pIndex->PostSetup();
 	return true;
 }
 
@@ -1111,7 +1430,26 @@ const char * sphLoadConfig ( const char * sOptConfig, bool bQuiet, CSphConfigPar
 
 //////////////////////////////////////////////////////////////////////////
 
-static SphLogger_fn g_pLogger = NULL;
+static void StdoutLogger ( ESphLogLevel eLevel, const char * sFmt, va_list ap )
+{
+	if ( eLevel>=SPH_LOG_DEBUG )
+		return;
+
+	switch ( eLevel )
+	{
+	case SPH_LOG_FATAL: fprintf ( stdout, "FATAL: " ); break;
+	case SPH_LOG_WARNING: fprintf ( stdout, "WARNING: " ); break;
+	case SPH_LOG_INFO: fprintf ( stdout, "WARNING: " ); break;
+	case SPH_LOG_DEBUG: // yes, I know that this branch will never execute because of the condition above.
+	case SPH_LOG_VERBOSE_DEBUG:
+	case SPH_LOG_VERY_VERBOSE_DEBUG: fprintf ( stdout, "DEBUG: " ); break;
+	}
+
+	vfprintf ( stdout, sFmt, ap );
+	fprintf ( stdout, "\n" );
+}
+
+static SphLogger_fn g_pLogger = &StdoutLogger;
 
 inline void Log ( ESphLogLevel eLevel, const char * sFmt, va_list ap )
 {
@@ -1319,6 +1657,8 @@ static int sphVSprintf ( char * pOutput, const char * sFmt, va_list ap )
 		case 's': // string
 			{
 				const char * pValue = va_arg ( ap, const char * );
+				if ( !pValue )
+					pValue = "(null)";
 				int iValue = strlen ( pValue );
 
 				if ( iWidth && bHeadingSpace )
@@ -1399,10 +1739,55 @@ void sphSafeInfo ( int iFD, const char * sFmt, ... )
 }
 
 
+int sphSafeInfo ( char * pBuf, const char * sFmt, ... )
+{
+	va_list ap;
+	va_start ( ap, sFmt );
+	int iLen = sphVSprintf ( pBuf, sFmt, ap ); // FIXME! make this vsnprintf
+	va_end ( ap );
+	return iLen;
+}
+
+
 #if !USE_WINDOWS
 
 #define SPH_BACKTRACE_ADDR_COUNT 128
+#define SPH_BT_BINARY_NAME 2
+#define SPH_BT_ADDRS 3
 static void * g_pBacktraceAddresses [SPH_BACKTRACE_ADDR_COUNT];
+static char g_pBacktrace[4096];
+static const char g_sSourceTail[] = "> source.txt\n";
+static const char * g_pArgv[128] = { "addr2line", "-e", "./searchd", "0x0", NULL };
+static CSphString g_sBinaryName;
+
+#if HAVE_BACKTRACE & HAVE_BACKTRACE_SYMBOLS
+const char * DoBacktrace ( int iDepth, int iSkip )
+{
+	if ( !iDepth || iDepth > SPH_BACKTRACE_ADDR_COUNT )
+		iDepth = SPH_BACKTRACE_ADDR_COUNT;
+	iDepth = backtrace ( g_pBacktraceAddresses, iDepth );
+	char ** ppStrings = backtrace_symbols ( g_pBacktraceAddresses, iDepth );
+	if ( !ppStrings )
+		return NULL;
+	char * pDst = g_pBacktrace;
+	for ( int i=iSkip; i<iDepth; ++i )
+	{
+		const char * pStr = ppStrings[i];
+		do
+			*pDst++ = *pStr++;
+		while (*pStr);
+		*pDst++='\n';
+	}
+	*pDst = '\0';
+	free ( ppStrings );
+	return g_pBacktrace; ///< sorry, no backtraces on Windows...
+}
+#else
+const char * DoBacktrace ( int iDepth, int iSkip )
+{
+	return NULL; ///< sorry, no backtraces on Windows...
+}
+#endif
 
 void sphBacktrace ( int iFD, bool bSafe )
 {
@@ -1461,11 +1846,12 @@ void sphBacktrace ( int iFD, bool bSafe )
 		{
 			int iRound = Min ( 65536, iStackSize );
 			pMyStack = (void *) ( ( (size_t) &pFramePointer + iRound ) & ~(size_t)65535 );
-			sphSafeInfo ( iFD, "Something wrong with thread stack, backtrace may be incorrect (fp=%p)", pFramePointer );
+			sphSafeInfo ( iFD, "Something wrong with thread stack, backtrace may be incorrect (fp=0x%p)", pFramePointer );
 
 			if ( pFramePointer > (BYTE**) pMyStack || pFramePointer < (BYTE**) pMyStack - iStackSize )
 			{
-				sphSafeInfo ( iFD, "Wrong stack limit or frame pointer, backtrace failed (fp=%p, stack=%p, stacksize=%d)", pFramePointer, pMyStack, iStackSize );
+				sphSafeInfo ( iFD, "Wrong stack limit or frame pointer, backtrace failed (fp=0x%p, stack=0x%p, stacksize=0x%x)",
+					pFramePointer, pMyStack, iStackSize );
 				break;
 			}
 		}
@@ -1476,7 +1862,7 @@ void sphBacktrace ( int iFD, bool bSafe )
 		while ( pFramePointer < (BYTE**) pMyStack )
 		{
 			pNewFP = (BYTE**) *pFramePointer;
-			sphSafeInfo ( iFD, "%p", iFrameCount==iReturnFrameCount? *(pFramePointer + SIGRETURN_FRAME_OFFSET) : *(pFramePointer + 1) );
+			sphSafeInfo ( iFD, "0x%p", iFrameCount==iReturnFrameCount ? *(pFramePointer + SIGRETURN_FRAME_OFFSET) : *(pFramePointer + 1) );
 
 			bOk = pNewFP > pFramePointer;
 			if ( !bOk ) break;
@@ -1491,29 +1877,89 @@ void sphBacktrace ( int iFD, bool bSafe )
 		break;
 	}
 
+	int iDepth = 0;
 #if HAVE_BACKTRACE
 	sphSafeInfo ( iFD, "begin of system backtrace:" );
-	int iDepth = backtrace ( g_pBacktraceAddresses, SPH_BACKTRACE_ADDR_COUNT );
+	iDepth = backtrace ( g_pBacktraceAddresses, SPH_BACKTRACE_ADDR_COUNT );
 #if HAVE_BACKTRACE_SYMBOLS
 	sphSafeInfo ( iFD, "begin of system symbols:" );
 	backtrace_symbols_fd ( g_pBacktraceAddresses, iDepth, iFD );
 #elif !HAVE_BACKTRACE_SYMBOLS
 	sphSafeInfo ( iFD, "begin of manual symbols:" );
-	for ( int i=0; i<Depth; i++ )
+	for ( int i=0; i<iDepth; i++ )
 		sphSafeInfo ( iFD, "%p", g_pBacktraceAddresses[i] );
 #endif // HAVE_BACKTRACE_SYMBOLS
 #endif // !HAVE_BACKTRACE
 
 	if ( bOk )
 		sphSafeInfo ( iFD, "Backtrace looks OK. Now you have to do following steps:\n"
-							"  1. Run the command over the crashed binary (for example, 'indexer'):\n"
-							"     nm -n indexer > indexer.sym\n"
+							"  1. Run the command over the crashed binary (for example, 'searchd'):\n"
+							"     nm -n searchd > searchd.sym\n"
 							"  2. Attach the binary, generated .sym and the text of backtrace (see above) to the bug report.\n"
 							"Also you can read the section about resolving backtraces in the documentation.");
 	sphSafeInfo ( iFD, "-------------- backtrace ends here ---------------" );
+
+	// convert all BT addresses to source code lines
+	int iCount = Min ( iDepth, (int)( sizeof(g_pArgv)/sizeof(g_pArgv[0]) - SPH_BT_ADDRS - 1 ) );
+	sphSafeInfo ( iFD, "--- BT to source lines (depth %d): ---", iCount );
+	char * pCur = g_pBacktrace;
+	for ( int i=0; i<iCount; i++ )
+	{
+		// early our on strings buffer overrun
+		if ( pCur>=g_pBacktrace+sizeof(g_pBacktrace)-48 )
+		{
+			iCount = i;
+			break;
+		}
+		g_pArgv[i+SPH_BT_ADDRS] = pCur;
+		pCur += sphSafeInfo ( pCur, "0x%x", g_pBacktraceAddresses[i] );
+		*(pCur-1) = '\0'; // make null terminated string from EOL string
+	}
+	g_pArgv[iCount+SPH_BT_ADDRS] = NULL;
+
+	// map stdout to log file
+	if ( iFD!=1 )
+	{
+		close ( 1 );
+		dup2 ( iFD, 1 );
+	}
+	execvp ( g_pArgv[0], const_cast<char **> ( g_pArgv ) ); // using execvp instead execv to auto find addr2line in directories
+
+	// if we here - execvp failed, ask user to do conversion manually
+	sphSafeInfo ( iFD, "conversion failed (error '%s'):\n"
+		"  1. Run the command provided below over the crashed binary (for example, '%s'):\n"
+		"  2. Attach the source.txt to the bug report.", strerror ( errno ), g_pArgv[SPH_BT_BINARY_NAME] );
+
+	int iColumn = 0;
+	for ( int i=0; g_pArgv[i]!=NULL; i++ )
+	{
+		const char * s = g_pArgv[i];
+		while ( *s )
+			s++;
+		int iLen = s-g_pArgv[i];
+		sphWrite ( iFD, g_pArgv[i], iLen );
+		sphWrite ( iFD, " ", 1 );
+		int iWas = iColumn % 80;
+		iColumn += iLen;
+		int iNow = iColumn % 80;
+		if ( iNow<iWas )
+			sphWrite ( iFD, "\n", 1 );
+	}
+	sphWrite ( iFD, g_sSourceTail, sizeof(g_sSourceTail)-1 );
+}
+
+void sphBacktraceSetBinaryName ( const char * sName )
+{
+	g_sBinaryName = sName;
+	g_pArgv[SPH_BT_BINARY_NAME] = g_sBinaryName.cstr();
 }
 
 #else // USE_WINDOWS
+
+const char * DoBacktrace ( int, int )
+{
+	return NULL; ///< sorry, no backtraces on Windows...
+}
 
 void sphBacktrace ( EXCEPTION_POINTERS * pExc, const char * sFile )
 {
@@ -1542,8 +1988,41 @@ void sphBacktrace ( EXCEPTION_POINTERS * pExc, const char * sFile )
 		sphInfo ( "can't dump minidump" );
 }
 
+void sphBacktraceSetBinaryName ( const char * )
+{
+}
+
 #endif // USE_WINDOWS
 
+
+static bool g_bUnlinkOld = true;
+void sphSetUnlinkOld ( bool bUnlink )
+{
+	g_bUnlinkOld = bUnlink;
+}
+
+
+void sphUnlinkIndex ( const char * sName, bool bForce )
+{
+	if ( !( g_bUnlinkOld || bForce ) )
+		return;
+
+	// FIXME! ext list must be in sync with sphinx.cpp, searchd.cpp
+	const int EXT_COUNT = 10;
+	const char * dCurExts[EXT_COUNT] = { ".sph", ".spa", ".spi", ".spd", ".spp", ".spm", ".spk", ".sps", ".spe", ".mvp" };
+	char sFileName[SPH_MAX_FILENAME_LEN];
+
+	for ( int j=0; j<EXT_COUNT; j++ )
+	{
+		snprintf ( sFileName, sizeof(sFileName), "%s%s", sName, dCurExts[j] );
+		// 'mvp' is optional file
+		if ( ::unlink ( sFileName ) && errno!=ENOENT )
+			sphWarning ( "unlink failed (file '%s', error '%s'", sFileName, strerror(errno) );
+	}
+}
+
+
+
 //
-// $Id: sphinxutils.cpp 3109 2012-02-19 14:13:20Z shodan $
+// $Id: sphinxutils.cpp 3366 2012-08-31 17:01:47Z shodan $
 //

@@ -1,5 +1,5 @@
 //
-// $Id: sphinxutils.h 3087 2012-01-30 23:07:35Z shodan $
+// $Id: sphinxutils.h 3320 2012-08-03 07:53:08Z tomat $
 //
 
 //
@@ -22,7 +22,7 @@
 #include <ctype.h>
 #include <stdarg.h>
 
-/////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////
 
 /// my own isalpha (let's build our own theme park!)
 inline int sphIsAlpha ( int c )
@@ -38,32 +38,20 @@ inline bool sphIsSpace ( int iCode )
 }
 
 
-/// string splitter, extracts sequences of alphas (as in sphIsAlpha)
-inline void sphSplit ( CSphVector<CSphString> & dOut, const char * sIn )
+/// check for keyword modifiers
+inline bool sphIsModifier ( int iSymbol )
 {
-	if ( !sIn )
-		return;
-
-	const char * p = (char*)sIn;
-	while ( *p )
-	{
-		// skip non-alphas
-		while ( (*p) && !sphIsAlpha(*p) )
-			p++;
-		if ( !(*p) )
-			break;
-
-		// this is my next token
-		assert ( sphIsAlpha(*p) );
-		const char * sNext = p;
-		while ( sphIsAlpha(*p) )
-			p++;
-		if ( sNext!=p )
-			dOut.Add().SetBinary ( sNext, p-sNext );
-	}
-
+	return iSymbol=='^' || iSymbol=='$' || iSymbol=='=' || iSymbol=='*';
 }
 
+
+/// string splitter, extracts sequences of alphas (as in sphIsAlpha)
+void sphSplit ( CSphVector<CSphString> & dOut, const char * sIn );
+
+/// string wildcard matching (case-sensitive, supports * and ? patterns)
+bool sphWildcardMatch ( const char * sSstring, const char * sPattern );
+
+//////////////////////////////////////////////////////////////////////////
 
 /// config section (hash of variant values)
 class CSphConfigSection : public SmallStringHash_T < CSphVariant >
@@ -91,7 +79,8 @@ public:
 	}
 
 	/// get size option (plain int, or with K/M prefix) value by key and default value
-	int GetSize ( const char * sKey, int iDefault ) const;
+	int		GetSize ( const char * sKey, int iDefault ) const;
+	int64_t GetSize64 ( const char * sKey, int64_t iDefault ) const;
 };
 
 /// config section type (hash of sections)
@@ -154,6 +143,9 @@ bool			sphConfTokenizer ( const CSphConfigSection & hIndex, CSphTokenizerSetting
 /// configure dictionary from index definition section
 void			sphConfDictionary ( const CSphConfigSection & hIndex, CSphDictSettings & tSettings );
 
+/// configure field filter from index definition section
+bool			sphConfFieldFilter ( const CSphConfigSection & hIndex, CSphFieldFilterSettings & tSettings, CSphString & sError );
+
 /// configure index from index definition section
 bool			sphConfIndex ( const CSphConfigSection & hIndex, CSphIndexSettings & tSettings, CSphString & sError );
 
@@ -172,12 +164,12 @@ enum ESphLogLevel
 
 typedef void ( *SphLogger_fn )( ESphLogLevel, const char *, va_list );
 
-void sphWarning ( const char * sFmt, ... ) __attribute__((format(printf,1,2)));
-void sphInfo ( const char * sFmt, ... ) __attribute__((format(printf,1,2)));
-void sphLogFatal ( const char * sFmt, ... ) __attribute__((format(printf,1,2)));
-void sphLogDebug ( const char * sFmt, ... ) __attribute__((format(printf,1,2)));
-void sphLogDebugv ( const char * sFmt, ... ) __attribute__((format(printf,1,2)));
-void sphLogDebugvv ( const char * sFmt, ... ) __attribute__((format(printf,1,2)));
+void sphWarning ( const char * sFmt, ... ) __attribute__((format(printf,1,2))); //NOLINT
+void sphInfo ( const char * sFmt, ... ) __attribute__((format(printf,1,2))); //NOLINT
+void sphLogFatal ( const char * sFmt, ... ) __attribute__((format(printf,1,2))); //NOLINT
+void sphLogDebug ( const char * sFmt, ... ) __attribute__((format(printf,1,2))); //NOLINT
+void sphLogDebugv ( const char * sFmt, ... ) __attribute__((format(printf,1,2))); //NOLINT
+void sphLogDebugvv ( const char * sFmt, ... ) __attribute__((format(printf,1,2))); //NOLINT
 void sphSetLogger ( SphLogger_fn fnLog );
 
 //////////////////////////////////////////////////////////////////////////
@@ -216,8 +208,13 @@ void sphBacktrace ( int iFD, bool bSafe=false );
 void sphBacktrace ( EXCEPTION_POINTERS * pExc, const char * sFile );
 #endif
 
+void sphBacktraceSetBinaryName ( const char * sName );
+
+/// plain backtrace - returns static buffer with the text of the call stack
+const char * DoBacktrace ( int iDepth=0, int iSkip=0 );
+
 #endif // _sphinxutils_
 
 //
-// $Id: sphinxutils.h 3087 2012-01-30 23:07:35Z shodan $
+// $Id: sphinxutils.h 3320 2012-08-03 07:53:08Z tomat $
 //

@@ -56,8 +56,7 @@ This file contains any custom css that I've written
 <!-- END Chosen -->
 
 <!-- BEGIN Datatable -->
-<link type="text/css" rel="stylesheet" href="<?php echo $_SESSION['SITE_URL']?>css/dt/dpage.css" />
-<link type="text/css" rel="stylesheet" href="<?php echo $_SESSION['SITE_URL']?>css/dt/dtable.css" />
+<link type="text/css" rel="stylesheet" href="<?php echo $_SESSION['SITE_URL']?>includes/js/jquery/plugins/datatables/css/jquery.dataTables.css" />
 <!-- END Datatable -->
 
 <!-- BEGIN Context Menu -->

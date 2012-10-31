@@ -30,13 +30,10 @@
 <!-- BEGIN Charts -->
 <script type="text/javascript" src="includes/js/hc/js/highcharts.js"></script>
 <!-- 1b) Optional: the exporting module -->
-<script type="text/javascript" src="includes/js/hc/js/modules/exporting.js"></script>
+<!-- disabled because of POSTs to external URL (highcharts.com)
+    Please see here: http://www.highcharts.com/documentation/how-to-use#exporting
+    <script type="text/javascript" src="includes/js/hc/js/modules/exporting.js"></script>-->
 <!-- END Charts -->
-
-<!-- BEGIN Modernizr/placeholder (html5 placeholder shim) -->
-<script type="text/javascript" src="includes/js/modernizr-2.5.3.js"></script>
-<script type="text/javascript" src="includes/js/jquery-placeholder.js"></script>
-<!-- END Modernizr -->
 
 <!-- BEGIN Help Modal -->
 <div class="dialog_hide">
@@ -121,15 +118,6 @@ function savelayout(){
 </script>
 <!-- END JQuery Portlets -->
 
-<!-- BEGIN Time Range Selector -->
-<script type="text/javascript" src="includes/js/jquery/plugins/jquery.timePicker.js"></script>
-<!-- END Time Range Selector -->
-
-<!-- BEGIN Multiselect -->
-<!-- <script type="text/javascript" src="includes/js/jquery/plugins/ui.multiselect.js"></script>-->
-<!-- <script type="text/javascript" src="includes/js/jquery/plugins/quasipartikel.multiselect.js"></script> -->
-<!-- END Multiselect -->
-
 <!-- BEGIN JQuery Multiselect Filter -->
 <script src="includes/js/jquery/plugins/jquery.multiselect.min.js" type="text/javascript"></script>
 <script src="includes/js/jquery/plugins/jquery.multiselect.filter.min.js" type="text/javascript"></script>
@@ -160,7 +148,7 @@ function savelayout(){
 <!-- END Chosen -->
 
 <!-- BEGIN Datatable -->
-<script type="text/javascript" src="includes/js/jquery/plugins/jquery.dataTables.js"></script>
+<script type="text/javascript" src="includes/js/jquery/plugins/datatables/js/jquery.dataTables.min.js"></script>
 <!-- END Datatable -->
 
 <!-- BEGIN Tabs -->
@@ -297,112 +285,6 @@ function reloadIE(id, display, url) {
 }
 </script>
 -->
-
-<!-- BEGIN Date Picker Functions -->
-<script type="text/javascript">
-$(document).ready(function(){
-	
-    if($(window.parent.document).find('iframe').size()){
-        var inframe = true;
-    }
-    var dedup = <?php echo ($_SESSION['DEDUP'])?>; 
-    if (dedup == "1") {
-        $('#fo_date').daterangepicker({
-        arrows: 'true',
-        dateFormat: 'yy-mm-dd',
-        rangeSplitter: 'to',
-        });
-    } else {
-        $('#fotr').remove()
-        $('#trandor').remove()
-        $('#lo_checkbox').remove()
-        $('#lotext').remove()
-    };
-    $('#lo_date').daterangepicker({
-    arrows: 'true',
-    dateFormat: 'yy-mm-dd',
-    rangeSplitter: 'to',
-    });
-}); //end doc ready
-</script>
-<!-- END Date Picker Functions -->
-
-<!-- BEGIN Time Picker Functions -->
-<script type="text/javascript">
-$(document).ready(function(){
-    var dedup = <?php echo ($_SESSION['DEDUP'])?>; 
-    if (dedup == "1") {
-        $("#fo_time_start, #fo_time_end").timePicker();
-        // Store time used by duration.
-        var oldTime = $.timePicker("#fo_time_start").getTime();
-
-        // Keep the duration between the two inputs.
-        $("#fo_time_start").change(function() {
-            // Added '!= '23:59:59'' so the time would not cycle to the next day
-            if ($("#fo_time_end").val() != '23:59:59') { // Only update when second input has a value.
-            // Calculate duration.
-            var duration = ($.timePicker("#fo_time_end").getTime() - oldTime);
-            var time = $.timePicker("#fo_time_start").getTime();
-            // Calculate and update the time in the second input.
-            $.timePicker("#fo_time_end").setTime(new Date(new Date(time.getTime() + duration)));
-            oldTime = time;
-            }
-            });
-        // Validate.
-        $("#fo_time_end").change(function() {
-            if($.timePicker("#fo_time_start").getTime() > $.timePicker(this).getTime()) {
-            $(this).addClass("error");
-            }
-            else {
-            $(this).removeClass("error");
-            }
-            });
-        // Clear watermark when the user clicks in the time entry field
-        $("#fo_time_start").focus(function() {
-            $(this).removeClass("watermark");
-            });
-        $("#fo_time_end").focus(function() {
-            $(this).removeClass("watermark");
-            });
-    };
-        });
-$(document).ready(function(){
-        $("#lo_time_start, #lo_time_end").timePicker();
-        // Store time used by duration.
-        var oldTime = $.timePicker("#lo_time_start").getTime();
-
-        // Keep the duration between the two inputs.
-        $("#lo_time_start").change(function() {
-            // Added '!= '23:59:59'' so the time would not cycle to the next day
-            if ($("#lo_time_end").val() != '23:59:59') { // Only update when second input has a value.
-            // Calculate duration.
-            var duration = ($.timePicker("#lo_time_end").getTime() - oldTime);
-            var time = $.timePicker("#lo_time_start").getTime();
-            // Calculate and update the time in the second input.
-            $.timePicker("#lo_time_end").setTime(new Date(new Date(time.getTime() + duration)));
-            oldTime = time;
-            }
-            });
-        // Validate.
-        $("#lo_time_end").change(function() {
-            if($.timePicker("#lo_time_start").getTime() > $.timePicker(this).getTime()) {
-            $(this).addClass("error");
-            }
-            else {
-            $(this).removeClass("error");
-            }
-            });
-        // Clear watermark when the user clicks in the time entry field
-        $("#lo_time_start").focus(function() {
-            $(this).removeClass("watermark");
-            });
-        $("#lo_time_end").focus(function() {
-            $(this).removeClass("watermark");
-            });
-        });
-</script>
-<!-- END Time Picker Functions -->
-
 
 <!-- BEGIN Select All Checkboxes -->
 <script type="text/javascript">

@@ -269,7 +269,6 @@ if (tail > 0) {
     $("#results_processing").hide();
     $("#results_paginate").hide();
 } else {
-$("#results_filter").append('&nbsp;&nbsp;Prev/Next');
 $("#results_filter").append($('#results_paginate'));
 $("#results_processing").hide();
 }

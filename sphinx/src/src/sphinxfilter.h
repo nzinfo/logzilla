@@ -1,5 +1,5 @@
 //
-// $Id: sphinxfilter.h 3087 2012-01-30 23:07:35Z shodan $
+// $Id: sphinxfilter.h 3174 2012-03-29 15:57:21Z shodan $
 //
 
 //
@@ -27,6 +27,8 @@ struct ISphFilter
 	virtual void SetMVAStorage ( const DWORD * ) {}
 
 	virtual ~ISphFilter () {}
+
+	virtual ISphFilter * Optimize() { return this; }
 
 	/// evaluate filter for a given match
 	/// returns true if match satisfies the filter critertia (i.e. in range, found in values list etc)
@@ -58,5 +60,5 @@ ISphFilter * sphJoinFilters ( ISphFilter *, ISphFilter * );
 #endif // _sphinxfilter_
 
 //
-// $Id: sphinxfilter.h 3087 2012-01-30 23:07:35Z shodan $
+// $Id: sphinxfilter.h 3174 2012-03-29 15:57:21Z shodan $
 //

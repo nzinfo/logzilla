@@ -1,7 +1,7 @@
-<html><head><meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1"><title>Sphinx 2.0.4-release reference manual</title><meta name="generator" content="DocBook XSL Stylesheets V1.76.1">
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1"><title>Sphinx 2.1.0-beta reference manual</title><meta name="generator" content="DocBook XSL Stylesheets V1.75.2">
 <style type="text/css">pre.programlisting { background-color: #f0f0f0; padding: 0.5em; margin-left: 2em; margin-right: 2em; }</style>
 </head>
-<body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div lang="en" class="book" title="Sphinx 2.0.4-release reference manual"><div class="titlepage"><div><div><h1 class="title">Sphinx 2.0.4-release reference manual</h1></div>
+<body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div lang="en" class="book" title="Sphinx 2.1.0-beta reference manual"><div class="titlepage"><div><div><h1 class="title">Sphinx 2.1.0-beta reference manual</h1></div>
 <div><h2 class="subtitle">Free open-source SQL full-text search engine</h2></div>
 <div><p class="copyright">Copyright &copy; 2001-2012 Andrew Aksyonoff</p></div>
 <div><p class="copyright">Copyright &copy; 2008-2012 Sphinx Technologies Inc, <a class="ulink" href="http://sphinxsearch.com" target="_top">http://sphinxsearch.com</a></p></div></div>
@@ -88,10 +88,11 @@
 <dt><span class="sect1"><a href="#sphinxql-update">7.18. UPDATE syntax</a></span></dt>
 <dt><span class="sect1"><a href="#sphinxql-attach-index">7.19. ATTACH INDEX syntax</a></span></dt>
 <dt><span class="sect1"><a href="#sphinxql-flush-rtindex">7.20. FLUSH RTINDEX syntax</a></span></dt>
-<dt><span class="sect1"><a href="#sphinxql-multi-queries">7.21. Multi-statement queries</a></span></dt>
-<dt><span class="sect1"><a href="#sphinxql-comment-syntax">7.22. Comment syntax</a></span></dt>
-<dt><span class="sect1"><a href="#sphinxql-reserved-keywords">7.23. List of SphinxQL reserved keywords</a></span></dt>
-<dt><span class="sect1"><a href="#sphinxql-upgrading-magics">7.24. SphinxQL upgrade notes, version 2.0.1-beta</a></span></dt>
+<dt><span class="sect1"><a href="#sphinxql-truncate-rtindex">7.21. TRUNCATE RTINDEX syntax</a></span></dt>
+<dt><span class="sect1"><a href="#sphinxql-multi-queries">7.22. Multi-statement queries</a></span></dt>
+<dt><span class="sect1"><a href="#sphinxql-comment-syntax">7.23. Comment syntax</a></span></dt>
+<dt><span class="sect1"><a href="#sphinxql-reserved-keywords">7.24. List of SphinxQL reserved keywords</a></span></dt>
+<dt><span class="sect1"><a href="#sphinxql-upgrading-magics">7.25. SphinxQL upgrade notes, version 2.0.1-beta</a></span></dt>
 </dl></dd><dt><span class="chapter"><a href="#api-reference">8. API reference</a></span></dt>
 <dd><dl><dt><span class="sect1"><a href="#api-funcgroup-general">8.1. General API functions</a></span></dt>
 <dd><dl><dt><span class="sect2"><a href="#api-func-getlasterror">8.1.1. GetLastError</a></span></dt>
@@ -300,16 +301,18 @@
 <dt><span class="sect2"><a href="#conf-binlog-path">11.4.30. binlog_path</a></span></dt>
 <dt><span class="sect2"><a href="#conf-binlog-flush">11.4.31. binlog_flush</a></span></dt>
 <dt><span class="sect2"><a href="#conf-binlog-max-log-size">11.4.32. binlog_max_log_size</a></span></dt>
-<dt><span class="sect2"><a href="#conf-collation-server">11.4.33. collation_server</a></span></dt>
-<dt><span class="sect2"><a href="#conf-collation-libc-locale">11.4.34. collation_libc_locale</a></span></dt>
-<dt><span class="sect2"><a href="#conf-plugin-dir">11.4.35. plugin_dir</a></span></dt>
-<dt><span class="sect2"><a href="#conf-mysql-version-string">11.4.36. mysql_version_string</a></span></dt>
-<dt><span class="sect2"><a href="#conf-rt-flush-period">11.4.37. rt_flush_period</a></span></dt>
-<dt><span class="sect2"><a href="#conf-thread-stack">11.4.38. thread_stack</a></span></dt>
-<dt><span class="sect2"><a href="#conf-expansion-limit">11.4.39. expansion_limit</a></span></dt>
-<dt><span class="sect2"><a href="#conf-compat-sphinxql-magics">11.4.40. compat_sphinxql_magics</a></span></dt>
-<dt><span class="sect2"><a href="#conf-watchdog">11.4.41. watchdog</a></span></dt>
-<dt><span class="sect2"><a href="#conf-prefork-rotation-throttle">11.4.42. prefork_rotation_throttle</a></span></dt>
+<dt><span class="sect2"><a href="#conf-snippets-file-prefix">11.4.33. snippets_file_prefix</a></span></dt>
+<dt><span class="sect2"><a href="#conf-collation-server">11.4.34. collation_server</a></span></dt>
+<dt><span class="sect2"><a href="#conf-collation-libc-locale">11.4.35. collation_libc_locale</a></span></dt>
+<dt><span class="sect2"><a href="#conf-plugin-dir">11.4.36. plugin_dir</a></span></dt>
+<dt><span class="sect2"><a href="#conf-mysql-version-string">11.4.37. mysql_version_string</a></span></dt>
+<dt><span class="sect2"><a href="#conf-rt-flush-period">11.4.38. rt_flush_period</a></span></dt>
+<dt><span class="sect2"><a href="#conf-thread-stack">11.4.39. thread_stack</a></span></dt>
+<dt><span class="sect2"><a href="#conf-expansion-limit">11.4.40. expansion_limit</a></span></dt>
+<dt><span class="sect2"><a href="#conf-compat-sphinxql-magics">11.4.41. compat_sphinxql_magics</a></span></dt>
+<dt><span class="sect2"><a href="#conf-watchdog">11.4.42. watchdog</a></span></dt>
+<dt><span class="sect2"><a href="#conf-prefork-rotation-throttle">11.4.43. prefork_rotation_throttle</a></span></dt>
+<dt><span class="sect2"><a href="#conf-sphinxql-state">11.4.44. sphinxql_state</a></span></dt>
 </dl></dd></dl></dd><dt><span class="appendix"><a href="#changelog">A. Sphinx revision history</a></span></dt>
 <dd><dl><dt><span class="sect1"><a href="#rel204">A.1. Version 2.0.4-release, 02 mar 2012</a></span></dt>
 <dt><span class="sect1"><a href="#rel203">A.2. Version 2.0.3-release, 23 dec 2011</a></span></dt>
@@ -1566,7 +1569,7 @@ gets saved, they can not be unlinked. An ever-growing binlog
 is not very good for disk use and crash recovery time. Starting
 with 2.0.1-beta you can configure <code class="filename">searchd</code>
 to perform a periodic RAM chunk flush to fix that problem
-using a <a class="link" href="#conf-rt-flush-period" title="11.4.37.&nbsp;rt_flush_period">rt_flush_period</a>
+using a <a class="link" href="#conf-rt-flush-period" title="11.4.38.&nbsp;rt_flush_period">rt_flush_period</a>
 directive. With periodic flushes enabled, <code class="filename">searchd</code>
 will keep a separate thread, checking whether RT indexes RAM
 chunks need to be written back to disk. Once that happens,
@@ -2700,7 +2703,7 @@ Two API methods that implement multi-query mechanism are
 <a class="link" href="#api-func-addquery" title="8.6.2.&nbsp;AddQuery">AddQuery()</a> and
 <a class="link" href="#api-func-runqueries" title="8.6.3.&nbsp;RunQueries">RunQueries()</a>.
 You can also run multiple queries with SphinxQL, see
-<a class="xref" href="#sphinxql-multi-queries" title="7.21.&nbsp;Multi-statement queries">Section&nbsp;7.21, &#8220;Multi-statement queries&#8221;</a>.
+<a class="xref" href="#sphinxql-multi-queries" title="7.22.&nbsp;Multi-statement queries">Section&nbsp;7.22, &#8220;Multi-statement queries&#8221;</a>.
 (In fact, regular <a class="link" href="#api-func-addquery" title="8.6.2.&nbsp;AddQuery">Query()</a>
 call is internally implemented as a single AddQuery() call immediately
 followed by RunQueries() call.) AddQuery() captures the current state
@@ -2832,10 +2835,10 @@ characters properly.
 </p><p>
 Second, we additionally need to know the language-specific
 string sorting rules. For instance, when sorting according to US rules
-in en_US locale, the accented character '&iuml;' (small letter i with diaeresis)
+in en_US locale, the accented character 'ï' (small letter i with diaeresis)
 should be placed somewhere after 'z'. However, when sorting with French rules
 and fr_FR locale in mind, it should be placed between 'i' and 'j'. And some
-other set of rules might choose to ignore accents at all, allowing '&iuml;'
+other set of rules might choose to ignore accents at all, allowing 'ï'
 and 'i' to be mixed arbitrarily.
 </p><p>
 Third, but not least, we might need case-sensitive sorting in some
@@ -2856,7 +2859,7 @@ and can thus support any locale that is installed on your system. They provide
 case-insensitive (_ci) and case-sensitive (_cs) comparisons respectively.
 By default they will use C locale, effectively resorting to bytewise
 comparisons. To change that, you need to specify a different available
-locale using <a class="link" href="#conf-collation-libc-locale" title="11.4.34.&nbsp;collation_libc_locale">collation_libc_locale</a>
+locale using <a class="link" href="#conf-collation-libc-locale" title="11.4.35.&nbsp;collation_libc_locale">collation_libc_locale</a>
 directive. The list of locales available on your system can usually be obtained
 with the <code class="filename">locale</code> command:
 </p><pre class="programlisting">
@@ -2898,7 +2901,7 @@ Collation can be overriden via SphinxQL on a per-session basis using
 <code class="code">SET collation_connection</code> statement. All subsequent SphinxQL
 queries will use this collation. SphinxAPI and SphinxSE queries will use
 the server default collation, as specified in
-<a class="link" href="#conf-collation-server" title="11.4.33.&nbsp;collation_server">collation_server</a> configuration
+<a class="link" href="#conf-collation-server" title="11.4.34.&nbsp;collation_server">collation_server</a> configuration
 directive. Sphinx currently defaults to <code class="option">libc_ci</code> collation.
 </p><p>
 Collations should affect all string attribute comparisons, including
@@ -2924,7 +2927,7 @@ libraries (aka shared objects). Most of the modern OSes are eligible,
 including Linux, Windows, MacOS, Solaris, BSD and others. (The internal
 testing has been done on Linux and Windows.) The UDF libraries must
 reside in a directory specified by
-<a class="link" href="#conf-plugin-dir" title="11.4.35.&nbsp;plugin_dir">plugin_dir</a> directive, and the
+<a class="link" href="#conf-plugin-dir" title="11.4.36.&nbsp;plugin_dir">plugin_dir</a> directive, and the
 server must be configured to use <code class="option">workers = threads</code> mode.
 Relative paths to the library files are not allowed. Once the library
 is succesfully built and copied to the trusted location, you can then
@@ -3678,10 +3681,11 @@ machine with possibly different path layouts.
 <dt><span class="sect1"><a href="#sphinxql-update">7.18. UPDATE syntax</a></span></dt>
 <dt><span class="sect1"><a href="#sphinxql-attach-index">7.19. ATTACH INDEX syntax</a></span></dt>
 <dt><span class="sect1"><a href="#sphinxql-flush-rtindex">7.20. FLUSH RTINDEX syntax</a></span></dt>
-<dt><span class="sect1"><a href="#sphinxql-multi-queries">7.21. Multi-statement queries</a></span></dt>
-<dt><span class="sect1"><a href="#sphinxql-comment-syntax">7.22. Comment syntax</a></span></dt>
-<dt><span class="sect1"><a href="#sphinxql-reserved-keywords">7.23. List of SphinxQL reserved keywords</a></span></dt>
-<dt><span class="sect1"><a href="#sphinxql-upgrading-magics">7.24. SphinxQL upgrade notes, version 2.0.1-beta</a></span></dt>
+<dt><span class="sect1"><a href="#sphinxql-truncate-rtindex">7.21. TRUNCATE RTINDEX syntax</a></span></dt>
+<dt><span class="sect1"><a href="#sphinxql-multi-queries">7.22. Multi-statement queries</a></span></dt>
+<dt><span class="sect1"><a href="#sphinxql-comment-syntax">7.23. Comment syntax</a></span></dt>
+<dt><span class="sect1"><a href="#sphinxql-reserved-keywords">7.24. List of SphinxQL reserved keywords</a></span></dt>
+<dt><span class="sect1"><a href="#sphinxql-upgrading-magics">7.25. SphinxQL upgrade notes, version 2.0.1-beta</a></span></dt>
 </dl></div>
 <p>
 SphinxQL is our SQL dialect that exposes all of the search daemon
@@ -4196,7 +4200,7 @@ CREATE FUNCTION statement, introduced in version 2.0.1-beta,
 installs a <a class="link" href="#udf" title="5.13.&nbsp;User-defined functions (UDF)">user-defined function (UDF)</a>
 with the given name and type from the given library file.
 The library file must reside in a trusted
-<a class="link" href="#conf-plugin-dir" title="11.4.35.&nbsp;plugin_dir">plugin_dir</a> directory.
+<a class="link" href="#conf-plugin-dir" title="11.4.36.&nbsp;plugin_dir">plugin_dir</a> directory.
 On success, the function is available for use in all subsequent
 queries that the server receives. Example:
 </p><pre class="programlisting">
@@ -4398,7 +4402,7 @@ that all the transactions in the log since the last successful RAM chunk
 write would need to be replayed. Those writes normally happen either
 on a clean shutdown, or periodically with a (big enough!) interval
 between writes specified in
-<a class="link" href="#conf-rt-flush-period" title="11.4.37.&nbsp;rt_flush_period">rt_flush_period</a> directive.
+<a class="link" href="#conf-rt-flush-period" title="11.4.38.&nbsp;rt_flush_period">rt_flush_period</a> directive.
 So such a backup made at an arbitrary point in time just might end up
 with way too much binary log data to replay.
 </p><p>
@@ -4410,7 +4414,18 @@ FLUSH RTINDEX should be almost instant.
 mysql&gt; FLUSH RTINDEX rt;
 Query OK, 0 rows affected (0.05 sec)
 </pre></div>
-<div class="sect1" title="7.21.&nbsp;Multi-statement queries"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="sphinxql-multi-queries"></a>7.21.&nbsp;Multi-statement queries</h2></div></div></div>
+<div class="sect1" title="7.21.&nbsp;TRUNCATE RTINDEX syntax"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="sphinxql-truncate-rtindex"></a>7.21.&nbsp;TRUNCATE RTINDEX syntax</h2></div></div></div>
+<pre class="programlisting">
+TRUNCATE RTINDEX rtindex
+</pre><p>
+TRUNCATE RTINDEX statement, added in version 2.1.1-beta, clears
+the RT index completely. It disposes the in-memory data, unlinks
+all the index data files, and releases the associated binary logs.
+</p><pre class="programlisting">
+mysql&gt; TRUNCATE RTINDEX rt;
+Query OK, 0 rows affected (0.05 sec)
+</pre></div>
+<div class="sect1" title="7.22.&nbsp;Multi-statement queries"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="sphinxql-multi-queries"></a>7.22.&nbsp;Multi-statement queries</h2></div></div></div>
 <p>
 Starting version 2.0.1-beta, SphinxQL supports multi-statement
 queries, or batches. Possible inter-statement optimizations described
@@ -4472,7 +4487,7 @@ sequence of these statements are allowed. The results sets
 returned should match those that would be returned if the
 batched queries were sent one by one.
 </p></div>
-<div class="sect1" title="7.22.&nbsp;Comment syntax"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="sphinxql-comment-syntax"></a>7.22.&nbsp;Comment syntax</h2></div></div></div>
+<div class="sect1" title="7.23.&nbsp;Comment syntax"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="sphinxql-comment-syntax"></a>7.23.&nbsp;Comment syntax</h2></div></div></div>
 <p>
 Since version 2.0.1-beta, SphinxQL supports C-style comment syntax.
 Everything from an opening <code class="code">/*</code> sequence to a closing
@@ -4486,7 +4501,7 @@ improving generaly query interoperability between Sphinx and MySQL.)
 SELECT /*! SQL_CALC_FOUND_ROWS */ col1 FROM table1 WHERE ...
 </pre><p>
 </p></div>
-<div class="sect1" title="7.23.&nbsp;List of SphinxQL reserved keywords"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="sphinxql-reserved-keywords"></a>7.23.&nbsp;List of SphinxQL reserved keywords</h2></div></div></div>
+<div class="sect1" title="7.24.&nbsp;List of SphinxQL reserved keywords"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="sphinxql-reserved-keywords"></a>7.24.&nbsp;List of SphinxQL reserved keywords</h2></div></div></div>
 <p>A complete alphabetical list of keywords that are currently reserved
 in SphinxQL syntax (and therefore can not be used as identifiers).
 </p><pre class="programlisting">
@@ -4542,7 +4557,7 @@ WEIGHT
 WHERE
 WITHIN
 </pre></div>
-<div class="sect1" title="7.24.&nbsp;SphinxQL upgrade notes, version 2.0.1-beta"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="sphinxql-upgrading-magics"></a>7.24.&nbsp;SphinxQL upgrade notes, version 2.0.1-beta</h2></div></div></div>
+<div class="sect1" title="7.25.&nbsp;SphinxQL upgrade notes, version 2.0.1-beta"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="sphinxql-upgrading-magics"></a>7.25.&nbsp;SphinxQL upgrade notes, version 2.0.1-beta</h2></div></div></div>
 <p>
 This section only applies to existing applications that
 use SphinxQL versions prior to 2.0.1-beta.
@@ -4564,7 +4579,7 @@ In version 2.0.1-beta, we fixed that. SphinxQL is now more
 SQL compliant (and will be further brought in as much compliance
 with standard SQL syntax as possible). That is not yet a breaking
 change, because <code class="filename">searchd</code> now supports
-<a class="link" href="#conf-compat-sphinxql-magics" title="11.4.40.&nbsp;compat_sphinxql_magics"><code class="code">compat_sphinxql_magics</code></a>
+<a class="link" href="#conf-compat-sphinxql-magics" title="11.4.41.&nbsp;compat_sphinxql_magics"><code class="code">compat_sphinxql_magics</code></a>
 directive that flips between the old "compatibility" mode and the new
 "compliance" mode. However, the compatibility mode support is going
 to be removed in future, so it's strongly advised to update SphinxQL
@@ -5337,7 +5352,11 @@ Starting with version 0.9.9-rc1, keywords can contain wildcards, that work simil
 	when this flag is enabled. Boolean, default is false. Starting with version 2.0.2-beta,
 	building of the snippets could be parallelized between remote agents. Just set the <a class="link" href="#conf-dist-threads" title="11.4.29.&nbsp;dist_threads">'dist_threads'</a> param in the config
 	to the value greater than 1, and then invoke the snippets
-	generation over the distributed index, which contain only one(!) first(!) <a class="link" href="#conf-local" title="11.2.30.&nbsp;local">local</a> agent and several remotes.
+	generation over the distributed index, which contain only one(!) <a class="link" href="#conf-local" title="11.2.30.&nbsp;local">local</a> agent and several remotes.
+	Starting with version 2.1.0-dev, the <a class="link" href="#conf-snippets-file-prefix" title="11.4.33.&nbsp;snippets_file_prefix">snippets_file_prefix</a> option is
+	also in the game and the final filename is calculated by concatenation of the prefix with given name. 
+	Otherwords, when snippets_file_prefix is '/var/data' and filename is 'text.txt' the sphinx will try to generate the snippets
+	from the file '/var/datatext.txt', which is exactly '/var/data' + 'text.txt'.
 	</p></dd><dt><span class="term">"load_files_scattered":</span></dt>
 <dd><p>Added in version 2.0.2-beta. It works only with distributed snippets generation
 	with remote agents. The source files for snippets could be distributed among different agents, and the main daemon will merge
@@ -6203,16 +6222,18 @@ you a few additional questions about it.
 <dt><span class="sect2"><a href="#conf-binlog-path">11.4.30. binlog_path</a></span></dt>
 <dt><span class="sect2"><a href="#conf-binlog-flush">11.4.31. binlog_flush</a></span></dt>
 <dt><span class="sect2"><a href="#conf-binlog-max-log-size">11.4.32. binlog_max_log_size</a></span></dt>
-<dt><span class="sect2"><a href="#conf-collation-server">11.4.33. collation_server</a></span></dt>
-<dt><span class="sect2"><a href="#conf-collation-libc-locale">11.4.34. collation_libc_locale</a></span></dt>
-<dt><span class="sect2"><a href="#conf-plugin-dir">11.4.35. plugin_dir</a></span></dt>
-<dt><span class="sect2"><a href="#conf-mysql-version-string">11.4.36. mysql_version_string</a></span></dt>
-<dt><span class="sect2"><a href="#conf-rt-flush-period">11.4.37. rt_flush_period</a></span></dt>
-<dt><span class="sect2"><a href="#conf-thread-stack">11.4.38. thread_stack</a></span></dt>
-<dt><span class="sect2"><a href="#conf-expansion-limit">11.4.39. expansion_limit</a></span></dt>
-<dt><span class="sect2"><a href="#conf-compat-sphinxql-magics">11.4.40. compat_sphinxql_magics</a></span></dt>
-<dt><span class="sect2"><a href="#conf-watchdog">11.4.41. watchdog</a></span></dt>
-<dt><span class="sect2"><a href="#conf-prefork-rotation-throttle">11.4.42. prefork_rotation_throttle</a></span></dt>
+<dt><span class="sect2"><a href="#conf-snippets-file-prefix">11.4.33. snippets_file_prefix</a></span></dt>
+<dt><span class="sect2"><a href="#conf-collation-server">11.4.34. collation_server</a></span></dt>
+<dt><span class="sect2"><a href="#conf-collation-libc-locale">11.4.35. collation_libc_locale</a></span></dt>
+<dt><span class="sect2"><a href="#conf-plugin-dir">11.4.36. plugin_dir</a></span></dt>
+<dt><span class="sect2"><a href="#conf-mysql-version-string">11.4.37. mysql_version_string</a></span></dt>
+<dt><span class="sect2"><a href="#conf-rt-flush-period">11.4.38. rt_flush_period</a></span></dt>
+<dt><span class="sect2"><a href="#conf-thread-stack">11.4.39. thread_stack</a></span></dt>
+<dt><span class="sect2"><a href="#conf-expansion-limit">11.4.40. expansion_limit</a></span></dt>
+<dt><span class="sect2"><a href="#conf-compat-sphinxql-magics">11.4.41. compat_sphinxql_magics</a></span></dt>
+<dt><span class="sect2"><a href="#conf-watchdog">11.4.42. watchdog</a></span></dt>
+<dt><span class="sect2"><a href="#conf-prefork-rotation-throttle">11.4.43. prefork_rotation_throttle</a></span></dt>
+<dt><span class="sect2"><a href="#conf-sphinxql-state">11.4.44. sphinxql_state</a></span></dt>
 </dl></dd></dl></div>
 <div class="sect1" title="11.1.&nbsp;Data source configuration options"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="confgroup-source"></a>11.1.&nbsp;Data source configuration options</h2></div></div></div>
 <div class="sect2" title="11.1.1.&nbsp;type"><div class="titlepage"><div><div><h3 class="title"><a name="conf-source-type"></a>11.1.1.&nbsp;type</h3></div></div></div>
@@ -7404,7 +7425,7 @@ keywords). Substring searching time can vary greatly depending
 on how many actual keywords match the given substring (in other
 words, into how many keywords does the search term expand).
 The maximum number of keywords matched is restricted by the
-<a class="link" href="#conf-expansion-limit" title="11.4.39.&nbsp;expansion_limit">expansion_limit</a>
+<a class="link" href="#conf-expansion-limit" title="11.4.40.&nbsp;expansion_limit">expansion_limit</a>
 directive.
 </p><p>
 Essentially, keywords and CRC dictionaries represent the two
@@ -9311,7 +9332,27 @@ more efficient binlog disk usage under certain borderline workloads.
 </p><h4>Example:</h4><pre class="programlisting">
 binlog_max_log_size = 16M
 </pre></div>
-<div class="sect2" title="11.4.33.&nbsp;collation_server"><div class="titlepage"><div><div><h3 class="title"><a name="conf-collation-server"></a>11.4.33.&nbsp;collation_server</h3></div></div></div>
+<div class="sect2" title="11.4.33.&nbsp;snippets_file_prefix"><div class="titlepage"><div><div><h3 class="title"><a name="conf-snippets-file-prefix"></a>11.4.33.&nbsp;snippets_file_prefix</h3></div></div></div>
+<p>
+The prefix for the files, used in distributed snippets generation together with 
+<code class="option">load_files</code> and <code class="option">load_files_scattered</code> options.
+Optional, default is empty ("").
+Introduced in version 2.1.0-dev.
+</p><p>
+Specifies the prefix, which will be attached in the front of all files,
+involved in indirect snippets generation. Note, that this is namely prefix,
+not the path. So, if you want to provide the path to the folder here,
+don't forget to append the trailing path separator to it.
+</p><h4>Example:</h4><pre class="programlisting">
+snippets_file_prefix = /var/data/
+</pre><p>With such setting you can then invoke the snippets generation for 'file.txt',
+and the sphinx will actually try to open the '/var/data/file.txt'.
+</p><p>The option only affects the local daemon and not touches the agents. So, in above example
+if you use distributed snippets generation, only the master will try to open '/var/data/file.txt',
+but all remote agents will receive just 'file.txt' as was queried - and so, they will try to
+open the file with their own prefixes (if any).
+</p></div>
+<div class="sect2" title="11.4.34.&nbsp;collation_server"><div class="titlepage"><div><div><h3 class="title"><a name="conf-collation-server"></a>11.4.34.&nbsp;collation_server</h3></div></div></div>
 <p>
 Default server collation.
 Optional, default is libc_ci.
@@ -9323,7 +9364,7 @@ Refer to <a class="xref" href="#collations" title="5.12.&nbsp;Collations">Sectio
 </p><h4>Example:</h4><pre class="programlisting">
 collation_server = utf8_ci
 </pre></div>
-<div class="sect2" title="11.4.34.&nbsp;collation_libc_locale"><div class="titlepage"><div><div><h3 class="title"><a name="conf-collation-libc-locale"></a>11.4.34.&nbsp;collation_libc_locale</h3></div></div></div>
+<div class="sect2" title="11.4.35.&nbsp;collation_libc_locale"><div class="titlepage"><div><div><h3 class="title"><a name="conf-collation-libc-locale"></a>11.4.35.&nbsp;collation_libc_locale</h3></div></div></div>
 <p>
 Server libc locale.
 Optional, default is C.
@@ -9334,7 +9375,7 @@ Refer to <a class="xref" href="#collations" title="5.12.&nbsp;Collations">Sectio
 </p><h4>Example:</h4><pre class="programlisting">
 collation_libc_locale = fr_FR
 </pre></div>
-<div class="sect2" title="11.4.35.&nbsp;plugin_dir"><div class="titlepage"><div><div><h3 class="title"><a name="conf-plugin-dir"></a>11.4.35.&nbsp;plugin_dir</h3></div></div></div>
+<div class="sect2" title="11.4.36.&nbsp;plugin_dir"><div class="titlepage"><div><div><h3 class="title"><a name="conf-plugin-dir"></a>11.4.36.&nbsp;plugin_dir</h3></div></div></div>
 <p>
 Trusted location for the dynamic libraries (UDFs).
 Optional, default is empty (no location).
@@ -9347,7 +9388,7 @@ Specifies the trusted directory from which the
 workers = threads
 plugin_dir = /usr/local/sphinx/lib
 </pre></div>
-<div class="sect2" title="11.4.36.&nbsp;mysql_version_string"><div class="titlepage"><div><div><h3 class="title"><a name="conf-mysql-version-string"></a>11.4.36.&nbsp;mysql_version_string</h3></div></div></div>
+<div class="sect2" title="11.4.37.&nbsp;mysql_version_string"><div class="titlepage"><div><div><h3 class="title"><a name="conf-mysql-version-string"></a>11.4.37.&nbsp;mysql_version_string</h3></div></div></div>
 <p>
 A server version string to return via MySQL protocol.
 Optional, default is empty (return Sphinx version).
@@ -9366,7 +9407,7 @@ report a different version to clients connecting over MySQL protocol.
 </p><h4>Example:</h4><pre class="programlisting">
 mysql_version_string = 5.0.37
 </pre></div>
-<div class="sect2" title="11.4.37.&nbsp;rt_flush_period"><div class="titlepage"><div><div><h3 class="title"><a name="conf-rt-flush-period"></a>11.4.37.&nbsp;rt_flush_period</h3></div></div></div>
+<div class="sect2" title="11.4.38.&nbsp;rt_flush_period"><div class="titlepage"><div><div><h3 class="title"><a name="conf-rt-flush-period"></a>11.4.38.&nbsp;rt_flush_period</h3></div></div></div>
 <p>
 RT indexes RAM chunk flush check period, in seconds.
 Optional, default is 0 (do not flush).
@@ -9381,7 +9422,7 @@ for more details.
 </p><h4>Example:</h4><pre class="programlisting">
 rt_flush_period = 3600
 </pre></div>
-<div class="sect2" title="11.4.38.&nbsp;thread_stack"><div class="titlepage"><div><div><h3 class="title"><a name="conf-thread-stack"></a>11.4.38.&nbsp;thread_stack</h3></div></div></div>
+<div class="sect2" title="11.4.39.&nbsp;thread_stack"><div class="titlepage"><div><div><h3 class="title"><a name="conf-thread-stack"></a>11.4.39.&nbsp;thread_stack</h3></div></div></div>
 <p>
 Per-thread stack size.
 Optional, default is 64K.
@@ -9407,7 +9448,7 @@ the required stack size in the error message.
 </p><h4>Example:</h4><pre class="programlisting">
 thread_stack = 256K
 </pre></div>
-<div class="sect2" title="11.4.39.&nbsp;expansion_limit"><div class="titlepage"><div><div><h3 class="title"><a name="conf-expansion-limit"></a>11.4.39.&nbsp;expansion_limit</h3></div></div></div>
+<div class="sect2" title="11.4.40.&nbsp;expansion_limit"><div class="titlepage"><div><div><h3 class="title"><a name="conf-expansion-limit"></a>11.4.40.&nbsp;expansion_limit</h3></div></div></div>
 <p>
 The maximum number of expanded keywords for a single wildcard.
 Optional, default is 0 (no limit).
@@ -9424,7 +9465,7 @@ matching keywords (per each wildcard in the query).
 </p><h4>Example:</h4><pre class="programlisting">
 expansion_limit = 16
 </pre></div>
-<div class="sect2" title="11.4.40.&nbsp;compat_sphinxql_magics"><div class="titlepage"><div><div><h3 class="title"><a name="conf-compat-sphinxql-magics"></a>11.4.40.&nbsp;compat_sphinxql_magics</h3></div></div></div>
+<div class="sect2" title="11.4.41.&nbsp;compat_sphinxql_magics"><div class="titlepage"><div><div><h3 class="title"><a name="conf-compat-sphinxql-magics"></a>11.4.41.&nbsp;compat_sphinxql_magics</h3></div></div></div>
 <p>
 Legacy SphinxQL quirks compatiblity mode.
 Optional, default is 1 (keep compatibility).
@@ -9439,12 +9480,12 @@ will be removed</strong></span> once we complete bringing SphinxQL in line
 with standard SQL syntax. So it's advised to update the applications
 utilising SphinxQL and then switch the daemon to the new, more SQL
 compliant mode by setting <code class="code">compat_sphinxql_magics = 0</code>.
-Please refer to <a class="xref" href="#sphinxql-upgrading-magics" title="7.24.&nbsp;SphinxQL upgrade notes, version 2.0.1-beta">Section&nbsp;7.24, &#8220;SphinxQL upgrade notes, version 2.0.1-beta&#8221;</a>
+Please refer to <a class="xref" href="#sphinxql-upgrading-magics" title="7.25.&nbsp;SphinxQL upgrade notes, version 2.0.1-beta">Section&nbsp;7.25, &#8220;SphinxQL upgrade notes, version 2.0.1-beta&#8221;</a>
 for the details and update instruction.
 </p><h4>Example:</h4><pre class="programlisting">
 compat_sphinxql_magics = 0 # the future is now
 </pre></div>
-<div class="sect2" title="11.4.41.&nbsp;watchdog"><div class="titlepage"><div><div><h3 class="title"><a name="conf-watchdog"></a>11.4.41.&nbsp;watchdog</h3></div></div></div>
+<div class="sect2" title="11.4.42.&nbsp;watchdog"><div class="titlepage"><div><div><h3 class="title"><a name="conf-watchdog"></a>11.4.42.&nbsp;watchdog</h3></div></div></div>
 <p>
 Threaded server watchdog.
 Optional, default is 1 (watchdog enabled).
@@ -9460,7 +9501,7 @@ is enabled by default.
 </p><h4>Example:</h4><pre class="programlisting">
 watchdog = 0 # disable watchdog
 </pre></div>
-<div class="sect2" title="11.4.42.&nbsp;prefork_rotation_throttle"><div class="titlepage"><div><div><h3 class="title"><a name="conf-prefork-rotation-throttle"></a>11.4.42.&nbsp;prefork_rotation_throttle</h3></div></div></div>
+<div class="sect2" title="11.4.43.&nbsp;prefork_rotation_throttle"><div class="titlepage"><div><div><h3 class="title"><a name="conf-prefork-rotation-throttle"></a>11.4.43.&nbsp;prefork_rotation_throttle</h3></div></div></div>
 <p>
 Delay between restarting preforked children on index rotation, in milliseconds.
 Optional, default is 0 (no delay).
@@ -9481,6 +9522,15 @@ restarted 1.5 seconds (50*30=1500 milliseconds) <span class="emphasis"><em>after
 the "rotation finished" message in the <code class="filename">searchd</code> event log.
 </p><h4>Example:</h4><pre class="programlisting">
 prefork_rotation_throttle = 50 # throttle children restarts by 50 msec each
+</pre></div>
+<div class="sect2" title="11.4.44.&nbsp;sphinxql_state"><div class="titlepage"><div><div><h3 class="title"><a name="conf-sphinxql-state"></a>11.4.44.&nbsp;sphinxql_state</h3></div></div></div>
+<p>
+Path to a file where current SphinxQL state will be serialized
+</p><p>
+On daemon startup, this file gets replayed. On eligible state changes (eg. SET GLOBAL),
+this file gets rewritten automatically.
+</p><h4>Example:</h4><pre class="programlisting">
+sphinxql_state = uservars.sql
 </pre></div></div></div>
 <div class="appendix" title="Appendix&nbsp;A.&nbsp;Sphinx revision history"><div class="titlepage"><div><div><h2 class="title"><a name="changelog"></a>Appendix&nbsp;A.&nbsp;Sphinx revision history</h2></div></div></div>
 <div class="toc"><p><b>Table of Contents</b></p><dl><dt><span class="sect1"><a href="#rel204">A.1. Version 2.0.4-release, 02 mar 2012</a></span></dt>
@@ -9512,7 +9562,7 @@ prefork_rotation_throttle = 50 # throttle children restarts by 50 msec each
 <li class="listitem"><p>fixed <a class="ulink" href="http://sphinxsearch.com/bugs/view.php?id=1050" target="_top">#1050</a>, expression ranker vs agents</p></li>
 <li class="listitem"><p>fixed <a class="ulink" href="http://sphinxsearch.com/bugs/view.php?id=1051" target="_top">#1051</a>, added <a class="link" href="#mva" title="3.4.&nbsp;MVA (multi-valued attributes)">MVA64</a> support to <a class="link" href="#udf" title="5.13.&nbsp;User-defined functions (UDF)">UDFs</a></p></li>
 <li class="listitem"><p>fixed <a class="ulink" href="http://sphinxsearch.com/bugs/view.php?id=1054" target="_top">#1054</a>, <a class="link" href="#sphinxql-select" title="7.1.&nbsp;SELECT syntax">max_query_time</a> not handled properly on searching at <a class="link" href="#rt-indexes" title="Chapter&nbsp;4.&nbsp;Real-time indexes">RT index</a></p></li>
-<li class="listitem"><p>fixed <a class="ulink" href="http://sphinxsearch.com/bugs/view.php?id=1055" target="_top">#1055</a>, <a class="link" href="#conf-expansion-limit" title="11.4.39.&nbsp;expansion_limit">expansion_limit</a> on searching at RT disk chunks</p></li>
+<li class="listitem"><p>fixed <a class="ulink" href="http://sphinxsearch.com/bugs/view.php?id=1055" target="_top">#1055</a>, <a class="link" href="#conf-expansion-limit" title="11.4.40.&nbsp;expansion_limit">expansion_limit</a> on searching at RT disk chunks</p></li>
 <li class="listitem"><p>fixed <a class="ulink" href="http://sphinxsearch.com/bugs/view.php?id=1057" target="_top">#1057</a>, daemon crashes on generating snippet with 0 documents provided</p></li>
 <li class="listitem"><p>fixed <a class="ulink" href="http://sphinxsearch.com/bugs/view.php?id=1060" target="_top">#1060</a>, <a class="link" href="#api-func-buildexcerpts" title="8.7.1.&nbsp;BuildExcerpts">load_files_scattered</a> don't work</p></li>
 <li class="listitem"><p>fixed <a class="ulink" href="http://sphinxsearch.com/bugs/view.php?id=1065" target="_top">#1065</a>, libsphinxclient vs distribute index (agents)</p></li>
@@ -9575,7 +9625,7 @@ prefork_rotation_throttle = 50 # throttle children restarts by 50 msec each
 <li class="listitem"><p>added <code class="code">ORDER BY RAND()</code> support to <a class="link" href="#sphinxql-select" title="7.1.&nbsp;SELECT syntax">SELECT</a> statement</p></li>
 <li class="listitem"><p>added Sphinx version to Windows crash log</p></li>
 <li class="listitem"><p>added RT index support to <a class="link" href="#ref-indextool" title="6.5.&nbsp;indextool command reference">indextool</a> <code class="code">--check</code> (checks disk chunks only) (#877)</p></li>
-<li class="listitem"><p>added <a class="link" href="#conf-prefork-rotation-throttle" title="11.4.42.&nbsp;prefork_rotation_throttle">prefork_rotation_throttle</a> directive (preforked children restart delay, in milliseconds) (#873)</p></li>
+<li class="listitem"><p>added <a class="link" href="#conf-prefork-rotation-throttle" title="11.4.43.&nbsp;prefork_rotation_throttle">prefork_rotation_throttle</a> directive (preforked children restart delay, in milliseconds) (#873)</p></li>
 <li class="listitem"><p>added <a class="link" href="#conf-on-file-field-error" title="11.3.7.&nbsp;on_file_field_error">on_file_field_error</a> directive (different <code class="code">sql_file_field</code> handling modes)</p></li>
 <li class="listitem"><p>added manpages for all the programs</p></li>
 <li class="listitem"><p>added syslog logging support</p></li>
@@ -9663,37 +9713,37 @@ prefork_rotation_throttle = 50 # throttle children restarts by 50 msec each
 <div class="sect1" title="A.4.&nbsp;Version 2.0.1-beta, 22 apr 2011"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="rel201"></a>A.4.&nbsp;Version 2.0.1-beta, 22 apr 2011</h2></div></div></div>
 <h3>New general features</h3><div class="itemizedlist"><ul class="itemizedlist" type="disc"><li class="listitem"><p>added remapping support to <a class="link" href="#conf-blend-chars" title="11.2.47.&nbsp;blend_chars">blend_chars</a> directive</p></li>
 <li class="listitem"><p>added multi-threaded snippet batches support (requires a batch sent via API, <a class="link" href="#conf-dist-threads" title="11.4.29.&nbsp;dist_threads">dist_threads</a>, and <code class="code">load_files</code>)</p></li>
-<li class="listitem"><p>added collations (<a class="link" href="#conf-collation-server" title="11.4.33.&nbsp;collation_server">collation_server</a>, <a class="link" href="#conf-collation-libc-locale" title="11.4.34.&nbsp;collation_libc_locale">collation_libc_locale directives</a>)</p></li>
+<li class="listitem"><p>added collations (<a class="link" href="#conf-collation-server" title="11.4.34.&nbsp;collation_server">collation_server</a>, <a class="link" href="#conf-collation-libc-locale" title="11.4.35.&nbsp;collation_libc_locale">collation_libc_locale directives</a>)</p></li>
 <li class="listitem"><p>added support for sorting and grouping on string attributes (<code class="code">ORDER BY</code>, <code class="code">GROUP BY</code>, <code class="code">WITHING GROUP ORDER BY</code>)</p></li>
-<li class="listitem"><p>added UDF support (<a class="link" href="#conf-plugin-dir" title="11.4.35.&nbsp;plugin_dir">plugin_dir</a> directive; <a class="link" href="#sphinxql-create-function" title="7.14.&nbsp;CREATE FUNCTION syntax">CREATE FUNCTION</a>, <a class="link" href="#sphinxql-drop-function" title="7.15.&nbsp;DROP FUNCTION syntax">DROP FUNCTION</a> statements)</p></li>
+<li class="listitem"><p>added UDF support (<a class="link" href="#conf-plugin-dir" title="11.4.36.&nbsp;plugin_dir">plugin_dir</a> directive; <a class="link" href="#sphinxql-create-function" title="7.14.&nbsp;CREATE FUNCTION syntax">CREATE FUNCTION</a>, <a class="link" href="#sphinxql-drop-function" title="7.15.&nbsp;DROP FUNCTION syntax">DROP FUNCTION</a> statements)</p></li>
 <li class="listitem"><p>added <a class="link" href="#conf-query-log-format" title="11.4.6.&nbsp;query_log_format">query_log_format</a> directive, <a class="link" href="#sphinxql-set" title="7.7.&nbsp;SET syntax">SET GLOBAL query_log_format | log_level = ...</a> statements; and connection id tracking</p></li>
 <li class="listitem"><p>added <a class="link" href="#conf-sql-column-buffers" title="11.1.26.&nbsp;sql_column_buffers">sql_column_buffers</a> directive, fixed out-of-buffer column handling in ODBC/MS SQL sources</p></li>
 <li class="listitem"><p>added <a class="link" href="#conf-blend-mode" title="11.2.48.&nbsp;blend_mode">blend_mode</a> directive that enables indexing multiple variants of a blended sequence</p></li>
 <li class="listitem"><p>added UNIX socket support to C, Ruby APIs</p></li>
 <li class="listitem"><p>added ranged query support to <a class="link" href="#conf-sql-joined-field" title="11.1.13.&nbsp;sql_joined_field">sql_joined_field</a></p></li>
-<li class="listitem"><p>added <a class="link" href="#conf-rt-flush-period" title="11.4.37.&nbsp;rt_flush_period">rt_flush_period</a> directive</p></li>
-<li class="listitem"><p>added <a class="link" href="#conf-thread-stack" title="11.4.38.&nbsp;thread_stack">thread_stack</a> directive</p></li>
+<li class="listitem"><p>added <a class="link" href="#conf-rt-flush-period" title="11.4.38.&nbsp;rt_flush_period">rt_flush_period</a> directive</p></li>
+<li class="listitem"><p>added <a class="link" href="#conf-thread-stack" title="11.4.39.&nbsp;thread_stack">thread_stack</a> directive</p></li>
 <li class="listitem"><p>added SENTENCE, PARAGRAPH, ZONE operators (and <a class="link" href="#conf-index-sp" title="11.2.8.&nbsp;index_sp">index_sp</a>, <a class="link" href="#conf-index-zones" title="11.2.9.&nbsp;index_zones">index_zones</a> directives)</p></li>
-<li class="listitem"><p>added keywords dictionary support (and <a class="link" href="#conf-dict" title="11.2.7.&nbsp;dict">dict</a>, <a class="link" href="#conf-expansion-limit" title="11.4.39.&nbsp;expansion_limit">expansion_limit</a> directives)</p></li>
+<li class="listitem"><p>added keywords dictionary support (and <a class="link" href="#conf-dict" title="11.2.7.&nbsp;dict">dict</a>, <a class="link" href="#conf-expansion-limit" title="11.4.40.&nbsp;expansion_limit">expansion_limit</a> directives)</p></li>
 <li class="listitem"><p>added <code class="code">passage_boundary</code>, <code class="code">emit_zones</code> options to snippets</p></li>
-<li class="listitem"><p>added <a class="link" href="#conf-watchdog" title="11.4.41.&nbsp;watchdog">a watchdog process</a> in threaded mode</p></li>
+<li class="listitem"><p>added <a class="link" href="#conf-watchdog" title="11.4.42.&nbsp;watchdog">a watchdog process</a> in threaded mode</p></li>
 <li class="listitem"><p>added persistent MVA updates</p></li>
 <li class="listitem"><p>added crash dumps to <code class="filename">searchd.log</code>, deprecated <code class="code">crash_log_path</code> directive</p></li>
 <li class="listitem"><p>added id32 index support in id64 binaries (EXPERIMENTAL)</p></li>
 <li class="listitem"><p>added SphinxSE support for DELETE and REPLACE on SphinxQL tables</p></li>
 </ul></div>
-<h3>New SphinxQL features</h3><div class="itemizedlist"><ul class="itemizedlist" type="disc"><li class="listitem"><p>added new, more SQL compliant SphinxQL syntax; and a <a class="link" href="#conf-compat-sphinxql-magics" title="11.4.40.&nbsp;compat_sphinxql_magics">compat_sphinxql_magics</a> directive</p></li>
+<h3>New SphinxQL features</h3><div class="itemizedlist"><ul class="itemizedlist" type="disc"><li class="listitem"><p>added new, more SQL compliant SphinxQL syntax; and a <a class="link" href="#conf-compat-sphinxql-magics" title="11.4.41.&nbsp;compat_sphinxql_magics">compat_sphinxql_magics</a> directive</p></li>
 <li class="listitem"><p>added <a class="link" href="#expr-func-crc32">CRC32()</a>, <a class="link" href="#expr-func-day">DAY()</a>, <a class="link" href="#expr-func-month">MONTH()</a>, <a class="link" href="#expr-func-year">YEAR()</a>, <a class="link" href="#expr-func-yearmonth">YEARMONTH()</a>, <a class="link" href="#expr-func-yearmonthday">YEARMONTHDAY()</a> functions</p></li>
 <li class="listitem"><p>added <a class="link" href="#expr-ari-ops">DIV, MOD, and % operators</a></p></li>
 <li class="listitem"><p>added <a class="link" href="#sphinxql-select" title="7.1.&nbsp;SELECT syntax">reverse_scan=(0|1)</a> option to SELECT</p></li>
 <li class="listitem"><p>added support for MySQL packets over 16M</p></li>
 <li class="listitem"><p>added dummy SHOW VARIABLES, SHOW COLLATION, and SET character_set_results support (to support handshake with certain client libraries and frameworks)</p></li>
-<li class="listitem"><p>added <a class="link" href="#conf-mysql-version-string" title="11.4.36.&nbsp;mysql_version_string">mysql_version_string</a> directive (to workaround picky MySQL client libraries)</p></li>
+<li class="listitem"><p>added <a class="link" href="#conf-mysql-version-string" title="11.4.37.&nbsp;mysql_version_string">mysql_version_string</a> directive (to workaround picky MySQL client libraries)</p></li>
 <li class="listitem"><p>added support for global filter variables, <a class="link" href="#sphinxql-set" title="7.7.&nbsp;SET syntax">SET GLOBAL @uservar=(int_list)</a> </p></li>
 <li class="listitem"><p>added <a class="link" href="#sphinxql-delete" title="7.6.&nbsp;DELETE syntax">DELETE ... IN (id_list)</a> syntax support</p></li>
 <li class="listitem"><p>added C-style comments syntax (for example, <code class="code">SELECT /*!40000 some comment*/ id FROM test</code>)</p></li>
 <li class="listitem"><p>added <a class="link" href="#sphinxql-update" title="7.18.&nbsp;UPDATE syntax">UPDATE ... WHERE id=X</a> syntax support</p></li>
-<li class="listitem"><p>added <a class="link" href="#sphinxql-multi-queries" title="7.21.&nbsp;Multi-statement queries">SphinxQL multi-query support</a></p></li>
+<li class="listitem"><p>added <a class="link" href="#sphinxql-multi-queries" title="7.22.&nbsp;Multi-statement queries">SphinxQL multi-query support</a></p></li>
 <li class="listitem"><p>added <a class="link" href="#sphinxql-describe" title="7.13.&nbsp;DESCRIBE syntax">DESCRIBE</a>, <a class="link" href="#sphinxql-show-tables" title="7.12.&nbsp;SHOW TABLES syntax">SHOW TABLES</a> statements</p></li>
 </ul></div>
 <h3>New command-line switches</h3><div class="itemizedlist"><ul class="itemizedlist" type="disc"><li class="listitem"><p>added <code class="code">--print-queries</code> switch to <code class="filename">indexer</code> that dumps SQL queries it runs</p></li>
@@ -9964,7 +10014,7 @@ prefork_rotation_throttle = 50 # throttle children restarts by 50 msec each
 <li class="listitem"><p>fixed libsphinxclient handling of zero max_matches and cutoff (bug <a class="ulink" href="http://sphinxsearch.com/bugs/view.php?id=208" target="_top">#208</a>)</p></li>
 <li class="listitem"><p>fixed Java API over-64K string reads (eg. big snippets) in Java API (bug <a class="ulink" href="http://sphinxsearch.com/bugs/view.php?id=181" target="_top">#181</a>)</p></li>
 <li class="listitem"><p>fixed Java API 2nd Query() after network error in 1st Query() call (bug <a class="ulink" href="http://sphinxsearch.com/bugs/view.php?id=308" target="_top">#308</a>)</p></li>
-<li class="listitem"><p>fixed typo-class bugs in SetFilterFloatRange (bug <a class="ulink" href="http://sphinxsearch.com/bugs/view.php?id=259" target="_top">#259</a>), SetSortMode (bug #248)</p></li>
+<li class="listitem"><p>fixed typo-class bugs in SetFilterFloatRange (bug <a class="ulink" href="http://sphinxsearch.com/bugs/view.php?id=259" target="_top">#259</a>), SetSortMode (bug <a class="ulink" href="http://sphinxsearch.com/bugs/view.php?id=248" target="_top">#248</a>)</p></li>
 <li class="listitem"><p>fixed missing @@relaxed support (bug <a class="ulink" href="http://sphinxsearch.com/bugs/view.php?id=276" target="_top">#276</a>), fixed missing error on @nosuchfield queries, documented @@relaxed</p></li>
 <li class="listitem"><p>fixed UNIX socket permissions to 0777 (bug <a class="ulink" href="http://sphinxsearch.com/bugs/view.php?id=288" target="_top">#288</a>)</p></li>
 <li class="listitem"><p>fixed xmlpipe2 crash on schemas with no fields, added better document structure checks</p></li>

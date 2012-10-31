@@ -30,6 +30,7 @@
 %token	TOK_ATID
 %token	TOK_ATWEIGHT
 %token	TOK_ID
+%token	TOK_GROUPBY
 %token	TOK_WEIGHT
 %token	TOK_COUNT
 %token	TOK_DISTINCT
@@ -37,7 +38,6 @@
 %token	TOK_ATTR_SINT
 
 %type <iNode>			attr
-%type <iNode>			attr_mva
 %type <iNode>			expr
 %type <iNode>			arg
 %type <iNode>			arglist
@@ -68,12 +68,6 @@ attr:
 	| TOK_ATTR_FLOAT				{ $$ = pParser->AddNodeAttr ( TOK_ATTR_FLOAT, $1 ); }
 	;
 
-attr_mva:
-	attr
-	| TOK_ATTR_MVA32				{ $$ = pParser->AddNodeAttr ( TOK_ATTR_MVA32, $1 ) }
-	| TOK_ATTR_MVA64				{ $$ = pParser->AddNodeAttr ( TOK_ATTR_MVA64, $1 ) }
-	;
-
 expr:
 	attr
 	| function
@@ -83,6 +77,7 @@ expr:
 	| TOK_ATWEIGHT					{ $$ = pParser->AddNodeWeight(); }
 	| TOK_ID						{ $$ = pParser->AddNodeID(); }
 	| TOK_WEIGHT '(' ')'			{ $$ = pParser->AddNodeWeight(); }
+	| TOK_GROUPBY '(' ')'			{ $$ = pParser->AddNodeGroupby(); }
 	| TOK_HOOK_IDENT				{ $$ = pParser->AddNodeHookIdent ( $1 ); }
 	| '-' expr %prec TOK_NEG		{ $$ = pParser->AddNodeOp ( TOK_NEG, $2, -1 ); }
 	| TOK_NOT expr					{ $$ = pParser->AddNodeOp ( TOK_NOT, $2, -1 ); if ( $$<0 ) YYERROR; }
@@ -136,17 +131,9 @@ function:
 	| TOK_FUNC '(' ')'				{ $$ = pParser->AddNodeFunc ( $1, -1 ); if ( $$<0 ) YYERROR; }
 	| TOK_UDF '(' arglist ')'		{ $$ = pParser->AddNodeUdf ( $1, $3 ); if ( $$<0 ) YYERROR; }
 	| TOK_UDF '(' ')'				{ $$ = pParser->AddNodeUdf ( $1, -1 ); if ( $$<0 ) YYERROR; }
-	| TOK_FUNC_IN '(' attr_mva ',' constlist_or_uservar ')'
+	| TOK_FUNC_IN '(' arg ',' constlist_or_uservar ')'
 		{
 			$$ = pParser->AddNodeFunc ( $1, $3, $5 );
-		}
-	| TOK_FUNC_IN '(' TOK_ID ',' constlist ')'
-		{
-			$$ = pParser->AddNodeFunc ( $1, pParser->AddNodeID(), $5 );
-		}
-	| TOK_FUNC_IN '(' TOK_ATID ',' constlist ')'
-		{
-			$$ = pParser->AddNodeFunc ( $1, pParser->AddNodeID(), $5 );
 		}
 	| TOK_HOOK_FUNC '(' arglist ')'
 		{

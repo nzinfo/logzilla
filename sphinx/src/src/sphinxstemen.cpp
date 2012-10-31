@@ -1,5 +1,5 @@
 //
-// $Id: sphinxstemen.cpp 3087 2012-01-30 23:07:35Z shodan $
+// $Id: sphinxstemen.cpp 3244 2012-06-02 23:14:19Z shodan $
 //
 
 //
@@ -230,7 +230,7 @@ void stem_en ( unsigned char * word, int len )
 #define SUFF7A(c7,c6,c5,c4,c3,c2) ( len>=6 && W(2,c2) && W(3,c3) && W(4,c4) && W(5,c5) && W(6,c6) && W(7,c7) )
 
 	///////////
-	// STEP 1A 
+	// STEP 1A
 	///////////
 
 #ifdef SNOWBALL2011
@@ -546,5 +546,5 @@ void stem_en ( unsigned char * word, int len )
 }
 
 //
-// $Id: sphinxstemen.cpp 3087 2012-01-30 23:07:35Z shodan $
+// $Id: sphinxstemen.cpp 3244 2012-06-02 23:14:19Z shodan $
 //

@@ -1,5 +1,5 @@
 //
-// $Id: sphinxstemcz.cpp 3087 2012-01-30 23:07:35Z shodan $
+// $Id: sphinxstemcz.cpp 3244 2012-06-02 23:14:19Z shodan $
 //
 
 //
@@ -127,7 +127,8 @@ static void Palatalize ( BYTE * word )
 	for ( int i = 0; i < nRules; ++i )
 	{
 		const ReplaceRule_t & Rule = g_dPalatalizeRules[i];
-		if ( iWordLength>=Rule.m_iRemoveLength && !strncmp ( (char*)word + iWordLength - Rule.m_iRemoveLength, (char*)Rule.m_szSuffix, Rule.m_iRemoveLength ) )
+		if ( iWordLength>=Rule.m_iRemoveLength &&
+!strncmp ( (char*)word + iWordLength - Rule.m_iRemoveLength, (char*)Rule.m_szSuffix, Rule.m_iRemoveLength ) )
 		{
 			word [iWordLength - Rule.m_iRemoveLength] = '\0';
 			strcat ( (char*)word, (char*)Rule.m_szAppend ); // NOLINT strcat
@@ -150,7 +151,8 @@ static void ApplyRules ( BYTE * word, const ClampRule_t * pRules, int nRules )
 	for ( int i = 0; i < nRules; ++i )
 	{
 		const ClampRule_t & Rule = pRules[i];
-		if ( iWordLength > Rule.m_iMinLength && !strncmp ( (char*)word + iWordLength - Rule.m_iCheckLength, (char*)Rule.m_szSuffix, Rule.m_iCheckLength ))
+		if ( iWordLength > Rule.m_iMinLength &&
+			!strncmp ( (char*)word + iWordLength - Rule.m_iCheckLength, (char*)Rule.m_szSuffix, Rule.m_iCheckLength ) )
 		{
 			word [iWordLength - Rule.m_nRemove] = '\0';
 			Palatalize ( word );
@@ -205,5 +207,5 @@ void stem_cz ( BYTE * word )
 
 
 //
-// $Id: sphinxstemcz.cpp 3087 2012-01-30 23:07:35Z shodan $
+// $Id: sphinxstemcz.cpp 3244 2012-06-02 23:14:19Z shodan $
 //
