@@ -136,7 +136,7 @@ foreach my $mod (@mods) {
 if ($options->{checkout} > 0) {
 	my ($svnroot, $install_dir) = $options->{lzroot} =~ /(.*)\/(.*)$/;
 	print "Downloading LogZilla\n";
-	 system("cd $svnroot && svn co https://subversion.assembla.com/svn/logzilla.2/trunk/ $install_dir 2>&1");
+	 system("cd $svnroot && svn co https://subversion.assembla.com/svn/logzilla/ $install_dir 2>&1");
 }
 
 # Create the .lzrc file
