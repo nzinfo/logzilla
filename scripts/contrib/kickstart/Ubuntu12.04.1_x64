@@ -288,7 +288,7 @@ alias mytop='mytop -u\$MY_ADMIN -p\$MY_ADMIN_PWD'
 # LogZilla related
 alias mysqltuner='\$LZ/scripts/tools/mysqltuner.pl --user \$MY_ADMIN --pass \$MY_ADMIN_PWD'
 alias summary='\$LZ/scripts/tools/summary'
-alias lzupdate='(cd \$LZ && sudo svn update --accept thiers-conflict && cd scripts && ./update)'
+alias lzupdate='(cd \$LZ && sudo svn update --accept theirs-conflict && cd scripts && ./upgrade)'
 
 # Sphinx shortcuts
 alias myspx='mysql -h0 -P9306'
