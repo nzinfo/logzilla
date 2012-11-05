@@ -563,11 +563,8 @@ sub make_partitions {
     my $dbh = db_connect( $dbname, $lzbase, $dbroot, $dbrootpass );
 
     # Create initial Partition of the $dbtable table
-    $dbh->do( "
-        ALTER TABLE $dbtable PARTITION BY RANGE( TO_DAYS( lo ) ) (
-        PARTITION $pAdd VALUES LESS THAN (to_days('$dateTomorrow'))
-        );
-        " ) or die "Could not create partition for the $dbtable table: $DBI::errstr";
+    $dbh->do( "CALL manage_logs_partitions();" )
+        or die "Could not create partition for the $dbtable table: $DBI::errstr";
 
 }
 
@@ -606,7 +603,8 @@ sub do_events {
 
     # Create Partition events
     my $event = qq{
-    CREATE EVENT logs_add_partition ON SCHEDULE EVERY 1 DAY STARTS '$dateTomorrow 00:00:00' ON COMPLETION NOT PRESERVE ENABLE DO CALL logs_add_part_proc();
+    CREATE EVENT logs_add_partition ON SCHEDULE EVERY 1 DAY STARTS '$dateTomorrow 00:00:00' ON
+    COMPLETION NOT PRESERVE ENABLE DO CALL manage_logs_partitions();
     };
     my $sth = $dbh->prepare( "
         $event

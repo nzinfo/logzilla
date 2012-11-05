@@ -1,8 +1,12 @@
 DROP PROCEDURE IF EXISTS `log_arch_hr_proc`; 
 DROP PROCEDURE IF EXISTS `log_arch_daily_proc`; 
 DROP PROCEDURE IF EXISTS `cleanup`;
+DROP PROCEDURE IF EXISTS `manage_logs_partitions`;
+DROP PROCEDURE IF EXISTS `debug`;
 
 DELIMITER $$
+
+-- ===============================================================================================
 
 CREATE DEFINER=`root`@`localhost` PROCEDURE `log_arch_hr_proc`()
 BEGIN
@@ -27,7 +31,7 @@ BEGIN
        update sph_counter set max_id=hmax where counter_id=1;
 END$$
 
-DELIMITER $$
+-- ===============================================================================================
 
 CREATE DEFINER=`root`@`localhost` PROCEDURE `log_arch_daily_proc`()
 BEGIN
@@ -49,7 +53,7 @@ BEGIN
 	INSERT INTO sph_counter (counter_id,max_id,index_name) VALUES (4,maxi,CONCAT('log_arch_day_',@yesterday));
 END$$
 
-DELIMITER $$
+-- ===============================================================================================
 
 CREATE DEFINER=`root`@`localhost` PROCEDURE `cleanup`()
 BEGIN
@@ -95,3 +99,84 @@ BEGIN
 
 END$$
 
+-- ===============================================================================================
+
+-- This should be called at least once a week, but better to call it every night
+-- It creates new partitions for 10 following days - of course only if they are not 
+-- created yet. It also checks if table 'logs' has partitioning set at all - and if
+-- not, then proper 'alter table' is performed to add partitioning.
+-- 
+-- It is safe to call this procedure many times, as it checks for existing partitions 
+-- before creating new ones - so it can be call during installation or during tests.
+CREATE DEFINER=`root`@`localhost` PROCEDURE `manage_logs_partitions`()
+BEGIN
+
+    DECLARE max_part_name, part_name varchar(20);
+    DECLARE date_from, date_to, d date;
+    DECLARE days int;
+    DECLARE part_list, part_def varchar(1024);
+
+    SELECT max(partition_name) 
+    INTO max_part_name
+    FROM information_schema.partitions
+    WHERE table_name = 'logs' AND table_schema = database();
+
+    IF isnull(max_part_name) THEN
+        SET date_from = get_current_date();
+    ELSE
+        SET date_from = greatest( get_current_date(), 
+            str_to_date(max_part_name, 'p%Y%m%d' ) + interval 1 day );
+    END IF;
+
+    SET date_to = get_current_date() + INTERVAL 9 day;
+
+    -- call debug( concat('date_from=', date_from, ', date_to=', date_to ) ); 
+
+    SET d = date_from;
+    WHILE d <= date_to DO
+        SET part_name = date_format( d, 'p%Y%m%d' );
+        SET days = to_days(d);
+        SET part_def = concat( 'PARTITION ', part_name, ' VALUES LESS THAN (', days, ')' );
+        IF isnull(max_part_name) THEN
+            SET part_list = concat_ws( ',', part_list, part_def );
+        ELSE
+            SET @sql = concat( 'ALTER TABLE logs ADD PARTITION ( ', part_def, ' )' );
+            -- call debug( concat( 'DOING stmt=[', @sql, ']' ) );
+            PREPARE stmt FROM @sql;
+            EXECUTE stmt;
+            DEALLOCATE PREPARE stmt;
+        END IF;
+        SET d = d + interval 1 day;
+    END WHILE;
+            
+    IF ! isnull(part_list) THEN
+        SET @sql = concat( 'ALTER TABLE logs PARTITION BY RANGE ( TO_DAYS(lo) ) ',
+            '( ', part_list, ' )' );
+        -- call debug( concat( 'DOING stmt=[', @sql, ']' ) );
+        PREPARE stmt FROM @sql;
+        EXECUTE stmt;
+        DEALLOCATE PREPARE stmt;
+    END IF;
+
+END$$
+
+-- ===============================================================================================
+
+-- Helper for debugging, adds given message to the session variable, which can be later on
+-- examined in perl code and displayed to the developer
+CREATE PROCEDURE debug( msg varchar(2560) )
+BEGIN
+    SET @debug_msg = concat( @debug_msg, msg, '\n' );
+END$$
+
+-- This is used by tests to mock current date - if session variable is set (by test), 
+-- then value of this variable is used - while on production (when this variable is not set)
+-- it returns standard current_date() value.
+CREATE FUNCTION get_current_date() RETURNS date
+BEGIN
+    RETURN coalesce( @test_current_date, current_date() );
+END$$
+
+-- ===============================================================================================
+
+DELIMITER ;

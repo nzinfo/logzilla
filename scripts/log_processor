@@ -909,31 +909,8 @@ sub trap {
     }
 }
 
-# =================================================================================================
-# HERE BE DRAGONS! Code below wasn't refactored yet, you enter on your own risk!
-# =================================================================================================
 sub add_missing_db_partitions {
-
-    my $dbtable = $settings->{TBL_MAIN};
-
-    # Get some date values in order to create the MySQL Partition
-    my ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = localtime(time);
-    $year = $year + 1900;
-    $mon  = $mon + 1;
-    ( $year, $mon, $mday ) = Date::Calc::Add_Delta_Days( $year, $mon, $mday, 1 );
-    my $pAdd = "p" . $year . sprintf( "%02d", $mon ) . sprintf( "%02d", $mday );
-    my $dateTomorrow = $year . "-" . sprintf( "%02d", $mon ) . "-" . sprintf( "%02d", $mday );
-    my $sql = ("SELECT PARTITION_NAME FROM information_schema.partitions " .
-        "WHERE table_name ='$dbtable' AND PARTITION_NAME='$pAdd'");
-    my (@row) = $dbh->selectrow_array("$sql");
-
-    if ( ! @row || $row[0] ne "$pAdd" ) {
-        $log->NOTICE( "Missing Partition Detected" );
-        $log->NOTICE( "Running SQL Command:\nALTER TABLE $dbtable ADD PARTITION (PARTITION $pAdd VALUES LESS THAN (to_days('$dateTomorrow')))" );
-        my $sth = $dbh->prepare( "ALTER TABLE $dbtable ADD PARTITION (PARTITION $pAdd VALUES LESS THAN (to_days('$dateTomorrow')))"
-);
-        $sth->execute;
-        $log->INFO( "Auto-creating missing partition for $dateTomorrow" );
-    }
+    $dbh->do( "CALL manage_logs_partitions()" );
+    $log->INFO( "Creating missing partition for logs table" );
 }
 

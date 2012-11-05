@@ -13,10 +13,15 @@ sub init_test_db {
     my( $params ) = ( $dsn =~ /DBI:mysql:(.*)/ );
     my %params = ( map { ( split(/=/) ) } split /;/, $params );
 
+    my @files = (
+        "$ROOT_DIR/scripts/sql/test-db.sql",
+        "$ROOT_DIR/scripts/sql/procedures.sql",
+    );
+
     # This uncommon syntax ("command mysql...") is to ignore aliases in bash,
     # as Clayton had some issue due to the alias for mysql being set on one machine.
-    my $cmd = "command mysql -u root --password='' -S $params{mysql_socket} $params{dbname} " .
-        "<$ROOT_DIR/scripts/sql/test-db.sql";
+    my $cmd = "cat @files | " .
+        "command mysql -u root --password='' -S $params{mysql_socket} $params{dbname} ";
     $debug_cb->( "Running $cmd" ) if $debug_cb;
     my $res = `$cmd`;
     if( $? ) {
