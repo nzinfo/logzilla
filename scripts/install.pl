@@ -65,7 +65,7 @@ sub prompt {
 }
 
 my $version    = "4.25";
-my $subversion = ".338";
+my $subversion = ".342";
 
 # Grab the base path
 my $lzbase = getcwd;
@@ -2267,6 +2267,17 @@ sub run_tests {
             print "$cmd\n";
         }
     }
+    opendir( DIR, "$lzbase/t/sql" );
+    foreach my $file ( sort { $a <=> $b } readdir(DIR) )
+    {
+
+        if ( $file =~ /\d+/ ) {
+            print "Running test: $file\n";
+            my $cmd = `$lzbase/t/sql/$file`;
+            print "$cmd\n";
+        }
+    }
+    closedir(DIR);
     closedir(DIR);
     print("\n\033[1m\n\n/*---------------------*/\033[0m\n");
     print("\033[1m    Performance Tests\n\033[0m");

@@ -1,3 +1,7 @@
+4.25.342 [Main Branch] - Partitioning
+CD:
+ - Fixed #379, #378 /Added partition creation event to log_processor
+
 4.25.504 - Bug
 CD:
  - Fix #369 - Missing partition auto-create fails on month boundaries
