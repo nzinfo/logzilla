@@ -1049,6 +1049,13 @@ sub update_settings {
         delete from users where username='guest';
         " ) or die "Could not insert user data: $DBI::errstr";
     $sth->execute;
+    
+    # Make sure procedures are installed in > v4.25
+    # Import procedures
+    system "perl -i -pe 's| logs | $dbtable |g' sql/procedures.sql" and warn "Could not modify sql/procedures.sql $!\n";
+    my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/procedures.sql`;
+    print $res;
+
 }
 
 sub add_logrotate {
