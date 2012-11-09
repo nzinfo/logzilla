@@ -65,7 +65,7 @@ sub prompt {
 }
 
 my $version    = "4.25";
-my $subversion = ".342";
+my $subversion = ".344";
 
 # Grab the base path
 my $lzbase = getcwd;
@@ -559,6 +559,12 @@ DEFINE('LOG_QUERIES', 'FALSE');
 
 sub make_partitions {
 
+    # Import procedures
+    system "perl -i -pe 's| logs | $dbtable |g' sql/procedures.sql" and warn "Could not modify sql/procedures.sql $!\n";
+    my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/procedures.sql`;
+    print $res;
+
+
     # Get some date values in order to create the MySQL Partition
     my $dbh = db_connect( $dbname, $lzbase, $dbroot, $dbrootpass );
 
@@ -836,11 +842,6 @@ sub do_procs {
     #        DROP PROCEDURE IF EXISTS `log_arch_weekly_proc`;
     #        ") or die "$DBI::errstr";
 
-    # Import procedures
-    system "perl -i -pe 's| logs | $dbtable |g' sql/procedures.sql" and warn "Could not modify sql/procedures.sql $!\n";
-    my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/procedures.sql`;
-    print $res;
-
     # Now create the events that trigger these procs
     do_events();
 }
@@ -1050,12 +1051,6 @@ sub update_settings {
         " ) or die "Could not insert user data: $DBI::errstr";
     $sth->execute;
     
-    # Make sure procedures are installed in > v4.25
-    # Import procedures
-    system "perl -i -pe 's| logs | $dbtable |g' sql/procedures.sql" and warn "Could not modify sql/procedures.sql $!\n";
-    my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/procedures.sql`;
-    print $res;
-
 }
 
 sub add_logrotate {
