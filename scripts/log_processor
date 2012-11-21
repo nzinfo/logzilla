@@ -369,8 +369,14 @@ sub save_messages {
     my $inserted_num = scalar(@messages);
     # For operations inserting many records at once last_insert_id returns id for the first 
     # record inserted, so we must add number of records inserted minus 1 to get actual max_id.
-    $prep_sth->{max_id}->execute($last_insert_id + $inserted_num - 1);
-    # This will increment value in DB
+    my $new_max_id = $last_insert_id + $inserted_num - 1;
+    if( $new_max_id > 1 ) {
+        $prep_sth->{max_id}->execute($new_max_id);
+    }
+    else {
+        $log->WARN("Wrong new max_id ($new_max_id, last_insert_id=$last_insert_id, " .
+            "inserted_num=$inserted_num");
+    }
 
     # If deduplication enabled, then set id of inserted records so it can be used
     # later on for updating counter/lo fields. Remember these are references, so 
