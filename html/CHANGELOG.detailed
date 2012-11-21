@@ -1,3 +1,7 @@
+4.25.345 [Main Branch] - Sphinx
+CD:
+ - Workaround for ticket:387 (max_id value in the cache table)
+
 4.25.342 [Main Branch] - Partitioning
 CD:
  - Fixed #379, #378 /Added partition creation event to log_processor
