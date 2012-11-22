@@ -65,7 +65,7 @@ sub prompt {
 }
 
 my $version    = "4.25";
-my $subversion = ".345";
+my $subversion = ".347";
 
 # Grab the base path
 my $lzbase = getcwd;
@@ -310,7 +310,7 @@ if ($sphinx_index   =~ /[Yy]/) {
 fbutton()         unless $skipfb       =~ /[Yy]/;
 add_ioncube()     unless $skip_ioncube =~ /[Yy]/;
 install_license() unless $skiplic      =~ /[Yy]/;
-run_tests()       unless $test    =~ /[Nn]/;
+# run_tests()       unless $test    =~ /[Nn]/;
 
 setup_rclocal();
 hup_syslog();

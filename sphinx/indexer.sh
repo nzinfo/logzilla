@@ -39,6 +39,7 @@ spconf="sphinx.conf"
 # -------------------------------------------
 # Sphinx executable programs
 # -------------------------------------------
+#indexer="bin/indexer --print-queries"
 indexer="bin/indexer"
 searchd="bin/searchd"
 # Path to logzilla config file
@@ -87,7 +88,7 @@ do_indexing()
     echo "rotate = $rotate"
     echo "cmd = $searchdcmd"
 
-        echo "Running Command: ( cd $sphinxhome && $indexer $indices$rotate;$searchdcmd )"
+        echo "[`date '+%H:%M'`] Running Command: ( cd $sphinxhome && $indexer $indices$rotate;$searchdcmd )"
         (
 		cd $sphinxhome
 		$indexer $indices$rotate
