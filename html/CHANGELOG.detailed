@@ -1,3 +1,8 @@
+4.25.347 [Main Branch] - Sphinx
+CD:
+ - Updated Main branch Sphinx.conf (s_logs) for ticket:389
+ - Changed sphinx.conf sql_range_step to 3000 as it performs a bit better
+
 4.25.345 [Main Branch] - Sphinx
 CD:
  - Workaround for ticket:387 (max_id value in the cache table)
