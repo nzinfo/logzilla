@@ -65,7 +65,7 @@ sub prompt {
 }
 
 my $version    = "4.25";
-my $subversion = ".347";
+my $subversion = ".348";
 
 # Grab the base path
 my $lzbase = getcwd;
@@ -558,11 +558,6 @@ DEFINE('LOG_QUERIES', 'FALSE');
 }
 
 sub make_partitions {
-
-    # Import procedures
-    system "perl -i -pe 's| logs | $dbtable |g' sql/procedures.sql" and warn "Could not modify sql/procedures.sql $!\n";
-    my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/procedures.sql`;
-    print $res;
 
 
     # Get some date values in order to create the MySQL Partition
@@ -2083,6 +2078,11 @@ sub copy_old_rbac {
 sub update_procs {
     my $dbh = db_connect( $dbname, $lzbase, $dbroot, $dbrootpass );
     print "Updating SQL Procedures...\n";
+    # Import procedures
+    system "perl -i -pe 's| logs | $dbtable |g' sql/procedures.sql" and warn "Could not modify sql/procedures.sql $!\n";
+    my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/procedures.sql`;
+    print $res;
+
     $dbh->do("DROP PROCEDURE IF EXISTS updateCache") or die "Could not create updateCache Procedure: $DBI::errstr";
     $dbh->do( "
         CREATE PROCEDURE updateCache()
