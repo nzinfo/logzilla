@@ -563,8 +563,10 @@ sub make_partitions {
     # Get some date values in order to create the MySQL Partition
     my $dbh = db_connect( $dbname, $lzbase, $dbroot, $dbrootpass );
 
-    # Added update_procs to fix the procedures bug.
-    update_procs();
+    # Import procedures
+    system "perl -i -pe 's| logs | $dbtable |g' sql/procedures.sql" and warn "Could not modify sql/procedures.sql $!\n";
+    my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/procedures.sql`;
+    print $res;
     # Create initial Partition of the $dbtable table
     $dbh->do( "CALL manage_logs_partitions();" )
         or die "Could not create partition for the $dbtable table: $DBI::errstr";
