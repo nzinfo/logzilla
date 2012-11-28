@@ -1,3 +1,7 @@
+4.25.349 [Main Branch] - Procedures bug
+CD:
+ - Added update_procs call to make_partitions.
+
 4.25.347 [Main Branch] - Sphinx
 CD:
  - Updated Main branch Sphinx.conf (s_logs) for ticket:389
