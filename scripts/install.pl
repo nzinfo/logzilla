@@ -65,7 +65,7 @@ sub prompt {
 }
 
 my $version    = "4.25";
-my $subversion = ".348";
+my $subversion = ".349";
 
 # Grab the base path
 my $lzbase = getcwd;
@@ -563,6 +563,8 @@ sub make_partitions {
     # Get some date values in order to create the MySQL Partition
     my $dbh = db_connect( $dbname, $lzbase, $dbroot, $dbrootpass );
 
+    # Added update_procs to fix the procedures bug.
+    update_procs();
     # Create initial Partition of the $dbtable table
     $dbh->do( "CALL manage_logs_partitions();" )
         or die "Could not create partition for the $dbtable table: $DBI::errstr";
