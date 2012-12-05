@@ -1,3 +1,8 @@
+4.25.351 [Main Branch] - manage partitions improvement
+PP:
+ - Disabled innodb_stats_on_metadata - it should make manage_logs_partitions much faster
+ - Improved info message about adding missing partitions.
+
 4.25.349 [Main Branch] - Procedures bug
 CD:
  - Added update_procs call to make_partitions.

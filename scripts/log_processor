@@ -128,7 +128,7 @@ setup_log();
 
 # cdukes: 2012-03-02 Added makepart on script startup to just try 
 #   and create a missing partition rather than waiting for the error.
-add_missing_db_partitions();
+manage_db_partitions();
 
 # This is list of counter tables, used by sub 'save_messages'
 my @counters_cfg = (
@@ -730,6 +730,7 @@ sub connect_to_db {
     my $dbh = DBI->connect( $cfg->db_dsn, $cfg->db_user, $cfg->db_pass, 
     { HandleError => sub { $log->ERR( $_[0] ); exit(1) } } );
     $dbh->{TraceLevel} = $options->{dbi_debug};
+    $dbh->do('set global innodb_stats_on_metadata=0');
     return $dbh;
 }
 
@@ -915,8 +916,8 @@ sub trap {
     }
 }
 
-sub add_missing_db_partitions {
+sub manage_db_partitions {
+    $log->INFO( "Managing partitions for logs table..." );
     $dbh->do( "CALL manage_logs_partitions()" );
-    $log->INFO( "Creating missing partition for logs table" );
 }
 
