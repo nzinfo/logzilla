@@ -166,7 +166,7 @@ print FILE <<EOF;
 \$retention = "7"; 
 \$snare = "Y";
 \$syslogng_conf = "/etc/syslog-ng/syslog-ng.conf";
-\$syslogng_source = "s_logzilla";
+\$syslogng_source = "s_net";
 \$webuser = "www-data";
 \$skipdb = "N";
 \$skipcron = "N";
@@ -192,8 +192,15 @@ if ( $options->{spx_compile} > 0 ) {
 # Customization for this script and a fresh syslog-ng install
 if ( $options->{ng} > 0 ) {
     print "Modifying syslog-ng template";
-    system("perl -i -pe 's|destination df_logzilla {|source s_logzilla { udp(); };\ndestination df_logzilla {|g' $options->{lzroot}/scripts/contrib/system_configs/syslog-ng.conf 2>&1");
-    system("perl -i -pe 's|MYSOURCE|s_logzilla|g' $options->{lzroot}/scripts/contrib/system_configs/syslog-ng.conf 2>&1");
+    my $file = "/etc/syslog-ng/syslog-ng.conf";
+    if ( -e "$file" ) {
+        open my $config, '+<', "$file" or warn "FAILED: $!\n";
+        my @arr = <$config>;
+        if ( !grep( /lzconfig|udp|s_logzilla/, @arr ) ) {
+            system("perl -i -pe 's|destination df_logzilla {|source s_logzilla { udp(); };\ndestination df_logzilla {|g' $options->{lzroot}/scripts/contrib/system_configs/syslog-ng.conf 2>&1");
+            system("perl -i -pe 's|MYSOURCE|s_logzilla|g' $options->{lzroot}/scripts/contrib/system_configs/syslog-ng.conf 2>&1");
+        }
+    }
 }
 
 # Install LogZilla

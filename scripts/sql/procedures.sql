@@ -3,6 +3,7 @@ DROP PROCEDURE IF EXISTS `log_arch_daily_proc`;
 DROP PROCEDURE IF EXISTS `cleanup`;
 DROP PROCEDURE IF EXISTS `manage_logs_partitions`;
 DROP PROCEDURE IF EXISTS `debug`;
+DROP FUNCTION IF EXISTS `get_current_date`;
 
 DELIMITER $$
 
