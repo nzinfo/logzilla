@@ -340,6 +340,8 @@ sub setup_mycnf {
     $sysmem = ( $sysmem * 1024 );
     my $poolsize                = ( $sysmem * 6 / 10 );
     my $innodb_logfile_size     = ( $poolsize / 4 );
+    # Set max log file size to 256M
+    $innodb_logfile_size = 268435456 if ($innodb_logfile_size > 268435456);
     my $innodb_log_buffer_size  = ( $innodb_logfile_size / 8 );
     my $Hpoolsize               = humanBytes($poolsize);
     my $Hinnodb_logfile_size    = humanBytes($innodb_logfile_size);
@@ -384,7 +386,8 @@ innodb_buffer_pool_size = $Hpoolsize
 # Note: If you modify innodb_log_file_size, you will first need to shut down mysql,
 # and delete/rename your current /var/lib/mysql/ib_logfile* files so that mysql can create new ones.
 # Check your /var/log/mysql/error.log on startup to make sure it worked properly.
-# Set the log file size to about 25% of the buffer pool size
+# Set the log file size to about 25% of the buffer pool size not to exceed 256M
+# http://www.mysqlperformanceblog.com/2008/11/21/how-to-calculate-a-good-innodb-log-file-size/
 innodb_log_file_size = $Hinnodb_logfile_size
 innodb_log_buffer_size = $Hinnodb_log_buffer_size
 
