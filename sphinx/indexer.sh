@@ -82,13 +82,13 @@ fi
 do_indexing()
 {
 	indices=$1
-    echo "home = $sphinxhome"
-    echo "indexer = $indexer"
-    echo "indices = $indices"
-    echo "rotate = $rotate"
-    echo "cmd = $searchdcmd"
+    #echo "home = $sphinxhome"
+    #echo "indexer = $indexer"
+    #echo "indices = $indices"
+    #echo "rotate = $rotate"
+    #echo "cmd = $searchdcmd"
 
-        echo "[`date '+%H:%M'`] Running Command: ( cd $sphinxhome && $indexer $indices$rotate;$searchdcmd )"
+        echo "[$$] Running Command: ( cd $sphinxhome && $indexer $indices$rotate;$searchdcmd )"
         (
 		cd $sphinxhome
 		$indexer $indices$rotate
@@ -115,11 +115,11 @@ if [ $# -lt 1 ]; then
 fi
 echo
 echo
-echo "Starting Sphinx Indexer: $DATE $TIME"
+echo "[$$] Starting $1 indexer: $DATE $TIME"
 if [ $1 = "delta" ]; then
            # the active index is the one where we put the latest data
 	   # activeindex=`echo "select index_name from sph_counter where counter_id=3" | $MYSQL | grep log_arch`
-           echo "Spawning DELTA indexer for delta idx_delta_logs"
+           echo "[$$] Spawning DELTA indexer for delta idx_delta_logs"
 	   indexes=''
 	   for a in `echo "select index_name from sph_counter where counter_id>2" \
 	   | $MYSQL ` ; do indexes="$indexes idx_$a"; done
@@ -135,16 +135,16 @@ if [ $1 = "delta" ]; then
   	echo "DELETE FROM sph_counter WHERE counter_id>2" | $MYSQL
 else
         if [ $1 = "merge" ]; then
-                 echo "Spawning MERGE indexer for idx_logs and idx_delta_logs"
-                 echo "Running command: $indexer --config $spconf --merge idx_logs idx_delta_logs --rotate"
+                 echo "[$$] Spawning MERGE indexer for idx_logs and idx_delta_logs"
+                 echo "[$$] Running command: $indexer --config $spconf --merge idx_logs idx_delta_logs --rotate"
                  $indexer --config $spconf --merge idx_logs idx_delta_logs $rotate --merge-dst-range deleted 0 0
                  `echo "UPDATE sph_counter SET max_id= (SELECT MAX(id) FROM $logtable) WHERE \
                  index_name = 'idx_logs'" | mysql -u$dbuser -p$dbpass $db`
 
         else
                 if [ $CHKFILES -eq 0 ]; then
-                        echo "No previous index files found"
-                        echo "Creating NEW indexes, this may take a while, so be patient..."
+                        echo "[$$] No previous index files found"
+                        echo "[$$] Creating NEW indexes, this may take a while, so be patient..."
 			do_indexing "--all"
                 else
 			do_indexing "--all --rotate"
@@ -154,4 +154,4 @@ else
 fi
 DATE2=`date +%F`
 TIME2=`date +%T`
-echo "Indexer started on $DATE at $TIME and completed on $DATE2 at $TIME2"
+echo "[$$] $1 indexer started on $DATE at $TIME and completed on $DATE2 at $TIME2"
