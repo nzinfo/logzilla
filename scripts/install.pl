@@ -65,7 +65,7 @@ sub prompt {
 }
 
 my $version    = "4.25";
-my $subversion = ".359";
+my $subversion = ".360";
 
 # Grab the base path
 my $lzbase = getcwd;
@@ -1175,12 +1175,17 @@ sub setup_cron {
 #####################################################
 
 #####################################################
-# Run Sphinx "delta" scans every 5 minutes throughout 
+# Run Sphinx "delta" scans every x minutes throughout 
 # the day.  
-# Delta indexing should be very fast but you may need
-# to adjust these times on very large systems.
 #####################################################
-*/$minute * * * * root ( cd $lzbase/sphinx; ./indexer.sh delta ) >> $logpath/sphinx_indexer.log 2>&1
+*/5 * * * * root ( cd $lzbase/sphinx; ./indexer.sh delta ) >> $logpath/sphinx_indexer.log 2>&1
+
+#####################################################
+# Run Sphinx "merge" scans to merge the deltas with 
+# the main index.
+#####################################################
+3,8,13,18,23,28,33,38,43,48,53,58 * * * * root ( cd $lzbase/sphinx; ./indexer.sh merge ) >> $logpath/sphinx_indexer.log 2>&1
+
 
 #####################################################
 # Daily export archives

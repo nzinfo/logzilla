@@ -1,15 +1,19 @@
-# http://nms.gdd.net/index.php/Install_Guide_for_LogZilla_v3.0
+# https://www.assembla.com/spaces/LogZillaWiki/wiki/CRON
 # Sphinx indexer cron times
 # Note: Your setup may require some tweaking depending on expected message rates!
-# Last updated on 2010-06-15
+# Last updated on 2012-12-14
 
 #####################################################
-# Run Sphinx "delta" scans every 5 minutes throughout 
-# the day.
-# Delta indexing should be very fast but you may need
-# to adjust these times on very large systems.
+# Run Sphinx "delta" scans every x minutes throughout 
+# the day.  
 #####################################################
-*/1 * * * * /path_to_logzilla/sphinx/indexer.sh delta >> /path_to_logs/sphinx_indexer.log 2>&1
+*/5 * * * * root ( cd /path_to_logzilla/sphinx; ./indexer.sh delta ) >> /path_to_logs/sphinx_indexer.log 2>&1
+
+#####################################################
+# Run Sphinx "merge" scans to merge the deltas with 
+# the main index.
+#####################################################
+3,8,13,18,23,28,33,38,43,48,53,58 * * * * root ( cd /path_to_logzilla/sphinx; ./indexer.sh merge ) >> /path_to_logs/sphinx_indexer.log 2>&1
 
 
 #####################################################
