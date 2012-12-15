@@ -84,7 +84,7 @@ do_indexing()
 	indices=$1
     #echo "home = $sphinxhome"
     #echo "indexer = $indexer"
-    #echo "indices = $indices"
+    echo "indices = $indices"
     #echo "rotate = $rotate"
     #echo "cmd = $searchdcmd"
 
