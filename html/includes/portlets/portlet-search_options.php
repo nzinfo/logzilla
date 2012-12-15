@@ -21,7 +21,8 @@ if ((has_portlet_access($_SESSION['username'], 'Search Options') == TRUE) || ($_
     // -------------------------
     if ($_SESSION['SHOWCOUNTS'] == "1") {
         if ($_SESSION['DEDUP'] == "1") {
-            $sql = "SELECT (SELECT value FROM cache WHERE name='msg_sum') as count_all, COUNT(*) as count FROM ".$_SESSION["TBL_MAIN"]."";
+            // $sql = "SELECT (SELECT value FROM cache WHERE name='msg_sum') as count_all, COUNT(*) as count FROM ".$_SESSION["TBL_MAIN"]."";
+            $sql = "SELECT (SELECT value FROM cache WHERE name='msg_sum') as count_all, (SELECT TABLE_ROWS FROM information_schema.tables WHERE table_schema = DATABASE() AND TABLE_NAME='".$_SESSION["TBL_MAIN"]."') as count";
             $result = perform_query($sql, $dbLink, $_REQUEST['pageId']);
             $line = fetch_array($result);
             $messagecount = humanReadable($line['count_all']);

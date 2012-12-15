@@ -65,7 +65,7 @@ sub prompt {
 }
 
 my $version    = "4.25";
-my $subversion = ".360";
+my $subversion = ".361";
 
 # Grab the base path
 my $lzbase = getcwd;
@@ -843,6 +843,11 @@ sub do_procs {
 
     # Now create the events that trigger these procs
     do_events();
+    # cdukes: added below after v4.25 because we moved some procedures to file but they were getting deleted above
+    # this will all get cleaned up when Piotr writes the new install :-)
+    system "perl -i -pe 's| logs | $dbtable |g' sql/procedures.sql" and warn "Could not modify sql/procedures.sql $!\n";
+    my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/procedures.sql`;
+    print $res;
 }
 
 sub make_dbuser {
@@ -1179,13 +1184,6 @@ sub setup_cron {
 # the day.  
 #####################################################
 */5 * * * * root ( cd $lzbase/sphinx; ./indexer.sh delta ) >> $logpath/sphinx_indexer.log 2>&1
-
-#####################################################
-# Run Sphinx "merge" scans to merge the deltas with 
-# the main index.
-#####################################################
-3,8,13,18,23,28,33,38,43,48,53,58 * * * * root ( cd $lzbase/sphinx; ./indexer.sh merge ) >> $logpath/sphinx_indexer.log 2>&1
-
 
 #####################################################
 # Daily export archives
