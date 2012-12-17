@@ -82,11 +82,11 @@ fi
 do_indexing()
 {
 	indices=$1
-    #echo "home = $sphinxhome"
-    #echo "indexer = $indexer"
+    echo "home = $sphinxhome"
+    echo "indexer = $indexer"
     echo "indices = $indices"
-    #echo "rotate = $rotate"
-    #echo "cmd = $searchdcmd"
+    echo "rotate = $rotate"
+    echo "cmd = $searchdcmd"
 
         echo "[$$] Running Command: ( cd $sphinxhome && $indexer $indices$rotate;$searchdcmd )"
         (
@@ -109,7 +109,7 @@ CHKFILES=$(ls -C1 $lzhome/sphinx/data/*idx_logs* 2> /dev/null | wc -l)
 if [ $# -lt 1 ]; then
         echo "Please specify \"delta\", or \"full\""
         echo "If \"delta\" is provided, only the delta updates will be done"
-        echo "If \"merge\" is provided, the delta index will be merged with the main index (this should only be done periodically)"
+#        echo "If \"merge\" is provided, the delta index will be merged with the main index (this should only be done periodically)"
         echo "If any other argument is passed, such as \"full\", then a full index will be done"
         exit 1
 fi
@@ -134,14 +134,16 @@ if [ $1 = "delta" ]; then
 	# clean out 
   	echo "DELETE FROM sph_counter WHERE counter_id>2" | $MYSQL
 else
-        if [ $1 = "merge" ]; then
-                 echo "[$$] Spawning MERGE indexer for idx_logs and idx_delta_logs"
-                 echo "[$$] Running command: $indexer --config $spconf --merge idx_logs idx_delta_logs --rotate"
-                 $indexer --config $spconf --merge idx_logs idx_delta_logs $rotate --merge-dst-range deleted 0 0
-                 `echo "UPDATE sph_counter SET max_id= (SELECT MAX(id) FROM $logtable) WHERE \
-                 index_name = 'idx_logs'" | mysql -u$dbuser -p$dbpass $db`
+#        if [ $1 = "merge" ]; then
+#                 echo "Spawning MERGE indexer for idx_logs and idx_delta_logs"
+# FIXME! It seems that we don't need the hourly merge anymore. Since we have 24 hourly indexes, and daily reindex. Do we?
 
-        else
+#                 echo "Running command: $indexer --config $spconf --merge idx_logs idx_delta_logs --rotate"
+#                 $indexer --config $spconf --merge idx_logs idx_delta_logs $rotate --merge-dst-range deleted 0 0
+#                 `echo "UPDATE sph_counter SET max_id= (SELECT MAX(id) FROM $logtable) WHERE \
+#                 index_name = 'idx_logs'" | mysql -u$dbuser -p$dbpass $db`
+
+#        else
                 if [ $CHKFILES -eq 0 ]; then
                         echo "[$$] No previous index files found"
                         echo "[$$] Creating NEW indexes, this may take a while, so be patient..."
@@ -150,7 +152,7 @@ else
 			do_indexing "--all --rotate"
 			echo "restarting searchd"; $searchd --stopwait; $searchd 
 			    fi
-        fi
+#        fi
 fi
 DATE2=`date +%F`
 TIME2=`date +%T`
