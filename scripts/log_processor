@@ -841,8 +841,12 @@ sub trigger_mail {
     my $subject = $trigger->{subject};
     my $body = $trigger->{body};
     my @vars = ( $msg =~ /$pattern/ ); # FIXME duplicated matching (we do it earlier already)
-    $subject =~ s/\{(\d+)\}/$vars[$1+1]/ge;
-    $body    =~ s/\{(\d+)\}/$vars[$1+1]/ge;
+    foreach my $var (@vars) {
+          $subject =~ s/\{\d+\}/$var/;
+          $body    =~ s/\{\d+\}/$var/;
+     }
+    #$subject =~ s/\{(\d+)\}/$vars[$1+1]/ge;
+    #$body    =~ s/\{(\d+)\}/$vars[$1+1]/ge;
 
     $subject = "[LogZilla Host $host]: $subject";
 
