@@ -37,6 +37,7 @@ if ( $sth_sphinx->rows <= 0 ) {
 $sth_sphinx = $dbh_sphinx->prepare('select  severity, sum(counter) from distributed group by severity;');
 $sth_sphinx->execute();
 $sth_syslog = $dbh_syslog->prepare('select sum(counter) from logs');
+
 #$sth_syslog->execute();
 $count = 0;
 my $count2 = 0;
@@ -62,21 +63,20 @@ if ( $sth_sphinx->rows == 0 ) {
         #}
     }
     $date = strftime "%Y-%m-%d %H:%M:%S", localtime;
-    if ($count < 50000000) {
-    while ( $results = $sth_syslog->fetchrow_hashref ) {
-    $count2 = $count2 + $results->{'sum(counter)'};
+    if ( $count < 50000000 ) {
+        while ( $results = $sth_syslog->fetchrow_hashref ) {
+            $count2 = $count2 + $results->{'sum(counter)'};
+        }
+        printf "[$date] DB sum(counter):\t\t%s\n", commify($count2);
+    } else {
+        print "[$date] DB sum(counter):\t\tSkipped. DB Too Large.\n";
     }
-    printf "[$date] DB sum(counter):\t\t%s\n", commify($count2);
     my $sth_syslog = $dbh_syslog->prepare('select count(*) from logs');
     $sth_syslog->execute();
     while ( $results = $sth_syslog->fetchrow_hashref ) {
         $date = strftime "%Y-%m-%d %H:%M:%S", localtime;
         printf "[$date] DB count(*):\t\t%s\n", commify( $results->{'count(*)'} );
     }
-} else {
-        print "[$date] DB sum(counter):\t\tSkipped. DB Too Large.\n";
-        print "[$date] DB count(*):\t\tSkipped. DB Too Large.\n";
-}
 
 }
 $sth_sphinx->finish;
@@ -85,7 +85,7 @@ $dbh_sphinx->disconnect();
 $dbh_syslog->disconnect();
 
 sub commify {
-    my $text = reverse $_[0];
-    $text =~ s/(\d\d\d)(?=\d)(?!\d*\.)/$1,/g;
-    return scalar reverse $text;
+      my $text = reverse $_[0];
+      $text =~ s/(\d\d\d)(?=\d)(?!\d*\.)/$1,/g;
+      return scalar reverse $text;
 }
