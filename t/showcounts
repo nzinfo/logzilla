@@ -1,0 +1,91 @@
+#!/usr/bin/perl
+use DBI;
+use DBD::mysql;
+use strict;
+use warnings;
+use bigint;
+use POSIX qw/strftime/;
+
+my $date = strftime "%Y-%m-%d %H:%M:%S", localtime;
+print "-------------------------\n";
+print "[$date] Collecting Counts\n";
+
+# connect to mysql and sphinx
+
+my $dbh_syslog = DBI->connect( 'DBI:mysql:syslog:localhost', 'root', 'mysql' ) || die "Could not connect to database: $DBI::errstr";
+my $dbh_sphinx = DBI->connect( 'DBI:mysql::127.0.0.1:9306', 'root', ) || die "Could not connect to database: $DBI::errstr";
+
+# some useful vars
+
+my $results;
+my bigint $count;
+
+my $sth_sphinx = $dbh_sphinx->prepare('select * from distributed group by host_crc limit 50000 OPTION max_matches=5000;');
+$sth_sphinx->execute();
+my $sth_syslog = $dbh_syslog->prepare('select * from hosts');
+$sth_syslog->execute();
+
+if ( $sth_sphinx->rows <= 0 ) {
+    print "Sorry, no hosts found.\n";
+} else {
+    $date = strftime "%Y-%m-%d %H:%M:%S", localtime;
+    printf "[$date] Sphinx Hosts:\t\t%s\n", commify( $sth_sphinx->rows );
+    printf "[$date] DB Hosts:\t\t\t%s\n",   commify( $sth_syslog->rows );
+}
+
+# due to a bug in sphinxql when using sum you also need to use a group-by
+$sth_sphinx = $dbh_sphinx->prepare('select  severity, sum(counter) from distributed group by severity;');
+$sth_sphinx->execute();
+$sth_syslog = $dbh_syslog->prepare('select sum(counter) from logs');
+#$sth_syslog->execute();
+$count = 0;
+my $count2 = 0;
+if ( $sth_sphinx->rows == 0 ) {
+    print "ERROR: No data found.\n";
+} else {
+    while ( $results = $sth_sphinx->fetchrow_hashref ) {
+        $count = $count + $results->{'sum(counter)'};
+    }
+    $date = strftime "%Y-%m-%d %H:%M:%S", localtime;
+    printf "[$date] Sphinx sum(counter):\t%s\n", commify($count);
+    my $spx_total = $dbh_sphinx->do('select * from distributed limit 1');
+    my $spx_meta  = $dbh_sphinx->prepare('show meta');
+    $spx_meta->execute();
+    while ( $results = $spx_meta->fetchrow_hashref ) {
+        if ( $results->{'Variable_name'} eq "total_found" ) {
+            $date = strftime "%Y-%m-%d %H:%M:%S", localtime;
+            printf "[$date] Sphinx count(*):\t\t%s\n", commify( $results->{'Value'} );
+        }
+
+        #for ( keys %$results ) {
+        #print "$_ => $results->{$_}\n"
+        #}
+    }
+    $date = strftime "%Y-%m-%d %H:%M:%S", localtime;
+    if ($count < 50000000) {
+    while ( $results = $sth_syslog->fetchrow_hashref ) {
+    $count2 = $count2 + $results->{'sum(counter)'};
+    }
+    printf "[$date] DB sum(counter):\t\t%s\n", commify($count2);
+    my $sth_syslog = $dbh_syslog->prepare('select count(*) from logs');
+    $sth_syslog->execute();
+    while ( $results = $sth_syslog->fetchrow_hashref ) {
+        $date = strftime "%Y-%m-%d %H:%M:%S", localtime;
+        printf "[$date] DB count(*):\t\t%s\n", commify( $results->{'count(*)'} );
+    }
+} else {
+        print "[$date] DB sum(counter):\t\tSkipped. DB Too Large.\n";
+        print "[$date] DB count(*):\t\tSkipped. DB Too Large.\n";
+}
+
+}
+$sth_sphinx->finish;
+$sth_syslog->finish;
+$dbh_sphinx->disconnect();
+$dbh_syslog->disconnect();
+
+sub commify {
+    my $text = reverse $_[0];
+    $text =~ s/(\d\d\d)(?=\d)(?!\d*\.)/$1,/g;
+    return scalar reverse $text;
+}
