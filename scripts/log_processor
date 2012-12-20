@@ -841,22 +841,64 @@ sub trigger_mail {
     my $subject = $trigger->{subject};
     my $body = $trigger->{body};
     my @vars = ( $msg =~ /$pattern/ ); # FIXME duplicated matching (we do it earlier already)
-    foreach my $var (@vars) {
-          $subject =~ s/\{\d+\}/$var/;
-          $body    =~ s/\{\d+\}/$var/;
-     }
+    # cdukes: removed below for ticket #406
     #$subject =~ s/\{(\d+)\}/$vars[$1+1]/ge;
     #$body    =~ s/\{(\d+)\}/$vars[$1+1]/ge;
-
+    # cdukes #406 - added foreach below from original db_insert script
+    foreach my $var (@vars) {
+        $subject =~ s/\{\d+\}/$var/;
+        $body    =~ s/\{\d+\}/$var/; 
+    }                            
     $subject = "[LogZilla Host $host]: $subject";
 
     DEBUG( 1, "Mail trigger found:" );
     DEBUG( 1, "Pattern = $pattern" );
+    DEBUG( 1, "Server = '" . $settings->{MAILHOST} ."'" );
+    DEBUG( 1, "Port = " . $settings->{MAILHOST_PORT} );
     DEBUG( 1, "To = $trigger->{mailto}" );
     DEBUG( 1, "From = $trigger->{mailfrom}" );
     DEBUG( 1, "Subject = $subject" );
     DEBUG( 1, "Body = $body" );
     DEBUG( 1, "Message = $msg" );
+
+    # cdukes: removed block below for ticket #410
+    #my $mailmsg = MIME::Lite->new(
+    #From    => $trigger->{mailfrom},
+    #To      => $trigger->{mailto},
+    #Subject => $subject,
+    #Type    => 'TEXT',
+    #Data    => $body
+    #);
+    #
+    #my %args = ();
+    #if( $settings->{MAILHOST_USER} ) {
+    #$args{AuthUser} = $settings->{MAILHOST_USER};
+    #$args{AuthPass} = $settings->{MAILHOST_PASS};
+    #DEBUG( 1, "Mail User = " . $settings->{MAILHOST_USER} );
+    #DEBUG( 1, "Mail Pass = " . $settings->{MAILHOST_PASS} );
+    #}
+    #if( $options->{debug} ) {
+    #$args{Debug} = 1;
+    #}
+    #if( $settings->{MAILHOST_PORT} ) {
+    #$args{Port} = 1;
+    #}
+    #$mailmsg->send( 'smtp', $settings->{MAILHOST}, %args );
+
+    # cdukes: added block below for ticket #410
+    if( $settings->{MAILHOST_USER} ) {
+        MIME::Lite->send( 'smtp', $settings->{MAILHOST},
+            Port     => $settings->{MAILHOST_PORT},
+            Debug    => $options->{debug},
+            AuthUser => $settings->{MAILHOST_USER},
+            AuthPass => $settings->{MAILHOST_PASS}
+        );
+    } else {
+        MIME::Lite->send( 'smtp', $settings->{MAILHOST},
+            Port     => $settings->{MAILHOST_PORT},
+            Debug    => $options->{debug}
+        );
+    }
 
     my $mailmsg = MIME::Lite->new(
         From    => $trigger->{mailfrom},
@@ -866,18 +908,7 @@ sub trigger_mail {
         Data    => $body
     );
 
-    my %args = ();
-    if( $settings->{MAILHOST_USER} ) {
-        $args{AuthUser} = $settings->{MAILHOST_USER};
-        $args{AuthPass} = $settings->{MAILHOST_PASS};
-    }
-    if( $options->{debug} ) {
-        $args{Debug} = 1;
-    }
-    if( $settings->{MAILHOST_PORT} ) {
-        $args{Port} = 1;
-    }
-    $mailmsg->send( 'smtp', $settings->{MAILHOST}, %args );
+    $mailmsg->send();
 }
 
 # SNMP Forwarding
