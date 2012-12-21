@@ -3,8 +3,8 @@ use DBI;
 use DBD::mysql;
 use strict;
 use warnings;
-use bigint;
 use POSIX qw/strftime/;
+$| = 1;
 
 my $date = strftime "%Y-%m-%d %H:%M:%S", localtime;
 print "-------------------------\n";
@@ -17,8 +17,7 @@ my $dbh_sphinx = DBI->connect( 'DBI:mysql::127.0.0.1:9306', 'root', ) || die "Co
 
 # some useful vars
 
-my $results;
-my bigint $count;
+my ($results, $count, $sum, $star);
 
 my $sth_sphinx = $dbh_sphinx->prepare('select * from distributed group by host_crc limit 50000 OPTION max_matches=5000;');
 $sth_sphinx->execute();
@@ -40,7 +39,6 @@ $sth_syslog = $dbh_syslog->prepare('select sum(counter) from logs');
 
 #$sth_syslog->execute();
 $count = 0;
-my $count2 = 0;
 if ( $sth_sphinx->rows == 0 ) {
     print "ERROR: No data found.\n";
 } else {
@@ -62,22 +60,24 @@ if ( $sth_sphinx->rows == 0 ) {
         #print "$_ => $results->{$_}\n"
         #}
     }
-    $date = strftime "%Y-%m-%d %H:%M:%S", localtime;
     if ( $count < 50000000 ) {
-        while ( $results = $sth_syslog->fetchrow_hashref ) {
-            $count2 = $count2 + $results->{'sum(counter)'};
-        }
-        printf "[$date] DB sum(counter):\t\t%s\n", commify($count2);
+        $date = strftime "%Y-%m-%d %H:%M:%S", localtime;
+        $sum = $dbh_syslog->selectrow_array("select sum(counter) from logs");
+        printf "[$date] DB sum(counter):\t\t%s\n", commify($sum);
     } else {
+        $date = strftime "%Y-%m-%d %H:%M:%S", localtime;
         print "[$date] DB sum(counter):\t\tSkipped. DB Too Large.\n";
     }
-    my $sth_syslog = $dbh_syslog->prepare('select count(*) from logs');
-    $sth_syslog->execute();
-    while ( $results = $sth_syslog->fetchrow_hashref ) {
+    $date = strftime "%Y-%m-%d %H:%M:%S", localtime;
+    my $star = $dbh_syslog->selectrow_array("select count(*) from logs");
+    printf "[$date] DB count(*):\t\t%s\n", commify($star);
+    if ( $sum > 0 ) {
+        my $r    = ( $sum - $star );
+        printf "[$date] Deduplicated Events:\t%.2f%%\n",  ( $r / $sum ) * 100;
+    } else {
         $date = strftime "%Y-%m-%d %H:%M:%S", localtime;
-        printf "[$date] DB count(*):\t\t%s\n", commify( $results->{'count(*)'} );
+        print "[$date] Deduplicated Events:\tSkipped. DB Too Large.\n";
     }
-
 }
 $sth_sphinx->finish;
 $sth_syslog->finish;
@@ -85,7 +85,7 @@ $dbh_sphinx->disconnect();
 $dbh_syslog->disconnect();
 
 sub commify {
-      my $text = reverse $_[0];
-      $text =~ s/(\d\d\d)(?=\d)(?!\d*\.)/$1,/g;
-      return scalar reverse $text;
+    my $text = reverse $_[0];
+    $text =~ s/(\d\d\d)(?=\d)(?!\d*\.)/$1,/g;
+    return scalar reverse $text;
 }
