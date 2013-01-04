@@ -2159,7 +2159,7 @@ sub add_ioncube {
     }
     my $phpver = `/usr/bin/php -v | head -1`;
     my $ver = $1 if ( $phpver =~ /PHP (\d\.\d)/ );
-    if ( $ver !~ /[45]\.[04]/ ) {
+    if ( $ver =~ /[4-5]\.[0-4].*/ ) {
         my $ok = &getYN( "\nInstall will try to add the license loader to php.ini for you is this ok?", "y" );
         if ( $ok =~ /[Yy]/ ) {
             my $file = "/etc/php5/apache2/php.ini";
