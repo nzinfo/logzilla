@@ -71,7 +71,7 @@ has default_script_args => (
     is => 'rw',
     isa => 'ArrayRef',
     lazy => 1,
-    default => sub { $_[0]->debug ? [ '-d' => 5, '-v' ] : []; },
+    default => sub { $_[0]->debug ? [ '-d' => 5, '-v' ] : [ '-v' ]; },
 );
 
 has settings => (
@@ -108,6 +108,12 @@ has _dbh => (
 has _test_mysqld => (
     is => 'rw',
     isa => 'Test::mysqld',
+);
+
+has _dedup_cache_size => (
+    is => 'rw',
+    isa => 'Int',
+    default => -1,
 );
 
 sub BUILD {
@@ -205,6 +211,9 @@ sub flush_output {
     return unless $self->_script_pid;
 
     while( defined( my $l = $self->_script_out->getline ) ) {
+        if($l =~ /dedup cache size: (\d+)/) {
+            $self->_dedup_cache_size($1);
+        }
         if( $self->debug ) {
             chop($l);
             note( "LP>> '$l'" );
@@ -362,6 +371,11 @@ sub check_cache {
     my $r = $sth->fetchrow_hashref();
     return cmp_deeply( $r, $expect, "There is expected value in table cache for name '$name'" )
         || diag( "Got: " . Dumper($r) . "Expected: " . Dumper($expect) );
+}
+
+sub check_dedup_cache_size {
+    my( $self, $expect ) = @_;
+    return is( $self->_dedup_cache_size, $expect, "Dedup cache size as expected ($expect)" );
 }
 
 sub check_message_rates {

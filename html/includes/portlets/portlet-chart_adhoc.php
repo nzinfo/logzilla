@@ -29,7 +29,8 @@ if ((has_portlet_access($_SESSION['username'], 'Graph Results') == TRUE) || ($_S
         // Run the search query to get results from Sphinx
         //------------------------------------------------------------
 
-        $json_o = search_graph(json_encode($searchArr), $spx_max, "distributed", $spx_ip, $spx_port);
+        // #425: Moved below to portlet_header
+        // $json_o = search_graph(json_encode($searchArr), $spx_max, "distributed", $spx_ip, $spx_port);
 
 
         //------------------------------------------------------------
@@ -38,7 +39,8 @@ if ((has_portlet_access($_SESSION['username'], 'Graph Results') == TRUE) || ($_S
         if (!preg_match("/^Sphinxql error/", "$json_o")) {
 
             // Decode returned json object into an array:
-            $sphinx_results = json_decode($json_o, true);
+        // #425: Moved below to portlet_header
+        //     $sphinx_results = json_decode($json_o, true);
 
             if (sizeof($sphinx_results) > 0) {
                 foreach ( $sphinx_results as $result ) {
