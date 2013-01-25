@@ -471,9 +471,9 @@ if(is_array($searchArr['hosts'])) {
 
 
 if ($searchArr['hosts'][0]=='') {
-    $where .= " AND host IN (";
+    $where .= " AND host_crc IN (";
     // only look for hosts inside the lo area 
-    $sql = "SELECT host FROM hosts where rbac(".$_SESSION['rbac'].", rbac_key) and lastseen>='".$filter_lo_start."'";
+    $sql = "SELECT crc32(host) FROM hosts where rbac(".$_SESSION['rbac'].", rbac_key) and lastseen>='".$filter_lo_start."'";
     $result = perform_query($sql, $dbLink, $_SERVER['PHP_SELF']); 
     while ($row = mysql_fetch_array($result, MYSQL_NUM)) {
         $searchArr['hosts'][] = $row[0];
@@ -526,7 +526,12 @@ $tail_where = $where;
 //------------------------------------------------------------
 // Run the search query to get results from Sphinx
 //------------------------------------------------------------
-$json_o = search(json_encode($searchArr), $spx_max, "distributed", $spx_ip, $spx_port);
+if ($page == "Graph") {
+    $json_o = search_graph(json_encode($searchArr), $spx_max, "distributed", $spx_ip, $spx_port);
+} else {
+    $json_o = search(json_encode($searchArr), $spx_max, "distributed", $spx_ip, $spx_port);
+}
+
 // Decode returned json object into an array:
 $sphinx_results = json_decode($json_o, true);
 

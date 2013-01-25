@@ -1164,19 +1164,22 @@ function search($json_o, $spx_max,$index="idx_logs idx_delta_logs",$spx_ip,$spx_
 
     if (is_array($json_a['hosts'])) {
         foreach ($json_a['hosts'] as $key => $h) {
-            if ($hosts=='') { // [[ticket:304]]
-                $hosts=" @host "; 
-            }
             if ($h !== '') {
-            $hosts =  $hosts . $h . "|";
+                // #407 - make sure all hosts are crc32
+                if (!is_numeric($h)) { 
+                    $h = crc32($h); 
+                }
+            $hosts =  $hosts . $h . ",";
             $counter = $counter+1;
             }
 
             // split query in max 100 hosts 
-            if ($counter>=100)  {
-                $hosts = rtrim($hosts,"|");
+            // cdukes - [[ticket:426]] - changed to 15000
+            if ($counter>=15000)  {
+                $hosts = rtrim($hosts,",");
                 $shosts = $scl->real_escape_string($hosts);
-                $search_string = $msg_mask . $hosts . $notes_mask;
+                $search_string = $msg_mask . $notes_mask;
+                $query = " AND MATCH ('$search_string')";
 
                 // Test for empty search and remove whitespaces
                 $search_string = preg_replace('/^\s+$/', '',$search_string);
@@ -1189,8 +1192,8 @@ function search($json_o, $spx_max,$index="idx_logs idx_delta_logs",$spx_ip,$spx_
                     $sphinxstatement = "Select id, facility, severity, counter, lo from idx_last_24h where "; }
                 if (sizeof($sphinxfilters)>0) {
                     $sphinxstatement.=implode($sphinxfilters,' AND '); }
-                $sphinxstatement .= " and MATCH ('$search_string') $sphinxgroupby $sphinxlimit $sphinxoptions";
-                action("Searching using sphinx ".$sphinxstatement);
+                $sphinxstatement .= " $query and host_crc in ($hosts) $sphinxgroupby $sphinxlimit $sphinxoptions";
+                action("Search Function: ".$sphinxstatement);
                 $result = $scl->query($sphinxstatement);
 
                 // Get meta info:
@@ -1217,11 +1220,11 @@ function search($json_o, $spx_max,$index="idx_logs idx_delta_logs",$spx_ip,$spx_
     }
 
     // catch the last few hosts
-
     if ($hosts != "") {
-        $hosts = rtrim($hosts,"|");
+        $hosts = rtrim($hosts,",");
         $hosts = $scl->real_escape_string($hosts);
-        $search_string = $msg_mask . $hosts . $notes_mask;
+        $search_string = $msg_mask . $notes_mask;
+        $query = " AND MATCH ('$search_string')";
 
         // Test for empty search and remove whitespaces
         $search_string = preg_replace('/^\s+$/', '',$search_string);
@@ -1234,10 +1237,8 @@ function search($json_o, $spx_max,$index="idx_logs idx_delta_logs",$spx_ip,$spx_
             $sphinxstatement = "Select id, facility, severity, counter, lo from idx_last_24h where "; }
         if (sizeof($sphinxfilters)>0) {
             $sphinxstatement.=implode($sphinxfilters,' AND '); }
-        $sphinxstatement .= " and MATCH ('$search_string') $sphinxgroupby $sphinxlimit $sphinxoptions";
-        action("Searching using sphinx ".$sphinxstatement);
-
-
+        $sphinxstatement .= " $query and host_crc in ($hosts) $sphinxgroupby $sphinxlimit $sphinxoptions";
+        action("Search Function: ".$sphinxstatement);
         $result = $scl->query($sphinxstatement);
 
         if ( $result ) {
@@ -1604,16 +1605,21 @@ function search_graph($json_o, $spx_max,$index="idx_logs idx_delta_logs",$spx_ip
 
     if (is_array($json_a['hosts'])) {
         foreach ($json_a['hosts'] as $key => $h) {
-            if ($hosts=='') { $hosts=" @host "; }
             if ($h !== '') { // [[ticket:304]]
-            $hosts =  $hosts . $h . "|";
+                // #407 - make sure all hosts are crc32
+                if (!is_numeric($h)) { 
+                    $h = crc32($h); 
+                }
+            $hosts =  $hosts . $h . ",";
             $counter = $counter+1;
             }
             // split query in max 100 hosts 
-            if ($counter>=100)  {
-                $hosts = rtrim($hosts,"|");
+            // cdukes - [[ticket:426]] - changed to 15000
+            if ($counter>=15000)  {
+                $hosts = rtrim($hosts,",");
                 $shosts = $scl->real_escape_string($hosts);
-                $search_string = $msg_mask . $hosts . $notes_mask;
+                $search_string = $msg_mask . $notes_mask;
+                $query = " AND MATCH ('$search_string')";
 
                 // Test for empty search and remove whitespaces
                 $search_string = preg_replace('/^\s+$/', '',$search_string);
@@ -1626,8 +1632,8 @@ function search_graph($json_o, $spx_max,$index="idx_logs idx_delta_logs",$spx_ip
                     $sphinxstatement = "Select ". $json_a['groupby'].", sum(counter) as scount from idx_last_24h where "; }
                 if (sizeof($sphinxfilters)>0) {
                     $sphinxstatement.=implode($sphinxfilters,' AND '); }
-                $sphinxstatement .= " and MATCH ('$search_string') $sphinxgroupby $sphinxlimit $sphinxoptions";
-                action("Searching using sphinx ".$sphinxstatement);
+                $sphinxstatement .= " $query and host_crc in ($hosts) $sphinxgroupby $sphinxlimit $sphinxoptions";
+                action("GRAPH: Searching using sphinx ".$sphinxstatement);
                 $result = $scl->query($sphinxstatement);
                 if ( $result ) {
                     while (list($name, $value) = $result->fetch_row())
@@ -1644,9 +1650,10 @@ function search_graph($json_o, $spx_max,$index="idx_logs idx_delta_logs",$spx_ip
     // catch the last few hosts
 
     if ($hosts != "") {
-        $hosts = rtrim($hosts,"|");
+        $hosts = rtrim($hosts,",");
         $hosts = $scl->real_escape_string($hosts);
-        $search_string = $msg_mask . $hosts . $notes_mask;
+        $search_string = $msg_mask . $notes_mask;
+        $query = " AND MATCH ('$search_string')";
 
         // Test for empty search and remove whitespaces
         $search_string = preg_replace('/^\s+$/', '',$search_string);
@@ -1659,8 +1666,8 @@ function search_graph($json_o, $spx_max,$index="idx_logs idx_delta_logs",$spx_ip
             $sphinxstatement = "Select ".$json_a['groupby'].", sum(counter) as scount from idx_last_24h where "; }
         if (sizeof($sphinxfilters)>0) {
             $sphinxstatement.=implode($sphinxfilters,' AND '); }
-        $sphinxstatement .= " and MATCH ('$search_string') $sphinxgroupby $sphinxlimit $sphinxoptions";
-        action("Searching using sphinx ".$sphinxstatement);
+        $sphinxstatement .= " $query and host_crc in ($hosts) $sphinxgroupby $sphinxlimit $sphinxoptions";
+        action("GRAPH2: Searching using sphinx ".$sphinxstatement);
         $result = $scl->query($sphinxstatement);
         if ( $result ) {
             while (list($name, $value) = $result->fetch_row())

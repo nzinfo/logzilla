@@ -50,20 +50,6 @@ if ((has_portlet_access($_SESSION['username'], 'Search Results') == TRUE) || ($_
             unset($sphinx_results[$i]);
         }
 
-        //------------------------------------------------------------
-        // If user clicks search with no parameters (e.g. show everything), 
-        // total_found will be 0, so we want to get a count of all rows
-        //------------------------------------------------------------
-        $array = spx_query("select * from distributed limit 1");
-        if(is_array($array)) {
-        $total_all = $array[2][1];
-        } else {
-            $error = $array;
-            echo $error;
-        }
-        if ($total_found == 0) {
-            $total_found = $total_all;
-        }
         if (sizeof($sphinx_results) > 0) {
             $where = " where id IN (";
             foreach ( $sphinx_results as $result ) {
