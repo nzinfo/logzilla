@@ -1179,7 +1179,7 @@ function search($json_o, $spx_max,$index="idx_logs idx_delta_logs",$spx_ip,$spx_
                 $hosts = rtrim($hosts,",");
                 $shosts = $scl->real_escape_string($hosts);
                 $search_string = $msg_mask . $notes_mask;
-                $query = " AND MATCH ('$search_string')";
+		if ($search_string) $query = " AND MATCH ('$search_string')";
 
                 // Test for empty search and remove whitespaces
                 $search_string = preg_replace('/^\s+$/', '',$search_string);
@@ -1224,7 +1224,7 @@ function search($json_o, $spx_max,$index="idx_logs idx_delta_logs",$spx_ip,$spx_
         $hosts = rtrim($hosts,",");
         $hosts = $scl->real_escape_string($hosts);
         $search_string = $msg_mask . $notes_mask;
-        $query = " AND MATCH ('$search_string')";
+	if ($search_string) $query = " AND MATCH ('$search_string')";
 
         // Test for empty search and remove whitespaces
         $search_string = preg_replace('/^\s+$/', '',$search_string);
@@ -1619,7 +1619,7 @@ function search_graph($json_o, $spx_max,$index="idx_logs idx_delta_logs",$spx_ip
                 $hosts = rtrim($hosts,",");
                 $shosts = $scl->real_escape_string($hosts);
                 $search_string = $msg_mask . $notes_mask;
-                $query = " AND MATCH ('$search_string')";
+		if ($search_string) $query = " AND MATCH ('$search_string')";
 
                 // Test for empty search and remove whitespaces
                 $search_string = preg_replace('/^\s+$/', '',$search_string);
@@ -1653,7 +1653,7 @@ function search_graph($json_o, $spx_max,$index="idx_logs idx_delta_logs",$spx_ip
         $hosts = rtrim($hosts,",");
         $hosts = $scl->real_escape_string($hosts);
         $search_string = $msg_mask . $notes_mask;
-        $query = " AND MATCH ('$search_string')";
+	if ($search_string) $query = " AND MATCH ('$search_string')";
 
         // Test for empty search and remove whitespaces
         $search_string = preg_replace('/^\s+$/', '',$search_string);
