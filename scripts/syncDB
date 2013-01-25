@@ -49,6 +49,7 @@ This program is used to process incoming syslog messages from a file.
 Usage: $myname [-option -option] 
     -h        : this (help) message
     -d        : debug level (0-5) (0 = disabled [default])
+    -dr       : Dry Run (don't make any changes)
     -v        : Also print results to STDERR
     -l        : log file (defaults to dir set in DB settings)
     -r        : Run only specified function(s) (used for debugging)
@@ -61,6 +62,7 @@ Example: $myname -l /var/log/foo.log -d 5 -c test/config.php -v
 
 GetOptions(
     'debug|d=i'       => \$options->{debug},
+    'dryrun|dr'       => \$options->{dryrun},
     'help|h!'         => \$options->{help},
     'verbose|v!'      => \$options->{verbose},
     'log-file|l=s'    => \$options->{log_file},
@@ -87,6 +89,9 @@ my $settings = read_settings_from_db();
 # set proper level and output based on $options{verbose} and $options{debug}
 setup_log();
 
+if ( $options->{dryrun} ) {
+$log->INFO("Dry Run Mode - No modifications will be made");
+}
 # Finally we are initialized, announce this to the world :-)
 $log->INFO("Program initialized successfully");
 
@@ -162,7 +167,7 @@ sub tblSync {
     $log->INFO("Syncing DB->$db_tbl to SP->$spx_tbl...");
     $sql = "update $db_tbl set seen=0, hidden='true'";
     DEBUG( 1, "Executing SQL Statement: $sql" );
-    $dbh->do($sql);
+    $dbh->do($sql) unless $options->{dryrun};
 
     $sql = "select $spx_tbl, sum(counter), max(lo) from distributed group by $spx_tbl limit 50000 OPTION max_matches=5000";
     $sth_sphinx = $dbh_sphinx->prepare($sql);
@@ -179,7 +184,7 @@ sub tblSync {
                 $sql = "update $db_tbl set seen='" . $results->{'sum(counter)'} . "', lastseen=GREATEST(lastseen,from_unixtime('" . $results->{'max(lo)'} . "')), hidden='false' where crc='" . $results->{"$spx_tbl"} . "'";
             }
             DEBUG( 1, "Executing SQL Statement: $sql" );
-            $dbh->do($sql);
+            $dbh->do($sql) unless $options->{dryrun};
         }
     }
 }
@@ -199,7 +204,7 @@ sub cleanup_old_views {
     $rc = substr( $rc, 0, -1 );
     if ( $rc !~ /^drop view$/ ) {
         DEBUG( 1, "Executing SQL Statement: '$rc'" );
-        $dbh->do($rc);
+        $dbh->do($rc) unless $options->{dryrun};
     }
 }
 
@@ -226,7 +231,7 @@ sub countUpdate {
             $count = $count + $results->{'sum(counter)'};
         }
         $sth_syslog = $dbh->prepare('REPLACE INTO cache (name,value,updatetime) VALUES ("msg_sum",?,NOW());');
-        $sth_syslog->execute($count);
+        $sth_syslog->execute($count) unless $options->{dryrun};
     }
 
     # Check yesterday's counters
@@ -250,7 +255,7 @@ sub countUpdate {
             $log->INFO("Updating $cache_yesterday_statistics with $count");
             $sql = "REPLACE INTO cache (name,value,updatetime) VALUES ('$cache_yesterday_statistics',$count,NOW())";
             DEBUG( 1, "Executing SQL Statement: $sql" );
-            $dbh->do($sql);
+            $dbh->do($sql) unless $options->{dryrun};
         }
     }
 }
@@ -259,7 +264,7 @@ sub updateHosts {
     my $table = shift;
     $sql = "update hosts set seen=0, hidden='true'";
     DEBUG( 1, "Executing SQL Statement: $sql" );
-    $dbh->do($sql);
+    $dbh->do($sql) unless $options->{dryrun};
 
 # Note that DB's with host count > 5000 may be a problem here. This needs testing.
     my $sql = "select host_crc, sum(counter), max(lo) from distributed group by host_crc limit 50000 OPTION max_matches=5000";
@@ -272,7 +277,7 @@ sub updateHosts {
         while ( my $results = $sth_sphinx->fetchrow_hashref ) {
             $sql = ( "update hosts set seen=" . $results->{'sum(counter)'} . ", lastseen=GREATEST(lastseen,from_unixtime(" . $results->{'max(lo)'} . ")), hidden='false' where crc32(host)=" . $results->{'host_crc'} );
             DEBUG( 1, "Executing SQL Statement: $sql" );
-            $dbh->do($sql);
+            $dbh->do($sql) unless $options->{dryrun};
         }
         $log->INFO("Searching for dropped hosts...");
         $sql = "SELECT value from settings WHERE name='RETENTION_DROPS_HOSTS'";
@@ -287,7 +292,7 @@ sub updateHosts {
                 $log->INFO("RETENTION_DROPS_HOST found. Dropping hidden hosts");
                 $sql = "delete from hosts where hidden='true'";
                 DEBUG( 1, "Executing SQL Statement: $sql" );
-                $dbh->do($sql);
+                $dbh->do($sql) unless $options->{dryrun};
             }
         }
     }
@@ -398,7 +403,7 @@ sub cleanup_old_idx {
     DEBUG( 1, "Oldest index is $old_idx" );
     $log->INFO("Removing indexes older than $retention days");
     DEBUG( 1, "Running system command: for file in `find $datadir/idx_log_arch_day_* -type f -mtime +$retention 2>/dev/null`; do echo \"removing \$file\"; rm \$file; done" );
-    system("for file in `find $datadir/idx_log_arch_day_* -type f -mtime +$retention 2>/dev/null`; do echo \"removing \$file\"; rm \$file; done");
+    system("for file in `find $datadir/idx_log_arch_day_* -type f -mtime +$retention 2>/dev/null`; do echo \"removing \$file\"; rm \$file; done") unless $options->{dryrun};
 
     # cleanup old indexes from views
     my @views;
@@ -425,7 +430,7 @@ sub cleanup_old_idx {
                 $sql        = "drop view $view";
                 $sth_syslog = $dbh->prepare($sql);
                 DEBUG( 1, "Executing SQL Statement: $sql" );
-                $sth_syslog->execute();
+                $sth_syslog->execute() unless $options->{dryrun};
             }
         } else {
             $log->INFO("No old views found");
