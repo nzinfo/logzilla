@@ -389,7 +389,7 @@ $(document).ready(function() {
 <!-- BEGIN Portal Counts -->
 <script type="text/javascript">
 function humanReadable(size) {  
-    var suffix = ['','K','M','T','P','E','Z','Y'], 
+    var suffix = ['','K','M','B','T','P','E','Z','Y'], 
         tier = 0;   while(size >= 1024) {
             size = size / 1000;
             tier++; }
