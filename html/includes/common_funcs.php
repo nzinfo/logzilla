@@ -494,7 +494,7 @@ function getsettings() {
         if($val>=1000)
             $val=humanReadable($val/1000,++$thousands);
         else{
-            $unit=array('','K','M','T','P','E','Z','Y');
+            $unit=array('','K','M','B','T','P','E','Z','Y');
             $val=round($val,2).$unit[$thousands];
         }
         return $val;
