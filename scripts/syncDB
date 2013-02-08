@@ -26,7 +26,7 @@ use FileHandle;
 my $log = Log::Fast->global();
 
 my (@runfuncs);
-my @functionlist = ( "countUpdate", "updateHosts", "tblSync", "cleanup_old_views", "cleanup_old_idx" );
+my @functionlist = ( "countUpdate", "updateHosts", "tblSync", "cleanup_old_views", "cleanup_old_idx", "ss" );
 
 # Command line options
 my $options = {
@@ -90,8 +90,9 @@ my $settings = read_settings_from_db();
 setup_log();
 
 if ( $options->{dryrun} ) {
-$log->INFO("Dry Run Mode - No modifications will be made");
+    $log->INFO("Dry Run Mode - No modifications will be made");
 }
+
 # Finally we are initialized, announce this to the world :-)
 $log->INFO("Program initialized successfully");
 
@@ -155,6 +156,9 @@ if ( $#runfuncs < 0 ) {
         elsif ( $func eq "cleanup_old_idx" ) {
             cleanup_old_idx();
         }
+        elsif ( $func eq "ss" ) {
+            ss();
+        }
         DEBUG( 1, "Ending $func" );
     }
 }
@@ -211,8 +215,8 @@ sub cleanup_old_views {
 sub countUpdate {
     $log->INFO("Collecting Counts");
 
-# Preparing replacement for updateCache db procedure: Count all counters
-# due to a bug in sphinxql when using sum you also need to use a group-by
+    # Preparing replacement for updateCache db procedure: Count all counters
+    # due to a bug in sphinxql when using sum you also need to use a group-by
     $sql = "select severity, sum(counter) from distributed group by severity limit 50000 OPTION max_matches=5000";
     DEBUG( 1, "Preparing SQL Statement: $sql" );
     $sth_sphinx = $dbh_sphinx->prepare($sql);
@@ -306,6 +310,31 @@ $dbh->disconnect();
 # =================================================================================================
 # Helper functions
 # =================================================================================================
+
+sub humanReadable {
+    my $i = shift;
+    $i = $i * 1000;
+    if ( $i > 1099511627776 )    #   TB: 1000 GB
+    {
+        return sprintf( "%.0f TB", $i / 1000000000000 );
+    }
+    elsif ( $i > 1073741824 )    #   GB: 1000 MB
+    {
+        return sprintf( "%.0f GB", $i / 1000000000 );
+    }
+    elsif ( $i > 1048576 )       #   MB: 1000 KB
+    {
+        return sprintf( "%.0f MB", $i / 1000000 );
+    }
+    elsif ( $i > 1000 )          #   KB: 1000 B
+    {
+        return sprintf( "%.0f KB", $i / 1000 );
+    }
+    else                         #   bytes
+    {
+        return "$i byte" . ( $i == 1 ? "" : "s" );
+    }
+}
 
 sub commify {
     my $text = reverse $_[0];
@@ -437,5 +466,34 @@ sub cleanup_old_idx {
         }
     } else {
         $log->INFO("No old views left for cleanup");
+    }
+}
+
+sub ss {
+    $log->INFO("Analyzing Memory Usage..");
+    $sql        = "SELECT ROUND(AVG(count)) AS avg FROM events_per_second";
+    $sth_syslog = $dbh->prepare($sql);
+    DEBUG( 1, "Executing SQL Statement: $sql" );
+    $sth_syslog->execute();
+    $results = $sth_syslog->fetchrow_hashref;
+    if ( ( $results->{'avg'} ) > 1 ) {
+        my $spmem = `(cd $ROOT_DIR/sphinx/data && du -hsc *.spa | grep total | awk '{print \$1}')`;
+        chomp($spmem);
+        $log->INFO( "Found %s average eps...", commify( $results->{'avg'} ) );
+        my $attrs = `cat $ROOT_DIR/sphinx/sphinx.conf | grep sql_attr | grep -v "#" | wc -l`;
+        chomp($attrs);
+        my $epd    = $results->{'avg'} * 60 * 60 * 24;
+        my $needed = ( 3 + $attrs ) * $epd * 4 / 1000;
+        $log->INFO( "Expecting %s average EPD...", commify($epd) );
+        my $total = `cat /proc/meminfo | grep MemTotal | awk '{print \$2}'`;
+        chomp($total);
+        my $free = `cat /proc/meminfo | grep MemFree | awk '{print \$2}'`;
+        chomp($free);
+        $log->INFO( "You have %s total system memory", humanReadable($total) );
+        $log->INFO( "You have %s free system memory",  humanReadable($free) );
+        $log->INFO( "At your current event rate, LogZilla will require about %s of Ram...", humanReadable($needed) );
+        $log->INFO( "LogZilla is currently using %s of that %s total.", commify($spmem), humanReadable($needed) );
+    } else {
+        $log->INFO("Your server has not been running long enough or has not received any events yet.");
     }
 }
