@@ -923,9 +923,13 @@ function search($json_o, $spx_max,$index="idx_logs idx_delta_logs",$spx_ip,$spx_
                         $msg_mask .= "\"$subval\"" . " $search_op ";
                     }
                     $val = $scl->real_escape_string($msg_mask);
+		    // [[ticket:5]] Need to escape certain special sphinx characters, like @
+		    // Solution: EscapeSphinxQL function defined later in this file.
+		    $val = EscapeSphinxQL($val);
                     $msg_mask .= $val . " $search_op ";
                 } else {
                     $val = $scl->real_escape_string($val);
+		    $val = EscapeSphinxQL($val);
                     $msg_mask .= $val . " $search_op ";
                 }
                 break;
@@ -1368,6 +1372,7 @@ function search_graph($json_o, $spx_max,$index="idx_logs idx_delta_logs",$spx_ip
             case 'msg_mask':
                 //                $val = real_escape_string( $cl->EscapeString ($val);
                 $val = $scl->real_escape_string($val);
+		$val = EscapeSphinxQL($val);
                 $msg_mask .= $val . " $search_op ";
                 break;
             case 'notes_mask':
@@ -1708,4 +1713,10 @@ function utfconvert($content) {
     } 
     return $content; 
 } 
+function EscapeSphinxQL ( $string )
+{
+    $from = array ( '\\', '(',')','|','-','!','@','~','"','&', '/', '^', '$', '=', "'", "\x00", "\n", "\r", "\x1a" );
+    $to   = array ( '\\\\', '\\\(','\\\)','\\\|','\\\-','\\\!','\\\@','\\\~','\\\"', '\\\&', '\\\/', '\\\^', '\\\$', '\\\=', "\\'", "\\x00", "\\n", "\\r", "\\x1a" );
+    return str_replace ( $from, $to, $string );
+}
 ?>
