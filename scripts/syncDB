@@ -327,24 +327,48 @@ $dbh->disconnect();
 # Helper functions
 # =================================================================================================
 
+sub humanBytes {
+    my $size = shift;
+    $size = $size * 1024; # incoming numbers are in kilobytes already
+    if ($size > 1099511627776)  #   TiB: 1024 GiB
+    {
+        return sprintf("%.2f TiB", $size / 1099511627776);
+    }
+    elsif ($size > 1073741824)  #   GiB: 1024 MiB
+    {
+        return sprintf("%.2f GiB", $size / 1073741824);
+    }
+    elsif ($size > 1048576)     #   MiB: 1024 KiB
+    {
+        return sprintf("%.2f MiB", $size / 1048576);
+    }
+    elsif ($size > 1024)        #   KiB: 1024 B
+    {
+        return sprintf("%.2f KiB", $size / 1024);
+    }
+    else                          #   bytes
+    {
+        return "$size byte" . ($size == 1 ? "" : "s");
+    }
+}
 sub humanReadable {
     my $i = shift;
     $i = $i * 1000;
-    if ( $i > 1099511627776 )    #   TB: 1000 GB
+    if ( $i > 1000000000000 )    #   TB: 1000 GB
     {
-        return sprintf( "%.0f TB", $i / 1000000000000 );
+        return sprintf( "%.0f T", $i / 1000000000000 );
     }
     elsif ( $i > 1073741824 )    #   GB: 1000 MB
     {
-        return sprintf( "%.0f GB", $i / 1000000000 );
+        return sprintf( "%.0f B", $i / 1000000000 );
     }
     elsif ( $i > 1048576 )       #   MB: 1000 KB
     {
-        return sprintf( "%.0f MB", $i / 1000000 );
+        return sprintf( "%.0f M", $i / 1000000 );
     }
     elsif ( $i > 1000 )          #   KB: 1000 B
     {
-        return sprintf( "%.0f KB", $i / 1000 );
+        return sprintf( "%.0f K", $i / 1000 );
     }
     else                         #   bytes
     {
@@ -395,7 +419,7 @@ sub setup_log {
 
         # make multiplexer FH sending data both to file and STDERR
         open( my $fh, '>>:tee', $options->{log_file}, \*STDERR )
-          or croak("$options->{log_file}: $!");
+            or croak("$options->{log_file}: $!");
         $fh->autoflush(1);
         $log_options->{fh} = $fh;
     }
@@ -486,7 +510,7 @@ sub cleanup_old_idx {
 }
 
 sub ss {
-    $log->INFO("Analyzing LogZilla Server Stats..");
+    $log->INFO("-=Analyzing LogZilla Server Stats=-");
     $sql        = "SELECT ROUND(AVG(count)) AS avg FROM events_per_second";
     $sth_syslog = $dbh->prepare($sql);
     DEBUG( 1, "Executing SQL Statement: $sql" );
@@ -497,37 +521,39 @@ sub ss {
         #---
         # Memory Stats
         #---
-        $log->INFO("Analyzing Memory Stats");
+        $log->INFO("Memory Stats...");
         my $spmem = `(cd $ROOT_DIR/sphinx/data && du -hsck *.spa | grep total | awk '{print \$1}')`;
         chomp($spmem);
-        $log->INFO( "Found %s average eps...", commify( $results->{'avg'} ) );
+        DEBUG(1, "spmem = %s", $spmem);
+        $log->INFO( "Found %s average eps", commify( $results->{'avg'} ) );
         my $epd    = $results->{'avg'} * 60 * 60 * 24;
-        my $needed = $epd * 4 / 100;
-        $log->INFO( "Expecting %s average EPD...", commify($epd) );
+        my $attrs = `cat $ROOT_DIR/sphinx/sphinx.conf | grep sql_attr | grep -v "#" | wc -l`;
+        my $needed = ( 2 + $attrs ) * $epd * 4 / 1000;
+        $log->INFO( "Expecting %s average EPD", commify($epd) );
         my $total = `cat /proc/meminfo | grep MemTotal | awk '{print \$2}'`;
         chomp($total);
         my $free = `cat /proc/meminfo | grep MemFree | awk '{print \$2}'`;
         chomp($free);
-        $log->INFO( "You have %s total system memory", humanReadable($total) );
-        $log->INFO( "You have %s free system memory",  humanReadable($free) );
-        $log->INFO( "At your current event rate, LogZilla will require about %s of Ram...", humanReadable($needed) );
-        $log->INFO( "LogZilla is currently using %s of that %s total.", humanReadable($spmem), humanReadable($needed) );
+        $log->INFO( "You have %s total system memory", humanBytes($total) );
+        $log->INFO( "You have %s free system memory",  humanBytes($free) );
+        $log->INFO( "At your current event rate, LogZilla will require about %s of Ram", humanBytes($needed) );
+        $log->INFO( "LogZilla is currently using %s of that %s total.", humanBytes($spmem), humanBytes($needed) );
         my $remainder = $free - ( $needed - $spmem );
 
         if ( ($remainder) < 0 ) {
             $remainder = -$remainder;
             $log->WARN("You don't have enough memory to support this logging level!");
-            $log->INFO( "You need at least %s more Ram", humanReadable($remainder) );
+            $log->INFO( "You need at least %s more Ram", humanBytes($remainder) );
         }
 
         #---
         # Disk Stats
         #---
-        $log->INFO("Analyzing Disk Stats");
+        $log->INFO("Disk Stats...");
         my $spdsk = `(cd $ROOT_DIR/sphinx/data && du -hsck *.spd *.spe *.sph *.spi *.spk *.spl *.spm *.spp *.sps | grep total | awk '{print \$1}')`;
         chomp($spdsk);
         my $du = $spdsk; # define du here in case the only disk usage is from today (server only up for one day)
-                         #$log->INFO( "LogZilla is currently using %s disk.", humanReadable($spdsk) );
+        $log->INFO( "LogZilla is currently using %s of TOTAL disk.", humanBytes($spdsk) );
         $sql = "SELECT FROM_UNIXTIME(ts_from) as dt, ts_from AS ts FROM events_per_second limit 1";
         $sth_syslog = $dbh->prepare($sql);
         DEBUG( 1, "Executing SQL Statement: $sql" );
@@ -538,13 +564,14 @@ sub ss {
             my $date = today();
             my ( $ymd, undef ) = split( /\s+/, $results->{dt} );
             my $diff = today() - date($ymd);
+            DEBUG(1, "YMD = %s, DB->dt = %s, DB->ts = %s, Date = %s, Diff = %s", $ymd, $results->{dt}, $results->{ts}, $date, $diff);
             if ( $diff > 0 ) {
-                $du = $spdsk / $diff;
-                $log->INFO( "Disk usage: %s per day", humanReadable($du) );
+                $du = sprintf("%d", ($spdsk / $diff));
+                DEBUG(1, "spdisk = %s, diff = %s, du = %s", $spdsk, $diff, $du);
             } else {
                 $log->WARN("Results may not be accurate, please run this tool after your server has been running for > 2 days");
-                $log->INFO( "Estimated Disk usage: %s per day", humanReadable($du) );
             }
+            $log->INFO( "LogZilla will consume an estimated %s of disk per day", humanBytes($du) );
         }
     } else {
         $log->INFO("Your server has not been running long enough or has not received any events yet.");
