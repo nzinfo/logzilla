@@ -173,7 +173,11 @@ sub tblSync {
     DEBUG( 1, "Executing SQL Statement: $sql" );
     $dbh->do($sql) unless $options->{dryrun};
 
-    $sql = "select $spx_tbl, sum(counter), max(lo) from distributed group by $spx_tbl limit 50000 OPTION max_matches=5000";
+    if ( $settings->{VERSION} > 4.2 ) {
+        $sql = "SELECT $spx_tbl, sum(counter), max(lo) from distributed where match('\@dummy dummy') group by $spx_tbl limit 50000 OPTION max_matches=5000";
+    } else {
+        $sql = "SELECT $spx_tbl, sum(counter), max(lo) from distributed group by $spx_tbl limit 50000 OPTION max_matches=5000";
+    }
     $sth_sphinx = $dbh_sphinx->prepare($sql);
     DEBUG( 1, "Executing SQL Statement: $sql" );
     $sth_sphinx->execute();
@@ -217,7 +221,11 @@ sub countUpdate {
 
     # Preparing replacement for updateCache db procedure: Count all counters
     # due to a bug in sphinxql when using sum you also need to use a group-by
-    $sql = "select severity, sum(counter) from distributed group by severity limit 50000 OPTION max_matches=5000";
+    if ( $settings->{VERSION} > 4.2 ) {
+        $sql = "select severity, sum(counter) from distributed where match('\@dummy dummy') group by severity limit 50000 OPTION max_matches=5000";
+    } else {
+        $sql = "select severity, sum(counter) from distributed group by severity limit 50000 OPTION max_matches=5000";
+    }
     DEBUG( 1, "Preparing SQL Statement: $sql" );
     $sth_sphinx = $dbh_sphinx->prepare($sql);
     $sth_sphinx->execute();
@@ -246,7 +254,11 @@ sub countUpdate {
     if ( $sth_syslog->rows == 0 ) {
         $log->INFO("No index for $sphinx_yesterday, skipping...");
     } else {
-        $sql = "select severity, sum(counter) from $sphinx_yesterday group by severity";
+        if ( $settings->{VERSION} > 4.2 ) {
+            $sql = "select severity, sum(counter) from $sphinx_yesterday where match('\@dummy dummy') group by severity";
+        } else {
+            $sql = "select severity, sum(counter) from $sphinx_yesterday group by severity";
+        }
         DEBUG( 1, "Preparing SQL Statement: $sql" );
         $sth_sphinx = $dbh_sphinx->prepare($sql);
         $sth_sphinx->execute();
@@ -271,7 +283,11 @@ sub updateHosts {
     $dbh->do($sql) unless $options->{dryrun};
 
 # Note that DB's with host count > 5000 may be a problem here. This needs testing.
-    my $sql = "select host_crc, sum(counter), max(lo) from distributed group by host_crc limit 50000 OPTION max_matches=5000";
+    if ( $settings->{VERSION} > 4.2 ) {
+        $sql = "select host_crc, sum(counter), max(lo) from distributed where match('\@dummy dummy') group by host_crc limit 50000 OPTION max_matches=5000";
+    } else {
+        $sql = "select host_crc, sum(counter), max(lo) from distributed group by host_crc limit 50000 OPTION max_matches=5000";
+    }
     DEBUG( 1, "Executing SQL Statement: $sql" );
     $dbh_sphinx->do($sql);
     my $sth_sphinx = $dbh_sphinx->prepare($sql);
@@ -470,20 +486,23 @@ sub cleanup_old_idx {
 }
 
 sub ss {
-    $log->INFO("Analyzing Memory Usage..");
+    $log->INFO("Analyzing LogZilla Server Stats..");
     $sql        = "SELECT ROUND(AVG(count)) AS avg FROM events_per_second";
     $sth_syslog = $dbh->prepare($sql);
     DEBUG( 1, "Executing SQL Statement: $sql" );
     $sth_syslog->execute();
     $results = $sth_syslog->fetchrow_hashref;
     if ( ( $results->{'avg'} ) > 1 ) {
-        my $spmem = `(cd $ROOT_DIR/sphinx/data && du -hsc *.spa | grep total | awk '{print \$1}')`;
+
+        #---
+        # Memory Stats
+        #---
+        $log->INFO("Analyzing Memory Stats");
+        my $spmem = `(cd $ROOT_DIR/sphinx/data && du -hsck *.spa | grep total | awk '{print \$1}')`;
         chomp($spmem);
         $log->INFO( "Found %s average eps...", commify( $results->{'avg'} ) );
-        my $attrs = `cat $ROOT_DIR/sphinx/sphinx.conf | grep sql_attr | grep -v "#" | wc -l`;
-        chomp($attrs);
         my $epd    = $results->{'avg'} * 60 * 60 * 24;
-        my $needed = ( 3 + $attrs ) * $epd * 4 / 1000;
+        my $needed = $epd * 4 / 100;
         $log->INFO( "Expecting %s average EPD...", commify($epd) );
         my $total = `cat /proc/meminfo | grep MemTotal | awk '{print \$2}'`;
         chomp($total);
@@ -492,7 +511,41 @@ sub ss {
         $log->INFO( "You have %s total system memory", humanReadable($total) );
         $log->INFO( "You have %s free system memory",  humanReadable($free) );
         $log->INFO( "At your current event rate, LogZilla will require about %s of Ram...", humanReadable($needed) );
-        $log->INFO( "LogZilla is currently using %s of that %s total.", commify($spmem), humanReadable($needed) );
+        $log->INFO( "LogZilla is currently using %s of that %s total.", humanReadable($spmem), humanReadable($needed) );
+        my $remainder = $free - ( $needed - $spmem );
+
+        if ( ($remainder) < 0 ) {
+            $remainder = -$remainder;
+            $log->WARN("You don't have enough memory to support this logging level!");
+            $log->INFO( "You need at least %s more Ram", humanReadable($remainder) );
+        }
+
+        #---
+        # Disk Stats
+        #---
+        $log->INFO("Analyzing Disk Stats");
+        my $spdsk = `(cd $ROOT_DIR/sphinx/data && du -hsck *.spd *.spe *.sph *.spi *.spk *.spl *.spm *.spp *.sps | grep total | awk '{print \$1}')`;
+        chomp($spdsk);
+        my $du = $spdsk; # define du here in case the only disk usage is from today (server only up for one day)
+                         #$log->INFO( "LogZilla is currently using %s disk.", humanReadable($spdsk) );
+        $sql = "SELECT FROM_UNIXTIME(ts_from) as dt, ts_from AS ts FROM events_per_second limit 1";
+        $sth_syslog = $dbh->prepare($sql);
+        DEBUG( 1, "Executing SQL Statement: $sql" );
+        $sth_syslog->execute();
+        $results = $sth_syslog->fetchrow_hashref;
+
+        if ( ( $results->{'ts'} ) > 1 ) {
+            my $date = today();
+            my ( $ymd, undef ) = split( /\s+/, $results->{dt} );
+            my $diff = today() - date($ymd);
+            if ( $diff > 0 ) {
+                $du = $spdsk / $diff;
+                $log->INFO( "Disk usage: %s per day", humanReadable($du) );
+            } else {
+                $log->WARN("Results may not be accurate, please run this tool after your server has been running for > 2 days");
+                $log->INFO( "Estimated Disk usage: %s per day", humanReadable($du) );
+            }
+        }
     } else {
         $log->INFO("Your server has not been running long enough or has not received any events yet.");
     }
