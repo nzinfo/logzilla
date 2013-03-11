@@ -829,6 +829,8 @@ sub load_triggers {
 }
 
 sub trigger_mail {
+
+sub trigger_mail {
     my( $trigger, $host, $msg ) = @_;
 
     my $pattern = $trigger->{pattern};
@@ -837,26 +839,33 @@ sub trigger_mail {
         trap( $msg, $pattern );
     }
 
-    # Replace each {N} with content of parens from pattern
-    my $subject = $trigger->{subject};
-    my $body = $trigger->{body};
-    my @vars = ( $msg =~ /$pattern/ ); # FIXME duplicated matching (we do it earlier already)
-    # cdukes: removed below for ticket #406
-    #$subject =~ s/\{(\d+)\}/$vars[$1+1]/ge;
-    #$body    =~ s/\{(\d+)\}/$vars[$1+1]/ge;
-    # cdukes #406 - added foreach below from original db_insert script
-    foreach my $var (@vars) {
-        $subject =~ s/\{\d+\}/$var/;
-        $body    =~ s/\{\d+\}/$var/; 
-    }                            
-    $subject = "[LogZilla Host $host]: $subject";
-
     DEBUG( 1, "Mail trigger found:" );
     DEBUG( 1, "Pattern = $pattern" );
     DEBUG( 1, "Server = '" . $settings->{MAILHOST} ."'" );
     DEBUG( 1, "Port = " . $settings->{MAILHOST_PORT} );
     DEBUG( 1, "To = $trigger->{mailto}" );
     DEBUG( 1, "From = $trigger->{mailfrom}" );
+
+    # Replace each {N} with content of parens from pattern
+    my $subject = $trigger->{subject};
+    my $body = $trigger->{body};
+    my @vars = ( $msg =~ /$pattern/ ); # FIXME duplicated matching (we do it earlier already)
+    # cdukes: removed below for ticket #406
+    # cdukes #406 - Also, do not use \d+ in the pattern below, you must use $i in a loop so that each {} gets replaced.
+    #$subject =~ s/\{(\d+)\}/$vars[$1+1]/ge;
+    #$body    =~ s/\{(\d+)\}/$vars[$1+1]/ge;
+    # cdukes #406 - added foreach below from original db_insert script
+    my $i=0;
+    DEBUG( 1, "Mail Triggers -> Original Subject: $subject" );
+    foreach my $var (@vars) {
+        $i++;
+        # cdukes #406 - do not use \d+ in the pattern below, you must use $i so that each {} gets replaced.
+        $subject =~ s/\{$i\}/$var/;
+        DEBUG( 1, "Mail Triggers -> Found pattern replacement variable #$i: $var" );
+        $body    =~ s/\{$i\}/$var/;
+    }
+    $subject = "[LogZilla Host $host]: $subject";
+
     DEBUG( 1, "Subject = $subject" );
     DEBUG( 1, "Body = $body" );
     DEBUG( 1, "Message = $msg" );
