@@ -829,8 +829,6 @@ sub load_triggers {
 }
 
 sub trigger_mail {
-
-sub trigger_mail {
     my( $trigger, $host, $msg ) = @_;
 
     my $pattern = $trigger->{pattern};
@@ -838,7 +836,6 @@ sub trigger_mail {
     if ( $settings->{SNMP_SENDTRAPS} ) {
         trap( $msg, $pattern );
     }
-
     DEBUG( 1, "Mail trigger found:" );
     DEBUG( 1, "Pattern = $pattern" );
     DEBUG( 1, "Server = '" . $settings->{MAILHOST} ."'" );
