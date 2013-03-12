@@ -497,9 +497,9 @@ sub process_line {
         # Mail Trigger (also SNMP Trap)
         for my $trigger ( @{$triggers} ) {
             my $pattern = $trigger->{pattern};
-            DEBUG( 4, "Looking for pattern \"$pattern\" in message \"$msg\"" );
+            DEBUG( 1, "Looking for pattern \"$pattern\" in message \"$msg\"" );
             if ( $msg =~ $pattern ) {
-                DEBUG( 3, "Found pattern '$pattern' in message: '$msg', sending email!" );
+                DEBUG( 1, "Found pattern '$pattern' in message: '$msg', sending email!" );
                 trigger_mail( $trigger, $host, $msg );
             }
         }
