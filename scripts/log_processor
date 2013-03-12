@@ -851,6 +851,7 @@ sub trigger_mail {
     DEBUG( 1, "Mail Triggers -> Original Subject: $subject" );
     $subject =~ s/\{(\d+)\}/$vars[$1-1] || "no paren $1 in pattern"/ge;
     $body    =~ s/\{(\d+)\}/$vars[$1-1] || "no paren $1 in pattern"/ge;
+    $body    =~ s/\{MSG\}/$msg/ge;
     $subject = "[LogZilla Host $host]: $subject";
     DEBUG( 1, "Mail Triggers -> Updated Subject: $subject" );
 
