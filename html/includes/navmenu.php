@@ -88,12 +88,15 @@ right: 40px;
 	</style>
 	<![endif]-->	
 
-<a tabindex="0" href="#menuItems" style="z-index: 999; position: absolute; top: 0px; left: -5px;" class="fg-button fg-button-icon-right ui-widget ui-state-default ui-corner-all" id="navmenu"><span style="z-index: 999;" class="ui-icon ui-icon-triangle-1-s"></span><img style='border: 0 none; width: 15px; padding-right:15px; position: relative; top: 2px;' src='images/lztri.png' alt='Back to Main page'/>Menu</a>
+    <div id="navdropdown">
+<a tabindex="0" href="#menuItems" class="navdropdown fg-button fg-button-icon-right ui-widget ui-state-default ui-corner-all" id="navmenu"><span style="z-index: 999;" class="ui-icon ui-icon-triangle-1-s"></span><img style='border: 0 none; width: 15px; padding-right:15px; position: relative; top: 2px;' src='images/lztri.png' alt='Back to Main page'/>Menu</a>
 <div id="menuItems" class="hidden">
 
 <ul>
 
+    <li><a href="<?php echo $_SESSION['SITE_URL']?>?page=Main"></a><!-- added this as a spacer because the hover for first link is a bit off -->
     <li><a href="<?php echo $_SESSION['SITE_URL']?>?page=Main">Return to Main Search Page</a>
+    </li>
     <li><a href="#">Admin</a>
         <ul>
             <?php 
@@ -267,6 +270,7 @@ right: 40px;
 <!-- Uncomment to show clicked link
 <p id="menuLog" style="z-index: 100; position: absolute; top: 0px; left: 90px;">You chose: <span id="menuSelection"></span></p>
 -->
+</div> <!-- end navdropdown div -->
 
     <script type="text/javascript">    
     $(function(){

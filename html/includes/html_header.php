@@ -36,4 +36,5 @@ getsettings();
 <!-- BEGIN Body 
 Note: Closing body tag is located in the html_footer.php file
 -->
-<body class="body gradient">
+<body class="body bg">
+    <img src="images/logo_146x40.png" alt="Logo" class="center" />
