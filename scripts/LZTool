@@ -259,6 +259,7 @@ sub countUpdate {
         }
         $sth_syslog = $dbh->prepare('REPLACE INTO cache (name,value,updatetime) VALUES ("msg_sum",?,NOW());');
         $sth_syslog->execute($count) unless $options->{dryrun};
+        store_metric("lztool_msgsum", $count);
     }
 
     # Check yesterday's counters
@@ -267,7 +268,7 @@ sub countUpdate {
     $sth_syslog = $dbh->prepare($sql);
     $sth_syslog->execute();
     if ( $sth_syslog->rows == 0 ) {
-        $log->INFO("No index for $sphinx_yesterday, skipping...");
+        DEBUG( 1, "No index for $sphinx_yesterday, no need to update counts...");
     } else {
         if ( $lzsub > 600 ) {
             $sql = "select severity, sum(counter) from $sphinx_yesterday where match('\@dummy dummy') group by severity";
@@ -309,6 +310,7 @@ sub updateHosts {
     $sth_sphinx->execute();
     if ( $sth_sphinx->rows > 0 ) {
         $log->INFO( "Updating %d hosts...", $sth_sphinx->rows );
+        store_metric("lztool_hostcount", sprintf ("%d", $sth_sphinx->rows));
         while ( my $results = $sth_sphinx->fetchrow_hashref ) {
             $sql = ( "update hosts set seen=" . $results->{'sum(counter)'} . ", lastseen=GREATEST(lastseen,from_unixtime(" . $results->{'max(lo)'} . ")), hidden='false' where crc32(host)=" . $results->{'host_crc'} );
             DEBUG( 1, "Executing SQL Statement: $sql" );
@@ -390,6 +392,31 @@ sub humanReadable {
     {
         return "$i byte" . ( $i == 1 ? "" : "s" );
     }
+}
+
+sub HumanToBytes {
+    my @strings = @_;
+    my $base = 1024;
+    my %units = (
+        K => $base,
+        M => $base ** 2,
+        G => $base ** 3,
+        T => $base ** 4,
+        P => $base ** 5,
+        E => $base ** 6,
+        Z => $base ** 7,
+        Y => $base ** 8,
+    );
+    my $pattern = join('|', sort keys %units);
+    my $total;
+    for my $string ( @strings ) {
+        while ( $string =~ /(([0-9]*(?:\.[0-9]+)?)($pattern))/g ) {
+            my $number = $2 * $units{$3};
+            $total += $number;
+            DEBUG( 1, "Converting %12s to %12.0f", $1, $number);
+        }
+    }
+    return sprintf "%.0f", $total;
 }
 
 sub commify {
@@ -570,6 +597,12 @@ sub idx_rotate {
                 $log->INFO("Converting index (${day}_$part) to disk-based storage because it is > $memdays day(s) old...");
                 push( @indexlist, "idx_log_arch_day_${day}_$part" );
             }
+            # cdukes: added below in case someone changes their idx_mem_days in teh db and we need to go back and convert disk based indexes back to memory based
+            if ( ( $diff < $memdays ) && ( $docinfo =~ /inline/ ) ) {
+                $log->INFO("The $day index is $diff day(s) older than today.");
+                $log->INFO("Converting index (${day}_$part) to memory-based storage because it is < $memdays day(s) old and your SPX_IDX_DIM is set to $memdays");
+                push( @indexlist, "idx_log_arch_day_${day}_$part" );
+            }
         } else {
             $log->ERR("Unable to obtain DOCINFO from the index header for idx_log_arch_day_${day}_$part, you will need to manually run '%s' to find out why", "$ROOT_DIR/sphinx/bin/indextool --config $ROOT_DIR/sphinx/sphinx.conf --dumpheader idx_log_arch_day_${day}_$part");
         }
@@ -615,6 +648,8 @@ sub ss {
         DEBUG( 1, "spmem = %s", $spmem );
         $results->{avg} = sprintf( "%0.f", $results->{avg} );
         $log->INFO( "Your current EPS average is %s (%s samples)", commify( $results->{avg} ), commify( $results->{samples} ) );
+        store_metric("lztool_eps_avg", $results->{avg});
+        store_metric("lztool_eps_avg_samples", $results->{samples});
         my $eph = $results->{avg} * 60 * 60;
         my $epd = $results->{avg} * 60 * 60 * 24;
         my $attrs = `cat $ROOT_DIR/sphinx/sphinx.conf | grep sql_attr | grep -v "#" | wc -l`;
@@ -627,6 +662,7 @@ sub ss {
         my $uptime;
         if ( ( $results->{'count'} ) > 1 ) {
             $log->INFO( "Server uptime is %s hours", $results->{count} );
+        store_metric("lztool_srv_uptime_hours", $results->{count});
         } else {
             $log->INFO("Sorry, there's no data available yet. Is this a new installation?");
             exit;
@@ -634,6 +670,7 @@ sub ss {
         my $multiplier = $settings->{SPX_IDX_DIM} + 1;  # needed for current day
         my $needed = ( 1 + $attrs ) * $epd * ( 4 * $multiplier ) / 1000;
         $log->INFO( "Expecting %s average EPD", commify($epd) );
+        store_metric("lztool_epd", $epd);
         my $total = `cat /proc/meminfo | grep MemTotal | awk '{print \$2}'`;
         chomp($total);
         my $free = `cat /proc/meminfo | grep MemFree | awk '{print \$2}'`;
@@ -643,6 +680,11 @@ sub ss {
         $log->INFO( "Your server is configured to store %d extra day(s) of events in memory (the rest on disk)", $settings->{SPX_IDX_DIM} );
         $log->INFO( "At your current event rate, the maximum amount of *estimated* memory usage is %s (All Days)", humanBytes($needed) );
         $log->INFO( "LogZilla is currently using %s of that %s total.", humanBytes($spmem), humanBytes($needed) );
+        store_metric("lztool_idx_memused", $spmem);
+        store_metric("lztool_mem_total", $total);
+        store_metric("lztool_mem_free", $free);
+        store_metric("lztool_spx_dim", $settings->{SPX_IDX_DIM});
+        store_metric("lztool_mem_needed", $needed);
         my $remainder = $free - ( $needed - $spmem );
 
         if ( ($remainder) < 0 ) {
@@ -659,12 +701,14 @@ sub ss {
         chomp($spdsk);
         my $du = $spdsk; # define du here in case the only disk usage is from today (server only up for one day)
         $log->INFO( "Current Index Size (on disk) is approximately %s", humanBytes($spdsk) );
+        store_metric("lztool_index_diskused_KB", $spdsk);
         $sql = "SELECT table_schema, Round(Sum(data_length + index_length) / 1024, 0) AS 'dbsize_kbytes' FROM information_schema.tables WHERE table_schema='syslog' GROUP  BY table_schema";
         $sth_syslog = $dbh->prepare($sql);
         DEBUG( 1, "Executing SQL Statement: $sql" );
         $sth_syslog->execute();
         $results = $sth_syslog->fetchrow_hashref;
         $log->INFO( "Current DB size (on disk) is approximately %s", humanBytes( $results->{'dbsize_kbytes'} ) );
+        store_metric("lztool_db_diskused_KB", $results->{'dbsize_kbytes'});
 
         # below doesn't work because events/sec don't drop for data > $retention
         # $sql = "SELECT FROM_UNIXTIME(ts_from) as dt, ts_from AS ts FROM events_per_second limit 1";
@@ -685,6 +729,7 @@ sub ss {
             $du = sprintf( "%d", ( $spdsk / $diff ) );
             DEBUG( 1, "spdisk = %s, diff = %s, du = %s", $spdsk, $diff, $du );
             $log->INFO( "LogZilla indexes (excluding MySQL) should consume about %s of disk per day.", humanBytes($du) );
+            store_metric("lztool_estimated_disk_perday", "$du");
         }
 
         #---
@@ -706,6 +751,8 @@ sub ss {
             my $recommended_key_buffer_size = $results->{'recommended_key_buffer_size'};
             $log->INFO( "The recommended innodb_buffer_pool_size for this server is %s", $recommended_innodb_buffer_pool_size );
             $log->INFO( "The recommended key_buffer_size for this server is %s", $recommended_key_buffer_size );
+          store_metric("lztool_innodb_rec", HumanToBytes("$recommended_innodb_buffer_pool_size"));
+          store_metric("lztool_myisam_rec", HumanToBytes("$recommended_key_buffer_size"));
         }
     } else {
           $log->INFO("Sorry, there's no EPS data avilable yet. Is this a new installation?");
@@ -725,8 +772,19 @@ sub mtti {
           push( @vals, $results->{value} );
       }
       if (@vals) {
-          $log->INFO( "Mean Time To Index is %d seconds (%s samples)", mean(@vals), commify( scalar(@vals) ) );
+          my $int = sprintf "%d",  mean(@vals);
+          $log->INFO( "Mean Time To Index is %d seconds (%s samples)", $int, commify( scalar(@vals) ) );
+          store_metric("lztool_mtti", $int);
       } else {
           $log->INFO("Sorry, there's no data available yet. Is this a new installation?");
       }
+}
+
+sub store_metric {
+    my ($name, $value) = @_;
+    #$log->INFO("Storing Metrics: $name = $value");
+    DEBUG( 1, "Storing Metrics: $name = $value");
+    $sql = "INSERT INTO sph_metrics (name,value,ts_start,ts_end) VALUES ('$name', $value, UNIX_TIMESTAMP(NOW()), UNIX_TIMESTAMP(NOW()))";
+    DEBUG( 1, "Executing SQL Statement: $sql" );
+    $dbh->do($sql) unless $options->{dryrun};
 }

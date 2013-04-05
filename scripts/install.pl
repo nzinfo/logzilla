@@ -1100,7 +1100,7 @@ options {
 source s_logzilla {
     tcp(
             log_fetch_limit(100)
-            log_iw_size(100)
+            log_iw_size(5000)
        );
     udp(
             so_rcvbuf(1048576)
@@ -1182,7 +1182,13 @@ sub setup_cron {
 #####################################################
 # Daily DB/SP Maintenance
 #####################################################
-39 12 * * * root perl $lzbase/scripts/LZTool -v >> $logpath/LZTool.log 2>&1
+# Grab some metrics every night @ 11pm, 3 attempts
+11,26,41 23 * * * root perl /var/www/logzilla/scripts/LZTool -v -r ss -mysql >> /var/log/logzilla/LZTool.log 2>&1
+
+# Update and general maintenance @ 1am, , 2 attempts
+11,26 1 * * * root perl $lzbase/scripts/LZTool -v >> $logpath/LZTool.log 2>&1
+
+# Rotate indexes @ midnight, 7 attempts
 0,5,10,20,25,35,40,55 0 * * * root perl $lzbase/scripts/rotate >> $logpath/rotate.log 2>&1
 
 #####################################################
