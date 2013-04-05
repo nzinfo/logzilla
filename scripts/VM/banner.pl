@@ -30,7 +30,7 @@ my $banner = qq{
 #######################################################################
 LOGZILLA
 #######################################################################
-This VM is running LogZilla v4.0 on Ubuntu 12.04 LTS Server x64
+This VM is running LogZilla v4.5 on Ubuntu 12.04 LTS Server x64
 To obtain an evaluation license, please visit http://www.logzilla.pro
 
 
@@ -43,11 +43,7 @@ You will need to set the timezone to your locale by typing:
 dpkg-reconfigure tzdata
 
 First Bootup:
-Please run:
-cd /path_to_logzilla && svn update && cd scripts && ./install.pl
-to get the latest source.
-LogZilla v4.0 uses an rc file to answer all install questions. You may
-modify /path_to_logzilla/scripts/.lzrc to suit your needs.
+Please run "sudo lzupdate" to get the latest version.
 
 Access:
 The login/password for the shell is lzadmin/lzadmin
@@ -56,7 +52,7 @@ The login/password for MySQL root is root/mysql
 $linfo
 
 More Information and Help:
-Please read /path_to_logzilla/VM-README.txt
+Please read /var/www/logzilla/VM-README.txt
 
 Please report any trouble to http://support.logzilla.pro                       
 #######################################################################
