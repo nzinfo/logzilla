@@ -147,9 +147,12 @@ sub BUILD {
 
 sub update_settings {
     my( $self, %settings ) = @_;
-    my $sth = $self->_dbh->prepare( "UPDATE settings SET value = ? WHERE name = ?" );
+    my $sth = $self->_dbh->prepare( 
+        "INSERT INTO settings SET name = ?, value = ? " .
+        "ON DUPLICATE KEY UPDATE value = ?"
+    );
     for my $k ( keys %settings ) {
-        $sth->execute( $settings{$k}, $k );
+        $sth->execute( $k, $settings{$k}, $settings{$k} );
     }
 }
 
@@ -262,6 +265,57 @@ sub time_genlog {
     return $elapsed;
 }
 
+sub neverending_loop {
+    my($self, @args) = @_;
+
+    # First prepare a log of log, which we'll reuse later on with only different timestamps
+    my $tmpfile = File::Temp->new();
+
+    my $genlog_cmd = join( " ", $self->_genlog_path, '-n 10000', "2>&1 >$tmpfile" );
+    my $res = `$genlog_cmd`;
+    if( $? ) {
+        croak( "Genlog fail: $genlog_cmd\n$res" );
+    }
+
+    my @log_lines = <$tmpfile>;
+
+    # Remove first line, then we'll prefix it with current timestamps
+    for my $l (@log_lines) {
+        $l =~ s/^.*?\t/\t/;
+    }
+
+    $self->start_script(@args);
+
+    my $i = 0;
+    my $t = time();
+    my $ts;
+
+    my $last_i = undef;
+
+    while(1) {
+        if(time() > $t) {
+            # one second elapsed - print stats
+            if($last_i) {
+                my $eps = $i - $last_i;
+                printf("Processed so far: %10d, current performance: %5d eps\n",
+                    $i, $eps);
+            }
+            $self->flush_output();
+            $last_i = $i;
+            $t = time();
+            $ts = undef;
+        }
+
+        if(!$ts) {
+            $ts = POSIX::strftime( "%Y-%m-%d %H:%M:%S", gmtime($t) );
+        }
+
+        my $line = $log_lines[$i%10000];
+        $self->_script_in->print($ts . $line);
+        $i++;
+    }
+}
+
 sub _process_line {
     my( $self, $line, $now ) = @_;
 
@@ -324,6 +378,10 @@ sub add_data {
     }
 }
 
+sub sql_do {
+    my($self, $query) = @_;
+    $self->_dbh->do($query);
+}
 
 sub check_table_count {
     my( $self, $table, $expected_count ) = @_;

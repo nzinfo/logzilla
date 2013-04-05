@@ -109,10 +109,6 @@ right: 40px;
             <li><a href="<?php echo $_SESSION['SITE_URL']?>?page=Security">RBAC</a></li>
             <?php } ?>
             <?php 
-            if ((has_portlet_access($_SESSION['username'], 'Import') == TRUE) || ($_SESSION['AUTHTYPE'] == "none")) { 
-            ?>
-            <li><a href="<?php echo $_SESSION['SITE_URL']?>?page=Import">Import</a></li>         <?php } ?>
-            <?php 
             if ((has_portlet_access($_SESSION['username'], 'Portlet Group Permissions') == TRUE) && ($_SESSION['AUTHTYPE'] != "none")) { 
             ?>
             <li><a href="<?php echo $_SESSION['SITE_URL']?>?page=Portlet_Admin">Portlet Admin</a></li>
@@ -306,7 +302,7 @@ function reset_layout()
 </div>
 <script type="text/javascript" src="includes/js/jquery/plugins/jquery.sparkline.min.js"></script>
 
-<?php if (($_SERVER["REQUEST_URI"] == $_SESSION['SITE_URL'] . "?page=Main") || ($_SERVER["REQUEST_URI"] == $_SESSION['SITE_URL'] . "index.php")){?>
+<?php if (!preg_match('/Results/', $_REQUEST["page"] )) {?>
 <script type="text/javascript">
 $(document).ready(function(){
 function isNumber(n) {

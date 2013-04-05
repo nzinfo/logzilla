@@ -15,7 +15,7 @@ $| = 1;
 ################################################
 # Help user if Perl mods are missing
 ################################################
-my @mods = (qw(DBI Date::Calc Term::ReadLine File::Copy Digest::MD5 LWP::Simple File::Spec String::CRC32 MIME::Lite IO::Socket::INET Getopt::Long CHI Net::SNMP Log::Fast Test::mysqld PerlIO::Util Find::Lib MooseX::Params::Validate Test::Deep Test::MockTime ));
+my @mods = (qw(DBI Date::Calc Term::ReadLine File::Copy Digest::MD5 LWP::Simple File::Spec String::CRC32 MIME::Lite IO::Socket::INET Getopt::Long CHI Net::SNMP Log::Fast Test::mysqld PerlIO::Util Find::Lib MooseX::Params::Validate Test::Deep Test::MockTime Date::Simple ));
 
 foreach my $mod (@mods) {
     ( my $fn = "$mod.pm" ) =~ s|::|/|g;    # Foo::Bar::Baz => Foo/Bar/Baz.pm
@@ -32,6 +32,8 @@ foreach my $mod (@mods) {
             #print "LogZilla requires $mod\n";
             #exit;
             #}
+	print "Module installation complete. Please re-run install\n";
+	exit;
     }
 }
 
@@ -53,6 +55,7 @@ require MIME::Lite;
 require IO::Socket::INET;
 require Getopt::Long;
 require Net::SNMP;
+require Date::Simple;
 
 
 
@@ -64,8 +67,8 @@ sub prompt {
     return $input ? $input : $default;
 }
 
-my $version    = "4.25";
-my $subversion = ".370";
+my $version    = "4.5";
+my $subversion = ".661";
 
 # Grab the base path
 my $lzbase = getcwd;
@@ -78,7 +81,7 @@ $curmon  = $curmon + 1;
 my ( $year, $mon, $mday ) = Date::Calc::Add_Delta_Days( $curyear, $curmon, $curmday, 1 );
 my $pAdd = "p" . $year . sprintf( "%02d", $mon ) . sprintf( "%02d", $mday );
 my $dateTomorrow = $year . "-" . sprintf( "%02d", $mon ) . "-" . sprintf( "%02d", $mday );
-my ( $dbroot, $dbrootpass, $dbname, $dbtable, $dbhost, $dbport, $dbadmin, $dbadminpw, $siteadmin, $siteadminpw, $email, $sitename, $url, $logpath, $retention, $snare, $j4, $arch, $skipcron, $skipdb, $skipsysng, $skiplogrot, $skipsudo, $skipfb, $skiplic, $sphinx_compile, $sphinx_index, $skip_ioncube,$skipapparmor, $syslogng_conf, $webuser, $syslogng_source, $upgrade, $test, $autoyes );
+my ( $dbroot, $dbrootpass, $dbname, $dbtable, $dbhost, $dbport, $dbadmin, $dbadminpw, $siteadmin, $siteadminpw, $email, $sitename, $url, $logpath, $retention, $snare, $j4, $arch, $skipcron, $skipdb, $skipsysng, $skiplogrot, $skipsudo, $skipfb, $skiplic, $sphinx_compile, $sphinx_index, $skip_ioncube,$skipapparmor, $syslogng_conf, $webuser, $syslogng_source, $upgrade, $test, $autoyes, $spx_cores );
 
 sub getYN {
     unless ( $autoyes =~ /[Yy]/ ) {
@@ -186,6 +189,7 @@ unless ( -e $rcfile ) {
     $logpath = &prompt( "Where should log files be stored?", '/var/log/logzilla' );
     $retention = &prompt( "How long before I archive old logs? (in days)", '7' );
     $snare = &getYN( "Do you plan to log Windows events from SNARE to this server?", 'n' );
+    #$spx_cores = &prompt( "How many cores do you want to use for indexing", '8' );
 }
 $dbtable     = "logs";
 $dbroot      = qq{$dbroot};
@@ -206,7 +210,7 @@ my $sock = IO::Socket::INET->new(
 my $localip = $sock->sockhost;
 
 if ( $dbhost !~ /localhost|127.0.0.1/ ) {
-    my $file = "$lzbase/scripts/log_processor";
+    my $file = "$lzbase/scripts/logzilla";
     system("perl -i -pe 's/LOAD DATA INFILE/LOAD DATA LOCAL INFILE/g' $file");
 }
 
@@ -289,10 +293,10 @@ if ( $skipdb !~ /[Yy]/ ) {
                         do_upgrade("all");
                     }
                 }
-                verify_columns();
             }
         }
     }
+    verify_columns();
     do_procs();
     update_version();
 }
@@ -316,7 +320,8 @@ setup_rclocal();
 hup_syslog();
 
 sub make_archive_tables {
-    my $i = 0;
+    my $i = 0; 
+    my $j = 0;
     my $dbh = db_connect( $dbname, $lzbase, $dbroot, $dbrootpass );
     if ( !$dbh ) {
         print "Can't connect to $dbname database: ", $DBI::errstr, "\n";
@@ -332,10 +337,18 @@ sub make_archive_tables {
         my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/archives.sql`;
     }
 
-    # TH: seed the hourly views with the first record
+    # TH: seed the hourly views with the no record
     # Hourly
     for ( $i = 0 ; $i <= 23 ; $i++ ) {
-        $dbh->do( "CREATE OR REPLACE VIEW log_arch_hr_$i AS SELECT * FROM $dbtable where id=1;
+        $dbh->do( "CREATE OR REPLACE VIEW log_arch_hr_$i AS SELECT * FROM $dbtable where id>2 and id<1;
+            " ) or die "Could not create log_arch_hr_$i: $DBI::errstr";
+    }
+    
+    # TH: seed the quad-hourly views with the no record
+    # quad-Hourly
+    for ( $i = 0 ; $i <= 3 ; $i++ ) {
+    	$j = $i*15;
+        $dbh->do( "CREATE OR REPLACE VIEW log_arch_qrhr_$j AS SELECT * FROM $dbtable where id>2 and id<1;
             " ) or die "Could not create log_arch_hr_$i: $DBI::errstr";
     }
 
@@ -364,10 +377,9 @@ sub do_install {
         fo datetime NOT NULL,
         lo datetime NOT NULL,
         notes varchar(255) NOT NULL DEFAULT '',
-        PRIMARY KEY (id,lo),
+        PRIMARY KEY (id,fo),
         KEY lo (lo),
-        KEY fo (fo),
-        KEY id (id)
+        KEY `fo` (`fo`) USING BTREE
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8 
         " ) or die "Could not create $dbtable table: $DBI::errstr";
 
@@ -412,8 +424,7 @@ sub do_install {
     print $res;
 
     # Create epx tables
-    my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/epx.sql`;
-    print $res;
+    `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/epx.sql` if ( colExists( "events_per_second", "name" ) eq 0 );
 
     # Create email alerts table
     do_email_alerts();
@@ -464,6 +475,13 @@ sub do_install {
         my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/rbac.sql`;
     }
 
+  # Insert view_limits table
+  # cdukes: moved down to verify_columns()
+  #if ( tblExists("view_limits") eq 1 ) {
+  #copy_old_view_limits();
+  #} else {
+  #my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/view_limits.sql`;
+  #}
     make_partitions();
     create_views();
     make_dbuser();
@@ -588,12 +606,6 @@ sub do_events {
         DROP EVENT IF EXISTS `cacheMne`;
         " ) or die "$DBI::errstr";
     $dbh->do( "
-        DROP EVENT IF EXISTS `cacheUpdate`;
-        " ) or die "$DBI::errstr";
-    $dbh->do( "
-        DROP EVENT IF EXISTS `cleanup`;
-        " ) or die "$DBI::errstr";
-    $dbh->do( "
         DROP EVENT IF EXISTS `log_arch_daily_event`;
         " ) or die "$DBI::errstr";
     $dbh->do( "
@@ -604,6 +616,16 @@ sub do_events {
         " ) or die "$DBI::errstr";
     $dbh->do( "
         DROP EVENT IF EXISTS `logs_del_partition`;
+        " ) or die "$DBI::errstr";
+    $dbh->do( "
+        DROP EVENT IF EXISTS `log_arch_qrhr_event`;
+        " ) or die "$DBI::errstr";
+    # ticket #412 : As of v4.25, all cleanup and updateCache procedures moved from DB to Perl to speed up the processes.
+    $dbh->do( "
+        DROP EVENT IF EXISTS `updateCache`;
+        " ) or die "$DBI::errstr";
+    $dbh->do( "
+        DROP EVENT IF EXISTS `cleanup`;
         " ) or die "$DBI::errstr";
 
     # Create Partition events
@@ -624,29 +646,15 @@ sub do_events {
         " ) or die "Could not create partition events: $DBI::errstr";
     $sth->execute;
 
-    # CDUKES: [[ticket:17]]
-    my $event = qq{
-    CREATE EVENT cacheUpdate ON SCHEDULE EVERY 1 DAY STARTS '$dateTomorrow 01:00:00' ON COMPLETION NOT PRESERVE ENABLE DO CALL updateCache();
-    };
-    my $sth = $dbh->prepare( "
-        $event
-        " ) or die "Could not create event: cacheUpdate: $DBI::errstr";
-    $sth->execute;
-    my $event = qq{
-    CREATE EVENT cleanup ON SCHEDULE EVERY 1 DAY STARTS '$dateTomorrow 00:15:00' ON COMPLETION NOT PRESERVE ENABLE DO CALL cleanup();
-    };
-    my $sth = $dbh->prepare( "
-        $event
-        " ) or die "Could not create event: cacheEid: $DBI::errstr";
-    $sth->execute;
-
     $dbh->do( "
-        CREATE EVENT `log_arch_daily_event` ON SCHEDULE EVERY 1 DAY STARTS date_add(date_add(date(now()), interval 1 day),interval 180 second) ON COMPLETION NOT PRESERVE ENABLE DO call log_arch_daily_proc();
+        CREATE EVENT `log_arch_daily_event` ON SCHEDULE EVERY 1 DAY STARTS date_add(date_add(date(now()), interval 1 day),interval 270 second) ON COMPLETION NOT PRESERVE ENABLE DO call log_arch_daily_proc();
         " ) or die "$DBI::errstr";
     $dbh->do( "
-        CREATE EVENT `log_arch_hr_event` ON SCHEDULE EVERY 1 HOUR STARTS date_add(date(now()),interval maketime(date_format(now(),'%H')+1,0,5) hour_second) ON COMPLETION PRESERVE ENABLE DO call log_arch_hr_proc();
+        CREATE EVENT `log_arch_hr_event` ON SCHEDULE EVERY 1 HOUR STARTS date_add(date(now()),interval maketime(date_format(now(),'%H')+1,4,40) hour_second) ON COMPLETION PRESERVE ENABLE DO call log_arch_hr_proc();
         " ) or die "$DBI::errstr";
-
+    $dbh->do( "
+        CREATE EVENT `log_arch_qrhr_event` ON SCHEDULE EVERY 15 MINUTE STARTS date_add(date(now()),interval maketime(date_format(now(),'%H'),4,15) hour_second) ON COMPLETION PRESERVE ENABLE DO call log_arch_qrthr_proc();
+        " ) or die "$DBI::errstr";
 }
 
 sub do_procs {
@@ -654,9 +662,6 @@ sub do_procs {
     my $dbh = db_connect( $dbname, $lzbase, $dbroot, $dbrootpass );
 
     # Drop procs and recreate them whether this is a new install or an upgrade.
-    $dbh->do( "
-    DROP PROCEDURE IF EXISTS updateCache;
-        " ) or die "$DBI::errstr";
     $dbh->do( "
     DROP PROCEDURE IF EXISTS updateHosts;
         " ) or die "$DBI::errstr";
@@ -680,6 +685,9 @@ sub do_procs {
         " ) or die "$DBI::errstr";
     $dbh->do( "
     DROP PROCEDURE IF EXISTS log_arch_hr_proc;
+        " ) or die "$DBI::errstr";
+    $dbh->do( "
+    DROP PROCEDURE IF EXISTS log_arch_qrthr_proc;
         " ) or die "$DBI::errstr";
     $dbh->do( "
     DROP PROCEDURE IF EXISTS logs_add_archive_proc;
@@ -744,36 +752,6 @@ sub do_procs {
     my $sth = $dbh->prepare( "
         $event
         " ) or die "Could not create partition events: $DBI::errstr";
-    $sth->execute;
-
-# No longer used
-#my $event = qq{
-#CREATE PROCEDURE logs_add_archive_proc()
-#SQL SECURITY DEFINER
-#COMMENT 'Creates archive for old messages'
-#BEGIN
-#INSERT INTO `logs_archive` SELECT * FROM `$dbtable`
-#WHERE `$dbtable`.`lo` < DATE_SUB(CURDATE(), INTERVAL (SELECT value from settings WHERE name='RETENTION') DAY);
-#END
-#};
-#my $sth = $dbh->prepare( "
-#$event
-#" ) or die "Could not create partition events: $DBI::errstr";
-#$sth->execute;
-
-    # CDUKES: [[ticket:17]]
-    my $event = qq{
-    CREATE PROCEDURE updateCache()
-    SQL SECURITY DEFINER
-    COMMENT 'Verifies cache totals every night' 
-    BEGIN    
-    REPLACE INTO cache (name,value,updatetime) VALUES ('msg_sum', (SELECT SUM(counter) FROM `$dbtable`),NOW());
-    REPLACE INTO cache (name,value,updatetime) VALUES (CONCAT('chart_mpd_',DATE_FORMAT(NOW() - INTERVAL 1 DAY, '%Y-%m-%d_%a')), (SELECT SUM(counter) FROM `$dbtable` WHERE lo BETWEEN DATE_SUB(CONCAT(CURDATE(), ' 00:00:00'), INTERVAL 1 DAY) AND DATE_SUB(CONCAT(CURDATE(), ' 23:59:59'), INTERVAL  1 DAY)),NOW());
-    END 
-    };
-    my $sth = $dbh->prepare( "
-        $event
-        " ) or die "Could not create updateCache Procedure: $DBI::errstr";
     $sth->execute;
 
     my $event = qq{
@@ -1023,7 +1001,15 @@ sub update_settings {
         update settings set value='$retention' where name='RETENTION';
         " ) or die "Could not update settings table: $DBI::errstr";
     $sth->execute;
-    if ( $snare =~ /[Yy]/ ) {
+    if (not $spx_cores) {
+        $spx_cores = `cat /proc/cpuinfo | grep processor | wc -l`;
+    }
+    #$spx_cores = 8 if ($spx_cores > 8);
+    my $sth = $dbh->prepare( "
+        update settings set value='$spx_cores' where name='SPX_CPU_CORES';
+        " ) or die "Could not update settings table: $DBI::errstr";
+    $sth->execute;
+        if ( $snare =~ /[Yy]/ ) {
         my $sth = $dbh->prepare( "
             update settings set value=1 where name='SNARE';
             " ) or die "Could not update settings table: $DBI::errstr";
@@ -1084,644 +1070,658 @@ system "chown mysql.mysql $lzbase/scripts/import.sh" and warn "Could not set per
 system "chown mysql.mysql $lzbase/scripts/doimport.sh" and warn "Could not set permission on $lzbase/scripts/doimport.sh";
 
 sub add_syslog_conf {
-    print "\n\nAdding LogZilla to syslog-ng\n";
-    $syslogng_conf = "/etc/syslog-ng/syslog-ng.conf";
-    my $ok = &getYN( "Ok to continue?", "y" );
-    if ( $ok =~ /[Yy]/ ) {
-        unless ( -e $syslogng_conf ) {
-            my $syslogng_conf = &prompt( "Where is your syslog-ng.conf file located?", "/etc/syslog-ng/syslog-ng.conf" );
-        }
-        if ( -e $syslogng_conf ) {
+    my $dir = "/etc/syslog-ng/conf.d";
+    my $file = "/etc/syslog-ng/conf.d/logzilla.conf";
+    unless ( -d "$dir" ) {
+        $dir = &prompt( "What is the correct path to your /etc/syslog-ng/conf.d directory?", "/etc/syslog-ng/conf.d" );
+    }
+    if ( -d $dir ) {
+        open my $config, '+<', "$file";
+        my @arr = <$config>;
+        if ( !grep( /logzilla|lzconfig/, @arr ) ) {
+            print "Creating LogZilla configuration for syslog-ng at $file\n";
+            open FILE, ">>$file" or die $!;
+            print FILE <<EOF;
+#<lzconfig> BEGIN LogZilla settings
+# LogZilla "standard" config - this may or may not work well for your environment
+# It is advisable that you learn what is best for your server.
+# There's a great web gui available at http://mitzkia.github.com/syslog-ng-ose-configurator/#/howtouse
+# Install Date: $now
 
-            # Check to see if entry already exists
-            open FILE, "<$syslogng_conf";
-            my @lines = <FILE>;
-            close FILE;
-            if ( grep( /<lzconfig>/, @lines ) ) {
-                print "\nLogZilla config already exists in $syslogng_conf, skipping add...\n";
-            } else {
-                print "Adding syslog-ng configuration to $syslogng_conf\n";
+# Global Options
+options {
+    chain_hostnames(no);
+    keep_hostname(yes);
+    threaded(yes); # enable if using Syslog-NG 3.3.x
+    use_fqdn(no);
+    use_dns(no);
+};
 
-                # Find syslog-ng.conf source definition
-                my ( @sources, $syslogng_source );
-                open( NGCONFIG, $syslogng_conf );
-                my @config = <NGCONFIG>;
-                close(NGCONFIG);
-                foreach my $var (@config) {
-                    next unless $var =~ /^source/;    # Skip non-source def's
-                    $syslogng_source = $1 if ( $var =~ /^source (\w+)/ );
-                    push( @sources, $syslogng_source );
-                }
-                my $count = $#sources + 1;
-                if ( $count > 1 ) {
-                    print "You have more than 1 source defined\n";
-                    print "Your source definitions are:\n";
-                    foreach my $t (@sources)
-                    {
-                        print $t . "\n";
-                    }
-                }
-                if ( not $syslogng_source ) {
-                    $syslogng_source = &prompt( "Which source definition would you like to use?", "$syslogng_source" );
-                }
-                system "perl -i -pe 's|MYSOURCE|$syslogng_source|g' contrib/system_configs/syslog-ng.conf" and warn "Could not modify contrib/system_configs/syslog-ng.conf $!\n";
-                open( CNF, ">>$syslogng_conf" ) || die("Cannot Open $syslogng_conf: $!");
-                open( FILE, "contrib/system_configs/syslog-ng.conf" ) || die("Cannot Open file: $!");
-                my @data = <FILE>;
-                foreach my $line (@data) {
-                    print CNF "$line";
-                }
-                close(CNF);
-                close(FILE);
-            }
-        } else {
-            print "Unable to locate your syslog-ng.conf file\n";
-            print "You will need to manually merge contrib/system_configs/syslog-ng.conf with yours.\n";
+source s_logzilla {
+    tcp(
+            log_fetch_limit(100)
+            log_iw_size(100)
+       );
+    udp(
+            so_rcvbuf(1048576)
+       );
+};
+
+destination d_logzilla {
+    program(
+            "$lzbase/scripts/logzilla"
+            log_fifo_size(1000)
+            flush_lines(100)
+            flush_timeout(1)
+            template("\$R_YEAR-\$R_MONTH-\$R_DAY \$R_HOUR:\$R_MIN:\$R_SEC\\t\$HOST\\t\$PRI\\t\$PROGRAM\\t\$MSGONLY\\n")
+            template_escape(yes)
+           );
+};
+
+destination df_logzilla {
+    file("$logpath/DEBUG.log"
+            template("\$R_YEAR-\$R_MONTH-\$R_DAY \$R_HOUR:\$R_MIN:\$R_SEC\\t\$HOST\\t\$PRI\\t\$PROGRAM\\t\$MSGONLY\\n")
+            template_escape(yes)
+        ); 
+};
+
+log {
+    source(s_logzilla);
+    destination(d_logzilla);
+    # Uncomment below and restart syslog-ng for debugging
+    # destination(df_logzilla);
+    flags(flow-control);
+};
+#</lzconfig> END LogZilla settings
+
+EOF
         }
     } else {
-        print "Skipped syslog-ng merge\n";
-        print "You will need to manually merge contrib/system_configs/syslog-ng.conf with yours.\n";
+        print("\n\033[1m\tERROR!\n\033[0m");
+        print "Unable to locate the $dir directory\n";
     }
 }
 
 sub setup_cron {
 
-    # Cronjob  Setup
-    print("\n\033[1m\n\n========================================\033[0m\n");
-    print("\n\033[1m\tCron Setup\n\033[0m");
-    print("\n\033[1m========================================\n\n\033[0m\n");
-    print "\n";
-    print "Cron is used to run backend indexing and data exports.\n";
-    print "Install will attempt to do this automatically for you by adding it to /etc/cron.d\n";
-    print "In the event that something fails or you skip this step, \n";
-    print "You MUST create it manually or create the entries in your root's crontab file.\n";
-    my $crondir;
-    my $ok = &getYN( "Ok to continue?", "y" );
+      # Cronjob  Setup
+      print("\n\033[1m\n\n========================================\033[0m\n");
+      print("\n\033[1m\tCron Setup\n\033[0m");
+      print("\n\033[1m========================================\n\n\033[0m\n");
+      print "\n";
+      print "Cron is used to run backend indexing and data exports.\n";
+      print "Install will attempt to do this automatically for you by adding it to /etc/cron.d\n";
+      print "In the event that something fails or you skip this step, \n";
+      print "You MUST create it manually or create the entries in your root's crontab file.\n";
+      my $crondir;
+      my $ok = &getYN( "Ok to continue?", "y" );
 
-    if ( $ok =~ /[Yy]/ ) {
-        my $minute;
+      if ( $ok =~ /[Yy]/ ) {
+          my $minute;
 
 # due hourly views cron can always run every minute
 #        my $sml = &getYN( "\n\nWill this copy of LogZilla be used to process more than 1 Million messages per day?\nNote: Your answer here only determines how often to run indexing.", "n" );
 #        if ( $sml =~ /[Yy]/ ) {
 #            $minute = 5;
 #        } else {
-        $minute = 1;
+          $minute = 1;
 
-        #        }
-        my $cron = qq{
+          #        }
+          my $cron = qq{
 #####################################################
 # BEGIN LogZilla Cron Entries
-#####################################################
 # http://www.logzilla.pro
-# Sphinx indexer cron times
-# Note: Your setup may require some tweaking depending on expected message rates!
 # Install date: $now
 #####################################################
 
 #####################################################
-# Run Sphinx "delta" scans every x minutes throughout 
-# the day.  
+# Run indexer every minute  
 #####################################################
-*/5 * * * * root ( cd $lzbase/sphinx; ./indexer.sh delta ) >> $logpath/sphinx_indexer.log 2>&1
+*/1 * * * * root ( cd $lzbase/sphinx; ./indexer.sh delta ) >> $logpath/sphinx_indexer.log 2>&1
 
 #####################################################
-# Daily export archives
+# Daily DB/SP Maintenance
 #####################################################
-0 1 * * * root sh $lzbase/scripts/export.sh
+39 12 * * * root perl $lzbase/scripts/LZTool -v >> $logpath/LZTool.log 2>&1
+0,5,10,20,25,35,40,55 0 * * * root perl $lzbase/scripts/rotate >> $logpath/rotate.log 2>&1
 
 #####################################################
 # END LogZilla Cron Entries
 #####################################################
 };
-        $crondir = "/etc/cron.d";
-        unless ( -d "$crondir" ) {
-            $crondir = &prompt( "What is the correct path to your cron.d?", "/etc/cron.d" );
-        }
-        if ( -d "$crondir" ) {
-            my $file = "$crondir/logzilla";
-            open FILE, ">$file" or die "cannot open $file: $!";
-            print FILE $cron;
-            close FILE;
-            print "Cronfile added to $crondir\n";
-            hup_crond();
-        } else {
-            print "$crondir does not exist\n";
-            print "You will need to manually copy $lzbase/scripts/contrib/system_configs/logzilla.crontab to /etc/cron.d\n";
-            print "or use 'crontab -e' as root and paste the contents of $lzbase/scripts/contrib/system_configs/logzilla.crontab into it.\n";
-            print "If you add it manually as root's personal crontab, then be sure to remove the \"root\" username from the last entry.\n";
-        }
-    } else {
-        print "Skipping Crontab setup.\n";
-        print "You will need to manually copy $lzbase/scripts/contrib/system_configs/logzilla.crontab to /etc/cron.d\n";
-        print "or use 'crontab -e' as root and paste the contents of $lzbase/scripts/contrib/system_configs/logzilla.crontab into it.\n";
-        print "If you add it manually as root's personal crontab, then be sure to remove the \"root\" username from the last entry.\n";
-    }
+          $crondir = "/etc/cron.d";
+          unless ( -d "$crondir" ) {
+              $crondir = &prompt( "What is the correct path to your cron.d?", "/etc/cron.d" );
+          }
+          if ( -d "$crondir" ) {
+              my $file = "$crondir/logzilla";
+              open FILE, ">$file" or die "cannot open $file: $!";
+              print FILE $cron;
+              close FILE;
+              print "Cronfile added to $crondir\n";
+              hup_crond();
+          } else {
+              print "$crondir does not exist\n";
+              print "You will need to manually copy $lzbase/scripts/contrib/system_configs/logzilla.crontab to /etc/cron.d\n";
+              print "or use 'crontab -e' as root and paste the contents of $lzbase/scripts/contrib/system_configs/logzilla.crontab into it.\n";
+              print "If you add it manually as root's personal crontab, then be sure to remove the \"root\" username from the last entry.\n";
+          }
+      } else {
+          print "Skipping Crontab setup.\n";
+          print "You will need to manually copy $lzbase/scripts/contrib/system_configs/logzilla.crontab to /etc/cron.d\n";
+          print "or use 'crontab -e' as root and paste the contents of $lzbase/scripts/contrib/system_configs/logzilla.crontab into it.\n";
+          print "If you add it manually as root's personal crontab, then be sure to remove the \"root\" username from the last entry.\n";
+      }
 }
 
 sub setup_sudo {
 
-    # Sudo Access Setup
-    print("\n\033[1m\n\n========================================\033[0m\n");
-    print("\n\033[1m\tSUDO Setup\n\033[0m");
-    print("\n\033[1m========================================\n\n\033[0m\n\n");
-    print "In order for the Apache user to be able to apply changes to syslog-ng, sudo access needs to be provided in /etc/sudoers\n";
-    print "Note that you do not HAVE to do this, but it will make things much easier on your for both licensing and Email Alert editing.\n";
-    print "If you choose not to install the sudo commands, then you must manually SIGHUP syslog-ng each time an Email Alert is added, changed or removed.\n";
-    my $ok = &getYN( "Ok to continue?", "y" );
-    if ( $ok =~ /[Yy]/ ) {
-        my $file = "/etc/sudoers";
-        unless ( -e $file ) {
-            $file = &prompt( "Please provide the location of your sudoers file", "/etc/sudoers" );
-        }
-        if ( -e "$file" ) {
+      # Sudo Access Setup
+      print("\n\033[1m\n\n========================================\033[0m\n");
+      print("\n\033[1m\tSUDO Setup\n\033[0m");
+      print("\n\033[1m========================================\n\n\033[0m\n\n");
+      print "In order for the Apache user to be able to apply changes to syslog-ng, sudo access needs to be provided in /etc/sudoers\n";
+      print "Note that you do not HAVE to do this, but it will make things much easier on your for both licensing and Email Alert editing.\n";
+      print "If you choose not to install the sudo commands, then you must manually SIGHUP syslog-ng each time an Email Alert is added, changed or removed.\n";
+      my $ok = &getYN( "Ok to continue?", "y" );
+      if ( $ok =~ /[Yy]/ ) {
+          my $file = "/etc/sudoers";
+          unless ( -e $file ) {
+              $file = &prompt( "Please provide the location of your sudoers file", "/etc/sudoers" );
+          }
+          if ( -e "$file" ) {
 
-            # Try to get current web user
-            my $PROGRAM = qr/apache|httpd/;
-            my @ps      = `ps axu`;
-            @ps = map { m/^(\S+)/; $1 } grep { /$PROGRAM/ } @ps;
-            my $webuser = $ps[$#ps];
-            if ( not $webuser ) {
-                my $webuser = &prompt( "Please provide the username that Apache runs as", "$webuser" );
-            }
+              # Try to get current web user
+              my $PROGRAM = qr/apache|httpd/;
+              my @ps      = `ps axu`;
+              @ps = map { m/^(\S+)/; $1 } grep { /$PROGRAM/ } @ps;
+              my $webuser = $ps[$#ps];
+              if ( not $webuser ) {
+                  my $webuser = &prompt( "Please provide the username that Apache runs as", "$webuser" );
+              }
 
 # since we have $webuser here, let's go ahead and chown the files needed for licensing
-            system "chown $webuser.$webuser $lzbase/html/includes/ajax/license.log" and warn "Could not chown license.log";
-            system "chown $webuser.$webuser $lzbase/html/" and warn "Could not chown html/";
+              system "chown $webuser.$webuser $lzbase/html/includes/ajax/license.log" and warn "Could not chown license.log";
+              system "chown $webuser.$webuser $lzbase/html/" and warn "Could not chown html/";
 
-            # Check to see if entry already exists
-            open SFILE, "<$file";
-            my @lines = <SFILE>;
-            close SFILE;
-            if ( grep( /<lzconfig>/, @lines ) ) {
-                print "Config entry already exists in $file, skipping add...\n";
-            } else {
-                my $os = `uname -a`;
-                $os =~ s/.*(ubuntu).*/$1/i;
-                my $now = localtime;
-                open( SFILE, ">>$file" ) || die("Cannot Open $syslogng_conf: $!");
-                my @data = <FILE>;
-                foreach my $line (@data) {
-                    chomp $line;
-                    print SFILE "$line";
-                }
-                print SFILE "\n";
-                print SFILE "# <lzconfig> BEGIN: Added by LogZilla installation on $now\n";
-                print SFILE "# Allows Apache user to HUP the syslog-ng process\n";
-                print SFILE "$webuser ALL=NOPASSWD:$lzbase/scripts/hup.pl\n";
-                print SFILE "# Allows Apache user to apply new licenses from the web interface\n";
-                print SFILE "$webuser ALL=NOPASSWD:$lzbase/scripts/licadd.pl\n";
-                print SFILE "# Allows Apache user to import data from archive\n";
-                print SFILE "$webuser ALL=NOPASSWD:$lzbase/scripts/doimport.sh\n";
-                print SFILE "$webuser ALL=NOPASSWD:$lzbase/scripts/dorestore.sh\n";
-                print SFILE "# </lzconfig> END: Added by LogZilla installation on $now\n";
-                close(SFILE);
-                print "Appended sudoer access for $webuser to $file\n";
+              # Check to see if entry already exists
+              open SFILE, "<$file";
+              my @lines = <SFILE>;
+              close SFILE;
+              if ( grep( /<lzconfig>/, @lines ) ) {
+                  print "Config entry already exists in $file, skipping add...\n";
+              } else {
+                  my $os = `uname -a`;
+                  $os =~ s/.*(ubuntu).*/$1/i;
+                  my $now = localtime;
+                  open( SFILE, ">>$file" ) || die("Cannot Open $!");
+                  my @data = <FILE>;
+                  foreach my $line (@data) {
+                      chomp $line;
+                      print SFILE "$line";
+                  }
+                  print SFILE "\n";
+                  print SFILE "# <lzconfig> BEGIN: Added by LogZilla installation on $now\n";
+                  print SFILE "# Allows Apache user to HUP the syslog-ng process\n";
+                  print SFILE "$webuser ALL=NOPASSWD:$lzbase/scripts/hup.pl\n";
+                  print SFILE "# Allows Apache user to apply new licenses from the web interface\n";
+                  print SFILE "$webuser ALL=NOPASSWD:$lzbase/scripts/licadd.pl\n";
+                  print SFILE "# Allows Apache user to import data from archive\n";
+                  print SFILE "$webuser ALL=NOPASSWD:$lzbase/scripts/doimport.sh\n";
+                  print SFILE "$webuser ALL=NOPASSWD:$lzbase/scripts/dorestore.sh\n";
+                  print SFILE "# </lzconfig> END: Added by LogZilla installation on $now\n";
+                  close(SFILE);
+                  print "Appended sudoer access for $webuser to $file\n";
 
-                if ( $os !~ /Ubuntu/i ) {
-                    my $find = qr/^Defaults.*requiretty/;
-                    open SFILE, "<$file";
-                    my @lines = <SFILE>;
-                    close SFILE;
-                    if ( grep( /$find/, @lines ) ) {
-                        print "Non-ubuntu OS's will require removal (or comment out) of the following line from $file:\n";
-                        print "Defaults    requiretty\n";
-                    }
-                }
-            }
-        } else {
-            print "$file does not exist\nUnable to continue!";
-            exit;
-        }
+                  if ( $os !~ /Ubuntu/i ) {
+                      my $find = qr/^Defaults.*requiretty/;
+                      open SFILE, "<$file";
+                      my @lines = <SFILE>;
+                      close SFILE;
+                      if ( grep( /$find/, @lines ) ) {
+                          print "Non-ubuntu OS's will require removal (or comment out) of the following line from $file:\n";
+                          print "Defaults    requiretty\n";
+                      }
+                  }
+              }
+          } else {
+              print "$file does not exist\nUnable to continue!";
+              exit;
+          }
 
-    } else {
-        print "Skipping SUDO setup.\n";
-        print "You will need to add the following to your sudoers so that LogZilla has permission to apply changes from the web interface\n";
-        print "Note: You should change \"www-data\" below to match the user that runs Apache\n";
-        print "# <lzconfig> BEGIN: Added by LogZilla installation on $now\n";
-        print "# Allows Apache user to HUP the syslog-ng process\n";
-        print "www-data ALL=NOPASSWD:$lzbase/scripts/hup.pl\n";
-        print "www-data ALL=NOPASSWD:$lzbase/scripts/licadd.pl\n";
-        print "www-data ALL=NOPASSWD:$lzbase/scripts/doimport.sh\n";
-        print "www-data ALL=NOPASSWD:$lzbase/scripts/dorestore.sh\n";
-        print "# </lzconfig> END: Added by LogZilla installation on $now\n";
+      } else {
+          print "Skipping SUDO setup.\n";
+          print "You will need to add the following to your sudoers so that LogZilla has permission to apply changes from the web interface\n";
+          print "Note: You should change \"www-data\" below to match the user that runs Apache\n";
+          print "# <lzconfig> BEGIN: Added by LogZilla installation on $now\n";
+          print "# Allows Apache user to HUP the syslog-ng process\n";
+          print "www-data ALL=NOPASSWD:$lzbase/scripts/hup.pl\n";
+          print "www-data ALL=NOPASSWD:$lzbase/scripts/licadd.pl\n";
+          print "www-data ALL=NOPASSWD:$lzbase/scripts/doimport.sh\n";
+          print "www-data ALL=NOPASSWD:$lzbase/scripts/dorestore.sh\n";
+          print "# </lzconfig> END: Added by LogZilla installation on $now\n";
 
-    }
+      }
 }
 
 sub kill {
-    my $PROGRAM = shift;
-    my @ps      = `ps ax`;
-    @ps = map { m/(\d+)/; $1 } grep { /\Q$PROGRAM\E/ } @ps;
-    for (@ps) {
-        ( kill 9, $_ ) or die("Unable to kill process for $PROGRAM\n");
-    }
-    my $time = gmtime();
+      my $PROGRAM = shift;
+      my @ps      = `ps ax`;
+      @ps = map { m/(\d+)/; $1 } grep { /\Q$PROGRAM\E/ } @ps;
+      for (@ps) {
+          ( kill 9, $_ ) or die("Unable to kill process for $PROGRAM\n");
+      }
+      my $time = gmtime();
 
-    #print "Killed $PROGRAM @ps\n";
+      #print "Killed $PROGRAM @ps\n";
 }
 
 sub install_sphinx {
 
-    # [[ticket:306]]
-    my $now   = strftime( '%Y-%m-%d %H:%M:%S', localtime );
-    my $procs = `cat /proc/cpuinfo | grep ^proce | wc -l`;
-    my $arch  = `uname -m`;
-    if ( $procs > 3 ) {
-        $j4 = "-j4";
-    }
+      # [[ticket:306]]
+      my $now   = strftime( '%Y-%m-%d %H:%M:%S', localtime );
+      my $procs = `cat /proc/cpuinfo | grep ^proce | wc -l`;
+      my $arch  = `uname -m`;
+      if ( $procs > 3 ) {
+          $j4 = "-j4";
+      }
 
-    # TH: ID64 works also on IA32 machines
-    # if ($arch =~ /64/) {
-    # $arch = "--enable-id64";
-    # }
-    my $makecmd = "make $j4 install";
-    print("\n\033[1m\n\n========================================\033[0m\n");
-    print("\n\033[1m\tSphinx Indexer\n\033[0m");
-    print("\n\033[1m========================================\n\n\033[0m\n\n");
-    print "Install will attempt to extract and compile your sphinx indexer.\n";
-    print "This option may not work on all systems, so please watch for errors.\n";
-    print "The steps taken are as follows:\n";
-    print "killall searchd (to stop any currently running Sphinx searchd processes).\n";
-    print "cd $lzbase/sphinx/src\n";
-    print "./configure --enable-id64 --with-syslog --prefix `pwd`/..\n";
-    print "$makecmd\n";
-    print "cd $lzbase/sphinx\n";
-    print "./indexer.sh full\n";
+      # TH: ID64 works also on IA32 machines
+      # if ($arch =~ /64/) {
+      # $arch = "--enable-id64";
+      # }
+      my $makecmd = "make $j4 install";
+      print("\n\033[1m\n\n========================================\033[0m\n");
+      print("\n\033[1m\tSphinx Indexer\n\033[0m");
+      print("\n\033[1m========================================\n\n\033[0m\n\n");
+      print "Install will attempt to extract and compile your sphinx indexer.\n";
+      print "This option may not work on all systems, so please watch for errors.\n";
+      print "The steps taken are as follows:\n";
+      print "killall searchd (to stop any currently running Sphinx searchd processes).\n";
 
-    my $ok = &getYN( "Ok to continue?", "y" );
-    if ( $ok =~ /[Yy]/ ) {
-        my $checkprocess = `ps -C searchd -o pid=`;
-        if ($checkprocess) {
-            system("kill -9 $checkprocess");
-        }
-        system("cd $lzbase/sphinx/src && ./configure --enable-id64 --with-syslog --prefix `pwd`/.. && $makecmd");
-        print "Starting Sphinx search daemon and re-indexing data...\n";
-        system("(rm -f $lzbase/sphinx/data/* && cd $lzbase/sphinx && ./indexer.sh full)");
-    } else {
-        print "Skipping Sphinx Installation\n";
-    }
+      # [[ticket:417]] - extract sphinx srouce from tarball
+      print "tar xzvf $lzbase/sphinx/sphinx_source.tgz -C $lzbase/sphinx\n";
+      print "cd $lzbase/sphinx/src\n";
+      print "./configure --enable-id64 --with-syslog --prefix `pwd`/..\n";
+      print "$makecmd\n";
+      print "cd $lzbase/sphinx\n";
+      print "./indexer.sh full\n";
+
+      my $ok = &getYN( "Ok to continue?", "y" );
+      if ( $ok =~ /[Yy]/ ) {
+          my $checkprocess = `ps -C searchd -o pid=`;
+          if ($checkprocess) {
+              system("kill -9 $checkprocess");
+          }
+          system("tar xzvf $lzbase/sphinx/sphinx_source.tgz -C $lzbase/sphinx && cd $lzbase/sphinx/src && ./configure --enable-id64 --with-syslog --prefix `pwd`/.. && $makecmd");
+          if ( $sphinx_index =~ /[Yy]/ ) {
+              print "Starting Sphinx search daemon and re-indexing data...\n";
+              system("(rm -f $lzbase/sphinx/data/* && cd $lzbase/sphinx && ./indexer.sh full)");
+          }
+      } else {
+          print "Skipping Sphinx Installation\n";
+      }
 }
 
 sub setup_apparmor {
 
-    # Attempt to fix AppArmor
-    my $file = "/etc/apparmor.d/usr.sbin.mysqld";
-    if ( -e "$file" ) {
-        open FILE, "<$file";
-        my @lines = <FILE>;
-        close FILE;
-        if ( !grep( /logzilla_import/, @lines ) ) {
-            print("\n\033[1m\n\n========================================\033[0m\n");
-            print("\n\033[1m\tAppArmor Setup\n\033[0m");
-            print("\n\033[1m========================================\n\n\033[0m\n\n");
-            print "In order for MySQL to import and export data, you must take measures to allow it access from AppArmor.\n";
-            print "Install will attempt do do this for you, but please be sure to check /etc/apparmor.d/usr.sbin.mysqld and also to restart the AppArmor daemon once install completes.\n";
-            my $ok = &getYN( "Ok to continue?", "y" );
-            if ( $ok =~ /[Yy]/ ) {
-                print "Adding the following to lines to $file:\n";
-                print "/tmp/logzilla_import.txt r,\n$lzbase/exports/** rw,\n";
-                open my $config, '+<', "$file" or warn "FAILED: $!\n";
-                my @all = <$config>;
-                seek $config, 0, 0;
-                splice @all, -1, 0, "# <lzconfig> (please do not remove this line)\n  /tmp/logzilla_import.txt r,\n  $lzbase/exports/** rw,\n  /tmp/** r,\n# </lzconfig> (please do not remove this line)\n";
-                print $config @all;
-                close $config;
-            }
-            print "\n\nAppArmor must be restarted, would you like to restart it now?\n";
-            my $ok = &getYN( "Ok to continue?", "y" );
-            if ( $ok =~ /[Yy]/ ) {
-                my $r = `/etc/init.d/apparmor restart`;
-            } else {
-                print("\033[1m\n\tPlease be sure to restart apparmor..\n\033[0m");
-            }
-        }
-    }
+      # Attempt to fix AppArmor
+      my $file = "/etc/apparmor.d/usr.sbin.mysqld";
+      if ( -e "$file" ) {
+          open FILE, "<$file";
+          my @lines = <FILE>;
+          close FILE;
+          if ( !grep( /logzilla_import/, @lines ) ) {
+              print("\n\033[1m\n\n========================================\033[0m\n");
+              print("\n\033[1m\tAppArmor Setup\n\033[0m");
+              print("\n\033[1m========================================\n\n\033[0m\n\n");
+              print "In order for MySQL to import and export data, you must take measures to allow it access from AppArmor.\n";
+              print "Install will attempt do do this for you, but please be sure to check /etc/apparmor.d/usr.sbin.mysqld and also to restart the AppArmor daemon once install completes.\n";
+              my $ok = &getYN( "Ok to continue?", "y" );
+              if ( $ok =~ /[Yy]/ ) {
+                  print "Adding the following to lines to $file:\n";
+                  print "/tmp/logzilla_import.txt r,\n$lzbase/exports/** rw,\n";
+                  open my $config, '+<', "$file" or warn "FAILED: $!\n";
+                  my @all = <$config>;
+                  seek $config, 0, 0;
+                  splice @all, -1, 0, "# <lzconfig> (please do not remove this line)\n  /tmp/logzilla_import.txt r,\n  $lzbase/exports/** rw,\n  /tmp/** r,\n# </lzconfig> (please do not remove this line)\n";
+                  print $config @all;
+                  close $config;
+              }
+              print "\n\nAppArmor must be restarted, would you like to restart it now?\n";
+              my $ok = &getYN( "Ok to continue?", "y" );
+              if ( $ok =~ /[Yy]/ ) {
+                  my $r = `/etc/init.d/apparmor restart`;
+              } else {
+                  print("\033[1m\n\tPlease be sure to restart apparmor..\n\033[0m");
+              }
+          }
+      }
 }
 
 sub setup_rclocal {
-    my $file = "/etc/rc.local";
-    if ( -e "$file" ) {
-        open my $config, '+<', "$file" or warn "FAILED: $!\n";
-        my @all = <$config>;
-        if ( !grep( /sphinx/, @all ) ) {
-            seek $config, 0, 0;
-            splice @all, -1, 0, "# <lzconfig>\n(cd $lzbase/sphinx && bin/searchd)\n# </lzconfig>\n";
-            print $config @all;
-        }
-        close $config;
-    } else {
-        print("\n\033[1m\tERROR!\n\033[0m");
-        print "Unable to locate your $file\n";
-        print "You will need to manually add the Sphinx Daemon startup to your system...\n";
-        print "Sphinx startup command:\n";
-        print "$lzbase/sphinx/bin/searchd -c $lzbase/sphinx/sphinx.conf\n";
-    }
+      my $file = "/etc/rc.local";
+      if ( -e "$file" ) {
+          open my $config, '+<', "$file" or warn "FAILED: $!\n";
+          my @all = <$config>;
+          if ( !grep( /sphinx/, @all ) ) {
+              seek $config, 0, 0;
+              splice @all, -1, 0, "# <lzconfig>\n(cd $lzbase/sphinx && bin/searchd)\n# </lzconfig>\n";
+              print $config @all;
+          }
+          close $config;
+      } else {
+          print("\n\033[1m\tERROR!\n\033[0m");
+          print "Unable to locate your $file\n";
+          print "You will need to manually add the Sphinx Daemon startup to your system...\n";
+          print "Sphinx startup command:\n";
+          print "$lzbase/sphinx/bin/searchd -c $lzbase/sphinx/sphinx.conf\n";
+      }
 }
 
 sub fbutton {
-    my $dbh = db_connect( $dbname, $lzbase, $dbroot, $dbrootpass );
+      my $dbh = db_connect( $dbname, $lzbase, $dbroot, $dbrootpass );
 
-    # Feedback button
-    print("\n\033[1m\n\n========================================\033[0m\n");
-    print("\n\033[1m\tFeedback and Support\n\033[0m");
-    print("\n\033[1m========================================\n\n\033[0m\n\n");
+      # Feedback button
+      print("\n\033[1m\n\n========================================\033[0m\n");
+      print("\n\033[1m\tFeedback and Support\n\033[0m");
+      print("\n\033[1m========================================\n\n\033[0m\n\n");
 
-    print "\nIf it's ok with you, install will include a small 'Feedback and Support'\n";
-    print "icon which will appear at the bottom right side of the web page\n";
-    print "This non-intrusive button will allow you to instantly open support \n";
-    print "requests with us as well as make suggestions on how we can make LogZilla better.\n";
-    print "You can always disable it by selecting 'Admin>Settings>FEEDBACK' from the main menu\n";
-    my $ok = &getYN( "Ok to add support and feedback?", "y" );
-    if ( $ok =~ /[Yy]/ ) {
-        my $sth = $dbh->prepare( "
+      print "\nIf it's ok with you, install will include a small 'Feedback and Support'\n";
+      print "icon which will appear at the bottom right side of the web page\n";
+      print "This non-intrusive button will allow you to instantly open support \n";
+      print "requests with us as well as make suggestions on how we can make LogZilla better.\n";
+      print "You can always disable it by selecting 'Admin>Settings>FEEDBACK' from the main menu\n";
+      my $ok = &getYN( "Ok to add support and feedback?", "y" );
+      if ( $ok =~ /[Yy]/ ) {
+          my $sth = $dbh->prepare( "
             update settings set value='1' where name='FEEDBACK';
             " ) or die "Could not update settings table: $DBI::errstr";
-        $sth->execute;
-    }
+          $sth->execute;
+      }
 }
 
 sub hup_syslog {
 
-    # syslog-ng HUP
-    print "\n\n";
-    my $checkprocess = `ps -C syslog-ng -o pid=`;
-    if ($checkprocess) {
-        print "\n\nSyslog-ng MUST be restarted, would you like to send a HUP signal to the process?\n";
-        my $ok = &getYN( "Ok to HUP syslog-ng?", "y" );
-        if ( $ok =~ /[Yy]/ ) {
-            if ( $checkprocess =~ /(\d+)/ ) {
-                my $pid = $1;
-                print STDOUT "HUPing syslog-ng PID $pid\n";
-                my $r = `kill -HUP $pid`;
-            } else {
-                print STDOUT "Unable to find PID for syslog-ng\n";
-            }
-        } else {
-            print("\033[1m\n\tPlease be sure to restart syslog-ng..\n\033[0m");
-        }
-    }
+      # syslog-ng HUP
+      print "\n\n";
+      my $checkprocess = `ps -C syslog-ng -o pid=`;
+      if ($checkprocess) {
+          print "\n\nSyslog-ng MUST be restarted, would you like to send a HUP signal to the process?\n";
+          my $ok = &getYN( "Ok to HUP syslog-ng?", "y" );
+          if ( $ok =~ /[Yy]/ ) {
+              if ( $checkprocess =~ /(\d+)/ ) {
+                  my $pid = $1;
+                  print STDOUT "HUPing syslog-ng PID $pid\n";
+                  my $r = `kill -HUP $pid`;
+              } else {
+                  print STDOUT "Unable to find PID for syslog-ng\n";
+              }
+          } else {
+              print("\033[1m\n\tPlease be sure to restart syslog-ng..\n\033[0m");
+          }
+      }
 }
 
 sub hup_crond {
-    print "\n\n";
-    my $checkprocess = `cat /var/run/crond.pid`;
-    if ($checkprocess) {
-        print "\n\nCron.d should be restarted, would you like to send a HUP signal to the process?\n";
-        my $ok = &getYN( "Ok to HUP CRON?", "y" );
-        if ( $ok =~ /[Yy]/ ) {
-            if ( $checkprocess =~ /(\d+)/ ) {
-                my $pid = $1;
-                print STDOUT "HUPing CRON PID $pid\n";
-                my $r = `kill -HUP $pid`;
-            } else {
-                print STDOUT "Unable to find PID for CRON.D in /var/run\n";
-            }
-        } else {
-            print("\033[1m\n\tPlease be sure to restart CRON..\n\033[0m");
-        }
-    }
+      print "\n\n";
+      my $checkprocess = `cat /var/run/crond.pid`;
+      if ($checkprocess) {
+          print "\n\nCron.d should be restarted, would you like to send a HUP signal to the process?\n";
+          my $ok = &getYN( "Ok to HUP CRON?", "y" );
+          if ( $ok =~ /[Yy]/ ) {
+              if ( $checkprocess =~ /(\d+)/ ) {
+                  my $pid = $1;
+                  print STDOUT "HUPing CRON PID $pid\n";
+                  my $r = `kill -HUP $pid`;
+              } else {
+                  print STDOUT "Unable to find PID for CRON.D in /var/run\n";
+              }
+          } else {
+              print("\033[1m\n\tPlease be sure to restart CRON..\n\033[0m");
+          }
+      }
 }
 
 print("\n\033[1m\tLogZilla installation complete!\n\033[0m");
 
 # Wordwrap system: deal with the next character
 sub wrap_one_char {
-    my $output   = shift;
-    my $pos      = shift;
-    my $word     = shift;
-    my $char     = shift;
-    my $reserved = shift;
-    my $length;
+      my $output   = shift;
+      my $pos      = shift;
+      my $word     = shift;
+      my $char     = shift;
+      my $reserved = shift;
+      my $length;
 
-    my $cTerminalLineSize = 79;
-    if ( not( ( $char eq "\n" ) || ( $char eq ' ' ) || ( $char eq '' ) ) ) {
-        $word .= $char;
+      my $cTerminalLineSize = 79;
+      if ( not( ( $char eq "\n" ) || ( $char eq ' ' ) || ( $char eq '' ) ) ) {
+          $word .= $char;
 
-        return ( $output, $pos, $word );
-    }
+          return ( $output, $pos, $word );
+      }
 
-    # We found a separator.  Process the last word
+      # We found a separator.  Process the last word
 
-    $length = length($word) + $reserved;
-    if ( ( $pos + $length ) > $cTerminalLineSize ) {
+      $length = length($word) + $reserved;
+      if ( ( $pos + $length ) > $cTerminalLineSize ) {
 
        # The last word doesn't fit in the end of the line. Break the line before
        # it
-        $output .= "\n";
-        $pos = 0;
-    }
-    ( $output, $pos ) = append_output( $output, $pos, $word );
-    $word = '';
+          $output .= "\n";
+          $pos = 0;
+      }
+      ( $output, $pos ) = append_output( $output, $pos, $word );
+      $word = '';
 
-    if ( $char eq "\n" ) {
-        $output .= "\n";
-        $pos = 0;
-    } elsif ( $char eq ' ' ) {
-        if ($pos) {
-            ( $output, $pos ) = append_output( $output, $pos, ' ' );
-        }
-    }
+      if ( $char eq "\n" ) {
+          $output .= "\n";
+          $pos = 0;
+      } elsif ( $char eq ' ' ) {
+          if ($pos) {
+              ( $output, $pos ) = append_output( $output, $pos, ' ' );
+          }
+      }
 
-    return ( $output, $pos, $word );
+      return ( $output, $pos, $word );
 }
 
 # Wordwrap system: word-wrap a string plus some reserved trailing space
 sub wrap {
-    my $input    = shift;
-    my $reserved = shift;
-    my $output;
-    my $pos;
-    my $word;
-    my $i;
+      my $input    = shift;
+      my $reserved = shift;
+      my $output;
+      my $pos;
+      my $word;
+      my $i;
 
-    if ( !defined($reserved) ) {
-        $reserved = 0;
-    }
+      if ( !defined($reserved) ) {
+          $reserved = 0;
+      }
 
-    $output = '';
-    $pos    = 0;
-    $word   = '';
-    for ( $i = 0 ; $i < length($input) ; $i++ ) {
-        ( $output, $pos, $word ) = wrap_one_char( $output, $pos, $word,
-            substr( $input, $i, 1 ), 0 );
-    }
+      $output = '';
+      $pos    = 0;
+      $word   = '';
+      for ( $i = 0 ; $i < length($input) ; $i++ ) {
+          ( $output, $pos, $word ) = wrap_one_char( $output, $pos, $word,
+              substr( $input, $i, 1 ), 0 );
+      }
 
-    # Use an artifical last '' separator to process the last word
-    ( $output, $pos, $word ) = wrap_one_char( $output, $pos, $word, '', $reserved );
+      # Use an artifical last '' separator to process the last word
+      ( $output, $pos, $word ) = wrap_one_char( $output, $pos, $word, '', $reserved );
 
-    return $output;
+      return $output;
 }
 
 # Print message
 sub msg {
-    my $msg = shift;
+      my $msg = shift;
 
-    print $msg . "\n";
-    exit;
+      print $msg . "\n";
+      exit;
 }
 
 sub do_upgrade {
-    my $rev = shift;
-    print("\n\033[1m\tUpgrading, please be patient!\nIf you have a large DB, this could take a long time...\n\033[0m");
-    my $dbh = db_connect( $dbname, $lzbase, $dbroot, $dbrootpass );
-    if ( $rev eq "0" ) {
-        print "You are running an unsupported version of LogZilla (<3.1)\n";
-        print "An attempt will be made to upgrade to $version$subversion...\n";
-        my $ok = &getYN( "Continue? (yes/no)", "y" );
-        if ( $ok =~ /[Yy]/ ) {
-            add_snare_to_logtable();
-            do_programs();
-            tbl_add_severities();
-            tbl_add_facilities();
-            create_snare_table();
-            do_email_alerts();
-            update_procs();
-            make_archive_tables();
-            make_dbuser();
-            add_table_triggers();
+      my $rev = shift;
+      print("\n\033[1m\tUpgrading, please be patient!\nIf you have a large DB, this could take a long time...\n\033[0m");
+      my $dbh = db_connect( $dbname, $lzbase, $dbroot, $dbrootpass );
+      if ( $rev eq "0" ) {
+          print "You are running an unsupported version of LogZilla (<3.1)\n";
+          print "An attempt will be made to upgrade to $version$subversion...\n";
+          my $ok = &getYN( "Continue? (yes/no)", "y" );
+          if ( $ok =~ /[Yy]/ ) {
+              add_snare_to_logtable();
+              do_programs();
+              tbl_add_severities();
+              tbl_add_facilities();
+              create_snare_table();
+              do_email_alerts();
+              update_procs();
+              make_archive_tables();
+              make_dbuser();
+              add_table_triggers();
 
-            if ( colExists( "logs", "priority" ) eq 1 ) {
-                tbl_logs_alter_from_30();
-            }
-            print "\n\tUpgrade complete, continuing installation...\n\n";
-        }
-    }
-    elsif ( $rev eq "1122" ) {
-        print "Upgrading Database from v3.1.122 to $version$subversion...\n";
-        add_snare_to_logtable();
-        create_snare_table();
-        do_email_alerts();
-        update_procs();
-        make_archive_tables();
-        make_dbuser();
-        add_table_triggers();
-        print "\n\tUpgrade complete, continuing installation...\n\n";
+              if ( colExists( "logs", "priority" ) eq 1 ) {
+                  tbl_logs_alter_from_30();
+              }
+              print "\n\tUpgrade complete, continuing installation...\n\n";
+          }
+      }
+      elsif ( $rev eq "1122" ) {
+          print "Upgrading Database from v3.1.122 to $version$subversion...\n";
+          add_snare_to_logtable();
+          create_snare_table();
+          do_email_alerts();
+          update_procs();
+          make_archive_tables();
+          make_dbuser();
+          add_table_triggers();
+          print "\n\tUpgrade complete, continuing installation...\n\n";
 
-    }
-    elsif ( $rev eq "php-syslog-ng" ) {
-        print "You are running an unsupported version of LogZilla (Php-syslog-ng v2.x)\n";
-        print "An attempt will be made to upgrade to $version$subversion...\n";
-        my $ok = &getYN( "Continue? (yes/no)", "y" );
-        if ( $ok =~ /[Yy]/ ) {
-            add_snare_to_logtable();
-            do_programs();
-            tbl_add_severities();
-            tbl_add_facilities();
-            create_snare_table();
-            do_email_alerts();
-            update_procs();
-            make_dbuser();
-            add_table_triggers();
+      }
+      elsif ( $rev eq "php-syslog-ng" ) {
+          print "You are running an unsupported version of LogZilla (Php-syslog-ng v2.x)\n";
+          print "An attempt will be made to upgrade to $version$subversion...\n";
+          my $ok = &getYN( "Continue? (yes/no)", "y" );
+          if ( $ok =~ /[Yy]/ ) {
+              add_snare_to_logtable();
+              do_programs();
+              tbl_add_severities();
+              tbl_add_facilities();
+              create_snare_table();
+              do_email_alerts();
+              update_procs();
+              make_dbuser();
+              add_table_triggers();
 
-            if ( colExists( "logs", "priority" ) eq 1 ) {
-                tbl_logs_alter_from_299();
-            }
-            make_partitions();
-            make_archive_tables();
-            print "\n\tUpgrade complete, continuing installation...\n\n";
-        }
-    }
-    elsif ( $rev eq "32" ) {
-        update_procs();
-        make_archive_tables();
-        make_dbuser();
-        add_table_triggers();
-        print "\n\tUpgrade complete, continuing installation...\n\n";
-    }
-    elsif ( $rev eq "all" ) {
-        print "Your version is not an officially supported upgrade.\n";
-        print "An attempt will be made to upgrade to $version$subversion...\n";
-        my $ok = &getYN( "Continue? (yes/no)", "y" );
-        if ( $ok =~ /[Yy]/ ) {
-            add_snare_to_logtable();
-            do_programs();
-            tbl_add_severities();
-            tbl_add_facilities();
-            create_snare_table();
-            do_email_alerts();
-            update_procs();
-            make_archive_tables();
-            make_dbuser();
-            add_table_triggers();
-            print "\n\tUpgrade complete, continuing installation...\n\n";
-        }
-    }
-    elsif ( $rev eq 2 ) {
-        print "Attempting upgrade from php-syslog-ng (v2.x) to LogZilla (v3.x)\n";
-        print "Not Implemented yet...sorry\n";
-        exit;
-    }
-    else {
-        print "Your version is not a candidate for upgrade.\n";
-        exit;
-    }
-    update_help();
+              if ( colExists( "logs", "priority" ) eq 1 ) {
+                  tbl_logs_alter_from_299();
+              }
+              make_partitions();
+              make_archive_tables();
+              print "\n\tUpgrade complete, continuing installation...\n\n";
+          }
+      }
+      elsif ( $rev eq "32" ) {
+          update_procs();
+          make_archive_tables();
+          make_dbuser();
+          add_table_triggers();
+          print "\n\tUpgrade complete, continuing installation...\n\n";
+      }
+      elsif ( $rev eq "all" ) {
+          print "Your version is not an officially supported upgrade.\n";
+          print "An attempt will be made to upgrade to $version$subversion...\n";
+          my $ok = &getYN( "Continue? (yes/no)", "y" );
+          if ( $ok =~ /[Yy]/ ) {
+              add_snare_to_logtable();
+              do_programs();
+              tbl_add_severities();
+              tbl_add_facilities();
+              create_snare_table();
+              do_email_alerts();
+              update_procs();
+              make_archive_tables();
+              make_dbuser();
+              add_table_triggers();
+              print "\n\tUpgrade complete, continuing installation...\n\n";
+          }
+      }
+      elsif ( $rev eq 2 ) {
+          print "Attempting upgrade from php-syslog-ng (v2.x) to LogZilla (v3.x)\n";
+          print "Not Implemented yet...sorry\n";
+          exit;
+      }
+      else {
+          print "Your version is not a candidate for upgrade.\n";
+          exit;
+      }
+      update_help();
 
-    # Insert ui_layout data
-    if ( tblExists("ui_layout") eq 1 ) {
-        upgrade_ui_layout();
-    } else {
-        my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/ui_layout.sql`;
-    }
-    update_settings();
-    hup_syslog();
+      # Insert ui_layout data
+      if ( tblExists("ui_layout") eq 1 ) {
+          upgrade_ui_layout();
+      } else {
+          my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/ui_layout.sql`;
+      }
+      update_settings();
+      hup_syslog();
 }
 
 sub db_connect {
-    my $dbname     = shift;
-    my $lzbase     = shift;
-    my $dbroot     = shift;
-    my $dbrootpass = shift;
-    my $dsn        = "DBI:mysql:$dbname:;mysql_read_default_group=logzilla;"
-      . "mysql_read_default_file=$lzbase/scripts/sql/lzmy.cnf";
-    my $dbh = DBI->connect( $dsn, $dbroot, $dbrootpass );
+      my $dbname     = shift;
+      my $lzbase     = shift;
+      my $dbroot     = shift;
+      my $dbrootpass = shift;
+      my $dsn        = "DBI:mysql:$dbname:;mysql_read_default_group=logzilla;"
+        . "mysql_read_default_file=$lzbase/scripts/sql/lzmy.cnf";
+      my $dbh = DBI->connect( $dsn, $dbroot, $dbrootpass );
 
-    if ( !$dbh ) {
-        print "Can't connect to the mysql database: ", $DBI::errstr, "\n";
-        exit;
-    }
+      if ( !$dbh ) {
+          print "Can't connect to the mysql database: ", $DBI::errstr, "\n";
+          exit;
+      }
 
-    return $dbh;
+      return $dbh;
 }
 
 sub db_exists {
-    my $dbh = DBI->connect( "DBI:mysql:mysql:$dbhost:$dbport", $dbroot, $dbrootpass );
-    my $sth = $dbh->prepare("show databases like '$dbname'") or die "Could not get DB's: $DBI::errstr";
-    $sth->execute;
-    while ( my @data = $sth->fetchrow_array() ) {
-        if ( $data[0] == "$dbtable" ) {
-            return 1;
-        } else {
-            return 0;
-        }
-    }
+      my $dbh = DBI->connect( "DBI:mysql:mysql:$dbhost:$dbport", $dbroot, $dbrootpass );
+      my $sth = $dbh->prepare("show databases like '$dbname'") or die "Could not get DB's: $DBI::errstr";
+      $sth->execute;
+      while ( my @data = $sth->fetchrow_array() ) {
+          if ( $data[0] == "$dbtable" ) {
+              return 1;
+          } else {
+              return 0;
+          }
+      }
 }
 
 sub getVer {
-    my $dbh = db_connect( $dbname, $lzbase, $dbroot, $dbrootpass );
-    if ( colExists( "settings", "id" ) eq 1 ) {
-        my $ver = $dbh->selectrow_array( "
+      my $dbh = db_connect( $dbname, $lzbase, $dbroot, $dbrootpass );
+      if ( colExists( "settings", "id" ) eq 1 ) {
+          my $ver = $dbh->selectrow_array( "
             SELECT value from settings where name='VERSION';
             " );
-        my ( $major, $minor ) = split( /\./, $ver );
-        my $sub = $dbh->selectrow_array("SELECT value from settings where name='VERSION_SUB'; ");
-        $sub =~ s/^\.//;
-        return ( $major, $minor, $sub );
-    } else {
+          my ( $major, $minor ) = split( /\./, $ver );
+          my $sub = $dbh->selectrow_array("SELECT value from settings where name='VERSION_SUB'; ");
+          $sub =~ s/^\.//;
+          return ( $major, $minor, $sub );
+      } else {
 
-        # If there is no settings table in the DB, it's php-syslog-ng v2.x
-        return ( 2, 99, 0 );
-    }
+          # If there is no settings table in the DB, it's php-syslog-ng v2.x
+          return ( 2, 99, 0 );
+      }
 }
 
 sub add_table_triggers {
-    my $dbh = db_connect( $dbname, $lzbase, $dbroot, $dbrootpass );
-    print "Dropping Table Triggers...\n";
-    $dbh->do("DROP TRIGGER IF EXISTS counts") or die "Could not drop trigger: $DBI::errstr";
-    $dbh->do("DROP TRIGGER IF EXISTS system_log") or die "Could not drop trigger: $DBI::errstr";
-    print "Adding Table Triggers...\n";
-    $dbh->do( "
+      my $dbh = db_connect( $dbname, $lzbase, $dbroot, $dbrootpass );
+      print "Dropping Table Triggers...\n";
+      $dbh->do("DROP TRIGGER IF EXISTS counts") or die "Could not drop trigger: $DBI::errstr";
+      $dbh->do("DROP TRIGGER IF EXISTS system_log") or die "Could not drop trigger: $DBI::errstr";
+      print "Adding Table Triggers...\n";
+      $dbh->do( "
         CREATE TRIGGER `system_log`
         BEFORE INSERT ON system_log
         FOR EACH ROW
@@ -1733,579 +1733,600 @@ sub add_table_triggers {
 }
 
 sub add_snare_to_logtable {
-    if ( colExists( "$dbtable", "eid" ) eq 0 ) {
-        my $dbh = db_connect( $dbname, $lzbase, $dbroot, $dbrootpass );
-        print "Adding SNARE eids to $dbtable...\n";
-        $dbh->do("ALTER TABLE $dbtable ADD `eid` int(10) unsigned NOT NULL DEFAULT '0'") or die "Could not update $dbtable: $DBI::errstr";
-        print "Adding SNARE index to $dbtable...\n";
-        $dbh->do("ALTER TABLE $dbtable ADD index eid(eid)") or die "Could not update $dbtable: $DBI::errstr";
-    }
+      if ( colExists( "$dbtable", "eid" ) eq 0 ) {
+          my $dbh = db_connect( $dbname, $lzbase, $dbroot, $dbrootpass );
+          print "Adding SNARE eids to $dbtable...\n";
+          $dbh->do("ALTER TABLE $dbtable ADD `eid` int(10) unsigned NOT NULL DEFAULT '0'") or die "Could not update $dbtable: $DBI::errstr";
+          print "Adding SNARE index to $dbtable...\n";
+          $dbh->do("ALTER TABLE $dbtable ADD index eid(eid)") or die "Could not update $dbtable: $DBI::errstr";
+      }
 }
 
 sub create_snare_table {
-    my $dbh = db_connect( $dbname, $lzbase, $dbroot, $dbrootpass );
-    if ( tblExists("snare_eid") eq 1 ) {
-        copy_old_snare();
-    } else {
-        print "Adding SNARE table...\n";
-        my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/snare_eid.sql`;
-    }
+      my $dbh = db_connect( $dbname, $lzbase, $dbroot, $dbrootpass );
+      if ( tblExists("snare_eid") eq 1 ) {
+          copy_old_snare();
+      } else {
+          print "Adding SNARE table...\n";
+          my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/snare_eid.sql`;
+      }
 }
 
 sub copy_old_snare {
-    my $dbh = db_connect( $dbname, $lzbase, $dbroot, $dbrootpass );
-    print "Updating SNARE table...\n";
-    $dbh->do("RENAME TABLE snare_eid TO snare_eid_orig") or die "Could not update $dbname: $DBI::errstr";
-    my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/snare_eid.sql`;
-    print $res;
-    $dbh->do("REPLACE INTO snare_eid SELECT * FROM snare_eid_orig; ") or die "Could not update $dbname: $DBI::errstr";
-    $dbh->do("DROP TABLE snare_eid_orig") or die "Could not update $dbname: $DBI::errstr";
+      my $dbh = db_connect( $dbname, $lzbase, $dbroot, $dbrootpass );
+      print "Updating SNARE table...\n";
+      $dbh->do("RENAME TABLE snare_eid TO snare_eid_orig") or die "Could not update $dbname: $DBI::errstr";
+      my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/snare_eid.sql`;
+      print $res;
+      $dbh->do("REPLACE INTO snare_eid SELECT * FROM snare_eid_orig; ") or die "Could not update $dbname: $DBI::errstr";
+      $dbh->do("DROP TABLE snare_eid_orig") or die "Could not update $dbname: $DBI::errstr";
 }
 
 sub copy_old_archives {
-    my $dbh = db_connect( $dbname, $lzbase, $dbroot, $dbrootpass );
-    print "Updating Archives table...\n";
-    $dbh->do("RENAME TABLE archives TO archives_orig") or die "Could not update $dbname: $DBI::errstr";
-    my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/archives.sql`;
-    print $res;
-    $dbh->do("REPLACE INTO archives SELECT * FROM archives_orig; ") or die "Could not update $dbname: $DBI::errstr";
-    $dbh->do("DROP TABLE archives_orig") or die "Could not update $dbname: $DBI::errstr";
+      my $dbh = db_connect( $dbname, $lzbase, $dbroot, $dbrootpass );
+      print "Updating Archives table...\n";
+      $dbh->do("RENAME TABLE archives TO archives_orig") or die "Could not update $dbname: $DBI::errstr";
+      my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/archives.sql`;
+      print $res;
+      $dbh->do("REPLACE INTO archives SELECT * FROM archives_orig; ") or die "Could not update $dbname: $DBI::errstr";
+      $dbh->do("DROP TABLE archives_orig") or die "Could not update $dbname: $DBI::errstr";
 }
 
 sub verify_columns {
 
 # As of v4.0, we will just do this for all columns regardless of install or upgrade to make sure they exist.
-    my $dbh = db_connect( $dbname, $lzbase, $dbroot, $dbrootpass );
-    print "Verifying Table Columns...\n";
-    my @tables = ( 'hosts', 'programs', 'snare_eid', 'mne' );
-    my @cols = ( 'lastseen', 'seen', 'hidden' );
-    foreach (@tables) {
-        print "Validating $_ table:\n";
-        my $table = $_;
-        if ( colExists( "$table", "id" ) eq 0 ) {
-            print "Creating $table table...\n";
-            my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/$table.sql`;
-            print "$res\n";
-        }
-        foreach (@cols) {
-            my $col = $_;
-            print "Validating $table.$col\n";
-            if ( colExists( "$table", "$col" ) ne 1 ) {
-                print "Updating $table $col column...\n";
-                if ( $col eq "lastseen" ) {
-                    $dbh->do("ALTER TABLE $table ADD `lastseen` datetime NOT NULL default '2012-01-01 00:00:00'; ") or die "Could not update $dbname: $DBI::errstr";
-                }
-                elsif ( $col eq "seen" ) {
-                    $dbh->do("ALTER TABLE $table ADD `seen` int(10) unsigned NOT NULL DEFAULT '1'; ") or die "Could not update $dbname: $DBI::errstr";
-                }
-                elsif ( $col eq "hidden" ) {
-                    $dbh->do("ALTER TABLE $table ADD `hidden` enum('false','true') DEFAULT 'false'; ") or die "Could not update $dbname: $DBI::errstr";
-                }
-            }
-        }
-    }
+      my $dbh = db_connect( $dbname, $lzbase, $dbroot, $dbrootpass );
+      print "Verifying Table Columns...\n";
+      my @tables = ( 'hosts', 'programs', 'snare_eid', 'mne' );
+      my @cols = ( 'lastseen', 'seen', 'hidden' );
+      foreach (@tables) {
+          print "Validating $_ table:\n";
+          my $table = $_;
+          if ( colExists( "$table", "id" ) eq 0 ) {
+              print "Creating $table table...\n";
+              my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/$table.sql`;
+              print "$res\n";
+          }
+          foreach (@cols) {
+              my $col = $_;
+              print "Validating $table.$col\n";
+              if ( colExists( "$table", "$col" ) ne 1 ) {
+                  print "Updating $table $col column...\n";
+                  if ( $col eq "lastseen" ) {
+                      $dbh->do("ALTER TABLE $table ADD `lastseen` datetime NOT NULL default '2012-01-01 00:00:00'; ") or die "Could not update $dbname: $DBI::errstr";
+                  }
+                  elsif ( $col eq "seen" ) {
+                      $dbh->do("ALTER TABLE $table ADD `seen` int(10) unsigned NOT NULL DEFAULT '1'; ") or die "Could not update $dbname: $DBI::errstr";
+                  }
+                  elsif ( $col eq "hidden" ) {
+                      $dbh->do("ALTER TABLE $table ADD `hidden` enum('false','true') DEFAULT 'false'; ") or die "Could not update $dbname: $DBI::errstr";
+                  }
+              }
+          }
+      }
 
-    # Test for RBAC
-    my @tables = ( 'hosts', 'users' );
-    foreach (@tables) {
-        my $table = $_;
-        if ( colExists( "$table", "rbac_key" ) eq 0 ) {
-            $dbh->do("ALTER TABLE $table ADD `rbac_key` int(10) unsigned NOT NULL DEFAULT '1'; ") or die "Could not update $dbname: $DBI::errstr";
-            $dbh->do("ALTER TABLE $table ADD KEY `rbac` (`rbac_key`); ") or die "Could not update $dbname: $DBI::errstr";
-        }
-    }
-    # Test for EPX
-    my $table = 'events_per_second';
-    if ( colExists( "$table", "id" ) eq 0 ) {
-        print "Creating $table table...\n";
-        my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/epx.sql`;
-        print "$res\n";
-    }
-    # fix for notes column not having the default value set in LogZilla v4.25
-    $dbh->do("ALTER TABLE logs MODIFY `notes` varchar(255) NOT NULL DEFAULT '';") or die "Could not update $dbname: $DBI::errstr";
+      # Test for RBAC
+      my @tables = ( 'hosts', 'users' );
+      foreach (@tables) {
+          my $table = $_;
+          if ( colExists( "$table", "rbac_key" ) eq 0 ) {
+              $dbh->do("ALTER TABLE $table ADD `rbac_key` int(10) unsigned NOT NULL DEFAULT '1'; ") or die "Could not update $dbname: $DBI::errstr";
+              $dbh->do("ALTER TABLE $table ADD KEY `rbac` (`rbac_key`); ") or die "Could not update $dbname: $DBI::errstr";
+          }
+      }
+
+      # Test for EPX
+      my $table = 'events_per_second';
+      if ( colExists( "$table", "name" ) eq 0 ) {
+          print "Creating $table table...\n";
+          my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/epx.sql`;
+          print "$res\n";
+      }
+
+      # fix for notes column not having the default value set in LogZilla v4.25
+      $dbh->do("ALTER TABLE logs MODIFY `notes` varchar(255) NOT NULL DEFAULT '';") or die "Could not update $dbname: $DBI::errstr";
+
+      # Insert sph metrics
+      if ( tblExists("sph_metrics") eq 0 ) {
+          print "Adding Sphinx Metrics Table\n";
+          my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/sph_metrics.sql`;
+      }
+      # Insert view_limits table
+      if ( tblExists("view_limits") eq 1 ) {
+          copy_old_view_limits();
+      } else {
+          my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/view_limits.sql`;
+      }
 }
 
 sub update_version {
-    my $dbh = db_connect( $dbname, $lzbase, $dbroot, $dbrootpass );
-    my $sth = $dbh->prepare( "
+      my $dbh = db_connect( $dbname, $lzbase, $dbroot, $dbrootpass );
+      my $sth = $dbh->prepare( "
         update settings set value='$version' where name='VERSION';
         " ) or die "Could not update settings table: $DBI::errstr";
-    $sth->execute;
-    my $sth = $dbh->prepare( "
+      $sth->execute;
+      my $sth = $dbh->prepare( "
         update settings set value='$subversion' where name='VERSION_SUB';
         " ) or die "Could not update settings table: $DBI::errstr";
-    $sth->execute;
+      $sth->execute;
 }
 
 sub tbl_logs_alter_from_30 {
-    my $dbh = db_connect( $dbname, $lzbase, $dbroot, $dbrootpass );
-    print "Attempting to modify an older logs table to work with the new version.\n";
-    print "This could take a VERY long time, DO NOT cancel this operation\n";
-    if ( colExists( "$dbtable", "priority" ) eq 1 ) {
+      my $dbh = db_connect( $dbname, $lzbase, $dbroot, $dbrootpass );
+      print "Attempting to modify an older logs table to work with the new version.\n";
+      print "This could take a VERY long time, DO NOT cancel this operation\n";
+      if ( colExists( "$dbtable", "priority" ) eq 1 ) {
 
-        print "Updating column: priority->severity\n";
-        $dbh->do("ALTER TABLE $dbtable CHANGE `priority` severity enum('0','1','2','3','4','5','6','7') NOT NULL") or die "Could not update $dbname: $DBI::errstr";
+          print "Updating column: priority->severity\n";
+          $dbh->do("ALTER TABLE $dbtable CHANGE `priority` severity enum('0','1','2','3','4','5','6','7') NOT NULL") or die "Could not update $dbname: $DBI::errstr";
 
-        print "Updating column: facility\n";
-        $dbh->do("ALTER TABLE $dbtable CHANGE `facility` `facility` enum('0','1','2','3','4','5','6','7','8','9','10','11','12','13','14','15','16','17','18','19','20','21','22','23') NOT NULL") or die "Could not update $dbname: $DBI::errstr";
+          print "Updating column: facility\n";
+          $dbh->do("ALTER TABLE $dbtable CHANGE `facility` `facility` enum('0','1','2','3','4','5','6','7','8','9','10','11','12','13','14','15','16','17','18','19','20','21','22','23') NOT NULL") or die "Could not update $dbname: $DBI::errstr";
 
-        print "Dropping tag column\n";
-        $dbh->do("ALTER TABLE $dbtable DROP COLUMN tag") or die "Could not update $dbname: $DBI::errstr";
+          print "Dropping tag column\n";
+          $dbh->do("ALTER TABLE $dbtable DROP COLUMN tag") or die "Could not update $dbname: $DBI::errstr";
 
-        print "Updating column: program\n";
-        $dbh->do("ALTER TABLE $dbtable CHANGE `program` `program` int(10) unsigned NOT NULL") or die "Could not update $dbname: $DBI::errstr";
+          print "Updating column: program\n";
+          $dbh->do("ALTER TABLE $dbtable CHANGE `program` `program` int(10) unsigned NOT NULL") or die "Could not update $dbname: $DBI::errstr";
 
-        print "Updating column: mne\n";
-        $dbh->do("ALTER TABLE $dbtable CHANGE `mne` `mne` int(10) unsigned NOT NULL") or die "Could not update $dbname: $DBI::errstr";
-        print "Adding Sphinx Counter table\n";
-        my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/sph_counter.sql`;
-
-    }
+          print "Updating column: mne\n";
+          $dbh->do("ALTER TABLE $dbtable CHANGE `mne` `mne` int(10) unsigned NOT NULL") or die "Could not update $dbname: $DBI::errstr";
+          print "Adding Sphinx Counter table\n";
+          my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/sph_counter.sql`;
+      }
 }
 
 sub tbl_logs_alter_from_299 {
-    my $dbh = db_connect( $dbname, $lzbase, $dbroot, $dbrootpass );
-    print("\n\033[1m\tWARNING!\n\033[0m");
-    print "Attempting to modify an older logs table to work with the new version.\n";
-    print "This could take a VERY long time, DO NOT cancel this operation\n";
-    if ( colExists( "$dbtable", "priority" ) eq 1 ) {
+      my $dbh = db_connect( $dbname, $lzbase, $dbroot, $dbrootpass );
+      print("\n\033[1m\tWARNING!\n\033[0m");
+      print "Attempting to modify an older logs table to work with the new version.\n";
+      print "This could take a VERY long time, DO NOT cancel this operation\n";
+      if ( colExists( "$dbtable", "priority" ) eq 1 ) {
 
-        print "Updating column: priority->severity\n";
-        $dbh->do("ALTER TABLE $dbtable CHANGE `priority` severity enum('0','1','2','3','4','5','6','7') NOT NULL") or die "Could not update $dbname: $DBI::errstr";
+          print "Updating column: priority->severity\n";
+          $dbh->do("ALTER TABLE $dbtable CHANGE `priority` severity enum('0','1','2','3','4','5','6','7') NOT NULL") or die "Could not update $dbname: $DBI::errstr";
 
-        print "Updating column: facility\n";
-        $dbh->do("ALTER TABLE $dbtable CHANGE `facility` `facility` enum('0','1','2','3','4','5','6','7','8','9','10','11','12','13','14','15','16','17','18','19','20','21','22','23') NOT NULL") or die "Could not update $dbname: $DBI::errstr";
+          print "Updating column: facility\n";
+          $dbh->do("ALTER TABLE $dbtable CHANGE `facility` `facility` enum('0','1','2','3','4','5','6','7','8','9','10','11','12','13','14','15','16','17','18','19','20','21','22','23') NOT NULL") or die "Could not update $dbname: $DBI::errstr";
 
-        print "Dropping tag column\n";
-        $dbh->do("ALTER TABLE $dbtable DROP COLUMN tag") or die "Could not update $dbname: $DBI::errstr";
+          print "Dropping tag column\n";
+          $dbh->do("ALTER TABLE $dbtable DROP COLUMN tag") or die "Could not update $dbname: $DBI::errstr";
 
-        print "Dropping level column\n";
-        $dbh->do("ALTER TABLE $dbtable DROP COLUMN level") or die "Could not update $dbname: $DBI::errstr";
+          print "Dropping level column\n";
+          $dbh->do("ALTER TABLE $dbtable DROP COLUMN level") or die "Could not update $dbname: $DBI::errstr";
 
-        print "Dropping seq column\n";
-        $dbh->do("ALTER TABLE $dbtable DROP COLUMN seq") or die "Could not update $dbname: $DBI::errstr";
+          print "Dropping seq column\n";
+          $dbh->do("ALTER TABLE $dbtable DROP COLUMN seq") or die "Could not update $dbname: $DBI::errstr";
 
-        print "Updating column: program\n";
-        $dbh->do("ALTER TABLE $dbtable CHANGE `program` `program` int(10) unsigned NOT NULL") or die "Could not update $dbname: $DBI::errstr";
+          print "Updating column: program\n";
+          $dbh->do("ALTER TABLE $dbtable CHANGE `program` `program` int(10) unsigned NOT NULL") or die "Could not update $dbname: $DBI::errstr";
 
-        print "Updating column: host\n";
-        $dbh->do("ALTER TABLE $dbtable CHANGE `host` `host` varchar(128) NOT NULL") or die "Could not update $dbname: $DBI::errstr";
+          print "Updating column: host\n";
+          $dbh->do("ALTER TABLE $dbtable CHANGE `host` `host` varchar(128) NOT NULL") or die "Could not update $dbname: $DBI::errstr";
 
-        print "Updating column: fo\n";
-        $dbh->do("ALTER TABLE $dbtable CHANGE `fo` `fo` datetime NOT NULL") or die "Could not update $dbname: $DBI::errstr";
+          print "Updating column: fo\n";
+          $dbh->do("ALTER TABLE $dbtable CHANGE `fo` `fo` datetime NOT NULL") or die "Could not update $dbname: $DBI::errstr";
 
-        print "Updating column: lo\n";
-        $dbh->do("ALTER TABLE $dbtable CHANGE `lo` `lo` datetime NOT NULL") or die "Could not update $dbname: $DBI::errstr";
+          print "Updating column: lo\n";
+          $dbh->do("ALTER TABLE $dbtable CHANGE `lo` `lo` datetime NOT NULL") or die "Could not update $dbname: $DBI::errstr";
 
-        print "Adding column: mne\n";
-        $dbh->do("ALTER TABLE $dbtable ADD `mne` int(10) unsigned NOT NULL") or die "Could not update $dbname: $DBI::errstr";
+          print "Adding column: mne\n";
+          $dbh->do("ALTER TABLE $dbtable ADD `mne` int(10) unsigned NOT NULL") or die "Could not update $dbname: $DBI::errstr";
 
-        print "Adding column: suppress\n";
-        $dbh->do("ALTER TABLE $dbtable ADD `suppress` datetime NOT NULL DEFAULT '2010-03-01 00:00:00'") or die "Could not update $dbname: $DBI::errstr";
+          print "Adding column: suppress\n";
+          $dbh->do("ALTER TABLE $dbtable ADD `suppress` datetime NOT NULL DEFAULT '2010-03-01 00:00:00'") or die "Could not update $dbname: $DBI::errstr";
 
-        print "Adding column: notes\n";
-        $dbh->do("ALTER TABLE $dbtable ADD `notes` varchar(255) NOT NULL") or die "Could not update $dbname: $DBI::errstr";
+          print "Adding column: notes\n";
+          $dbh->do("ALTER TABLE $dbtable ADD `notes` varchar(255) NOT NULL") or die "Could not update $dbname: $DBI::errstr";
 
-        print "Altering column: msg\n";
-        $dbh->do("ALTER TABLE $dbtable CHANGE `msg` `msg` varchar(2048) NOT NULL") or die "Could not update $dbname: $DBI::errstr";
+          print "Altering column: msg\n";
+          $dbh->do("ALTER TABLE $dbtable CHANGE `msg` `msg` varchar(2048) NOT NULL") or die "Could not update $dbname: $DBI::errstr";
 
-        print "Dropping index: priority\n";
-        $dbh->do("ALTER TABLE $dbtable DROP INDEX priority") or die "Could not update $dbname: $DBI::errstr";
+          print "Dropping index: priority\n";
+          $dbh->do("ALTER TABLE $dbtable DROP INDEX priority") or die "Could not update $dbname: $DBI::errstr";
 
-        print "Adding index: severity\n";
-        $dbh->do("ALTER TABLE $dbtable ADD INDEX severity (severity)") or die "Could not update $dbname: $DBI::errstr";
+          print "Adding index: severity\n";
+          $dbh->do("ALTER TABLE $dbtable ADD INDEX severity (severity)") or die "Could not update $dbname: $DBI::errstr";
 
-        print "Adding index: mne\n";
-        $dbh->do("ALTER TABLE $dbtable ADD INDEX mne (mne)") or die "Could not update $dbname: $DBI::errstr";
+          print "Adding index: mne\n";
+          $dbh->do("ALTER TABLE $dbtable ADD INDEX mne (mne)") or die "Could not update $dbname: $DBI::errstr";
 
-        print "Adding index: suppress\n";
-        $dbh->do("ALTER TABLE $dbtable ADD INDEX suppress (suppress)") or die "Could not update $dbname: $DBI::errstr";
+          print "Adding index: suppress\n";
+          $dbh->do("ALTER TABLE $dbtable ADD INDEX suppress (suppress)") or die "Could not update $dbname: $DBI::errstr";
 
-        print "Adding primary key\n";
-        $dbh->do("ALTER TABLE $dbtable DROP PRIMARY KEY, ADD PRIMARY KEY (`id`, `lo`)") or die "Could not update $dbname: $DBI::errstr";
-        print "Dropping users table primary key\n";
-        $dbh->do("ALTER TABLE users DROP PRIMARY KEY") or die "Could not update $dbname: $DBI::errstr";
+          print "Adding primary key\n";
+          $dbh->do("ALTER TABLE $dbtable DROP PRIMARY KEY, ADD PRIMARY KEY (`id`, `lo`)") or die "Could not update $dbname: $DBI::errstr";
+          print "Dropping users table primary key\n";
+          $dbh->do("ALTER TABLE users DROP PRIMARY KEY") or die "Could not update $dbname: $DBI::errstr";
 
-        print "Modifying users table: add id and primary key\n";
-        $dbh->do("ALTER TABLE users ADD `id` int(9) NOT NULL AUTO_INCREMENT, ADD PRIMARY KEY id (id);") or die "Could not update $dbname: $DBI::errstr";
+          print "Modifying users table: add id and primary key\n";
+          $dbh->do("ALTER TABLE users ADD `id` int(9) NOT NULL AUTO_INCREMENT, ADD PRIMARY KEY id (id);") or die "Could not update $dbname: $DBI::errstr";
 
-        print "Updating column: users.username\n";
-        $dbh->do("ALTER TABLE users CHANGE `username` `username` varchar(15) NOT NULL") or die "Could not update $dbname: $DBI::errstr";
-        print "Adding column: users.group\n";
-        $dbh->do("ALTER TABLE users ADD `group` int(3) NOT NULL DEFAULT '2'") or die "Could not update $dbname: $DBI::errstr";
+          print "Updating column: users.username\n";
+          $dbh->do("ALTER TABLE users CHANGE `username` `username` varchar(15) NOT NULL") or die "Could not update $dbname: $DBI::errstr";
+          print "Adding column: users.group\n";
+          $dbh->do("ALTER TABLE users ADD `group` int(3) NOT NULL DEFAULT '2'") or die "Could not update $dbname: $DBI::errstr";
 
-        print "Adding column: users.totd\n";
-        $dbh->do("ALTER TABLE users ADD `totd` enum('show','hide') NOT NULL DEFAULT 'show'") or die "Could not update $dbname: $DBI::errstr";
+          print "Adding column: users.totd\n";
+          $dbh->do("ALTER TABLE users ADD `totd` enum('show','hide') NOT NULL DEFAULT 'show'") or die "Could not update $dbname: $DBI::errstr";
 
-        print "Setting up $siteadmin user\n";
-        $dbh->do("REPLACE INTO `users` (username,pwhash) VALUES ('$siteadmin',md5('$siteadminpw'))") or die "Could not update $dbname: $DBI::errstr";
+          print "Setting up $siteadmin user\n";
+          $dbh->do("REPLACE INTO `users` (username,pwhash) VALUES ('$siteadmin',md5('$siteadminpw'))") or die "Could not update $dbname: $DBI::errstr";
 
-        print "Dropping table: actions\n";
-        $dbh->do("DROP TABLE actions") or die "Could not update $dbname: $DBI::errstr";
+          print "Dropping table: actions\n";
+          $dbh->do("DROP TABLE actions") or die "Could not update $dbname: $DBI::errstr";
 
-        print "Dropping MERGE table: all_logs\n";
-        $dbh->do("DROP TABLE all_logs") or die "Could not update $dbname: $DBI::errstr";
+          print "Dropping MERGE table: all_logs\n";
+          $dbh->do("DROP TABLE all_logs") or die "Could not update $dbname: $DBI::errstr";
 
-        print "Dropping table: cemdb\n";
-        $dbh->do("DROP TABLE cemdb") or die "Could not update $dbname: $DBI::errstr";
+          print "Dropping table: cemdb\n";
+          $dbh->do("DROP TABLE cemdb") or die "Could not update $dbname: $DBI::errstr";
 
-        print "Dropping table: search_cache\n";
-        $dbh->do("DROP TABLE search_cache") or die "Could not update $dbname: $DBI::errstr";
+          print "Dropping table: search_cache\n";
+          $dbh->do("DROP TABLE search_cache") or die "Could not update $dbname: $DBI::errstr";
 
-        print "Dropping table: user_access\n";
-        $dbh->do("DROP TABLE user_access") or die "Could not update $dbname: $DBI::errstr";
+          print "Dropping table: user_access\n";
+          $dbh->do("DROP TABLE user_access") or die "Could not update $dbname: $DBI::errstr";
 
-        print "Adding Sphinx Counter table\n";
-        my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/sph_counter.sql`;
+          print "Adding Sphinx Counter table\n";
+          my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/sph_counter.sql`;
 
-        print "Adding Cache Table\n";
-        my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/cache.sql`;
-        print $res;
+          print "Adding Cache Table\n";
+          my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/cache.sql`;
+          print $res;
 
-        print "Adding Groups Table\n";
-        my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/groups.sql`;
-        print $res;
+          print "Adding Groups Table\n";
+          my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/groups.sql`;
+          print $res;
 
-        print "Adding History Table\n";
-        my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/history.sql`;
-        print $res;
+          print "Adding History Table\n";
+          my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/history.sql`;
+          print $res;
 
-        print "Adding lzecs Table\n";
-        my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/lzecs.sql`;
-        print $res;
+          print "Adding lzecs Table\n";
+          my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/lzecs.sql`;
+          print $res;
 
-        print "Creating Suppress Table\n";
-        my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/suppress.sql`;
-        print $res;
+          print "Creating Suppress Table\n";
+          my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/suppress.sql`;
+          print $res;
 
-        print "Creating Totd Table\n";
-        my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/totd.sql`;
+          print "Creating Totd Table\n";
+          my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/totd.sql`;
 
-        print "Creating views\n";
-        create_views();
-    }
+          print "Creating views\n";
+          create_views();
+      }
 }
 
 sub do_email_alerts {
-    my $dbh = db_connect( $dbname, $lzbase, $dbroot, $dbrootpass );
-    if ( tblExists("triggers") eq 0 ) {
-        print "Adding Email Alerts...\n";
-        my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/triggers.sql`;
-    } else {
-        print "Updating Email Alerts...\n";
-        if ( colExists( "triggers", "description" ) eq 0 ) {
-            $dbh->do("ALTER TABLE triggers ADD `description` varchar(255) NOT NULL DEFAULT ''") or die "Could not update $dbtable: $DBI::errstr";
-        }
-        if ( colExists( "triggers", "to" ) eq 1 ) {
-            $dbh->do("ALTER TABLE triggers CHANGE `to` `mailto` varchar (255)") or die "Could not update $dbtable: $DBI::errstr";
-        }
-        if ( colExists( "triggers", "from" ) eq 1 ) {
-            $dbh->do("ALTER TABLE triggers CHANGE `from` `mailfrom` varchar (255)") or die "Could not update $dbtable: $DBI::errstr";
-        }
-        if ( colExists( "triggers", "disabled" ) eq 0 ) {
-            $dbh->do("ALTER TABLE triggers ADD `disabled` enum('Yes','No') NOT NULL DEFAULT 'Yes'") or die "Could not update $dbtable: $DBI::errstr";
-        }
+      my $dbh = db_connect( $dbname, $lzbase, $dbroot, $dbrootpass );
+      if ( tblExists("triggers") eq 0 ) {
+          print "Adding Email Alerts...\n";
+          my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/triggers.sql`;
+      } else {
+          print "Updating Email Alerts...\n";
+          if ( colExists( "triggers", "description" ) eq 0 ) {
+              $dbh->do("ALTER TABLE triggers ADD `description` varchar(255) NOT NULL DEFAULT ''") or die "Could not update $dbtable: $DBI::errstr";
+          }
+          if ( colExists( "triggers", "to" ) eq 1 ) {
+              $dbh->do("ALTER TABLE triggers CHANGE `to` `mailto` varchar (255)") or die "Could not update $dbtable: $DBI::errstr";
+          }
+          if ( colExists( "triggers", "from" ) eq 1 ) {
+              $dbh->do("ALTER TABLE triggers CHANGE `from` `mailfrom` varchar (255)") or die "Could not update $dbtable: $DBI::errstr";
+          }
+          if ( colExists( "triggers", "disabled" ) eq 0 ) {
+              $dbh->do("ALTER TABLE triggers ADD `disabled` enum('Yes','No') NOT NULL DEFAULT 'Yes'") or die "Could not update $dbtable: $DBI::errstr";
+          }
 
-        #continue
-        $dbh->do("RENAME TABLE triggers TO triggers_orig") or die "Could not update $dbname: $DBI::errstr";
-        my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/triggers.sql`;
-        print $res;
-        $dbh->do("REPLACE INTO triggers SELECT * FROM triggers_orig; ") or die "Could not update $dbname: $DBI::errstr";
-        $dbh->do("DROP TABLE triggers_orig") or die "Could not update $dbname: $DBI::errstr";
-    }
+          #continue
+          $dbh->do("RENAME TABLE triggers TO triggers_orig") or die "Could not update $dbname: $DBI::errstr";
+          my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/triggers.sql`;
+          print $res;
+          $dbh->do("REPLACE INTO triggers SELECT * FROM triggers_orig; ") or die "Could not update $dbname: $DBI::errstr";
+          $dbh->do("DROP TABLE triggers_orig") or die "Could not update $dbname: $DBI::errstr";
+      }
 }
 
 sub do_programs {
-    my $dbh = db_connect( $dbname, $lzbase, $dbroot, $dbrootpass );
-    if ( tblExists("programs") eq 0 ) {
-        print "Adding Programs Table...\n";
-        my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/programs.sql`;
-    } else {
-        print "Updating Programs Table...\n";
-        $dbh->do("RENAME TABLE programs TO programs_orig") or die "Could not update $dbname: $DBI::errstr";
-        my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/programs.sql`;
-        print $res;
-        $dbh->do("REPLACE INTO programs SELECT * FROM programs_orig; ") or die "Could not update $dbname: $DBI::errstr";
-        $dbh->do("DROP TABLE programs_orig") or die "Could not update $dbname: $DBI::errstr";
-    }
+      my $dbh = db_connect( $dbname, $lzbase, $dbroot, $dbrootpass );
+      if ( tblExists("programs") eq 0 ) {
+          print "Adding Programs Table...\n";
+          my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/programs.sql`;
+      } else {
+          print "Updating Programs Table...\n";
+          $dbh->do("RENAME TABLE programs TO programs_orig") or die "Could not update $dbname: $DBI::errstr";
+          my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/programs.sql`;
+          print $res;
+          $dbh->do("REPLACE INTO programs SELECT * FROM programs_orig; ") or die "Could not update $dbname: $DBI::errstr";
+          $dbh->do("DROP TABLE programs_orig") or die "Could not update $dbname: $DBI::errstr";
+      }
 }
 
 sub tbl_add_severities {
-    if ( tblExists("severities") eq 0 ) {
-        print "Adding Severities Table...\n";
-        my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/severities.sql`;
-        print $res;
-    }
+      if ( tblExists("severities") eq 0 ) {
+          print "Adding Severities Table...\n";
+          my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/severities.sql`;
+          print $res;
+      }
 }
 
 sub tbl_add_facilities {
-    if ( tblExists("facilities") eq 0 ) {
-        print "Adding Facilities Table...\n";
-        my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/facilities.sql`;
-        print $res;
-    }
+      if ( tblExists("facilities") eq 0 ) {
+          print "Adding Facilities Table...\n";
+          my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/facilities.sql`;
+          print $res;
+      }
 }
 
 sub update_help {
-    print "Updating help files...\n";
-    my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/help.sql`;
-    print $res;
+      print "Updating help files...\n";
+      my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/help.sql`;
+      print $res;
 }
 
 sub upgrade_ui_layout {
-    my $dbh = db_connect( $dbname, $lzbase, $dbroot, $dbrootpass );
-    print "Updating UI Layout...\n";
-    $dbh->do("RENAME TABLE ui_layout TO ui_layout_orig") or die "Could not update $dbname: $DBI::errstr";
-    my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/ui_layout.sql`;
-    print $res;
-    $dbh->do("REPLACE INTO ui_layout SELECT * FROM ui_layout_orig; ") or die "Could not update $dbname: $DBI::errstr";
-    $dbh->do("DROP TABLE ui_layout_orig") or die "Could not update $dbname: $DBI::errstr";
+      my $dbh = db_connect( $dbname, $lzbase, $dbroot, $dbrootpass );
+      print "Updating UI Layout...\n";
+      $dbh->do("RENAME TABLE ui_layout TO ui_layout_orig") or die "Could not update $dbname: $DBI::errstr";
+      my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/ui_layout.sql`;
+      print $res;
+      $dbh->do("REPLACE INTO ui_layout SELECT * FROM ui_layout_orig; ") or die "Could not update $dbname: $DBI::errstr";
+      $dbh->do("DROP TABLE ui_layout_orig") or die "Could not update $dbname: $DBI::errstr";
 }
 
 sub copy_old_settings {
-    my $dbh = db_connect( $dbname, $lzbase, $dbroot, $dbrootpass );
-    print "Updating Settings...\n";
-    $dbh->do("RENAME TABLE settings TO settings_orig") or die "Could not update $dbname: $DBI::errstr";
-    my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/settings.sql`;
-    print $res;
-    $dbh->do("REPLACE INTO settings SELECT * FROM settings_orig; ") or die "Could not update $dbname: $DBI::errstr";
-    $dbh->do("DROP TABLE settings_orig") or die "Could not update $dbname: $DBI::errstr";
+      my $dbh = db_connect( $dbname, $lzbase, $dbroot, $dbrootpass );
+      print "Updating Settings...\n";
+      $dbh->do("RENAME TABLE settings TO settings_orig") or die "Could not update $dbname: $DBI::errstr";
+      my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/settings.sql`;
+      print $res;
+      $dbh->do("REPLACE INTO settings SELECT * FROM settings_orig; ") or die "Could not update $dbname: $DBI::errstr";
+      $dbh->do("DROP TABLE settings_orig") or die "Could not update $dbname: $DBI::errstr";
 }
 
 sub copy_old_rbac {
-    my $dbh = db_connect( $dbname, $lzbase, $dbroot, $dbrootpass );
-    print "Updating RBAC...\n";
-    $dbh->do("RENAME TABLE rbac TO rbac_orig") or die "Could not update $dbname: $DBI::errstr";
-    my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/rbac.sql`;
-    print $res;
-    $dbh->do("REPLACE INTO rbac SELECT * FROM rbac_orig; ") or die "Could not update $dbname: $DBI::errstr";
-    $dbh->do("DROP TABLE rbac_orig") or die "Could not update $dbname: $DBI::errstr";
+      my $dbh = db_connect( $dbname, $lzbase, $dbroot, $dbrootpass );
+      print "Updating RBAC...\n";
+      $dbh->do("RENAME TABLE rbac TO rbac_orig") or die "Could not update $dbname: $DBI::errstr";
+      my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/rbac.sql`;
+      print $res;
+      $dbh->do("REPLACE INTO rbac SELECT * FROM rbac_orig; ") or die "Could not update $dbname: $DBI::errstr";
+      $dbh->do("DROP TABLE rbac_orig") or die "Could not update $dbname: $DBI::errstr";
+}
+
+sub copy_old_view_limits {
+      my $dbh = db_connect( $dbname, $lzbase, $dbroot, $dbrootpass );
+      print "Updating view_limits...\n";
+      $dbh->do("RENAME TABLE view_limits TO view_limits_orig") or die "Could not update $dbname: $DBI::errstr";
+      my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/view_limits.sql`;
+      print $res;
+      $dbh->do("REPLACE INTO view_limits SELECT * FROM view_limits_orig; ") or die "Could not update $dbname: $DBI::errstr";
+      $dbh->do("DROP TABLE view_limits_orig") or die "Could not update $dbname: $DBI::errstr";
 }
 
 sub update_procs {
-    my $dbh = db_connect( $dbname, $lzbase, $dbroot, $dbrootpass );
-    print "Updating SQL Procedures...\n";
-    # Import procedures
-    system "perl -i -pe 's| logs | $dbtable |g' sql/procedures.sql" and warn "Could not modify sql/procedures.sql $!\n";
-    my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/procedures.sql`;
-    print $res;
+      my $dbh = db_connect( $dbname, $lzbase, $dbroot, $dbrootpass );
+      print "Updating SQL Procedures...\n";
 
-    $dbh->do("DROP PROCEDURE IF EXISTS updateCache") or die "Could not create updateCache Procedure: $DBI::errstr";
-    $dbh->do( "
-        CREATE PROCEDURE updateCache()
-        SQL SECURITY DEFINER
-        COMMENT 'Verifies cache totals every night' 
-        BEGIN    
-        REPLACE INTO cache (name,value,updatetime) VALUES (CONCAT('chart_mpd_',DATE_FORMAT(NOW() - INTERVAL 1 DAY, '%Y-%m-%d_%a')), (SELECT SUM(counter) FROM `$dbtable` WHERE lo BETWEEN DATE_SUB(CONCAT(CURDATE(), ' 00:00:00'), INTERVAL 1 DAY) AND DATE_SUB(CONCAT(CURDATE(), ' 23:59:59'), INTERVAL  1 DAY)),NOW());
-        END
-        " ) or die "Could not create updateCache Procedure: $DBI::errstr";
+      # Import procedures
+      system "perl -i -pe 's| logs | $dbtable |g' sql/procedures.sql" and warn "Could not modify sql/procedures.sql $!\n";
+      my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/procedures.sql`;
+      print $res;
 
-    # Insert system_log table
-    my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/system_log.sql`;
-    print $res;
+      # Insert system_log table
+      my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/system_log.sql`;
+      print $res;
 
-    # Insert rbac table
-    if ( tblExists("rbac") eq 1 ) {
-        copy_old_rbac();
-    } else {
-        my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/rbac.sql`;
-    }
+      # Insert rbac table
+      if ( tblExists("rbac") eq 1 ) {
+          copy_old_rbac();
+      } else {
+          my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/rbac.sql`;
+      }
+
+      # Insert view_limits table
+      if ( tblExists("view_limits") eq 1 ) {
+          copy_old_view_limits();
+      } else {
+          my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/view_limits.sql`;
+      }
 
 }
 
 sub insert_test {
-    print "Inserting first message as a test ...\n";
-        system("$lzbase/scripts/test/genlog -hn 1 -n 1 | $lzbase/scripts/log_processor -d 1 -v");
+      print "Inserting first message as a test ...\n";
+      system("$lzbase/scripts/test/genlog -hn 1 -n 1 | $lzbase/scripts/logzilla -d 1 -v");
 }
 
 sub colExists {
-    my $table = shift;
-    my $col   = shift;
-    my $dbh   = db_connect( $dbname, $lzbase, $dbroot, $dbrootpass );
-    my $sth   = $dbh->column_info( undef, $dbname, $table, '%' );
-    my $ref   = $sth->fetchall_arrayref;
-    my @cols  = map { $_->[3] } @$ref;
+      my $table = shift;
+      my $col   = shift;
+      my $dbh   = db_connect( $dbname, $lzbase, $dbroot, $dbrootpass );
+      my $sth   = $dbh->column_info( undef, $dbname, $table, '%' );
+      my $ref   = $sth->fetchall_arrayref;
+      my @cols  = map { $_->[3] } @$ref;
 
-    #print "DEB: looking for $col\n";
-    #print "DEB: @cols\n";
-    if ( grep( /\b$col\b/, @cols ) ) {
-        return 1;
-    } else {
-        return 0;
-    }
+      #print "DEB: looking for $col\n";
+      #print "DEB: @cols\n";
+      if ( grep( /\b$col\b/, @cols ) ) {
+          return 1;
+      } else {
+          return 0;
+      }
 }
 
 sub tblExists {
-    my $tbl = shift;
-    my $dbh = db_connect( $dbname, $lzbase, $dbroot, $dbrootpass );
-    my $sth = $dbh->table_info( undef, undef, $tbl, "TABLE" );
-    if ( $sth->fetch ) {
-        return 1;
-    } else {
-        return 0;
-    }
+      my $tbl = shift;
+      my $dbh = db_connect( $dbname, $lzbase, $dbroot, $dbrootpass );
+      my $sth = $dbh->table_info( undef, undef, $tbl, "TABLE" );
+      if ( $sth->fetch ) {
+          return 1;
+      } else {
+          return 0;
+      }
 }
 
 sub add_ioncube {
-    print("\n\033[1m\n\n========================================\033[0m\n");
-    print("\n\033[1m\tIONCube License Manager\n\033[0m");
-    print("\n\033[1m========================================\n\n\033[0m\n\n");
-    print "Extracting IONCube files to /usr/local/ioncube\n";
-    my $arch = `uname -m`;
-    if ( $arch =~ /64/ ) {
-        system("tar xzvf ioncube/ioncube_loaders_lin_x86-64.tar.gz -C /usr/local");
-    } else {
-        system("tar xzvf ioncube/ioncube_loaders_lin_x86.tar.gz -C /usr/local");
-    }
-    my $phpver = `/usr/bin/php -v | head -1`;
-    my $ver = $1 if ( $phpver =~ /PHP (\d\.\d)/ );
-    if ( $ver =~ /[4-5]\.[0-4].*/ ) {
-        my $ok = &getYN( "\nInstall will try to add the license loader to php.ini for you is this ok?", "y" );
-        if ( $ok =~ /[Yy]/ ) {
-            my $file = "/etc/php5/apache2/php.ini";
-            if ( !-e "$file" ) {
-                $file = &prompt( "Please enter the location of your php.ini file", "$file" );
-            }
-            if ( !-e "$file" ) {
-                print "unable to locate $file\n";
-            } else {
-                open my $config, '+<', "$file" or warn "FAILED: $!\n";
-                my @all = <$config>;
-                if ( !grep( /lzconfig/, @all ) ) {
-                    seek $config, 0, 0;
-                    splice @all, 1, 0, ";# <lzconfig> (please do not remove this line)\nzend_extension = /usr/local/ioncube/ioncube_loader_lin_$ver.so\n;# </lzconfig> (please do not remove this line)\n";
-                    print $config @all;
-                }
-                close $config;
+      print("\n\033[1m\n\n========================================\033[0m\n");
+      print("\n\033[1m\tIONCube License Manager\n\033[0m");
+      print("\n\033[1m========================================\n\n\033[0m\n\n");
+      print "Extracting IONCube files to /usr/local/ioncube\n";
+      my $arch = `uname -m`;
+      if ( $arch =~ /64/ ) {
+          system("tar xzvf ioncube/ioncube_loaders_lin_x86-64.tar.gz -C /usr/local");
+      } else {
+          system("tar xzvf ioncube/ioncube_loaders_lin_x86.tar.gz -C /usr/local");
+      }
+      my $phpver = `/usr/bin/php -v | head -1`;
+      my $ver = $1 if ( $phpver =~ /PHP (\d\.\d)/ );
+      if ( $ver !~ /[45]\.[04]/ ) {
+          my $ok = &getYN( "\nInstall will try to add the license loader to php.ini for you is this ok?", "y" );
+          if ( $ok =~ /[Yy]/ ) {
+              my $file = "/etc/php5/apache2/php.ini";
+              if ( !-e "$file" ) {
+                  $file = &prompt( "Please enter the location of your php.ini file", "$file" );
+              }
+              if ( !-e "$file" ) {
+                  print "unable to locate $file\n";
+              } else {
+                  open my $config, '+<', "$file" or warn "FAILED: $!\n";
+                  my @all = <$config>;
+                  if ( !grep( /lzconfig/, @all ) ) {
+                      seek $config, 0, 0;
+                      splice @all, 1, 0, ";# <lzconfig> (please do not remove this line)\nzend_extension = /usr/local/ioncube/ioncube_loader_lin_$ver.so\n;# </lzconfig> (please do not remove this line)\n";
+                      print $config @all;
+                  }
+                  close $config;
 
-                if ( -e "/etc/init.d/apache2" ) {
-                    my $ok = &getYN( "Is it ok to restart Apache to apply changes?", "y" );
-                    if ( $ok =~ /[Yy]/ ) {
-                        my $r = `/etc/init.d/apache2 restart`;
-                    } else {
-                        print("\033[1m\n\tPlease be sure to restart your Apache server..\n\033[0m");
-                    }
-                } else {
-                    print("\033[1m\n\tPlease be sure to restart your Apache server..\n\033[0m");
-                }
-            }
-        }
-    } else {
-        print "\nWARNING: Your PHP version ($ver) does not appear to be a candidate for auto-populating the php.ini file.\nPlease read /usr/local/ioncube/README.txt for more information.\n";
-    }
+                  if ( -e "/etc/init.d/apache2" ) {
+                      my $ok = &getYN( "Is it ok to restart Apache to apply changes?", "y" );
+                      if ( $ok =~ /[Yy]/ ) {
+                          my $r = `/etc/init.d/apache2 restart`;
+                      } else {
+                          print("\033[1m\n\tPlease be sure to restart your Apache server..\n\033[0m");
+                      }
+                  } else {
+                      print("\033[1m\n\tPlease be sure to restart your Apache server..\n\033[0m");
+                  }
+              }
+          }
+      } else {
+          print "\nWARNING: Your PHP version ($ver) does not appear to be a candidate for auto-populating the php.ini file.\nPlease read /usr/local/ioncube/README.txt for more information.\n";
+      }
 }
 
 sub install_license {
 
-    print("\n\033[1m\n\n========================================\033[0m\n");
-    print("\n\033[1m\tLicense\n\033[0m");
-    print("\n\033[1m========================================\n\n\033[0m\n\n");
-    print "If you have already ordered your license, install will attempt to connect to the licensing server and download it.\n";
-    print "It is highly recommended that you use this method in order to avoid any possible copy/paste issues with your license.\n";
-    print "If you skip this step, or if something goes wrong, you will still have an opportunity to enter your license in the web interface.\n\n";
-    print "You can also run \"$0 install_license\" at any time.\n";
-    my $ok = &getYN( "Would you like to attempt automatic license install? (y/n)", "y" );
-    if ( $ok =~ /[Yy]/ ) {
-        my @lines = `ifconfig -a`;
-        my ( $ip, $mac );
-        for (@lines) {
-            if (/\s*HWaddr (\S+)/) {
-                $mac = $1;
-            }
-            if (/\s*inet addr:([\d.]+)/) {
-                $ip = $1;
-                last;    # we only want the first interface
-            }
-        }
-        $ip  =~ s/[^a-zA-Z0-9]//g;
-        $mac =~ s/[^a-zA-Z0-9]//g;
-        my $hash = md5_hex("$ip$mac");
+      print("\n\033[1m\n\n========================================\033[0m\n");
+      print("\n\033[1m\tLicense\n\033[0m");
+      print("\n\033[1m========================================\n\n\033[0m\n\n");
+      print "If you have already ordered your license, install will attempt to connect to the licensing server and download it.\n";
+      print "It is highly recommended that you use this method in order to avoid any possible copy/paste issues with your license.\n";
+      print "If you skip this step, or if something goes wrong, you will still have an opportunity to enter your license in the web interface.\n\n";
+      print "You can also run \"$0 install_license\" at any time.\n";
+      my $ok = &getYN( "Would you like to attempt automatic license install? (y/n)", "y" );
+      if ( $ok =~ /[Yy]/ ) {
+          my @lines = `ifconfig -a`;
+          my ( $ip, $mac );
+          for (@lines) {
+              if (/\s*HWaddr (\S+)/) {
+                  $mac = $1;
+              }
+              if (/\s*inet addr:([\d.]+)/) {
+                  $ip = $1;
+                  last;    # we only want the first interface
+              }
+          }
+          $ip  =~ s/[^a-zA-Z0-9]//g;
+          $mac =~ s/[^a-zA-Z0-9]//g;
+          my $hash = md5_hex("$ip$mac");
 
-        print "requesting license file for IP $ip and MAC $mac through hash $hash\n"; #for debugging purposes only
+          print "requesting license file for IP $ip and MAC $mac through hash $hash\n"; #for debugging purposes only
 
-        my $url  = "http://licserv.logzilla.pro/files/$hash.txt";
-        my $file = "$lzbase/html/license.txt";
+          my $url  = "http://licserv.logzilla.pro/files/$hash.txt";
+          my $file = "$lzbase/html/license.txt";
 
-        if ( is_success( getstore( $url, $file ) ) ) {
-            print "License Installed Successfully\n";
-        } else {
-            print "\n\033[1m[ERROR] Failed to download: $url\n\033[0m";
-            print "Unable to find your license on the license server\n";
-            print "You can try using the web interface or contact LogZilla support (support\@logzilla.pro) for assistance\n";
-        }
-    }
+          if ( is_success( getstore( $url, $file ) ) ) {
+              print "License Installed Successfully\n";
+          } else {
+              print "\n\033[1m[ERROR] Failed to download: $url\n\033[0m";
+              print "Unable to find your license on the license server\n";
+              print "You can try using the web interface or contact LogZilla support (support\@logzilla.pro) for assistance\n";
+          }
+      }
 }
 
 sub rm_config_block {
-    my $d = strftime( '%m%d%H%M', localtime );
-    my $file = shift;
-    if ( -e $file ) {
-        system "cp $file $file.lzbackup.$d";
-        my @data;
-        open my $config, '<', "$file" or warn "FAILED: $!\n";
-        while (<$config>) {
-            next if ( /# <lzconfig>/ .. /# <\/lzconfig>/ );
-            next if ( /# http:\/\/nms.gdd.net\/index.php\/Install_Guide_for_LogZilla_v3.2/ .. /# END LogZilla/ );
-            next if (/logzilla/);
-            next if (/ioncube/);
-            push( @data, $_ );
-        }
-        close $config;
-        open FILE, ">$file" or die "Unable to open $file: $!";
-        print FILE @data;
-        close FILE;
-    } else {
-        print "$file does not exist\n";
-    }
+      my $d = strftime( '%m%d%H%M', localtime );
+      my $file = shift;
+      if ( -e $file ) {
+          system "cp $file $file.lzbackup.$d";
+          my @data;
+          open my $config, '<', "$file" or warn "FAILED: $!\n";
+          while (<$config>) {
+              next if ( /# <lzconfig>/ .. /# <\/lzconfig>/ );
+              next if ( /# http:\/\/nms.gdd.net\/index.php\/Install_Guide_for_LogZilla_v3.2/ .. /# END LogZilla/ );
+              next if (/logzilla/);
+              next if (/ioncube/);
+              push( @data, $_ );
+          }
+          close $config;
+          open FILE, ">$file" or die "Unable to open $file: $!";
+          print FILE @data;
+          close FILE;
+      } else {
+          print "$file does not exist\n";
+      }
 }
 
 sub run_tests {
-    print("\n\033[1m\n\n========================================\033[0m\n");
-    print("\n\033[1m\tPost-Install Self Tests\n\033[0m");
-    print("\n\033[1m========================================\n\n\033[0m\n\n");
-    print("\n\033[1m\n\n/*---------------------*/\033[0m\n");
-    print("\033[1m     Usability Tests\n\033[0m");
-    print("\033[1m/*---------------------*/\n\n\033[0m\n\n");
-    opendir( DIR, "$lzbase/t/log_processor" );
-    foreach my $file ( sort { $a <=> $b } readdir(DIR) )
-    {
+      print("\n\033[1m\n\n========================================\033[0m\n");
+      print("\n\033[1m\tPost-Install Self Tests\n\033[0m");
+      print("\n\033[1m========================================\n\n\033[0m\n\n");
+      print("\n\033[1m\n\n/*---------------------*/\033[0m\n");
+      print("\033[1m     Usability Tests\n\033[0m");
+      print("\033[1m/*---------------------*/\n\n\033[0m\n\n");
+      opendir( DIR, "$lzbase/t/log_processor" );
+      foreach my $file ( sort { $a <=> $b } readdir(DIR) )
+      {
 
-        if ( $file =~ /\d+/ ) {
-            print "Running test: $file\n";
-            my $cmd = `$lzbase/t/log_processor/$file`;
-            print "$cmd\n";
-        }
-    }
-    opendir( DIR, "$lzbase/t/sql" );
-    foreach my $file ( sort { $a <=> $b } readdir(DIR) )
-    {
+          if ( $file =~ /\d+/ ) {
+              print "Running test: $file\n";
+              my $cmd = `$lzbase/t/log_processor/$file`;
+              print "$cmd\n";
+          }
+      }
+      opendir( DIR, "$lzbase/t/sql" );
+      foreach my $file ( sort { $a <=> $b } readdir(DIR) )
+      {
 
-        if ( $file =~ /\d+/ ) {
-            print "Running test: $file\n";
-            my $cmd = `$lzbase/t/sql/$file`;
-            print "$cmd\n";
-        }
-    }
-    closedir(DIR);
-    closedir(DIR);
-    print("\n\033[1m\n\n/*---------------------*/\033[0m\n");
-    print("\033[1m    Performance Tests\n\033[0m");
-    print("\033[1m/*---------------------*/\n\n\033[0m\n\n");
-    opendir( DIR, "$lzbase/t/log_processor/perf" );
-    foreach my $file ( sort { $a <=> $b } readdir(DIR) )
-    {
+          if ( $file =~ /\d+/ ) {
+              print "Running test: $file\n";
+              my $cmd = `$lzbase/t/sql/$file`;
+              print "$cmd\n";
+          }
+      }
+      closedir(DIR);
+      closedir(DIR);
+      print("\n\033[1m\n\n/*---------------------*/\033[0m\n");
+      print("\033[1m    Performance Tests\n\033[0m");
+      print("\033[1m/*---------------------*/\n\n\033[0m\n\n");
+      opendir( DIR, "$lzbase/t/log_processor/perf" );
+      foreach my $file ( sort { $a <=> $b } readdir(DIR) )
+      {
 
-        if ( $file =~ /\d+/ ) {
-            print "Running test: $file\n";
-            my $cmd = `$lzbase/t/log_processor/perf/$file`;
-            print "$cmd\n";
-        }
-    }
-    closedir(DIR);
+          if ( $file =~ /\d+/ ) {
+              print "Running test: $file\n";
+              my $cmd = `$lzbase/t/log_processor/perf/$file`;
+              print "$cmd\n";
+          }
+      }
+      closedir(DIR);
 }
 
 sub EULA {
-    print <<EOF;
+      print <<EOF;
 
 SOFTWARE LICENSE & SUPPORT SUBSCRIPTION AGREEMENT STANDARD TERMS AND CONDITIONS
 
@@ -2419,10 +2440,10 @@ After Customer provides LogZilla with notice of an Error, LogZilla will make com
 7.  Termination of Support Services. LogZilla reserves the right to discontinue the Support Services should LogZilla, in its sole discretion, determine that continued support for any Software is no longer economically practicable. LogZilla will give Customer at least three (3) months prior written notice of any such discontinuance of Support Services and will refund any unaccrued Support Services fees Customer may have prepaid with respect to the affected Software.  LogZilla shall have no obligation to support or maintain any version of the Software except (i) the then current version of the Software, and (ii) the immediately preceding version of the Software for a period of six (6) months after it is first superseded. LogZilla reserves the right to suspend performance of the Support Services if Customer fails to pay any amount that is payable to LogZilla under the Agreement within thirty (30) days after such amount becomes due.
 8.  Customer Feedback.  Customer is not required to, but is encouraged to, provide comprehensive data to LogZilla in connection with any reported Error, including any attempts at bug fixes that Customer may have made, so that the Error may be fixed as soon as practicable and that code-based solutions may be incorporated into future iterations of the Software.\n
 EOF
-    print "Do you accept the LogZilla License Terms? (yes/no)";
-        chomp( my $input = <STDIN> );
-    if ( $input !~ /[Yy]/ ) {
-        print "Please try again when you are ready to accept.\n";
-        exit 1;
-    }
+      print "Do you accept the LogZilla License Terms? (yes/no)";
+      chomp( my $input = <STDIN> );
+      if ( $input !~ /[Yy]/ ) {
+          print "Please try again when you are ready to accept.\n";
+          exit 1;
+      }
 }

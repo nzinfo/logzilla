@@ -1,1 +1,1 @@
-log_processor
+./logzilla

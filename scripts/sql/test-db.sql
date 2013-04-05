@@ -167,7 +167,7 @@ CREATE TABLE `logs` (
   `fo` datetime NOT NULL,
   `lo` datetime NOT NULL,
   `notes` varchar(255) NOT NULL DEFAULT '',
-  PRIMARY KEY (`id`,`lo`),
+  PRIMARY KEY (`id`,`fo`),
 --  KEY `facility` (`facility`),
 --  KEY `severity` (`severity`),
 --  KEY `host` (`host`),
@@ -175,8 +175,8 @@ CREATE TABLE `logs` (
 --  KEY `eid` (`eid`),
 --  KEY `program` (`program`),
 --  KEY `suppress` (`suppress`),
---  KEY `lo` (`lo`),
-  KEY `fo` (`fo`)
+  KEY `lo` (`lo`),
+  KEY `fo` (`fo`) USING BTREE
 --  KEY `id` (`id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
@@ -552,7 +552,7 @@ INSERT INTO `settings` VALUES (1,'ADMIN_EMAIL','pp@idea7.pl','varchar','','None'
 (3,'TBL_AUTH','users','varchar','','users','This variable sets the auth table name for local user information.','yes'),
 (4,'AUTHTYPE','local','enum','local,ldap,msad,none','local','This variable is used to set the authentication method to one of the following:<br><ul><li>Local Authentication</li><li>LDAP Authentication</li><li>Microsoft AD Domain Authentication</li><li>None (No Authentication)</li></ul>','no'),
 (5,'DEBUG','0','enum','0,1,2,3,4,5','0','This variable enables and disables site-wide debugging','no'),
-(6,'DEDUP','0','enum','0,1','1','This variable is used to Enable or Disable Message Deduplication in the log_processor script','no'),
+(6,'DEDUP','0','enum','0,1','1','This variable is used to Enable or Disable Message Deduplication in the logzilla script','no'),
 (7,'DEDUP_DIST','5','int','','5','This variable is used to set distance for message deduplication.<br>The higher the number, the more likely compared messages will match.','no'),
 (8,'DEDUP_WINDOW','300','int','','300','If Message deduplication is enabled, this setting is used to indicate the amount of time (in seconds) to compare messages from the same host.<br>When an event arrives, messages from the same host within this time frame are compared.','no'),
 (9,'DEMO','0','enum','0,1','0','This variable is used to place the server into Demo mode. This setting is only used by us on the demo website and should not normally need to be changed.','yes'),

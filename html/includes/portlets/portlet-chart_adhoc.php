@@ -108,6 +108,10 @@ $fetch = array();
                     case "mne":
                         $sql = " SELECT name FROM mne WHERE crc=".$t[$groupby];
                         break;
+                        // cdukes: [[ticket:442]] - Added 'eid' for proper chart labels and data
+                    case "eid":
+                        $sql = " SELECT eid FROM snare_eid WHERE eid=".$t[$groupby];
+                        break;
                 }
 
                 $result = perform_query($sql,$dbLink);

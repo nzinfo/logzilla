@@ -1183,17 +1183,24 @@ function search($json_o, $spx_max,$index="idx_logs idx_delta_logs",$spx_ip,$spx_
                 $hosts = rtrim($hosts,",");
                 $shosts = $scl->real_escape_string($hosts);
                 $search_string = $msg_mask . $notes_mask;
-		if ($search_string) $query = " AND MATCH ('$search_string')";
+                // if lo_start is greater than today - idx_dim
+                $idx_dim_ts = strtotime(date('Y-m-d',(strtotime ( '-'.$_SESSION[SPX_IDX_DIM].' day' , strtotime (date('Y-m-d'))))));
+                if (strtotime($lo_start) >= $idx_dim_ts) {
+                    $query = " AND MATCH ('$search_string')";
+                } else {
+                    if ($search_string) $query = " AND MATCH ('@dummy dummy $search_string')";
+                }
 
                 // Test for empty search and remove whitespaces
                 $search_string = preg_replace('/^\s+$/', '',$search_string);
                 $search_string = preg_replace('/\s+$/', '',$search_string);
                 // get the columns we are sorting 
-                // speedup: when use use today only idx_last_24h is used
-                if ($lo_start<(date('Y-m-d')." 00:00:00")) {
-                    $sphinxstatement = "Select id, facility, severity, counter, lo from distributed where "; }
+                // speedup: when use use today only idx_inmem is used
+                $idx_dim_ts = strtotime(date('Y-m-d',(strtotime ( '-'.$_SESSION[SPX_IDX_DIM].' day' , strtotime (date('Y-m-d'))))));
+                if (strtotime($lo_start) >= $idx_dim_ts) {
+                    $sphinxstatement = "Select id, facility, severity, counter, lo from idx_inmem where "; }
                 else {
-                    $sphinxstatement = "Select id, facility, severity, counter, lo from idx_last_24h where "; }
+                    $sphinxstatement = "Select id, facility, severity, counter, lo from idx_ondisk where "; }
                 if (sizeof($sphinxfilters)>0) {
                     $sphinxstatement.=implode($sphinxfilters,' AND '); }
                 $sphinxstatement .= " $query and host_crc in ($hosts) $sphinxgroupby $sphinxlimit $sphinxoptions";
@@ -1227,18 +1234,24 @@ function search($json_o, $spx_max,$index="idx_logs idx_delta_logs",$spx_ip,$spx_
     if ($hosts != "") {
         $hosts = rtrim($hosts,",");
         $hosts = $scl->real_escape_string($hosts);
-        $search_string = $msg_mask . $notes_mask;
-	if ($search_string) $query = " AND MATCH ('$search_string')";
+                $search_string = $msg_mask . $notes_mask;
+                $idx_dim_ts = strtotime(date('Y-m-d',(strtotime ( '-'.$_SESSION[SPX_IDX_DIM].' day' , strtotime (date('Y-m-d'))))));
+                if (strtotime($lo_start) >= $idx_dim_ts) {
+                    $query = " AND MATCH ('$search_string')";
+                } else {
+                    $query = " AND MATCH ('@dummy dummy $search_string')";
+                }
 
         // Test for empty search and remove whitespaces
         $search_string = preg_replace('/^\s+$/', '',$search_string);
         $search_string = preg_replace('/\s+$/', '',$search_string);
         // get the columns we are sorting 
-        // speedup: when use use today only idx_last_24h is used
-        if ($lo_start<(date('Y-m-d')." 00:00:00")) {
-            $sphinxstatement = "Select id, facility, severity, counter, lo from distributed where "; }
+        // speedup: when use use today only idx_inmem is used
+        $idx_dim_ts = strtotime(date('Y-m-d',(strtotime ( '-'.$_SESSION[SPX_IDX_DIM].' day' , strtotime (date('Y-m-d'))))));
+        if (strtotime($lo_start) >= $idx_dim_ts) {
+            $sphinxstatement = "Select id, facility, severity, counter, lo from idx_inmem where "; }
         else {
-            $sphinxstatement = "Select id, facility, severity, counter, lo from idx_last_24h where "; }
+            $sphinxstatement = "Select id, facility, severity, counter, lo from idx_ondisk where "; }
         if (sizeof($sphinxfilters)>0) {
             $sphinxstatement.=implode($sphinxfilters,' AND '); }
         $sphinxstatement .= " $query and host_crc in ($hosts) $sphinxgroupby $sphinxlimit $sphinxoptions";
@@ -1294,7 +1307,7 @@ function search($json_o, $spx_max,$index="idx_logs idx_delta_logs",$spx_ip,$spx_
 function spx_query($sql) {
     /*
        Usage example:
-       $sql = "select *, count(*) x from distributed group by msg_crc order by x desc limit 10";
+       $sql = "select *, count(*) x from idx_ondisk group by msg_crc order by x desc limit 10";
        $result = spx_query($sql);
        $top_ten_msgs = json_decode($result);
      */
@@ -1624,17 +1637,23 @@ function search_graph($json_o, $spx_max,$index="idx_logs idx_delta_logs",$spx_ip
                 $hosts = rtrim($hosts,",");
                 $shosts = $scl->real_escape_string($hosts);
                 $search_string = $msg_mask . $notes_mask;
-		if ($search_string) $query = " AND MATCH ('$search_string')";
+                $idx_dim_ts = strtotime(date('Y-m-d',(strtotime ( '-'.$_SESSION[SPX_IDX_DIM].' day' , strtotime (date('Y-m-d'))))));
+                if (strtotime($lo_start) >= $idx_dim_ts) {
+                    $query = " AND MATCH ('$search_string')";
+                } else {
+                    if ($search_string) $query = " AND MATCH ('@dummy dummy $search_string')";
+                }
 
                 // Test for empty search and remove whitespaces
                 $search_string = preg_replace('/^\s+$/', '',$search_string);
                 $search_string = preg_replace('/\s+$/', '',$search_string);
                 // get the columns we are sorting 
-                // speedup: when use use today only idx_last_24h is used
-                if ($lo_start<(date('Y-m-d')." 00:00:00")) {
-                    $sphinxstatement = "Select ".$json_a['groupby'].", sum(counter) as scount from distributed where "; }
+                // speedup: when use use today only idx_inmem is used
+                $idx_dim_ts = strtotime(date('Y-m-d',(strtotime ( '-'.$_SESSION[SPX_IDX_DIM].' day' , strtotime (date('Y-m-d'))))));
+                if (strtotime($lo_start) >= $idx_dim_ts) {
+                    $sphinxstatement = "Select ". $json_a['groupby'].", sum(counter) as scount from idx_inmem where "; }
                 else {
-                    $sphinxstatement = "Select ". $json_a['groupby'].", sum(counter) as scount from idx_last_24h where "; }
+                    $sphinxstatement = "Select ".$json_a['groupby'].", sum(counter) as scount from idx_ondisk where "; }
                 if (sizeof($sphinxfilters)>0) {
                     $sphinxstatement.=implode($sphinxfilters,' AND '); }
                 $sphinxstatement .= " $query and host_crc in ($hosts) $sphinxgroupby $sphinxlimit $sphinxoptions";
@@ -1657,18 +1676,24 @@ function search_graph($json_o, $spx_max,$index="idx_logs idx_delta_logs",$spx_ip
     if ($hosts != "") {
         $hosts = rtrim($hosts,",");
         $hosts = $scl->real_escape_string($hosts);
-        $search_string = $msg_mask . $notes_mask;
-	if ($search_string) $query = " AND MATCH ('$search_string')";
+                $search_string = $msg_mask . $notes_mask;
+                $idx_dim_ts = strtotime(date('Y-m-d',(strtotime ( '-'.$_SESSION[SPX_IDX_DIM].' day' , strtotime (date('Y-m-d'))))));
+                if (strtotime($lo_start) >= $idx_dim_ts) {
+                    $query = " AND MATCH ('$search_string')";
+                } else {
+                    if ($search_string) $query = " AND MATCH ('@dummy dummy $search_string')";
+                }
 
         // Test for empty search and remove whitespaces
         $search_string = preg_replace('/^\s+$/', '',$search_string);
         $search_string = preg_replace('/\s+$/', '',$search_string);
         // get the columns we are sorting 
-        // speedup: when use use today only idx_last_24h is used
-        if ($lo_start<(date('Y-m-d')." 00:00:00")) {
-            $sphinxstatement = "Select ".$json_a['groupby'].", sum(counter) as scount from distributed where "; }
+        // speedup: when use use today only idx_inmem is used
+        $idx_dim_ts = strtotime(date('Y-m-d',(strtotime ( '-'.$_SESSION[SPX_IDX_DIM].' day' , strtotime (date('Y-m-d'))))));
+        if (strtotime($lo_start) >= $idx_dim_ts) {
+            $sphinxstatement = "Select ". $json_a['groupby'].", sum(counter) as scount from idx_inmem where "; }
         else {
-            $sphinxstatement = "Select ".$json_a['groupby'].", sum(counter) as scount from idx_last_24h where "; }
+            $sphinxstatement = "Select ".$json_a['groupby'].", sum(counter) as scount from idx_ondisk where "; }
         if (sizeof($sphinxfilters)>0) {
             $sphinxstatement.=implode($sphinxfilters,' AND '); }
         $sphinxstatement .= " $query and host_crc in ($hosts) $sphinxgroupby $sphinxlimit $sphinxoptions";
@@ -1694,7 +1719,11 @@ function search_graph($json_o, $spx_max,$index="idx_logs idx_delta_logs",$spx_ip
         $found_ids[$i]['scount'] = $values[$i];
     }
 
+    if ($found_ids) {
     return json_encode($found_ids);
+    } else {
+        return "There are no results that match your search criteria.<br>Please refine your search.";
+    }
 
 }
 

@@ -265,7 +265,7 @@ var tail = '<?php echo $tail?>';
 function fireIt() {
     <?php
 if ($tail > 0) {
-	$tail_where = preg_replace('/host_crc/','crc32(host)',$tail_where);
+        $tail_where = preg_replace('/host_crc/','crc32(host)',$tail_where); 
         $sql = "CREATE OR REPLACE VIEW ".$_SESSION['viewname']." AS SELECT ".$select_columns." FROM ".$_SESSION['TBL_MAIN']." ".$tail_where." ORDER BY lo DESC LIMIT ".$limit;
     $result = perform_query($sql, $dbLink, $_SERVER['PHP_SELF']);
     if(!$result){

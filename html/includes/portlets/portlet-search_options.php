@@ -21,27 +21,35 @@ if ((has_portlet_access($_SESSION['username'], 'Search Options') == TRUE) || ($_
     // -------------------------
     if ($_SESSION['SHOWCOUNTS'] == "1") {
         if ($_SESSION['DEDUP'] == "1") {
-            // $sql = "SELECT (SELECT value FROM cache WHERE name='msg_sum') as count_all, COUNT(*) as count FROM ".$_SESSION["TBL_MAIN"]."";
             $sql = "SELECT (SELECT value FROM cache WHERE name='msg_sum') as count_all, (SELECT TABLE_ROWS FROM information_schema.tables WHERE table_schema = DATABASE() AND TABLE_NAME='".$_SESSION["TBL_MAIN"]."') as count";
             $result = perform_query($sql, $dbLink, $_REQUEST['pageId']);
             $line = fetch_array($result);
-            $messagecount = humanReadable($line['count_all']);
             $sumcnt = $line['count_all'];
             $count = $line['count'];
+            if ($count > 0) {
+                $r = ( $sumcnt - $count );
+                $percent = ($r/$sumcnt) * 100;
+            }
+            /* To be enabled after Sphinx counts are correct
+            // Get total message count directly from cache table
+            $sql = "SELECT value FROM cache WHERE name='msg_sum'";
+            $result = perform_query($sql, $dbLink, $_REQUEST['pageId']);
+            $line = fetch_array($result);
+            $msg_sum = $line['value'];
+            // Get db row count from Sphinx because count(*) is too slow on large DB's
+            $spx_sql = 'select * from distributed limit 1';
+            $array = spx_query($spx_sql);
+            $count_star = $array[2][1];
+             echo "msg_sum = ".humanReadable($msg_sum) . "\n";
+             echo "count_star = ".humanReadable($count_star);
             // simple test for new (or empty) databases so we don't divide by zero on new installs
-            if (empty($sumcnt)) {
-                $sumcnt = 1;
+            if ($count_star > 0) {
+                $r = ( $msg_sum - $count_star );
+                $percent = ($r/$msg_sum) * 100;
             }
-            if (empty($count)) {
-                $count = 1;
-            }
-            $mph = ($sumcnt/$count);
-            // subtract 100 from the total below to get the opposite effect (savings = 90% rather than 10%)
-            // Calculation is to get the percentage of messages to messages_per_host (convert a ratio to percentage)
-            $dedup_tot = (100 - (round(100/($mph * 100),4)) * 100);
-            // $dedup_pct = round($dedup_tot,4)."%"; // Changed to below since we are rounding above already
-            if ($dedup_tot < 0) $dedup_tot = 0; // added so that negative numbers would show as zero when not enough data is available.
-            $dedup_pct = $dedup_tot."%";
+            */
+            // safety net
+            if ($percent < 0) $percent = 0;
         }
     }
     ?>
@@ -58,7 +66,7 @@ if ((has_portlet_access($_SESSION['username'], 'Search Options') == TRUE) || ($_
         <tbody>
             <?php  if ( $_SESSION["DEDUP"] == "1" ) { ?>
             <tr>
-                <td>Duplicates <?php echo $dedup_pct?></td>
+                <td>Duplicates <?php echo sprintf ("%.2f%%", $percent)?></td>
                 <td>
                     <select name="dupop" id="dupop" multiple size=1>
                         <option value="gt">></option>
@@ -123,12 +131,12 @@ if ((has_portlet_access($_SESSION['username'], 'Search Options') == TRUE) || ($_
                     <select name="groupby" id="groupby" multiple size=1>
                         <option selected value="">No Grouping</option>
                         <option  value="host_crc">Host</option>
-                        <option value="msg_crc">Message</option>
+                        <!-- #434 - removed for scalability <option value="msg_crc">Message</option>-->
                         <option value="program">Program</option>
                         <option value="facility">Facility</option>
                         <option value="severity">Severity</option>
                         <option value="mne">Mnemonic</option>
-                        <option value="notes_crc">Notes</option>
+                        <!-- No longer used <option value="notes_crc">Notes</option>-->
                         <?php if($_SESSION['SNARE'] == "1") {?>
                         <option value="eid">Windows EventId</option>
                         <?php } ?>
