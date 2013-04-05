@@ -55,7 +55,7 @@ $grid->setGridOptions(array(
     "loadComplete"=>"js:"
     ));
 
-$grid->setColProperty('Seen', array('width'=>'10'));
+$grid->setColProperty('Seen', array('width'=>'20','formatter'=>'js:grid_formatSeen'));
 $grid->setColProperty('LastSeen', array('width'=>'35','formatter'=>'js:easyDate'));
 $grid->setColProperty('Rbac_Key', array('hidden'=>true));
 
@@ -96,12 +96,97 @@ $("#portlet-header_Hosts .ui-icon-search").click(function() {
                 },
             open: function(event, ui) { 
 		
+                       // CDUKES: BEGIN #370 - Checkboxes in extended search doesn't check that in portlet
+                       $('#tblHosts > tbody  > tr').each(function() {
+                               var id = $(this).find('input:checkbox:first').attr('id');
+                                // console.log("Testing the id: " + id + " in the grid");
+                               // Note on below: you can just do "is('checked')" here!
+                               // because the id may have periods (hostnames) and jquery will barf
+                               // so instead of using the id, I just grabbed the status of the first checkbox
+                               if ($(this).find('input:checkbox:first').attr('checked') == "checked") {
+                               // check the host in the grid
+                               $('input[id="jqg_hostsgrid_'+ id +'"]').attr('checked', true);
+
+                               // place at top and highlight
+                               // Commented out because the jqgrid insists on resizing the columns and they look crappy!
+                               // var row = $('input[id="jqg_hostsgrid_'+ id +'"]').parents("tr:first");
+                               // if (row.length) { // if the row is already in the table, just move it up to the top
+                               // var firstRow = row.parent().find("tr:first").not(row);
+                               // row.insertBefore(firstRow).addClass("TopRow");
+                               // $(row).effect("pulsate", { times:1 }, 1000);
+                               // }
+                               // end place at top
+
+                               } else {
+                               // UNcheck the host on the main page
+                               $('input[id="jqg_hostsgrid_'+ id +'"]').attr('checked', false);
+                               }
+                       });             
+                       // END #370 - Checkboxes in extended search doesn't check that in portlet
+
 	//start code(by abani)
 		setRememberedCheckboxesForDialog('hosts','host_dialog',14,'portlet-content_Hosts'); 
 	//end code (by abani)
 		$('#host_dialog').css('overflow','hidden');$('.ui-widget-overlay').css('width','99%') 
 		},
             close: function(event, ui) {
+                       // CDUKES: BEGIN #370 - Checkboxes in extended search doesn't check that in portlet
+                       $('#hostsgrid > tbody  > tr').each(function(i) {
+                               if (i > 0) { // skip first row (the check all box)
+                               var id=$(this).attr('id'); // the id here will be the hostname
+                               // console.log("Testing id: " + id + " for checkbox");
+                               var test = $(this).find('input:checkbox:first').attr('checked');
+                               // Note on below: you can just do "is('checked')" here!
+                               // because the id may have periods (hostnames) and jquery will barf
+                               // so instead of using the id, I just grabbed the status of the first checkbox
+                               if ($(this).find('input:checkbox:first').attr('checked') == "checked") {
+                               // console.log("Row id is checked:" + id);
+                               // check the host on the main page
+                               $('input[id="'+ id +'"]').attr('checked', true);
+
+                               // place at top and highlight
+                               var row = $('input[id="'+ id +'"]').parents("tr:first");
+                               if (row.length) { // if the row is already in the table, just move it up to the top
+                               var firstRow = row.parent().find("tr:first").not(row);
+                               row.insertBefore(firstRow).addClass("TopRow");
+                               // console.log("Row already exists for id " + id);
+                               } else { // Add a new row in the main table since it's not there yet
+                                // console.log("Adding new row for id: " + id);
+                               var addrow = $('input[id="jqg_hostsgrid_'+ id +'"]').parents("tr:first");
+                               $('#portlet-content_Hosts > table > tbody:first').prepend(addrow);
+                               // make it purty
+                               $(addrow).effect("pulsate", { times:1 }, 1000);
+                               addrow.removeClass("ui-widget-content jqgrow ui-row-ltr ui-priority-secondary ui-state-highlight");
+                               }
+                               // end place at top
+
+                               } else {
+                               // UNcheck the host on the main page
+                               $('input[id="'+ id +'"]').attr('checked', false);
+
+                               // remove from top placement
+                               var row = $('input[id="'+ id +'"]').parents("tr:first");
+                                 if (row.hasClass('TopRow')){
+                                    var nonTopRows = row.siblings().not('.TopRow');
+                                    // console.log(nonTopRows);
+                                    var found = false;
+                                    nonTopRows.each(function(){
+                                        // console.log('rowPos: ' + row.data('pos'));
+                                        // console.log('current compare: ' + $(this).data('pos'));
+                                        if (row.data('pos')<$(this).data('pos') && !found){
+                                            found = true;
+                                            row.insertBefore($(this));
+                                    }
+                                    });
+                                    if (!found)
+                                        row.appendTo(row.parent());
+                                    row.removeClass("TopRow");
+                                }
+                               // end remove from top placement
+                               }
+                               }
+                       });             
+                       // END #370 - Checkboxes in extended search doesn't check that in portlet
 
  setRememberedCheckboxes('hosts','portlet-content_Hosts');	
  $('#host_dialog').css('overflow','auto') }

@@ -464,6 +464,14 @@ $("#btnGraph").click( function() {
         $("#results").append("<input type='hidden' name='limit' value='" + limit + "'>");
         $("#results").append("<input type='hidden' name='orderby' value='counter'>");
         }
+        if (groupby == "") {
+        // [[ticket:431]] set default groupby to host_crc is it is missing
+        $("#results").append("<input type='hidden' name='groupby' value='host_crc'>");
+        //error("When clicking \"Graph\", you must specify a \"Group By\" in the search options portlet.<br>Please refresh the page and try again or click the ? icon for proper syntax.");
+        //$("#results").submit(function (e) {
+        //e.preventDefault(); // this will prevent from submitting the form.
+        //});   
+        }
         if (hosts) {
         $("#results").append("<input type='hidden' name='hosts' value='"+hosts+"'>");
         }
@@ -661,6 +669,14 @@ function easyDate (cellValue, options, rowdata)
     var t = $.timeago(cellValue);
     var cellHtml = "<span>" + t + "</span>";
     return cellHtml;
+}
+function grid_formatSeen (cellValue, options, rowdata)
+{
+    var suffix = ['','K','M','B','T','P','E','Z','Y'], 
+        tier = 0;   while(cellValue >= 1000) {
+            cellValue = cellValue / 1000;
+            tier++; }
+            return Math.round(cellValue * Math.pow(10, 2)) / Math.pow(10, 2) + suffix[tier] + " times";
 }
 
 function setWidth(percent){

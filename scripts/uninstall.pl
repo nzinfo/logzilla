@@ -110,9 +110,9 @@ if ( $q =~ /^[Ss]/ ) {
     } else {
         print "Skipping, no changes made to the $db database.\n";
     }
-    my $q = &p( "Remove LogZilla entries from syslog-ng.conf?", "Y" );
+    my $q = &p( "Remove LogZilla entries from syslog-ng?", "Y" );
     if ( $q =~ /^[Yy]/ ) {
-        &rm_config_block("/etc/syslog-ng/syslog-ng.conf");
+        &rm_syslogng();
     }
     my $q = &p( "Remove sudo entries from /etc/sudoers?", "Y" );
     if ( $q =~ /^[Yy]/ ) {
@@ -150,8 +150,7 @@ if ( $q =~ /^[Aa]/ ) {
     print("\n\033[1m\tThis will remove all LogZilla configurations and drop the $db database.\n\033[0m");
     my $q = &p( "Are you SURE you want to do this?", "Y" );
     if ( $q =~ /^[Yy]/ ) {
-        print "Removing LogZilla from syslog-ng\n";
-        &rm_config_block("/etc/syslog-ng/syslog-ng.conf");
+        &rm_syslogng();
         print "Removing LogZilla from sudoers\n";
         &rm_config_block("/etc/sudoers");
         print "Removing LogZilla cron.d\n";
@@ -213,6 +212,15 @@ sub rm_sphinx {
 sub rm_logrotate {
     print "Removing LogZilla from log rotate.d\nNOTE: YOU MUST MANUALLY DELETE /path_to_logs\n";
     my $file = "/etc/logrotate.d/logzilla";
+    if ( -f $file ) {
+        unlink($file);
+    } else {
+        print "$file does not exist\n";
+    }
+}
+sub rm_syslogng {
+    print "Removing LogZilla from syslog-ng\n";
+    my $file = "/etc/syslog-ng/conf.d/logzilla.conf";
     if ( -f $file ) {
         unlink($file);
     } else {

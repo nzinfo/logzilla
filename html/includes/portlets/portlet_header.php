@@ -539,9 +539,16 @@ $sphinx_results = json_decode($json_o, true);
 // If something goes wrong, search() will return an error
 //------------------------------------------------------------
 
-// if (preg_match('/[Ee]rror","Value":"(.*)"},{"Variable_name":"total".*/', $json_o, $matches)) {
-// $error = $json_o;
-// }
+if (preg_match('/[Ee]rror|warning/', $sphinx_results[count($sphinx_results)-4]['Variable_name'])) {
+    $error =$sphinx_results[count($sphinx_results)-4]['Variable_name'];
+    if (preg_match('/:(.*)/', $sphinx_results[count($sphinx_results)-4]['Value'], $matches)) {
+        $error .= '<br>' . $matches[0];
+    } else {
+        $error .= '<br>' . $sphinx_results[count($sphinx_results)-4]['Value'];
+    }
+    // echo "<br><br><br>E: $error<pre>";
+    // die(print_r($sphinx_results));
+}
 if (!$sphinx_results) {
 $error = $json_o;
 }

@@ -1,3 +1,104 @@
+4.5.658 - Index Rotation
+CD:
+ - Added better error checking for nightly index rotation
+
+4.5.644 - Install
+CD:
+Updated check for missing (new) sph_metrics table
+
+4.5.636 - Syslog-ng Setup/Removal
+CD:
+ - #433 - Modified the way syslog-ng's config gets installed. Now, a file is created in conf.d instead of adding to the base syslog-ng.conf file
+ - Modified uninstall script to remove the conf.d file instead of modifying the syslog-ng.conf
+ - Added some enhanced syslog-ng features for large scale servers
+
+4.5.629 - Multiple Updates 
+CD:
+ - renamed syncDB to LZTool since it has now become much more than just a dbsync tool
+ - Added option to keep more than 1 days' worth of indexes in memory (new setting in DB: SPX_IDX_DIM and in the admin menu>Sphinx settings in the GUI
+ - Added LZTool function named "idx_rotate" to rotate old indexes to disk that are greater than settings->SPX_IDX_DIM
+ - Added MTTI tool to LZTool (calculates the mean time to index based on the sphinx_indexer.log)
+ - Renamed "log_processor" to "logzilla" (duh)
+ - added --sighup-each to indexer so that large index merges don't take forever to restart searchd in one monolithic instance
+ - changed  ondisk_dict = 1 to  ondisk_dict = 0
+ - Added: preopen_indexes  = 0
+ - Added: expansion_limit  = 12
+ - Added: min_stemming_len = 4
+ - Added new table "sph_metrics", will be used for tracking various metrics (such as index times) so we can chart them eventually
+ - Rebuilt the Ubuntu Mysql .cnf generator script based on a lot more research and tests
+ - symlink idx_rotate to LZTools for calling idx_rotate in cron without causing a wait condition on normal indexing
+ - Removed export function from cron
+ - Removed 'import' menu
+ - Changed sphinx index names fromm idx_last_24 and 'distributed' to idx_inmem and idx_ondisk
+
+4.5.606 - Multiple Updates 
+CD:
+ - #414 - Added Multi-core indexing (since rev 587)
+ - $426 - Split result sets to 1500 per query (was 100)
+ - #407 - Fixed RBAC bug (using host_crc now instead of host)
+ - #420 - Wildcard searches now use dict keywords (less disk space)
+ - #405 - All tests pass except t/log_processor/12-dedup-cache-cleaning.t
+ - #375 - Moved all maintenance functions out of the MySQL scheduler to a nightly syncDB script
+
+4.xx.566 [Trunk] - bugfix 
+TH:
+ - small bug in sphinx.conf
+ 
+ 4.xx.564 [Trunk] - Adding Multicore indexing support 
+TH:
+ - Merge from test server
+ - limit MEM_LIMIT on sphinx to 256MB, every forked index use this memory
+ - Daily rotation and indexing still don't work
+ 
+4.xx.558 [Sphinx Branch]
+CD:
+ - #404 Implementation of 1/4 hour indexing
+ - #412 Implementation of syncDB (MySQL updateCache replacement) 
+ - #412 Added logging and removed hard-coded mysql connect params
+ - Added logging to t/showcounts
+ - Fixed invalid PID test in indexer.sh
+ - Removed sphinx/var from svn as it is created during install
+
+4.xx [Sphinx Branch] - Patches for bug #404 
+TH:
+ - try to fix the bug with incorrect count(*) and sum(counter) at sphinx (Point 5) 
+ - todo: testing, testing, testing 
+ 
+4.xx [Sphinx Branch] - Patches for bug #404 
+TH:
+ - small bogus on install empty qrhr views 
+ - todo: testing, testing, testing 
+ 
+4.xx [Sphinx Branch] - Patches for bug #404 
+TH:
+ - small bogus on install due sph_counter table change 
+ - todo: testing, testing, testing 
+ 
+ 4.xx [Sphinx Branch] - Patches for bug #404 
+TH:
+ - try to fix the race condition for generating new views while indexer is still running 
+ - todo: testing, testing, testing
+ 
+ 4.xx [Sphinx Branch] - Patches for bug #404  
+TH:
+ - initial seed of hr_views and qrhr views with no data 
+ - todo: testing, testing, testing
+ 
+ 4.xx [Sphinx Branch] - Patches for bug #404 
+TH:
+ - Adapt db event times to avoid race conditions 
+ - todo: testing, testing, testing
+
+4.xx [Sphinx Branch] - Patches for bug #404 
+TH:
+ - Adapt indexer.sh and sphinx.conf 
+ - todo: testing, testing, testing
+
+4.xx [Sphinx Branch] - Patches for bug #404 
+TH:
+ - Ticket:#404: Points 1,3 (and implicit 2) and 4. 
+ - todo: adapt the sphinx/indexer.sh
+
 4.25.351 [Main Branch] - manage partitions improvement
 PP:
  - Disabled innodb_stats_on_metadata - it should make manage_logs_partitions much faster

@@ -53,7 +53,7 @@ if (cnt < 11) {
         while($row = fetch_array($result)) { 
         echo "<tr>";
         echo "<td id='eid_sel'>";
-          echo "<input type=\"checkbox\" name=\"sel_eid[]\" id=\"eids\" value=\"$row[eid]\"";
+        echo "<input type=\"checkbox\" name=\"sel_eid[]\" value=\"$row[eid]\" id='$row[eid]'";
         echo "</td>";
         echo "<td id='eid'>";
         if (strlen($row['eid']) < 26) {

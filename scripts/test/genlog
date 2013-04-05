@@ -3,7 +3,7 @@ use warnings;
 use strict;
 
 # Generate given number of random (or not so random, if requested)
-# log entries, to be passed to the log_processor script
+# log entries, to be passed to the logzilla script
 
 use Getopt::Long;
 use Pod::Usage;

@@ -105,7 +105,7 @@ if ( $options->{prereqs} > 0 ) {
     print "Installing system prerequisites 3 of 9\n";
     system("apt-get -y install php5-mysql php5-gd php5-json");
     print "Installing system prerequisites 4 of 9\n";
-    system("apt-get -y install libdate-calc-perl libfile-tail-perl libdbd-mysql-perl libmime-lite-perl libdata-random-perl");
+    system("apt-get -y install libdate-calc-perl libfile-tail-perl libdbd-mysql-perl libmime-lite-perl libdata-random-perl libdate-simple-perl");
     print "Installing system prerequisites 5 of 9\n";
     system("apt-get -y install libstring-crc32-perl libmoose-perl libnet-snmp-perl libwww-perl libdigest-md5-file-perl");
     print "Installing system prerequisites 6 of 9\n";
@@ -338,7 +338,7 @@ sub setup_mycnf {
     system("touch $file");
     my $sysmem = `cat /proc/meminfo |  grep "MemTotal" | awk '{print \$2}'`;
     $sysmem = ( $sysmem * 1024 );
-    my $poolsize                = ( $sysmem * 6 / 10 );
+    my $poolsize                = ( $sysmem * 3 / 10 );
     my $innodb_logfile_size     = ( $poolsize / 4 );
     # Set max log file size to 256M
     $innodb_logfile_size = 268435456 if ($innodb_logfile_size > 268435456);
@@ -378,7 +378,8 @@ skip_innodb_doublewrite
 log-error=/var/log/mysql/error.log
 
 
-# Set innodb_buffer_pool_size to 50-80% of total system memory if this is a dedicated LogZilla server
+# Set innodb_buffer_pool_size to 30% of total system memory if this is a dedicated LogZilla server
+# Note, this is an estimate, YMMV.
 innodb_buffer_pool_size = $Hpoolsize
 
 # innodb log file size
@@ -410,7 +411,7 @@ log-output = TABLE
 
 ##########################
 # Meta data stats
-# Enable this to speed up log_processor startup.
+# Enable this to speed up logzilla startup.
 # On slow, or very large servers, InnoDB can take > 30 seconds to start
 # It's important that you know what you are doing this for, so please read before enabling it:
 # http://dev.mysql.com/doc/refman/5.1/en/innodb-parameters.html#sysvar_innodb_stats_on_metadata

@@ -25,8 +25,10 @@ SET character_set_client = utf8;
 CREATE TABLE `sph_counter` (
   `counter_id` int(11) unsigned NOT NULL AUTO_INCREMENT,
   `max_id` bigint(20) unsigned NOT NULL,
+  `min_id` INT NOT NULL DEFAULT '1',
   `index_name` varchar(32) NOT NULL DEFAULT '',
   `last_updated` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `this_run` tinyint(4) DEFAULT '0',
   PRIMARY KEY (`counter_id`),
   KEY `index_name` (`index_name`)
 ) ENGINE=MyISAM AUTO_INCREMENT=3 DEFAULT CHARSET=latin1;
@@ -38,7 +40,7 @@ SET character_set_client = @saved_cs_client;
 
 LOCK TABLES `sph_counter` WRITE;
 /*!40000 ALTER TABLE `sph_counter` DISABLE KEYS */;
-INSERT INTO `sph_counter` VALUES (1,1,'idx_logs','2010-04-17 00:07:35'),(2,1,'idx_delta_logs','2010-04-17 00:08:06');
+INSERT INTO `sph_counter` VALUES (1,1,1,'idx_logs','2010-04-17 00:07:35','0'),(2,1,1,'idx_delta_logs','2010-04-17 00:08:06','0');
 /*!40000 ALTER TABLE `sph_counter` ENABLE KEYS */;
 UNLOCK TABLES;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;

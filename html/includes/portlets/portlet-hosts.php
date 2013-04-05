@@ -40,7 +40,7 @@ if (cnt < 11) {
     $('#portlet-header_Hosts').append(" (<?php echo commify($count)?> total)")
 };
 </script>
-<table class="hoverTable">
+<table class="hoverTable" id="tblHosts">
 <thead class="ui-widget-header">
   <tr>
     <th width="5%" style="text-align:left"></th>
@@ -57,7 +57,7 @@ if (cnt < 11) {
         while($row = fetch_array($result)) { 
         echo "<tr>";
         echo "<td id='host_sel'>";
-          echo "<input type=\"checkbox\" name=\"sel_hosts[]\" value=\"$row[host]\"";
+        echo "<input type=\"checkbox\" name=\"sel_hosts[]\" id=\"$row[host]\" value=\"$row[host]\"";
         echo "</td>";
         echo "<td id='host'>";
           echo "$row[host]";

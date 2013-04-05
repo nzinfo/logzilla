@@ -129,6 +129,7 @@ if ((has_portlet_access($_SESSION['username'], 'Server Settings') == TRUE) || ($
             <a href="#" class='adminItem' id='SPX_MEM_LIMIT'>Memory Limit</a><br />
             <a href="#" class='adminItem' id='SPX_PORT'>Port</a><br />
             <a href="#" class='adminItem' id='SPX_SRV'>Server IP</a><br />
+            <a href="#" class='adminItem' id='SPX_IDX_DIM'>Index DIM</a><br />
         </div>
         <h3><a href="#">Audit Logging</a></h3>
         <div>
