@@ -32,7 +32,7 @@ has dbh => (
     lazy_build => 1,
 );
 
-# This will trigger only if not set directly in constructor - as it is done in log_processor
+# This will trigger only if not set directly in constructor - as it is done in the logzilla processor script
 sub _build_dbh {
     my( $self ) = @_;
 

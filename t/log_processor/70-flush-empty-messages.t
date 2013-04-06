@@ -8,7 +8,7 @@ use Test::More;
 use Test::Deep;
 use LogZilla::Test::LogProcessor;
 
-# This test checks if log_processor flush data properly if data stream doesn't end
+# This test checks if the logzilla processor script flushes data properly if data stream doesn't end
 # (how it is supposed to work usually, when connected to the syslog).
 # This is almost the same like in 01-basic - only we use "send_data" instead of "process_data"
 # and check only records counts

@@ -55,7 +55,7 @@ has data_dir => (
 
 # Static method for passing data dir in $ENV, so child
 # processes will use them regardless the configuration file. 
-# Used by tests for log_processor script.
+# Used by tests for the logzilla script.
 sub set_data_dir_for_tests {
     my( $class, $dir ) = @_;
     $ENV{LZ_TEST_DATA_DIR} = $dir;

@@ -241,7 +241,7 @@ skip_innodb_checksums
 
 #--------------------------------------
 # Meta data stats
-# Enable this to speed up log_processor startup.
+# Enable this to speed up logzilla startup.
 # On slow, or very large servers, InnoDB can take > 30 seconds to start
 # It's important that you know what you are doing this for, so please read before enabling it:
 # http://dev.mysql.com/doc/refman/5.1/en/innodb-parameters.html#sysvar_innodb_stats_on_metadata
