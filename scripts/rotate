@@ -21,4 +21,4 @@ if [ "$PID" ]; then
     echo "LogZilla daily index rotation is already running on PID $PID" >&2
     exit 1
 fi
-/var/www/logzilla/scripts/idx-rotate -v -r idx_rotate -d 1
+/var/www/logzilla/scripts/idx-rotate -v -r idx_rotate 
