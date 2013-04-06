@@ -1,4 +1,4 @@
-List of things to be done, regarding log_processor:
+List of things to be done, regarding the logzilla script:
 
 01. Join all configuration objects in one - that is, extend Config class to support command
     line parameters and table 'settings'. Maybe convert PHP config to some *.ini file, then

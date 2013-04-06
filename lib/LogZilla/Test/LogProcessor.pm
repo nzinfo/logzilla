@@ -53,7 +53,7 @@ sub _build__root_dir {
 has script_name => (
     is => 'ro',
     isa => 'Str',
-    default => 'log_processor',
+    default => 'logzilla',
 );
 
 has _script_path => (
@@ -225,7 +225,7 @@ sub flush_output {
 }
 
 # Measure time of processing generating data by genlog. Input is saved to
-# temporary file, then log_processor is run on file, to measure only processing time.
+# temporary file, then logzilla is run on file, to measure only processing time.
 sub time_genlog {
     my( $self, %params ) = @_;
 
