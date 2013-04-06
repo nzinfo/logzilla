@@ -68,7 +68,7 @@ sub prompt {
 }
 
 my $version    = "4.5";
-my $subversion = ".661";
+my $subversion = ".393";
 
 # Grab the base path
 my $lzbase = getcwd;
@@ -1073,9 +1073,12 @@ sub add_syslog_conf {
     my $dir = "/etc/syslog-ng/conf.d";
     my $file = "/etc/syslog-ng/conf.d/logzilla.conf";
     unless ( -d "$dir" ) {
-        $dir = &prompt( "What is the correct path to your /etc/syslog-ng/conf.d directory?", "/etc/syslog-ng/conf.d" );
+        $file = "/etc/syslog-ng/syslog-ng.conf";
+        unless ( -e "$file" ) {
+            $file = &prompt( "What is the correct path to your syslog-ng.conf file?", "/etc/syslog-ng/syslog-ng.conf" );
+        }
     }
-    if ( -d $dir ) {
+    if ( -e $file ) {
         open my $config, '+<', "$file";
         my @arr = <$config>;
         if ( !grep( /logzilla|lzconfig/, @arr ) ) {
@@ -1092,18 +1095,18 @@ sub add_syslog_conf {
 options {
     chain_hostnames(no);
     keep_hostname(yes);
-    threaded(yes); # enable if using Syslog-NG 3.3.x
-    use_fqdn(no);
-    use_dns(no);
+    #threaded(yes); # enable if using Syslog-NG 3.3.x
+    #use_fqdn(no); uncomment in high scale environments
+    #use_dns(no); uncomment in high scale environments
 };
 
 source s_logzilla {
     tcp(
-            log_fetch_limit(100)
-            log_iw_size(5000)
+            log_fetch_limit(100) uncomment in high scale environments
+            log_iw_size(5000) uncomment in high scale environments
        );
     udp(
-            so_rcvbuf(1048576)
+            so_rcvbuf(1048576) uncomment in high scale environments
        );
 };
 
@@ -1138,7 +1141,7 @@ EOF
         }
     } else {
         print("\n\033[1m\tERROR!\n\033[0m");
-        print "Unable to locate the $dir directory\n";
+        print "Unable to locate your syslog-ng config\n";
     }
 }
 
