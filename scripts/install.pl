@@ -1097,17 +1097,17 @@ options {
     chain_hostnames(no);
     keep_hostname(yes);
     #threaded(yes); # enable if using Syslog-NG 3.3.x
-    #use_fqdn(no); uncomment in high scale environments
-    #use_dns(no); uncomment in high scale environments
+    #use_fqdn(no); # uncomment in high scale environments
+    #use_dns(no); # uncomment in high scale environments
 };
 
 source s_logzilla {
     tcp(
-            log_fetch_limit(100) uncomment in high scale environments
-            log_iw_size(5000) uncomment in high scale environments
+            #log_fetch_limit(100) # uncomment in high scale environments
+            #log_iw_size(5000) # uncomment in high scale environments
        );
     udp(
-            so_rcvbuf(1048576) uncomment in high scale environments
+            #so_rcvbuf(1048576) # uncomment in high scale environments
        );
 };
 
