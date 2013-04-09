@@ -59,7 +59,7 @@ sub setup_mycnf {
     my $cores2x   = $cpu_cores * 2;
     my $sysmem    = `cat /proc/meminfo |  grep "MemTotal" | awk '{print \$2}'`;
     $sysmem = ( $sysmem * 1024 );
-    my $poolsize             = ( $sysmem * 3 / 10 );
+    my $poolsize             = ( $sysmem * 5 / 10 );
 
     if ( $sysmem >= 68719476736 ) {
         $innodb_log_file_size = 385875968;
@@ -71,7 +71,7 @@ sub setup_mycnf {
         $innodb_log_file_size = 67108864;
     }
 
-    my $innodb_log_buffer_size  = ( $innodb_log_file_size / 6 );
+    my $innodb_log_buffer_size  = ( $innodb_log_file_size / 8 );
     my $Hpoolsize               = humanBytes($poolsize);
     my $Hinnodb_log_file_size   = humanBytes($innodb_log_file_size);
     my $Hinnodb_log_buffer_size = humanBytes($innodb_log_buffer_size);
