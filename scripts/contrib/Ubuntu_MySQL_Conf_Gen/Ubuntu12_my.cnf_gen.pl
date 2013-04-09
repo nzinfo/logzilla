@@ -55,17 +55,11 @@ sub setup_mycnf {
     system("touch $file");
     my $numdisks = `fdisk -l 2>/dev/null | grep "Disk \/" | grep -v "\/dev\/md" | awk '{print \$2}' | sed -e 's/://g' | wc -l`;
     my $innodb_commit_concurrency = $numdisks * 4;
-    # Below just grabs IOPS for the fastest disk, which we assume is where MySQL is running from...hopefully
-    #my $diskio = `iostat | awk '{print \$2}' | sort -nr | head -1`;
-    #chomp($diskio);
-    #$diskio = sprintf("%.0f", $diskio);
-    #$diskio = 200 if not ($diskio);
     my $cpu_cores = `cat /proc/cpuinfo | grep processor | wc -l`;
     my $cores2x   = $cpu_cores * 2;
     my $sysmem    = `cat /proc/meminfo |  grep "MemTotal" | awk '{print \$2}'`;
     $sysmem = ( $sysmem * 1024 );
     my $poolsize             = ( $sysmem * 3 / 10 );
-    #my $innodb_log_file_size = ( $poolsize / 4 );
 
     if ( $sysmem >= 68719476736 ) {
         $innodb_log_file_size = 385875968;
@@ -77,7 +71,7 @@ sub setup_mycnf {
         $innodb_log_file_size = 67108864;
     }
 
-    my $innodb_log_buffer_size  = ( $innodb_log_file_size / 8 );
+    my $innodb_log_buffer_size  = ( $innodb_log_file_size / 6 );
     my $Hpoolsize               = humanBytes($poolsize);
     my $Hinnodb_log_file_size   = humanBytes($innodb_log_file_size);
     my $Hinnodb_log_buffer_size = humanBytes($innodb_log_buffer_size);
@@ -92,7 +86,7 @@ sub setup_mycnf {
 # Based on http://www.mysqlperformanceblog.com/2007/11/01/innodb-performance-optimization-basics/
 # And also from http://themattreid.com/uploads/innodb_flush_method-CNF-loadtest.txt
 # Do not depend on these settings to be correct for your server. Please consult your DBA
-# You can also run /path_to_logzilla/scripts/tools/mysqltuner.pl for help.
+# You can also run /var/www/logzilla/scripts/tools/mysqltuner.pl for help.
 #
 #
 [mysqld]
@@ -143,9 +137,11 @@ binlog_cache_size               = 128K    #default: 32K, size of buffer to hold 
 #--------------------------------------
 ## Query Cache
 #--------------------------------------
-query_cache_size                = 64M   #global buffer
-query_cache_limit               = 512K  #max query result size to put in cache
 
+# Percona Rec: In many high concurrency and high performance environments query cache causes more harm than good
+# also set query_cache_type = 0 which disables the mutex entirely
+query_cache_size                = 0   #global buffer
+query_cache_type		= 0
 #--------------------------------------
 ## Connections
 #--------------------------------------
@@ -179,14 +175,16 @@ thread_cache_size               = 500 #recommend 5% of max_connections
 #--------------------------------------
 ## MyISAM Engine
 #--------------------------------------
-key_buffer                      = 1M    #global buffer
 myisam_sort_buffer_size         = 128M  #index buffer size for creating/altering indexes
 myisam_max_sort_file_size       = 256M  #max file size for tmp table when creating/alering indexes
 myisam_repair_threads           = 4     #thread quantity when running repairs
 myisam_recover                  = BACKUP #repair mode, recommend BACKUP
 myisam-block-size               = 14384
 myisam_use_mmap
-key_buffer_size                 = 128M  # This is the MyISAM equivalent of 'innodb_buffer_pool_size' for InnoDB.
+
+# Percona Rec: We don't have many MyISAM tables, so 64M should be plenty
+key_buffer_size                 = 64M    #global buffer
+
 
 #--------------------------------------
 ## InnoDB IO Capacity - 5.1.x plugin, 5.5.x
@@ -218,10 +216,8 @@ innodb_log_file_size            = $Hinnodb_log_file_size #64G_RAM+ = 368, 24G_RA
 
 innodb_log_files_in_group       = 3     #combined size of all logs <4GB. <16G_RAM = 2, >16G_RAM = 3
 #
-# Set innodb_buffer_pool_size to 10%-25% of total system memory if this is a dedicated LogZilla server
-# This is negotiable, Percona recommends up to 80% but I've seen no improvements during testing
-# (probably because we use external indexes)
-# Also possibly helpful: http://stackoverflow.com/questions/5174396/innodb-performance-tweaks
+# Set innodb_buffer_pool_size to 50%-60% of total system memory if this is a dedicated LogZilla server
+# This is negotiable, Percona recommends up to 80% but that leaves no memory for the Indexer
 innodb_buffer_pool_size         = $Hpoolsize
 innodb_buffer_pool_instances    = 4     #ver 5.5+ only: splits buffer pool (req: buffer_pool/n > 1G) into n-chunks
 innodb_additional_mem_pool_size = 4M    #global buffer
@@ -235,8 +231,15 @@ innodb_thread_concurrency       = $cores2x    #recommend 2x core quantity
 innodb_commit_concurrency       = $innodb_commit_concurrency    #recommend 4x num disks
 innodb_flush_method             = O_DIRECT # use O_DIRECT if you have raid with bbu. Options: O_DIRECT, O_DSYNC, blank for fdatasync (default)
 innodb_support_xa               = false #recommend 0 on read-only slave, disable xa to negate extra disk flush
-skip-innodb-doublewrite
-skip_innodb_checksums
+
+# Percona Rec:
+# Without double write buffer, you may get an inconsistency in InnoDB due 
+# to partial page write in which case crash recovery would be
+# unable to bring the database back to a consistent state. Disabling checksums can have different effects -
+# in case of hardware failure (broken memory or disks), incorrectly written data may stay unnoticed for a
+# long time. Enable this only if you know what you are doing and have tested the performance gain.
+# skip-innodb-doublewrite
+# skip_innodb_checksums
 
 
 #--------------------------------------
