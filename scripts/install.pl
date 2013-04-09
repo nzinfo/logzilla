@@ -1072,6 +1072,7 @@ system "chown mysql.mysql $lzbase/scripts/doimport.sh" and warn "Could not set p
 sub add_syslog_conf {
     my $dir = "/etc/syslog-ng/conf.d";
     my $file = "/etc/syslog-ng/conf.d/logzilla.conf";
+    system("touch $file");
     unless ( -d "$dir" ) {
         $file = "/etc/syslog-ng/syslog-ng.conf";
         unless ( -e "$file" ) {
