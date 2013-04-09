@@ -92,6 +92,7 @@ my $dbh = connect_to_db();
 my $settings = read_settings_from_db();
 my ( $lzmajor, $lzminor ) = split( /\./, $settings->{VERSION} );
 my ( undef, $lzsub ) = split( /\./, $settings->{VERSION_SUB} );
+DEBUG( 1, "LogZilla Version Check: $lzmajor, $lzminor, $lzsub");
 
 # Reconfigure log to use log_file (as we finally got it from $settings), also
 # set proper level and output based on $options{verbose} and $options{debug}
@@ -188,7 +189,7 @@ sub tblSync {
     DEBUG( 1, "Executing SQL Statement: $sql" );
     $dbh->do($sql) unless $options->{dryrun};
 
-    if ( $lzsub > 600 ) {
+    if ( $lzminor > 4 ) {
         $sql = "SELECT $spx_tbl, sum(counter), max(lo) from idx_ondisk where match('\@dummy dummy') group by $spx_tbl limit 50000 OPTION max_matches=5000";
     } else {
         $sql = "SELECT $spx_tbl, sum(counter), max(lo) from distributed group by $spx_tbl limit 50000 OPTION max_matches=5000";
@@ -236,7 +237,7 @@ sub countUpdate {
 
     # Preparing replacement for updateCache db procedure: Count all counters
     # due to a bug in sphinxql when using sum you also need to use a group-by
-    if ( $lzsub > 600 ) {
+    if ( $lzminor > 4 ) {
         $sql = "select severity, sum(counter) from idx_ondisk where match('\@dummy dummy') group by severity limit 50000 OPTION max_matches=5000";
     } else {
         $sql = "select severity, sum(counter) from distributed group by severity limit 50000 OPTION max_matches=5000";
@@ -270,7 +271,7 @@ sub countUpdate {
     if ( $sth_syslog->rows == 0 ) {
         DEBUG( 1, "No index for $sphinx_yesterday, no need to update counts...");
     } else {
-        if ( $lzsub > 600 ) {
+        if ( $lzminor > 4 ) {
             $sql = "select severity, sum(counter) from $sphinx_yesterday where match('\@dummy dummy') group by severity";
         } else {
             $sql = "select severity, sum(counter) from $sphinx_yesterday group by severity";
@@ -299,7 +300,7 @@ sub updateHosts {
     $dbh->do($sql) unless $options->{dryrun};
 
 # Note that DB's with host count > 5000 may be a problem here. This needs testing.
-    if ( $lzsub > 600 ) {
+    if ( $lzminor > 4 ) {
         $sql = "select host_crc, sum(counter), max(lo) from idx_ondisk where match('\@dummy dummy') group by host_crc limit 50000 OPTION max_matches=5000";
     } else {
         $sql = "select host_crc, sum(counter), max(lo) from distributed group by host_crc limit 50000 OPTION max_matches=5000";
