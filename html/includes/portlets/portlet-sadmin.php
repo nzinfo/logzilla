@@ -71,13 +71,14 @@ if ((has_portlet_access($_SESSION['username'], 'Server Settings') == TRUE) || ($
             <a href="#" class='adminItem' id='Q_LIMIT'>Message Queue Limit</a><br />
             <a href="#" class='adminItem' id='Q_TIME'>Message Queue Time Limit</a><br />
         </div>
-        <h3><a href="#">Archival</a></h3>
+        <h3><a href="#">Data Retention</a></h3>
         <div>
             <a href="#" class='adminItem' id='RETENTION'>Retention Policy</a><br />
             <a href="#" class='adminItem' id='RETENTION_DROPS_HOSTS'>Stale Host Purging</a><br />
+            <!-- Deprecated in v4.5 
             <a href="#" class='adminItem' id='ARCHIVE_PATH'>Archive Path</a><br />
             <a href="#" class='adminItem' id='ARCHIVE_BACKUP'>Archival Command</a><br />
-            <a href="#" class='adminItem' id='ARCHIVE_RESTORE'>Archival Restore Command</a><br />
+            <a href="#" class='adminItem' id='ARCHIVE_RESTORE'>Archival Restore Command</a><br /> -->
         </div>
         <h3><a href="#">Authentication</a></h3>
         <div>
