@@ -68,7 +68,7 @@ sub prompt {
 }
 
 my $version    = "4.5";
-my $subversion = ".393";
+my $subversion = ".402";
 
 # Grab the base path
 my $lzbase = getcwd;
@@ -1097,8 +1097,8 @@ options {
     chain_hostnames(no);
     keep_hostname(yes);
     #threaded(yes); # enable if using Syslog-NG 3.3.x
-    #use_fqdn(no); # uncomment in high scale environments
-    #use_dns(no); # uncomment in high scale environments
+    #use_fqdn(no); # disable in high scale environments
+    #use_dns(no); # disable in high scale environments
 };
 
 source s_logzilla {
@@ -1846,7 +1846,7 @@ sub verify_columns {
           copy_old_view_limits();
       } else {
           my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/view_limits.sql`;
- print "Building view limits\n";
+          print "Building view limits\n";
           system("for f in `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport INFORMATION_SCHEMA --skip-column-names --batch -e \"select table_name from tables where table_type = 'VIEW' and table_schema = '$dbname'\"  | grep \"log_arch_day\"`; do mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname -e \"insert ignore into view_limits (view_name, min_id, max_id) values ('\$f', (select min(id) from \$f), (select max(id) from \$f))\"; done");
       }
 }
@@ -2142,7 +2142,7 @@ sub update_procs {
           copy_old_view_limits();
       } else {
           my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/view_limits.sql`;
- print "Building view limits\n";
+          print "Building view limits\n";
           system("for f in `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport INFORMATION_SCHEMA --skip-column-names --batch -e \"select table_name from tables where table_type = 'VIEW' and table_schema = '$dbname'\"  | grep \"log_arch_day\"`; do mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname -e \"insert ignore into view_limits (view_name, min_id, max_id) values ('\$f', (select min(id) from \$f), (select max(id) from \$f))\"; done");
       }
 
