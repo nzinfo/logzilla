@@ -132,7 +132,8 @@ if ( defined( $options->{functionlist} ) ) {
     exit;
 }
 if ( $#runfuncs < 0 ) {
-$dbh_sphinx = DBI->connect( 'DBI:mysql::127.0.0.1:9306', 'root', ) || die "Could not connect to SphinxQL: $DBI::errstr";
+    waitfor("indexer", 5, 600);
+    $dbh_sphinx = DBI->connect( 'DBI:mysql::127.0.0.1:9306', 'root', ) || die "Could not connect to SphinxQL: $DBI::errstr";
     countUpdate();
     updateHosts();
     tblSync( "mne",       "mne" );
@@ -145,7 +146,8 @@ $dbh_sphinx = DBI->connect( 'DBI:mysql::127.0.0.1:9306', 'root', ) || die "Could
     mtti();
 } else {
     $log->INFO("Running specific functions only");
-$dbh_sphinx = DBI->connect( 'DBI:mysql::127.0.0.1:9306', 'root', ) || die "Could not connect to SphinxQL: $DBI::errstr";
+    waitfor("indexer", 5, 600);
+    $dbh_sphinx = DBI->connect( 'DBI:mysql::127.0.0.1:9306', 'root', ) || die "Could not connect to SphinxQL: $DBI::errstr";
 
     foreach my $func (@runfuncs) {
         DEBUG( 1, "Starting $func" );
@@ -788,4 +790,24 @@ sub store_metric {
     $sql = "INSERT INTO sph_metrics (name,value,ts_start,ts_end) VALUES ('$name', $value, UNIX_TIMESTAMP(NOW()), UNIX_TIMESTAMP(NOW()))";
     DEBUG( 1, "Executing SQL Statement: $sql" );
     $dbh->do($sql) unless $options->{dryrun};
+}
+
+sub waitfor {
+    # Need to wait for indexer to finish if it is restarting searchd
+    my ( $proc, $sleepfor, $timelimit ) = @_;
+    my $i = 0;
+    DEBUG( 1, "Running ps -C $proc -o pid=" );
+    my $pid = `ps -C $proc -o pid=`;
+    DEBUG( 1, "PID = $pid" );
+    while ($pid) {
+        chomp $pid;
+        $log->INFO("$0: Waiting up to $timelimit seconds for $proc on PID $pid to finish...");
+        if ( $i >= $timelimit ) {
+            $log->INFO("$0: Timed out waiting for $proc on PID $pid");
+            exit;
+        }
+        sleep $sleepfor;
+        $pid = `ps -C $proc -o pid=`;
+        $i += $sleepfor;
+    }
 }
