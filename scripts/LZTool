@@ -662,9 +662,8 @@ sub ss {
         DEBUG( 1, "Executing SQL Statement: $sql" );
         $sth_syslog->execute();
         $results = $sth_syslog->fetchrow_hashref;
-        my $uptime;
         if ( ( $results->{'count'} ) > 1 ) {
-            $log->INFO( "Server uptime is %s hours", $results->{count} );
+            $log->INFO( "LogZilla uptime is %s hours", $results->{count} );
         store_metric("lztool_srv_uptime_hours", $results->{count});
         } else {
             $log->INFO("Sorry, there's no data available yet. Is this a new installation?");
