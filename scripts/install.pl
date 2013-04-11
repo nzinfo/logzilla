@@ -68,7 +68,7 @@ sub prompt {
 }
 
 my $version    = "4.5";
-my $subversion = ".402";
+my $subversion = ".404";
 
 # Grab the base path
 my $lzbase = getcwd;
@@ -1004,9 +1004,15 @@ sub update_settings {
     if (not $spx_cores) {
         $spx_cores = `cat /proc/cpuinfo | grep processor | wc -l`;
     }
-    #$spx_cores = 8 if ($spx_cores > 8);
+    # Added for larger systems where we don't need to use *all* cores - leaves some for mysql
+    $spx_cores = 12 if ($spx_cores > 12);
     my $sth = $dbh->prepare( "
         update settings set value='$spx_cores' where name='SPX_CPU_CORES';
+        " ) or die "Could not update settings table: $DBI::errstr";
+    $sth->execute;
+    # workaround for v4.25->v4.5 upgrades
+    my $sth = $dbh->prepare( "
+        update settings set description='This variable is used to determine the number of days to keep data in the database. <br>Any data older than this setting will be automatically purged.' where name='RETENTION';
         " ) or die "Could not update settings table: $DBI::errstr";
     $sth->execute;
         if ( $snare =~ /[Yy]/ ) {
