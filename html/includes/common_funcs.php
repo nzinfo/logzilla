@@ -1188,7 +1188,7 @@ function search($json_o, $spx_max,$index="idx_logs idx_delta_logs",$spx_ip,$spx_
                 if (strtotime($lo_start) >= $idx_dim_ts) {
                     $query = " AND MATCH ('$search_string')";
                 } else {
-                    if ($search_string) $query = " AND MATCH ('@dummy dummy $search_string')";
+                    $query = " AND MATCH ('@dummy dummy $search_string')";
                 }
 
                 // Test for empty search and remove whitespaces
@@ -1641,7 +1641,7 @@ function search_graph($json_o, $spx_max,$index="idx_logs idx_delta_logs",$spx_ip
                 if (strtotime($lo_start) >= $idx_dim_ts) {
                     $query = " AND MATCH ('$search_string')";
                 } else {
-                    if ($search_string) $query = " AND MATCH ('@dummy dummy $search_string')";
+                    $query = " AND MATCH ('@dummy dummy $search_string')";
                 }
 
                 // Test for empty search and remove whitespaces
@@ -1681,7 +1681,7 @@ function search_graph($json_o, $spx_max,$index="idx_logs idx_delta_logs",$spx_ip
                 if (strtotime($lo_start) >= $idx_dim_ts) {
                     $query = " AND MATCH ('$search_string')";
                 } else {
-                    if ($search_string) $query = " AND MATCH ('@dummy dummy $search_string')";
+                    $query = " AND MATCH ('@dummy dummy $search_string')";
                 }
 
         // Test for empty search and remove whitespaces
