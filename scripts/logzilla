@@ -535,7 +535,7 @@ sub process_line {
         $msg =~ s/\t/ /g;   # remove any extra TABs
         $msg =~ s/\177/ /g; # Fix for NT Events Logs (they send 0x7f with the message)
 
-        $log->INFO("Checking for enabled Alert Triggers");
+        #$log->INFO("Checking for enabled Alert Triggers");
         # Mail Trigger (also SNMP Trap)
         for my $trigger ( @{$triggers} ) {
         $log->INFO("Found %s active alert pattern(s), processing...", scalar(@{$triggers}));
