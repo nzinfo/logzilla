@@ -26,7 +26,7 @@ TIME=`date +%T`
 # -------------------------------------------
 # Set logzilla base path
 # -------------------------------------------
-lzhome="/path_to_logzilla"
+lzhome="/var/www/logzilla"
 [ ! -d "$lzhome" ] && lzhome="/var/www/logzilla"
 
 sphinxhome="$lzhome/sphinx"
@@ -87,6 +87,16 @@ do_indexing()
     echo "rotate = $rotate"
     echo "[$$] Running Command: ( cd $sphinxhome && $indexer $indices$rotate;$searchdcmd )"
     (
+    # -------------------------------------------
+    # Must wait for LZTool  if it's running
+    # -------------------------------------------
+    PID=`ps aux | grep "LZTool" | grep -v grep | awk '{print $2}'`
+    for pid in "$PID"; do
+        while kill -0 "$pid" >/dev/null 2>&1; do
+            echo "indexer.sh: Waiting for the LZTool process on pid $pid to finish"
+            sleep 5
+        done
+    done
     cd $sphinxhome
     $indexer $indices$rotate
     $searchdcmd

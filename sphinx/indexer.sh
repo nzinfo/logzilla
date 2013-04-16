@@ -28,12 +28,10 @@ ulimit -Sn 4096
 # Must wait for daily LZTool cleanup to complete
 # -------------------------------------------
 PID=`ps aux | grep "LZTool" | grep -v grep | awk '{print $2}'`
-for pid in "$PID"; do
-    while kill -0 "$pid" >/dev/null 2>&1; do
-        echo "Waiting for the LZTool process on pid $pid to finish"
-        sleep 5
-    done
-done
+if [ "$PID" ]; then
+    echo "LZTool is currently running on PID $PID" >&2
+    exit 1
+fi
 # -------------------------------------------
 # Check to see if we are already running.
 # -------------------------------------------
