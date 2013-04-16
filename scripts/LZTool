@@ -132,7 +132,7 @@ if ( defined( $options->{functionlist} ) ) {
     exit;
 }
 if ( $#runfuncs < 0 ) {
-    waitfor("indexer", 5, 600);
+    waitfor("indexer", 5, 300);
     $dbh_sphinx = DBI->connect( 'DBI:mysql::127.0.0.1:9306', 'root', ) || die "Could not connect to SphinxQL: $DBI::errstr";
     countUpdate();
     updateHosts();
@@ -146,7 +146,7 @@ if ( $#runfuncs < 0 ) {
     mtti();
 } else {
     $log->INFO("Running specific functions only");
-    waitfor("indexer", 5, 600);
+    waitfor("indexer", 5, 300);
     $dbh_sphinx = DBI->connect( 'DBI:mysql::127.0.0.1:9306', 'root', ) || die "Could not connect to SphinxQL: $DBI::errstr";
 
     foreach my $func (@runfuncs) {
@@ -192,7 +192,7 @@ sub tblSync {
     $dbh->do($sql) unless $options->{dryrun};
 
     if ( $lzminor > 4 ) {
-        $sql = "SELECT $spx_tbl, sum(counter), max(lo) from idx_ondisk where match('\@dummy dummy') group by $spx_tbl limit 50000 OPTION max_matches=5000";
+        $sql = "SELECT $spx_tbl, sum(counter), max(lo) from idx_all where match('\@dummy dummy') group by $spx_tbl limit 50000 OPTION max_matches=5000";
     } else {
         $sql = "SELECT $spx_tbl, sum(counter), max(lo) from distributed group by $spx_tbl limit 50000 OPTION max_matches=5000";
     }
@@ -240,7 +240,7 @@ sub countUpdate {
     # Preparing replacement for updateCache db procedure: Count all counters
     # due to a bug in sphinxql when using sum you also need to use a group-by
     if ( $lzminor > 4 ) {
-        $sql = "select severity, sum(counter) from idx_ondisk where match('\@dummy dummy') group by severity limit 50000 OPTION max_matches=5000";
+        $sql = "select severity, sum(counter) from idx_all where match('\@dummy dummy') group by severity limit 50000 OPTION max_matches=5000";
     } else {
         $sql = "select severity, sum(counter) from distributed group by severity limit 50000 OPTION max_matches=5000";
     }
@@ -303,7 +303,7 @@ sub updateHosts {
 
 # Note that DB's with host count > 5000 may be a problem here. This needs testing.
     if ( $lzminor > 4 ) {
-        $sql = "select host_crc, sum(counter), max(lo) from idx_ondisk where match('\@dummy dummy') group by host_crc limit 50000 OPTION max_matches=5000";
+        $sql = "select host_crc, sum(counter), max(lo) from idx_all where match('\@dummy dummy') group by host_crc limit 50000 OPTION max_matches=5000";
     } else {
         $sql = "select host_crc, sum(counter), max(lo) from distributed group by host_crc limit 50000 OPTION max_matches=5000";
     }
