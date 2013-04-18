@@ -29,7 +29,7 @@ my $log = Log::Fast->global();
 
 my (@runfuncs);
 my $dbh_sphinx;
-my @functionlist = ( "countUpdate", "updateHosts", "tblSync", "cleanup_old_views", "cleanup_old_idx", "ss", "idx_rotate", "mtti" );
+my @functionlist = ( "countUpdate", "updateHosts", "tblSync", "cleanup_old_views", "cleanup_old_idx", "ss", "idx_rotate", "mtti", "mvdate" );
 
 # Command line options
 my $options = {
@@ -58,6 +58,7 @@ Usage: $myname [-option -option]
     -r        : Run only specified function(s) (used for debugging)
     -f        : list available functions (for debug use)
     -ss       : Analyze Server Stats [option -mysql]
+    -mvdate   : Used with 'makeview' function to recreate views for old data imports
     -c        : config file (defaults to $options->{config_file})
 Example: $myname -l /var/log/foo.log -d 5 -c test/config.php -v
 };
@@ -76,6 +77,7 @@ GetOptions(
     'idx_rotate!'     => \$options->{idx_rotate},
     'mtti!'           => \$options->{mtti},
     'mysql!'          => \$options->{mysql},
+    'mvdate|mvd=s'    => \$options->{mvdate},
 ) or usage_and_exit(1);    # got some invalid options
 
 if ( $options->{help} ) {
@@ -177,6 +179,9 @@ if ( $#runfuncs < 0 ) {
         elsif ( $func eq "mtti" ) {
             mtti();
         }
+        elsif ( $func eq "makeview" ) {
+            makeview();
+        }
         DEBUG( 1, "Ending $func" );
     }
 }
@@ -219,7 +224,7 @@ sub cleanup_old_views {
 
     # cleanup old search results
     $rc = 'drop view ';
-    $sql = "select table_name from information_schema.views where table_name like '%search_results'";
+    $sql = "SELECT table_name from information_schema.views where table_name like '%search_results'";
     $sth_syslog = $dbh->prepare($sql);
     DEBUG( 1, "Executing SQL Statement: $sql" );
     $sth_syslog->execute();
@@ -240,9 +245,9 @@ sub countUpdate {
     # Preparing replacement for updateCache db procedure: Count all counters
     # due to a bug in sphinxql when using sum you also need to use a group-by
     if ( $lzminor > 4 ) {
-        $sql = "select severity, sum(counter) from idx_all where match('\@dummy dummy') group by severity limit 50000 OPTION max_matches=5000";
+        $sql = "SELECT severity, sum(counter) from idx_all where match('\@dummy dummy') group by severity limit 50000 OPTION max_matches=5000";
     } else {
-        $sql = "select severity, sum(counter) from distributed group by severity limit 50000 OPTION max_matches=5000";
+        $sql = "SELECT severity, sum(counter) from distributed group by severity limit 50000 OPTION max_matches=5000";
     }
     DEBUG( 1, "Preparing SQL Statement: $sql" );
     $sth_sphinx = $dbh_sphinx->prepare($sql);
@@ -274,9 +279,9 @@ sub countUpdate {
         DEBUG( 1, "No index for $sphinx_yesterday, no need to update counts...");
     } else {
         if ( $lzminor > 4 ) {
-            $sql = "select severity, sum(counter) from $sphinx_yesterday where match('\@dummy dummy') group by severity";
+            $sql = "SELECT severity, sum(counter) from $sphinx_yesterday where match('\@dummy dummy') group by severity";
         } else {
-            $sql = "select severity, sum(counter) from $sphinx_yesterday group by severity";
+            $sql = "SELECT severity, sum(counter) from $sphinx_yesterday group by severity";
         }
         DEBUG( 1, "Preparing SQL Statement: $sql" );
         $sth_sphinx = $dbh_sphinx->prepare($sql);
@@ -303,9 +308,9 @@ sub updateHosts {
 
 # Note that DB's with host count > 5000 may be a problem here. This needs testing.
     if ( $lzminor > 4 ) {
-        $sql = "select host_crc, sum(counter), max(lo) from idx_all where match('\@dummy dummy') group by host_crc limit 50000 OPTION max_matches=5000";
+        $sql = "SELECT host_crc, sum(counter), max(lo) from idx_all where match('\@dummy dummy') group by host_crc limit 50000 OPTION max_matches=5000";
     } else {
-        $sql = "select host_crc, sum(counter), max(lo) from distributed group by host_crc limit 50000 OPTION max_matches=5000";
+        $sql = "SELECT host_crc, sum(counter), max(lo) from distributed group by host_crc limit 50000 OPTION max_matches=5000";
     }
     DEBUG( 1, "Executing SQL Statement: $sql" );
     $dbh_sphinx->do($sql);
@@ -536,7 +541,7 @@ sub cleanup_old_idx {
     # cleanup old indexes from views
     my @views;
     $log->INFO("Pruning old archive views");
-    $sql = "select table_name from information_schema.views where table_name like 'log_arch_day_%'";
+    $sql = "SELECT table_name from information_schema.views where table_name like 'log_arch_day_%'";
     $sth_syslog = $dbh->prepare($sql);
     DEBUG( 1, "Executing SQL Statement: $sql" );
     $sth_syslog->execute();
@@ -808,5 +813,31 @@ sub waitfor {
         sleep $sleepfor;
         $pid = `ps -C $proc -o pid=`;
         $i += $sleepfor;
+    }
+}
+
+sub makeview {
+    my $ymd = $options->{mvdate};
+    if ($ymd) {
+        if ( $ymd =~ /(\d{4})-?(\d{2})-?(\d{2})-?/ ) {
+            $log->INFO("Creating view name log_arch_day_$1$2$3");
+            $sql = "CREATE OR REPLACE VIEW log_arch_day_$1$2$3 AS SELECT `logs`.`id` AS `id`,`logs`.`host` AS `host`,`logs`.`facility` AS `facility`,`logs`.`severity` AS `severity`,`logs`.`program` AS `program`,`logs`.`msg` AS `msg`,`logs`.`mne` AS `mne`,`logs`.`eid` AS `eid`,`logs`.`suppress` AS `suppress`,`logs`.`counter` AS `counter`,`logs`.`fo` AS `fo`,`logs`.`lo` AS `lo`,`logs`.`notes` AS `notes` FROM `logs` where ((`logs`.`fo` >= '$ymd 00:00:00') AND (`logs`.`fo` <= '$ymd 23:59:59'))";
+            DEBUG( 1, "Executing SQL Statement: $sql" );
+            $dbh->do($sql) unless $options->{dryrun};
+            $sql = "SELECT table_name FROM INFORMATION_SCHEMA.tables where table_type = 'VIEW' AND table_schema = 'syslog' AND table_name LIKE 'log_arch_day_$1$2$3%'";
+            $sth_syslog = $dbh->prepare($sql);
+            DEBUG( 1, "Executing SQL Statement: $sql" );
+            $sth_syslog->execute();
+            while ( $results = $sth_syslog->fetchrow_hashref ) {
+            $log->INFO("Creating view_limits for log_arch_day_$1$2$3");
+            $sql = "INSERT IGNORE INTO view_limits (view_name, min_id, max_id) values ('$results->{table_name}', (SELECT min(id) FROM $results->{table_name}), (SELECT max(id) FROM $results->{table_name}))";
+            DEBUG( 1, "Executing SQL Statement: $sql" );
+            $dbh->do($sql) unless $options->{dryrun};
+            }
+        } else {
+            $log->ERR("Option -mvdate must be in the form YYYY-MM-DD");
+        }
+    } else {
+        $log->ERR("Option 'makeview' requires a date in the form YYYY-MM-DD");
     }
 }
