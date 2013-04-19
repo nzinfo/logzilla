@@ -58,6 +58,7 @@ GetOptions(
     'help|h!'      => \$options->{help},
     'verbose|v!'   => \$options->{verbose},
     'log-file|l=s' => \$options->{logfile},
+    'cisco_only!' => \$options->{cisco_only},
 ) or usage_and_exit(1);    # got some invalid options
 
 if ( $options->{help} ) {
@@ -99,6 +100,10 @@ while ( my $line = <STDIN> ) {
         ( $sev = $mne ) =~ s/.*\-(\d+)\-.*$/$1/;
     } else {
         $sev = 6;    # Default set to informational
+    	if ( $options->{cisco_only} ) {
+	$log->INFO("Skipping non-cisco based message");
+	next;
+	}
     }
     # Cisco ASA's send their Mnemonic in the program field...
     if ( $prg =~ /%(\w+-\d+-\S+):?/ ) {
