@@ -68,7 +68,7 @@ sub prompt {
 }
 
 my $version    = "4.5";
-my $subversion = ".410";
+my $subversion = ".412";
 
 # Grab the base path
 my $lzbase = getcwd;
@@ -95,6 +95,14 @@ sub getYN {
     }
 }
 
+my $rcfile = ".lzrc";
+if ( -e $rcfile ) {
+    open CONFIG, "$rcfile";
+    my $config = join "", <CONFIG>;
+    close CONFIG;
+    eval $config;
+    die "Couldn't interpret the configuration file ($rcfile) that was given.\nError details follow: $@\n" if $@;
+}
 # The command line args below are really just for me so I don't have to keep going through extra steps to test 1 thing.
 # But you can use them if you want :-)
 foreach my $arg (@ARGV) {
@@ -148,14 +156,6 @@ foreach my $arg (@ARGV) {
     }
 }
 
-my $rcfile = ".lzrc";
-if ( -e $rcfile ) {
-    open CONFIG, "$rcfile";
-    my $config = join "", <CONFIG>;
-    close CONFIG;
-    eval $config;
-    die "Couldn't interpret the configuration file ($rcfile) that was given.\nError details follow: $@\n" if $@;
-}
 print("\n\033[1m\n\n========================================\033[0m\n");
 print("\n\033[1m\tLogZilla End User License\n\033[0m");
 print("\n\033[1m========================================\n\n\033[0m\n\n");
@@ -1103,17 +1103,17 @@ options {
     chain_hostnames(no);
     keep_hostname(yes);
     #threaded(yes); # enable if using Syslog-NG 3.3.x
-    #use_fqdn(no); # disable in high scale environments
-    #use_dns(no); # disable in high scale environments
+    #use_fqdn(no); #disable in high scale environments
+    #use_dns(no); #disable in high scale environments
 };
 
 source s_logzilla {
     tcp(
-            #log_fetch_limit(100) # uncomment in high scale environments
-            #log_iw_size(5000) # uncomment in high scale environments
+        # log_fetch_limit(100) # uncomment in high scale environments
+        # log_iw_size(5000) # uncomment in high scale environments
        );
     udp(
-            #so_rcvbuf(1048576) # uncomment in high scale environments
+        # so_rcvbuf(1048576) # uncomment in high scale environments
        );
 };
 
@@ -1192,14 +1192,14 @@ sub setup_cron {
 #####################################################
 # Daily DB/SP Maintenance
 #####################################################
-# Grab some metrics every night @ 11pm, 3 attempts
-11,26,41 23 * * * root perl /var/www/logzilla/scripts/LZTool -v -r ss -mysql >> /var/log/logzilla/LZTool.log 2>&1
+# Grab some metrics every night @ 11pm
+11 23 * * * root perl /var/www/logzilla/scripts/LZTool -v -r ss -mysql 
 
-# Update and general maintenance @ 1am, , 2 attempts
-11,26 1 * * * root perl $lzbase/scripts/LZTool -v >> $logpath/LZTool.log 2>&1
+# Update and general maintenance @ 1am, 2 attempts
+11,26 1 * * * root perl $lzbase/scripts/LZTool -v 
 
-# Rotate indexes @ midnight, 7 attempts
-0,5,10,20,25,35,40,55 0 * * * root perl $lzbase/scripts/rotate >> $logpath/rotate.log 2>&1
+# Rotate indexes @ midnight and 2am
+0 0,2 * * * root perl $lzbase/scripts/rotate 
 
 #####################################################
 # END LogZilla Cron Entries
