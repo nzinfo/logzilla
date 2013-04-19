@@ -833,6 +833,7 @@ sub makeview {
             $sql = "INSERT IGNORE INTO view_limits (view_name, min_id, max_id) values ('$results->{table_name}', (SELECT min(id) FROM $results->{table_name}), (SELECT max(id) FROM $results->{table_name}))";
             DEBUG( 1, "Executing SQL Statement: $sql" );
             $dbh->do($sql) unless $options->{dryrun};
+            $log->INFO("View creation complete");
             }
         } else {
             $log->ERR("Option -mvdate must be in the form YYYY-MM-DD");
