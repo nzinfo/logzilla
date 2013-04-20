@@ -79,7 +79,8 @@ my @months   = qw(Jan Feb Mar Apr May Jun Jul Aug Sep Oct Nov Dec);
 my @days     = qw(Sun Mon Tue Wed Thu Fri Sat);
 my %months_h = map { $_ => 1 } @months;
 my $datetime = strftime( "%Y-%m-%d %H:%M:%S", localtime );
-my ( $hms, $sev, $msg, $day, $ymd, $prg, $mne, $month_num );
+my ( $hms, $msg, $day, $ymd, $prg, $month_num );
+my $sev = 7;    # Default set to debug if no sev is found
 
 while ( my $line = <STDIN> ) {
     chomp $line;
@@ -95,20 +96,18 @@ while ( my $line = <STDIN> ) {
         $ymd = "$yr-$month_num-$day";
         DEBUG( 1, "Setting YMD to %s", $ymd );
     }
-    if ( $msg =~ /\%([^:]*\-\d+\-[A-Z\-\_\d]+?)(?:\:|\s)/ ) {
-   # if ( $msg =~ /\%([A-Z\-\d\_]+?\-\d+\-[A-Z\-\_\d]+?)(?:\:|\s)/ ) {
+    if ( $msg =~ /\%([^:]*)\-(\d+)\-([A-Z\-\_\d]+?)(?:\:|\s)/ ) {
         $prg = "1019293"; # the logzilla processor will pick this up
-        ( $sev = $mne ) =~ s/.*\-(\d+)\-.*$/$1/;
+        $sev = $2
     } else {
-        $sev = 6;    # Default set to informational
     	if ( $options->{cisco_only} ) {
 	$log->INFO("Skipping non-cisco based message");
 	next;
 	}
     }
     # Cisco ASA's send their Mnemonic in the program field...
-    if ( $prg =~ /%(\w+-\d+-\S+):?/ ) {
-        ( $sev = $mne ) =~ s/.*\-(\d+)\-.*$/$1/;
+    if ( $prg =~ /\%([^:]*)\-(\d+)\-([A-Z\-\_\d]+?)(?:\:|\s)/ ) {
+        $sev = $2
     }
     DEBUG( 1, "Setting Severity to $sev" );
     if ( !$prg ) {
