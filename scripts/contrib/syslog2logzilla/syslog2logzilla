@@ -93,7 +93,8 @@ while ( my $line = <STDIN> ) {
         my ( $month, $day ) = split( '\s+', $line, 3 );
 	DEBUG(1, "Month found is $month");
         my $yr = strftime( "%Y", localtime );
-	$month_num= sprintf( "%02d", grep { $months[$_] eq $month } 0..$#months) + 1;
+        $month_num = sprintf( "%02d", (aIndex($month, @months)) + 1);
+	DEBUG(1, "Month array position is $month_num");
         $ymd = "$yr-$month_num-$day";
         DEBUG( 1, "Setting YMD to %s", $ymd );
     }
@@ -182,3 +183,4 @@ sub DEBUG {
           $log->DEBUG(@log_args);
       }
 }
+sub aIndex{for(1..@_){$_[0]eq$_[$_]&&return$_-1}-1}
