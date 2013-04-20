@@ -550,7 +550,7 @@ sub process_line {
         }
 
         my $mne;
-        if ( $msg =~ /\%([A-Z\-\d\_]+?\-\d+\-[A-Z\-\_\d]+?)(?:\:|\s)/ ) {
+        if ( $msg =~ /\%([^:]*\-\d+\-[A-Z\-\_\d]+?)(?:\:|\s)/ ) {
             $mne = $1;
             $prg = "Cisco Syslog";
         } else {
