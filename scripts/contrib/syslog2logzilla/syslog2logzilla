@@ -95,8 +95,9 @@ while ( my $line = <STDIN> ) {
         $ymd = "$yr-$month_num-$day";
         DEBUG( 1, "Setting YMD to %s", $ymd );
     }
-    if ( $msg =~ /\%([A-Z\-\d\_]+?\-\d+\-[A-Z\-\_\d]+?)(?:\:|\s)/ ) {
-        $prg = "Cisco_Syslog";
+    if ( $msg =~ /\%([^:]*\-\d+\-[A-Z\-\_\d]+?)(?:\:|\s)/ ) {
+   # if ( $msg =~ /\%([A-Z\-\d\_]+?\-\d+\-[A-Z\-\_\d]+?)(?:\:|\s)/ ) {
+        $prg = "1019293"; # the logzilla processor will pick this up
         ( $sev = $mne ) =~ s/.*\-(\d+)\-.*$/$1/;
     } else {
         $sev = 6;    # Default set to informational
