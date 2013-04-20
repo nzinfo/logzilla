@@ -91,8 +91,9 @@ while ( my $line = <STDIN> ) {
     if ( exists( $months_h{$month} ) ) {
         DEBUG( 1, "Incorrect Y-m-d value, converting..." );
         my ( $month, $day ) = split( '\s+', $line, 3 );
+	DEBUG(1, "Month found is $month");
         my $yr = strftime( "%Y", localtime );
-        $month_num = sprintf( "%02d", $months_h{$month} );
+	$month_num= sprintf( "%02d", grep { $months[$_] eq $month } 0..$#months) + 1;
         $ymd = "$yr-$month_num-$day";
         DEBUG( 1, "Setting YMD to %s", $ymd );
     }
