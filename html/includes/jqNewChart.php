@@ -45,7 +45,13 @@ require_once $basePath2."/grid/php/jqChart.php";
 		 // $this->setXAxis($formatter);//"d = new Date(this.value);return d.getDate()+'<br/>'+weekdaystxt[d.getDay()][0];");
 		 
 		  $this->_data->setyAxis("min",0);
-		  $this->_data->setyAxis("title",array("text"=>"Events"));						 			
+		  $this->_data->setyAxis("title", array(
+                      "text"=>"Events",
+                      "style"=>array(
+                          "color"=>'#FDA110'
+                          )
+                      )
+                  );						 			
 		}
 		$this->_data->setLegend(array("enabled"=> false)) ;
 		$this->_data->setChartOptions("backgroundColor",'#FFDDAA');
