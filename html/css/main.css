@@ -16,7 +16,7 @@ margin-right: auto;
 }
 
 .bg {
-    background: url(../images/bg.jpg) no-repeat center center fixed; 
+    background: url(../images/bg.jpg) no-repeat center 0 fixed; 
     -webkit-background-size: cover;
     -moz-background-size: cover;
     -o-background-size: cover;
