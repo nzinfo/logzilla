@@ -40,7 +40,7 @@ $(document).ready(function(){
 /* Sparklines */
 #ticker_container {
 position: absolute;
-top: 0px;
+top: 7px;
 right: 40px;
 }
 .ticker_text {
@@ -349,7 +349,7 @@ mdraw = function() {
             $('.ticker_text').text("");
             if(data) {
                 // Add sparkline:
-                $('.ticker').sparkline(data, {width: ((data.length - 1) * 2), height: '30px', type: 'line'});
+                $('.ticker').sparkline(data, {width: ((data.length + 10) * 2), height: '30px', type: 'line'});
                 // Added average MPS text if data exists:
                 var total = 0;
                 for(var i = 0; i < data.length; i++){
