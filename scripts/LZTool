@@ -188,6 +188,14 @@ if ( $#runfuncs < 0 ) {
 
 # There should only be subs from here down
 
+sub getYN {
+    my ( $prompt, $default ) = @_;
+    my $defaultValue = $default ? "[$default]" : "";
+    print "$prompt $defaultValue: ";
+    chomp( my $input = <STDIN> );
+    return $input ? $input : $default;
+}
+
 sub tblSync {
     my $db_tbl  = shift;
     my $spx_tbl = shift;
@@ -818,22 +826,33 @@ sub waitfor {
 
 sub makeview {
     my $ymd = $options->{mvdate};
+    my ($y, $m, $d);
     if ($ymd) {
         if ( $ymd =~ /(\d{4})-?(\d{2})-?(\d{2})-?/ ) {
-            $log->INFO("Creating view name log_arch_day_$1$2$3");
-            $sql = "CREATE OR REPLACE VIEW log_arch_day_$1$2$3 AS SELECT `logs`.`id` AS `id`,`logs`.`host` AS `host`,`logs`.`facility` AS `facility`,`logs`.`severity` AS `severity`,`logs`.`program` AS `program`,`logs`.`msg` AS `msg`,`logs`.`mne` AS `mne`,`logs`.`eid` AS `eid`,`logs`.`suppress` AS `suppress`,`logs`.`counter` AS `counter`,`logs`.`fo` AS `fo`,`logs`.`lo` AS `lo`,`logs`.`notes` AS `notes` FROM `logs` where ((`logs`.`fo` >= '$ymd 00:00:00') AND (`logs`.`fo` <= '$ymd 23:59:59'))";
+            my $y = $1;
+            my $m = $2;
+            my $d = $3;
+            $log->INFO("Creating view name log_arch_day_$y$m$d");
+            $sql = "CREATE OR REPLACE VIEW log_arch_day_$y$m$d AS SELECT `logs`.`id` AS `id`,`logs`.`host` AS `host`,`logs`.`facility` AS `facility`,`logs`.`severity` AS `severity`,`logs`.`program` AS `program`,`logs`.`msg` AS `msg`,`logs`.`mne` AS `mne`,`logs`.`eid` AS `eid`,`logs`.`suppress` AS `suppress`,`logs`.`counter` AS `counter`,`logs`.`fo` AS `fo`,`logs`.`lo` AS `lo`,`logs`.`notes` AS `notes` FROM `logs` where ((`logs`.`fo` >= '$ymd 00:00:00') AND (`logs`.`fo` <= '$ymd 23:59:59'))";
             DEBUG( 1, "Executing SQL Statement: $sql" );
             $dbh->do($sql) unless $options->{dryrun};
-            $sql = "SELECT table_name FROM INFORMATION_SCHEMA.tables where table_type = 'VIEW' AND table_schema = 'syslog' AND table_name LIKE 'log_arch_day_$1$2$3%'";
+            $sql = "SELECT table_name FROM INFORMATION_SCHEMA.tables where table_type = 'VIEW' AND table_schema = 'syslog' AND table_name LIKE 'log_arch_day_$y$m$d%'";
             $sth_syslog = $dbh->prepare($sql);
             DEBUG( 1, "Executing SQL Statement: $sql" );
             $sth_syslog->execute();
             while ( $results = $sth_syslog->fetchrow_hashref ) {
-            $log->INFO("Creating view_limits for log_arch_day_$1$2$3");
-            $sql = "INSERT IGNORE INTO view_limits (view_name, min_id, max_id) values ('$results->{table_name}', (SELECT min(id) FROM $results->{table_name}), (SELECT max(id) FROM $results->{table_name}))";
-            DEBUG( 1, "Executing SQL Statement: $sql" );
-            $dbh->do($sql) unless $options->{dryrun};
-            $log->INFO("View creation complete");
+                $log->INFO("Creating view_limits for log_arch_day_$y$m$d");
+                $sql = "INSERT IGNORE INTO view_limits (view_name, min_id, max_id) values ('$results->{table_name}', (SELECT min(id) FROM $results->{table_name}), (SELECT max(id) FROM $results->{table_name}))";
+                DEBUG( 1, "Executing SQL Statement: $sql" );
+                $dbh->do($sql) unless $options->{dryrun};
+                $log->INFO("View creation complete");
+                my $ok = &getYN( "Data will be unavailable until indexed. Should I index the new data?", "y" );
+                if ( $ok =~ /[Yy]/ ) {
+                    my $cores = $settings->{SPX_CPU_CORES};
+                    for ( my $i = 0 ; $i < $cores ; $i++ ) {
+                        system("cd $ROOT_DIR/sphinx && bin/indexer  idx_log_arch_day_$y$m${d}_$i --rotate");
+                    }
+                }
             }
         } else {
             $log->ERR("Option -mvdate must be in the form YYYY-MM-DD");
