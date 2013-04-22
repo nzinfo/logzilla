@@ -68,7 +68,7 @@ sub prompt {
 }
 
 my $version    = "4.5";
-my $subversion = ".422";
+my $subversion = ".426";
 
 # Grab the base path
 my $lzbase = getcwd;
@@ -369,7 +369,7 @@ sub do_install {
         facility enum('0','1','2','3','4','5','6','7','8','9','10','11','12','13','14','15','16','17','18','19','20','21','22','23') NOT NULL,
         severity enum('0','1','2','3','4','5','6','7') NOT NULL,
         program int(10) unsigned NOT NULL,
-        msg varchar(2048) NOT NULL,
+        msg varchar(8192) NOT NULL,
         mne int(10) unsigned NOT NULL,
         eid int(10) unsigned NOT NULL DEFAULT '0',
         suppress datetime NOT NULL DEFAULT '2010-03-01 00:00:00',
@@ -782,7 +782,7 @@ sub do_procs {
     `i_facility` int(2) unsigned,
     `i_severity` int(2) unsigned,
     `i_program` varchar(255),
-    `i_msg` varchar(2048),
+    `i_msg` varchar(8192),
     `i_mne` varchar(255),
     `i_eid` int(10) unsigned,
     `i_suppress` datetime ,
@@ -1938,7 +1938,7 @@ sub tbl_logs_alter_from_299 {
           $dbh->do("ALTER TABLE $dbtable ADD `notes` varchar(255) NOT NULL") or die "Could not update $dbname: $DBI::errstr";
 
           print "Altering column: msg\n";
-          $dbh->do("ALTER TABLE $dbtable CHANGE `msg` `msg` varchar(2048) NOT NULL") or die "Could not update $dbname: $DBI::errstr";
+          $dbh->do("ALTER TABLE $dbtable CHANGE `msg` `msg` varchar(8192) NOT NULL") or die "Could not update $dbname: $DBI::errstr";
 
           print "Dropping index: priority\n";
           $dbh->do("ALTER TABLE $dbtable DROP INDEX priority") or die "Could not update $dbname: $DBI::errstr";
