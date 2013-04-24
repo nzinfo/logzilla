@@ -2,6 +2,7 @@
 $| = 1;
 use strict;
 use warnings;
+use Find::Lib qw(../../../lib);
 use Log::Fast;
 use FindBin;
 use Getopt::Long;
@@ -9,6 +10,8 @@ use File::Basename;
 use Cwd qw(abs_path);
 my $ROOT_DIR = abs_path("$FindBin::Bin");
 use POSIX qw/strftime/;
+use LogZilla::Config;
+use DBI;
 
 #FIXME - I had to add below for Perl 5.10 users.
 # on Perl 5.10, I would get the following when running:
@@ -28,6 +31,7 @@ my $options = {
     verbose => 0,
     logfile => "./$myname.log",
     help    => 0,
+    config_file => "$ROOT_DIR/../../../html/config/config.php",
 
 };
 
@@ -45,6 +49,7 @@ sub usage_and_exit {
     -h        : this (help) message
     -d        : debug level (0-5) (0 = disabled [default])
     -v        : Also print results to STDERR
+    -c        : config file (defaults to $options->{config_file})
     -l        : log file (defaults to local dir
     Example: cat logfile | $myname -l /var/log/foo.log -d 1 -v
         or, to feed into LogZilla:
@@ -57,8 +62,10 @@ GetOptions(
     'debug|d=i'    => \$options->{debug},
     'help|h!'      => \$options->{help},
     'verbose|v!'   => \$options->{verbose},
+    'config-file|c=s' => \$options->{config_file},
     'log-file|l=s' => \$options->{logfile},
     'cisco_only!' => \$options->{cisco_only},
+    'makeview!' => \$options->{makeview},
 ) or usage_and_exit(1);    # got some invalid options
 
 if ( $options->{help} ) {
@@ -80,7 +87,29 @@ my @days     = qw(Sun Mon Tue Wed Thu Fri Sat);
 my %months_h = map { $_ => 1 } @months;
 my $datetime = strftime( "%Y-%m-%d %H:%M:%S", localtime );
 my ( $hms, $msg, $day, $ymd, $prg, $month_num );
+my ( $results, $sth, $sql, $dbh );
+my @ymds;
 my $sev = 7;    # Default set to debug if no sev is found
+my $cfg = LogZilla::Config->new( path => $options->{config_file} );
+$dbh = connect_to_db();
+sub connect_to_db {
+    $dbh = DBI->connect( $cfg->db_dsn, $cfg->db_user, $cfg->db_pass,
+        { HandleError => sub { $log->ERR( $_[0] ); exit(1) } } );
+    $dbh->{TraceLevel} = $options->{dbi_debug};
+    return $dbh;
+}
+# Create hash with pairs of name => value for every row read from settings table
+my $settings = read_settings_from_db();
+sub read_settings_from_db {
+    my %settings;
+    my $sth = $dbh->prepare("SELECT name, value FROM settings");
+    $sth->execute();
+    while ( my $r = $sth->fetchrow_arrayref ) {
+        $settings{ $r->[0] } = $r->[1];
+    }
+    $settings{SNARE} = 0 if $settings{SNARE} != 1;
+    return \%settings;
+}
 
 while ( my $line = <STDIN> ) {
     chomp $line;
@@ -121,14 +150,57 @@ while ( my $line = <STDIN> ) {
     my $fac = 23;    # Manually set Local7 since we don't know the IETF facility
     my $pri = ( 23 * 8 + $sev );
     print "$ymd $hms\t$host\t$pri\t$prg\t$msg\n";
+    push(@ymds, $ymd) if ( $options->{makeview} ); 
 }
-
+makeview() if ( $options->{makeview} );
 # There should only be subs from here down
 
 # =================================================================================================
 # Helper functions
 # =================================================================================================
 
+sub uniq{
+	my %temp_hash = map { $_, 0 } @_;
+	return keys %temp_hash;
+}
+sub makeview {
+    @ymds = uniq(@ymds);
+    for my $ymd ( @ymds ) {
+    $log->INFO("Creating view for $ymd");
+next;
+    my ($y, $m, $d);
+    if ($ymd) {
+        if ( $ymd =~ /(\d{4})-?(\d{2})-?(\d{2})-?/ ) {
+            my $y = $1;
+            my $m = $2;
+            my $d = $3;
+            $log->INFO("Creating view name log_arch_day_$y$m$d");
+            $sql = "CREATE OR REPLACE VIEW log_arch_day_$y$m$d AS SELECT `logs`.`id` AS `id`,`logs`.`host` AS `host`,`logs`.`facility` AS `facility`,`logs`.`severity` AS `severity`,`logs`.`program` AS `program`,`logs`.`msg` AS `msg`,`logs`.`mne` AS `mne`,`logs`.`eid` AS `eid`,`logs`.`suppress` AS `suppress`,`logs`.`counter` AS `counter`,`logs`.`fo` AS `fo`,`logs`.`lo` AS `lo`,`logs`.`notes` AS `notes` FROM `logs` where ((`logs`.`fo` >= '$ymd 00:00:00') AND (`logs`.`fo` <= '$ymd 23:59:59'))";
+            DEBUG( 1, "Executing SQL Statement: $sql" );
+            $dbh->do($sql) unless $options->{dryrun};
+            $sql = "SELECT table_name FROM INFORMATION_SCHEMA.tables where table_type = 'VIEW' AND table_schema = 'syslog' AND table_name LIKE 'log_arch_day_$y$m$d%'";
+            $sth = $dbh->prepare($sql);
+            DEBUG( 1, "Executing SQL Statement: $sql" );
+            $sth->execute();
+            while ( $results = $sth->fetchrow_hashref ) {
+                $log->INFO("Creating view_limits for log_arch_day_$y$m$d");
+                $sql = "INSERT IGNORE INTO view_limits (view_name, min_id, max_id) values ('$results->{table_name}', (SELECT min(id) FROM $results->{table_name}), (SELECT max(id) FROM $results->{table_name}))";
+                DEBUG( 1, "Executing SQL Statement: $sql" );
+                $dbh->do($sql) unless $options->{dryrun};
+                $log->INFO("View creation complete");
+                    my $cores = $settings->{SPX_CPU_CORES};
+                    for ( my $i = 0 ; $i < $cores ; $i++ ) {
+                        system("cd $ROOT_DIR/../../../sphinx && bin/indexer  idx_log_arch_day_$y$m${d}_$i --rotate");
+                    }
+            }
+        } else {
+            $log->ERR("Date string must be in the form YYYY-MM-DD");
+        }
+    } else {
+        $log->ERR("Option 'makeview' requires a date in the form YYYY-MM-DD");
+    }
+}
+}
 sub setup_log {
       my $log_dir = dirname( $options->{logfile} );
 
