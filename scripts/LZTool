@@ -78,7 +78,7 @@ GetOptions(
     'mtti!'           => \$options->{mtti},
     'mysql!'          => \$options->{mysql},
     'mvdate|mvd=s'    => \$options->{mvdate},
-    'yes|y'	      => \$options->{yes},
+    'yes|y'           => \$options->{yes},
 ) or usage_and_exit(1);    # got some invalid options
 
 if ( $options->{help} ) {
@@ -94,8 +94,8 @@ my $dbh = connect_to_db();
 # Read settings from DB.
 my $settings = read_settings_from_db();
 my ( $lzmajor, $lzminor ) = split( /\./, $settings->{VERSION} );
-my ( undef, $lzsub ) = split( /\./, $settings->{VERSION_SUB} );
-DEBUG( 1, "LogZilla Version Check: $lzmajor, $lzminor, $lzsub");
+my ( undef,    $lzsub )   = split( /\./, $settings->{VERSION_SUB} );
+DEBUG( 1, "LogZilla Version Check: $lzmajor, $lzminor, $lzsub" );
 
 # Reconfigure log to use log_file (as we finally got it from $settings), also
 # set proper level and output based on $options{verbose} and $options{debug}
@@ -135,7 +135,7 @@ if ( defined( $options->{functionlist} ) ) {
     exit;
 }
 if ( $#runfuncs < 0 ) {
-    waitfor("indexer", 5, 300);
+    waitfor( "indexer", 5, 300 );
     $dbh_sphinx = DBI->connect( 'DBI:mysql::127.0.0.1:9306', 'root', ) || die "Could not connect to SphinxQL: $DBI::errstr";
     countUpdate();
     updateHosts();
@@ -149,7 +149,7 @@ if ( $#runfuncs < 0 ) {
     mtti();
 } else {
     $log->INFO("Running specific functions only");
-    waitfor("indexer", 5, 300);
+    waitfor( "indexer", 5, 300 );
     $dbh_sphinx = DBI->connect( 'DBI:mysql::127.0.0.1:9306', 'root', ) || die "Could not connect to SphinxQL: $DBI::errstr";
 
     foreach my $func (@runfuncs) {
@@ -276,7 +276,7 @@ sub countUpdate {
         }
         $sth_syslog = $dbh->prepare('REPLACE INTO cache (name,value,updatetime) VALUES ("msg_sum",?,NOW());');
         $sth_syslog->execute($count) unless $options->{dryrun};
-        store_metric("lztool_msgsum", $count);
+        store_metric( "lztool_msgsum", $count );
     }
 
     # Check yesterday's counters
@@ -285,7 +285,7 @@ sub countUpdate {
     $sth_syslog = $dbh->prepare($sql);
     $sth_syslog->execute();
     if ( $sth_syslog->rows == 0 ) {
-        DEBUG( 1, "No index for $sphinx_yesterday, no need to update counts...");
+        DEBUG( 1, "No index for $sphinx_yesterday, no need to update counts..." );
     } else {
         if ( $lzminor > 4 ) {
             $sql = "SELECT severity, sum(counter) from $sphinx_yesterday where match('\@dummy dummy') group by severity";
@@ -327,7 +327,7 @@ sub updateHosts {
     $sth_sphinx->execute();
     if ( $sth_sphinx->rows > 0 ) {
         $log->INFO( "Updating %d hosts...", $sth_sphinx->rows );
-        store_metric("lztool_hostcount", sprintf ("%d", $sth_sphinx->rows));
+        store_metric( "lztool_hostcount", sprintf( "%d", $sth_sphinx->rows ) );
         while ( my $results = $sth_sphinx->fetchrow_hashref ) {
             $sql = ( "update hosts set seen=" . $results->{'sum(counter)'} . ", lastseen=GREATEST(lastseen,from_unixtime(" . $results->{'max(lo)'} . ")), hidden='false' where crc32(host)=" . $results->{'host_crc'} );
             DEBUG( 1, "Executing SQL Statement: $sql" );
@@ -413,24 +413,24 @@ sub humanReadable {
 
 sub HumanToBytes {
     my @strings = @_;
-    my $base = 1024;
-    my %units = (
+    my $base    = 1024;
+    my %units   = (
         K => $base,
-        M => $base ** 2,
-        G => $base ** 3,
-        T => $base ** 4,
-        P => $base ** 5,
-        E => $base ** 6,
-        Z => $base ** 7,
-        Y => $base ** 8,
+        M => $base**2,
+        G => $base**3,
+        T => $base**4,
+        P => $base**5,
+        E => $base**6,
+        Z => $base**7,
+        Y => $base**8,
     );
-    my $pattern = join('|', sort keys %units);
+    my $pattern = join( '|', sort keys %units );
     my $total;
-    for my $string ( @strings ) {
+    for my $string (@strings) {
         while ( $string =~ /(([0-9]*(?:\.[0-9]+)?)($pattern))/g ) {
             my $number = $2 * $units{$3};
             $total += $number;
-            DEBUG( 1, "Converting %12s to %12.0f", $1, $number);
+            DEBUG( 1, "Converting %12s to %12.0f", $1, $number );
         }
     }
     return sprintf "%.0f", $total;
@@ -601,6 +601,7 @@ sub idx_rotate {
         DEBUG( 1, "Running command: $ROOT_DIR/sphinx/bin/indextool --config $ROOT_DIR/sphinx/sphinx.conf --dumpheader idx_log_arch_day_${day}_$part | grep docinfo | awk '{print \$2}'" );
         my $docinfo = `$ROOT_DIR/sphinx/bin/indextool --config $ROOT_DIR/sphinx/sphinx.conf --dumpheader idx_log_arch_day_${day}_$part | grep docinfo | awk '{print \$2}'`;
         chomp($docinfo);
+
         if ($docinfo) {
             DEBUG( 1, "Docinfo is $docinfo" );
             DEBUG( 1, "Running command: $ROOT_DIR/sphinx/bin/indextool --config $ROOT_DIR/sphinx/sphinx.conf --dumpheader idx_log_arch_day_${day}_0 | grep total-documents | awk '{print \$2}'" ) if ( !$events );
@@ -614,14 +615,15 @@ sub idx_rotate {
                 $log->INFO("Converting index (${day}_$part) to disk-based storage because it is > $memdays day(s) old...");
                 push( @indexlist, "idx_log_arch_day_${day}_$part" );
             }
-            # cdukes: added below in case someone changes their idx_mem_days in teh db and we need to go back and convert disk based indexes back to memory based
+
+# cdukes: added below in case someone changes their idx_mem_days in teh db and we need to go back and convert disk based indexes back to memory based
             if ( ( $diff < $memdays ) && ( $docinfo =~ /inline/ ) ) {
                 $log->INFO("The $day index is $diff day(s) older than today.");
                 $log->INFO("Converting index (${day}_$part) to memory-based storage because it is < $memdays day(s) old and your SPX_IDX_DIM is set to $memdays");
                 push( @indexlist, "idx_log_arch_day_${day}_$part" );
             }
         } else {
-            $log->ERR("Unable to obtain DOCINFO from the index header for idx_log_arch_day_${day}_$part, you will need to manually run '%s' to find out why", "$ROOT_DIR/sphinx/bin/indextool --config $ROOT_DIR/sphinx/sphinx.conf --dumpheader idx_log_arch_day_${day}_$part");
+            $log->ERR( "Unable to obtain DOCINFO from the index header for idx_log_arch_day_${day}_$part, you will need to manually run '%s' to find out why", "$ROOT_DIR/sphinx/bin/indextool --config $ROOT_DIR/sphinx/sphinx.conf --dumpheader idx_log_arch_day_${day}_$part" );
         }
     }
     if (@indexlist) {
@@ -632,11 +634,12 @@ sub idx_rotate {
         my $secs   = sprintf( "%.0f", $events / $speed * $idxcnt );
         DEBUG( 1, "events = $events, speed = $speed, indexcount = $idxcnt" );
         $log->INFO( "This may take about %s (just a non-scientific guess)", sec2human($secs) );
-        # cdukes: have to move this to a loop, looks like doing them all at once is too much for large scale
-        # instead, we will call idx_rotate every hour so that these get re-indexed one at a time
-        #my $indexes = join( ' ', @indexlist );
-        #DEBUG( 1, "Running $ROOT_DIR/sphinx/bin/indexer --config $ROOT_DIR/sphinx/sphinx.conf $indexes --rotate --sighup-each" );
-        #system("$ROOT_DIR/sphinx/bin/indexer --config $ROOT_DIR/sphinx/sphinx.conf $indexes --rotate --sighup-each") unless $options->{dryrun};
+
+# cdukes: have to move this to a loop, looks like doing them all at once is too much for large scale
+# instead, we will call idx_rotate every hour so that these get re-indexed one at a time
+#my $indexes = join( ' ', @indexlist );
+#DEBUG( 1, "Running $ROOT_DIR/sphinx/bin/indexer --config $ROOT_DIR/sphinx/sphinx.conf $indexes --rotate --sighup-each" );
+#system("$ROOT_DIR/sphinx/bin/indexer --config $ROOT_DIR/sphinx/sphinx.conf $indexes --rotate --sighup-each") unless $options->{dryrun};
         foreach my $index (@indexlist) {
             DEBUG( 1, "Running $ROOT_DIR/sphinx/bin/indexer --config $ROOT_DIR/sphinx/sphinx.conf $index --rotate" );
             system("$ROOT_DIR/sphinx/bin/indexer --config $ROOT_DIR/sphinx/sphinx.conf $index --rotate") unless $options->{dryrun};
@@ -665,8 +668,8 @@ sub ss {
         DEBUG( 1, "spmem = %s", $spmem );
         $results->{avg} = sprintf( "%0.f", $results->{avg} );
         $log->INFO( "Your current EPS average is %s (%s samples)", commify( $results->{avg} ), commify( $results->{samples} ) );
-        store_metric("lztool_eps_avg", $results->{avg});
-        store_metric("lztool_eps_avg_samples", $results->{samples});
+        store_metric( "lztool_eps_avg",         $results->{avg} );
+        store_metric( "lztool_eps_avg_samples", $results->{samples} );
         my $eph = $results->{avg} * 60 * 60;
         my $epd = $results->{avg} * 60 * 60 * 24;
         my $attrs = `cat $ROOT_DIR/sphinx/sphinx.conf | grep sql_attr | grep -v "#" | wc -l`;
@@ -678,7 +681,7 @@ sub ss {
         $results = $sth_syslog->fetchrow_hashref;
         if ( ( $results->{'count'} ) > 1 ) {
             $log->INFO( "LogZilla uptime is %s hours", $results->{count} );
-        store_metric("lztool_srv_uptime_hours", $results->{count});
+            store_metric( "lztool_srv_uptime_hours", $results->{count} );
         } else {
             $log->INFO("Sorry, there's no data available yet. Is this a new installation?");
             exit;
@@ -686,7 +689,7 @@ sub ss {
         my $multiplier = $settings->{SPX_IDX_DIM} + 1;  # needed for current day
         my $needed = ( 1 + $attrs ) * $epd * ( 4 * $multiplier ) / 1000;
         $log->INFO( "Expecting %s average EPD", commify($epd) );
-        store_metric("lztool_epd", $epd);
+        store_metric( "lztool_epd", $epd );
         my $total = `cat /proc/meminfo | grep MemTotal | awk '{print \$2}'`;
         chomp($total);
         my $free = `cat /proc/meminfo | grep MemFree | awk '{print \$2}'`;
@@ -696,11 +699,11 @@ sub ss {
         $log->INFO( "Your server is configured to store %d extra day(s) of events in memory (the rest on disk)", $settings->{SPX_IDX_DIM} );
         $log->INFO( "At your current event rate, the maximum amount of *estimated* memory usage is %s (All Days)", humanBytes($needed) );
         $log->INFO( "LogZilla is currently using %s of that %s total.", humanBytes($spmem), humanBytes($needed) );
-        store_metric("lztool_idx_memused", $spmem);
-        store_metric("lztool_mem_total", $total);
-        store_metric("lztool_mem_free", $free);
-        store_metric("lztool_spx_dim", $settings->{SPX_IDX_DIM});
-        store_metric("lztool_mem_needed", $needed);
+        store_metric( "lztool_idx_memused", $spmem );
+        store_metric( "lztool_mem_total",   $total );
+        store_metric( "lztool_mem_free",    $free );
+        store_metric( "lztool_spx_dim",     $settings->{SPX_IDX_DIM} );
+        store_metric( "lztool_mem_needed",  $needed );
         my $remainder = $free - ( $needed - $spmem );
 
         if ( ($remainder) < 0 ) {
@@ -717,17 +720,17 @@ sub ss {
         chomp($spdsk);
         my $du = $spdsk; # define du here in case the only disk usage is from today (server only up for one day)
         $log->INFO( "Current Index Size (on disk) is approximately %s", humanBytes($spdsk) );
-        store_metric("lztool_index_diskused_KB", $spdsk);
+        store_metric( "lztool_index_diskused_KB", $spdsk );
         $sql = "SELECT table_schema, Round(Sum(data_length + index_length) / 1024, 0) AS 'dbsize_kbytes' FROM information_schema.tables WHERE table_schema='syslog' GROUP  BY table_schema";
         $sth_syslog = $dbh->prepare($sql);
         DEBUG( 1, "Executing SQL Statement: $sql" );
         $sth_syslog->execute();
         $results = $sth_syslog->fetchrow_hashref;
         $log->INFO( "Current DB size (on disk) is approximately %s", humanBytes( $results->{'dbsize_kbytes'} ) );
-        store_metric("lztool_db_diskused_KB", $results->{'dbsize_kbytes'});
+        store_metric( "lztool_db_diskused_KB", $results->{'dbsize_kbytes'} );
 
-        # below doesn't work because events/sec don't drop for data > $retention
-        # $sql = "SELECT FROM_UNIXTIME(ts_from) as dt, ts_from AS ts FROM events_per_second limit 1";
+# below doesn't work because events/sec don't drop for data > $retention
+# $sql = "SELECT FROM_UNIXTIME(ts_from) as dt, ts_from AS ts FROM events_per_second limit 1";
         $sql = "SELECT UNIX_TIMESTAMP(fo) AS ts, fo AS dt FROM logs ORDER BY lo ASC LIMIT 1";
         $sth_syslog = $dbh->prepare($sql);
         DEBUG( 1, "Executing SQL Statement: $sql" );
@@ -745,7 +748,7 @@ sub ss {
             $du = sprintf( "%d", ( $spdsk / $diff ) );
             DEBUG( 1, "spdisk = %s, diff = %s, du = %s", $spdsk, $diff, $du );
             $log->INFO( "LogZilla indexes (excluding MySQL) should consume about %s of disk per day.", humanBytes($du) );
-            store_metric("lztool_estimated_disk_perday", "$du");
+            store_metric( "lztool_estimated_disk_perday", "$du" );
         }
 
         #---
@@ -767,45 +770,47 @@ sub ss {
             my $recommended_key_buffer_size = $results->{'recommended_key_buffer_size'};
             $log->INFO( "The recommended innodb_buffer_pool_size for this server is %s", $recommended_innodb_buffer_pool_size );
             $log->INFO( "The recommended key_buffer_size for this server is %s", $recommended_key_buffer_size );
-          store_metric("lztool_innodb_rec", HumanToBytes("$recommended_innodb_buffer_pool_size"));
-          store_metric("lztool_myisam_rec", HumanToBytes("$recommended_key_buffer_size"));
+            store_metric( "lztool_innodb_rec", HumanToBytes("$recommended_innodb_buffer_pool_size") );
+            store_metric( "lztool_myisam_rec", HumanToBytes("$recommended_key_buffer_size") );
         }
     } else {
-          $log->INFO("Sorry, there's no EPS data avilable yet. Is this a new installation?");
+        $log->INFO("Sorry, there's no EPS data avilable yet. Is this a new installation?");
     }
 }
 
 sub mtti {
-      $log->INFO("-=Calculating MTTI Stats=-");
-      $sql = "SELECT FROM_UNIXTIME(ts_start) AS start, FROM_UNIXTIME(ts_end) AS end, value FROM sph_metrics WHERE name='indexer'";
-      $sth_syslog = $dbh->prepare($sql);
-      DEBUG( 1, "Executing SQL Statement: $sql" );
-      $sth_syslog->execute();
-      my @vals;
-      while ( $results = $sth_syslog->fetchrow_hashref ) {
-          my $diff = str2time( $results->{end} ) - str2time( $results->{start} );
-          DEBUG( 1, "diff between %s and %s is %s", $results->{start}, $results->{end}, sec2human($diff) );
-          push( @vals, $results->{value} );
-      }
-      if (@vals) {
-          my $int = sprintf "%d",  mean(@vals);
-          $log->INFO( "Mean Time To Index is %d seconds (%s samples)", $int, commify( scalar(@vals) ) );
-          store_metric("lztool_mtti", $int);
-      } else {
-          $log->INFO("Sorry, there's no data available yet. Is this a new installation?");
-      }
+    $log->INFO("-=Calculating MTTI Stats=-");
+    $sql = "SELECT FROM_UNIXTIME(ts_start) AS start, FROM_UNIXTIME(ts_end) AS end, value FROM sph_metrics WHERE name='indexer'";
+    $sth_syslog = $dbh->prepare($sql);
+    DEBUG( 1, "Executing SQL Statement: $sql" );
+    $sth_syslog->execute();
+    my @vals;
+    while ( $results = $sth_syslog->fetchrow_hashref ) {
+        my $diff = str2time( $results->{end} ) - str2time( $results->{start} );
+        DEBUG( 1, "diff between %s and %s is %s", $results->{start}, $results->{end}, sec2human($diff) );
+        push( @vals, $results->{value} );
+    }
+    if (@vals) {
+        my $int = sprintf "%d", mean(@vals);
+        $log->INFO( "Mean Time To Index is %d seconds (%s samples)", $int, commify( scalar(@vals) ) );
+        store_metric( "lztool_mtti", $int );
+    } else {
+        $log->INFO("Sorry, there's no data available yet. Is this a new installation?");
+    }
 }
 
 sub store_metric {
-    my ($name, $value) = @_;
+    my ( $name, $value ) = @_;
+
     #$log->INFO("Storing Metrics: $name = $value");
-    DEBUG( 1, "Storing Metrics: $name = $value");
+    DEBUG( 1, "Storing Metrics: $name = $value" );
     $sql = "INSERT INTO sph_metrics (name,value,ts_start,ts_end) VALUES ('$name', $value, UNIX_TIMESTAMP(NOW()), UNIX_TIMESTAMP(NOW()))";
     DEBUG( 1, "Executing SQL Statement: $sql" );
     $dbh->do($sql) unless $options->{dryrun};
 }
 
 sub waitfor {
+
     # Need to wait for indexer to finish if it is restarting searchd
     my ( $proc, $sleepfor, $timelimit ) = @_;
     my $i = 0;
@@ -827,7 +832,7 @@ sub waitfor {
 
 sub makeview {
     my $ymd = $options->{mvdate};
-    my ($y, $m, $d);
+    my ( $y, $m, $d );
     if ($ymd) {
         if ( $ymd =~ /(\d{4})-?(\d{2})-?(\d{2})-?/ ) {
             my $y = $1;
@@ -841,26 +846,27 @@ sub makeview {
             $sth_syslog = $dbh->prepare($sql);
             DEBUG( 1, "Executing SQL Statement: $sql" );
             $sth_syslog->execute();
+
             while ( $results = $sth_syslog->fetchrow_hashref ) {
                 $log->INFO("Creating view_limits for log_arch_day_$y$m$d");
                 $sql = "INSERT IGNORE INTO view_limits (view_name, min_id, max_id) values ('$results->{table_name}', (SELECT min(id) FROM $results->{table_name}), (SELECT max(id) FROM $results->{table_name}))";
                 DEBUG( 1, "Executing SQL Statement: $sql" );
                 $dbh->do($sql) unless $options->{dryrun};
                 $log->INFO("View creation complete");
-		unless ($options->{yes}) {
-                my $ok = &getYN( "Data will be unavailable until indexed. Should I index the new data?", "y" );
-                if ( $ok =~ /[Yy]/ ) {
+                unless ( $options->{yes} ) {
+                    my $ok = &getYN( "Data will be unavailable until indexed. Should I index the new data?", "y" );
+                    if ( $ok =~ /[Yy]/ ) {
+                        my $cores = $settings->{SPX_CPU_CORES};
+                        for ( my $i = 0 ; $i < $cores ; $i++ ) {
+                            system("cd $ROOT_DIR/sphinx && bin/indexer  idx_log_arch_day_$y$m${d}_$i --rotate");
+                        }
+                    }
+                } else {
                     my $cores = $settings->{SPX_CPU_CORES};
                     for ( my $i = 0 ; $i < $cores ; $i++ ) {
                         system("cd $ROOT_DIR/sphinx && bin/indexer  idx_log_arch_day_$y$m${d}_$i --rotate");
                     }
                 }
-		} else {
-                    my $cores = $settings->{SPX_CPU_CORES};
-                    for ( my $i = 0 ; $i < $cores ; $i++ ) {
-                        system("cd $ROOT_DIR/sphinx && bin/indexer  idx_log_arch_day_$y$m${d}_$i --rotate");
-                    }
-		}
             }
         } else {
             $log->ERR("Option -mvdate must be in the form YYYY-MM-DD");
