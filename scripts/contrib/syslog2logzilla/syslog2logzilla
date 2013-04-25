@@ -27,10 +27,10 @@ $myname =~ s{.*/}{};    # leave just program name without path
 
 # Command line options
 my $options = {
-    debug   => 0,
-    verbose => 0,
-    logfile => "./$myname.log",
-    help    => 0,
+    debug       => 0,
+    verbose     => 0,
+    logfile     => "./$myname.log",
+    help        => 0,
     config_file => "$ROOT_DIR/../../../html/config/config.php",
 
 };
@@ -59,13 +59,13 @@ sub usage_and_exit {
 }
 
 GetOptions(
-    'debug|d=i'    => \$options->{debug},
-    'help|h!'      => \$options->{help},
-    'verbose|v!'   => \$options->{verbose},
+    'debug|d=i'       => \$options->{debug},
+    'help|h!'         => \$options->{help},
+    'verbose|v!'      => \$options->{verbose},
     'config-file|c=s' => \$options->{config_file},
-    'log-file|l=s' => \$options->{logfile},
-    'cisco_only!' => \$options->{cisco_only},
-    'makeview!' => \$options->{makeview},
+    'log-file|l=s'    => \$options->{logfile},
+    'cisco_only!'     => \$options->{cisco_only},
+    'makeview!'       => \$options->{makeview},
 ) or usage_and_exit(1);    # got some invalid options
 
 if ( $options->{help} ) {
@@ -92,14 +92,17 @@ my @ymds;
 my $sev = 7;    # Default set to debug if no sev is found
 my $cfg = LogZilla::Config->new( path => $options->{config_file} );
 $dbh = connect_to_db();
+
 sub connect_to_db {
     $dbh = DBI->connect( $cfg->db_dsn, $cfg->db_user, $cfg->db_pass,
         { HandleError => sub { $log->ERR( $_[0] ); exit(1) } } );
     $dbh->{TraceLevel} = $options->{dbi_debug};
     return $dbh;
 }
+
 # Create hash with pairs of name => value for every row read from settings table
 my $settings = read_settings_from_db();
+
 sub read_settings_from_db {
     my %settings;
     my $sth = $dbh->prepare("SELECT name, value FROM settings");
@@ -113,6 +116,7 @@ sub read_settings_from_db {
 
 while ( my $line = <STDIN> ) {
     chomp $line;
+
     # Skip useless "MARK" messages
     next if ( $line =~ /-- MARK --/ );
     my ( $month, $day, $hms, $host, $prg, $msg ) = split( '\s+', $line, 6 );
@@ -120,29 +124,30 @@ while ( my $line = <STDIN> ) {
     if ( exists( $months_h{$month} ) ) {
         DEBUG( 1, "Incorrect Y-m-d value, converting..." );
         my ( $month, $day ) = split( '\s+', $line, 3 );
-	DEBUG(1, "Month found is $month");
+        DEBUG( 1, "Month found is $month" );
         my $yr = strftime( "%Y", localtime );
-        $month_num = sprintf( "%02d", (aIndex($month, @months)) + 1);
-	DEBUG(1, "Month array position is $month_num");
+        $month_num = sprintf( "%02d", ( aIndex( $month, @months ) ) + 1 );
+        DEBUG( 1, "Month array position is $month_num" );
         $ymd = "$yr-$month_num-$day";
         DEBUG( 1, "Setting YMD to %s", $ymd );
     }
     if ( $msg =~ /\%([^:]*)\-(\d+)\-([A-Z\-\_\d]+?)(?:\:|\s)/ ) {
-        $prg = "1019293"; # the logzilla processor will pick this up
+        $prg = "1019293";    # the logzilla processor will pick this up
         $sev = $2
     } else {
-    	if ( $options->{cisco_only} ) {
-	$log->INFO("Skipping non-cisco based message");
-	next;
-	}
+        if ( $options->{cisco_only} ) {
+            $log->INFO("Skipping non-cisco based message");
+            next;
+        }
     }
+
     # Cisco ASA's send their Mnemonic in the program field...
     if ( $prg =~ /\%([^:]*)\-(\d+)\-([A-Z\-\_\d]+?)(?:\:|\s)/ ) {
         $sev = $2
     }
     DEBUG( 1, "Setting Severity to $sev" );
     if ( !$prg ) {
-        DEBUG( 1, "No program name found, setting to \"Syslog\"");
+        DEBUG( 1, "No program name found, setting to \"Syslog\"" );
         $prg = "Syslog";
     }
     DEBUG( 1, "Month = %s, Day = %s, HMS = %s, Host = %s, Program = %s, Message = %s", $month_num, $day, $hms, $host, $prg, $msg );
@@ -150,109 +155,113 @@ while ( my $line = <STDIN> ) {
     my $fac = 23;    # Manually set Local7 since we don't know the IETF facility
     my $pri = ( 23 * 8 + $sev );
     print "$ymd $hms\t$host\t$pri\t$prg\t$msg\n";
-    push(@ymds, $ymd) if ( $options->{makeview} ); 
+    push( @ymds, $ymd ) if ( $options->{makeview} );
 }
 makeview() if ( $options->{makeview} );
+
 # There should only be subs from here down
 
 # =================================================================================================
 # Helper functions
 # =================================================================================================
 
-sub uniq{
-	my %temp_hash = map { $_, 0 } @_;
-	return keys %temp_hash;
+sub uniq {
+    my %temp_hash = map { $_, 0 } @_;
+    return keys %temp_hash;
 }
+
 sub makeview {
     @ymds = uniq(@ymds);
-    for my $ymd ( @ymds ) {
-    $log->INFO("Creating view for $ymd");
-next;
-    my ($y, $m, $d);
-    if ($ymd) {
-        if ( $ymd =~ /(\d{4})-?(\d{2})-?(\d{2})-?/ ) {
-            my $y = $1;
-            my $m = $2;
-            my $d = $3;
-            $log->INFO("Creating view name log_arch_day_$y$m$d");
-            $sql = "CREATE OR REPLACE VIEW log_arch_day_$y$m$d AS SELECT `logs`.`id` AS `id`,`logs`.`host` AS `host`,`logs`.`facility` AS `facility`,`logs`.`severity` AS `severity`,`logs`.`program` AS `program`,`logs`.`msg` AS `msg`,`logs`.`mne` AS `mne`,`logs`.`eid` AS `eid`,`logs`.`suppress` AS `suppress`,`logs`.`counter` AS `counter`,`logs`.`fo` AS `fo`,`logs`.`lo` AS `lo`,`logs`.`notes` AS `notes` FROM `logs` where ((`logs`.`fo` >= '$ymd 00:00:00') AND (`logs`.`fo` <= '$ymd 23:59:59'))";
-            DEBUG( 1, "Executing SQL Statement: $sql" );
-            $dbh->do($sql) unless $options->{dryrun};
-            $sql = "SELECT table_name FROM INFORMATION_SCHEMA.tables where table_type = 'VIEW' AND table_schema = 'syslog' AND table_name LIKE 'log_arch_day_$y$m$d%'";
-            $sth = $dbh->prepare($sql);
-            DEBUG( 1, "Executing SQL Statement: $sql" );
-            $sth->execute();
-            while ( $results = $sth->fetchrow_hashref ) {
-                $log->INFO("Creating view_limits for log_arch_day_$y$m$d");
-                $sql = "INSERT IGNORE INTO view_limits (view_name, min_id, max_id) values ('$results->{table_name}', (SELECT min(id) FROM $results->{table_name}), (SELECT max(id) FROM $results->{table_name}))";
+    for my $ymd (@ymds) {
+        $log->INFO("Creating view for $ymd");
+        next;
+        my ( $y, $m, $d );
+        if ($ymd) {
+            if ( $ymd =~ /(\d{4})-?(\d{2})-?(\d{2})-?/ ) {
+                my $y = $1;
+                my $m = $2;
+                my $d = $3;
+                $log->INFO("Creating view name log_arch_day_$y$m$d");
+                $sql = "CREATE OR REPLACE VIEW log_arch_day_$y$m$d AS SELECT `logs`.`id` AS `id`,`logs`.`host` AS `host`,`logs`.`facility` AS `facility`,`logs`.`severity` AS `severity`,`logs`.`program` AS `program`,`logs`.`msg` AS `msg`,`logs`.`mne` AS `mne`,`logs`.`eid` AS `eid`,`logs`.`suppress` AS `suppress`,`logs`.`counter` AS `counter`,`logs`.`fo` AS `fo`,`logs`.`lo` AS `lo`,`logs`.`notes` AS `notes` FROM `logs` where ((`logs`.`fo` >= '$ymd 00:00:00') AND (`logs`.`fo` <= '$ymd 23:59:59'))";
                 DEBUG( 1, "Executing SQL Statement: $sql" );
                 $dbh->do($sql) unless $options->{dryrun};
-                $log->INFO("View creation complete");
+                $sql = "SELECT table_name FROM INFORMATION_SCHEMA.tables where table_type = 'VIEW' AND table_schema = 'syslog' AND table_name LIKE 'log_arch_day_$y$m$d%'";
+                $sth = $dbh->prepare($sql);
+                DEBUG( 1, "Executing SQL Statement: $sql" );
+                $sth->execute();
+
+                while ( $results = $sth->fetchrow_hashref ) {
+                    $log->INFO("Creating view_limits for log_arch_day_$y$m$d");
+                    $sql = "INSERT IGNORE INTO view_limits (view_name, min_id, max_id) values ('$results->{table_name}', (SELECT min(id) FROM $results->{table_name}), (SELECT max(id) FROM $results->{table_name}))";
+                    DEBUG( 1, "Executing SQL Statement: $sql" );
+                    $dbh->do($sql) unless $options->{dryrun};
+                    $log->INFO("View creation complete");
                     my $cores = $settings->{SPX_CPU_CORES};
                     for ( my $i = 0 ; $i < $cores ; $i++ ) {
                         system("cd $ROOT_DIR/../../../sphinx && bin/indexer  idx_log_arch_day_$y$m${d}_$i --rotate");
                     }
+                }
+            } else {
+                $log->ERR("Date string must be in the form YYYY-MM-DD");
             }
         } else {
-            $log->ERR("Date string must be in the form YYYY-MM-DD");
+            $log->ERR("Option 'makeview' requires a date in the form YYYY-MM-DD");
         }
-    } else {
-        $log->ERR("Option 'makeview' requires a date in the form YYYY-MM-DD");
     }
 }
-}
+
 sub setup_log {
-      my $log_dir = dirname( $options->{logfile} );
+    my $log_dir = dirname( $options->{logfile} );
 
-     # Create log dir, and build log path if not provided by command line option
-      if ( !-d $log_dir ) {
-          mkdir( $log_dir, 0755 ) or die("mkdir $log_dir: $!");
-      }
-      if ( !$options->{logfile} ) {
-          $options->{logfile} = $log_dir . "/" . basename( $0, '.pl' ) . '.log';
-      }
+    # Create log dir, and build log path if not provided by command line option
+    if ( !-d $log_dir ) {
+        mkdir( $log_dir, 0755 ) or die("mkdir $log_dir: $!");
+    }
+    if ( !$options->{logfile} ) {
+        $options->{logfile} = $log_dir . "/" . basename( $0, '.pl' ) . '.log';
+    }
 
-      my $log_options = {};
+    my $log_options = {};
 
-      # Set up output to file or both file and stderr
-      if ( $options->{verbose} ) {
+    # Set up output to file or both file and stderr
+    if ( $options->{verbose} ) {
 
-          # make multiplexer FH sending data both to file and STDERR
-          open( my $fh, '>>:tee', $options->{logfile}, \*STDERR )
-            or die("$options->{logfile}: $!");
-          $fh->autoflush(1);
-          $log_options->{fh} = $fh;
-      }
-      else {
-          open( my $fh, '>>', $options->{logfile} ) or die("$options->{logfile}: $!");
-          $log_options->{fh} = $fh;
-      }
+        # make multiplexer FH sending data both to file and STDERR
+        open( my $fh, '>>:tee', $options->{logfile}, \*STDERR )
+          or die("$options->{logfile}: $!");
+        $fh->autoflush(1);
+        $log_options->{fh} = $fh;
+    }
+    else {
+        open( my $fh, '>>', $options->{logfile} ) or die("$options->{logfile}: $!");
+        $log_options->{fh} = $fh;
+    }
 
     # Setup extra information to put in every log line, depending on debug level
-      if ( $options->{debug} > 1 ) {
-          $log_options->{prefix} = "%D %T %S [%L] ";
-      }
-      else {
-          $log_options->{prefix} = "%D %T [%L] ";
-      }
+    if ( $options->{debug} > 1 ) {
+        $log_options->{prefix} = "%D %T %S [%L] ";
+    }
+    else {
+        $log_options->{prefix} = "%D %T [%L] ";
+    }
 
-      $log_options->{level} = $options->{debug} > 0 ? 'DEBUG' : 'INFO';
+    $log_options->{level} = $options->{debug} > 0 ? 'DEBUG' : 'INFO';
 
-      $log->config($log_options);
+    $log->config($log_options);
 
-      $SIG{__WARN__} = sub {
-          my $msg = shift;
-          $msg =~ s/\n//;
-          $log->WARN($msg);
-      };
+    $SIG{__WARN__} = sub {
+        my $msg = shift;
+        $msg =~ s/\n//;
+        $log->WARN($msg);
+    };
 
-      $log->INFO("Starting logging to $options->{logfile} with pid $$");
+    $log->INFO("Starting logging to $options->{logfile} with pid $$");
 }
 
 sub DEBUG {
-      my ( $level, @log_args ) = @_;
-      if ( $options->{debug} >= $level ) {
-          $log->DEBUG(@log_args);
-      }
+    my ( $level, @log_args ) = @_;
+    if ( $options->{debug} >= $level ) {
+        $log->DEBUG(@log_args);
+    }
 }
-sub aIndex{for(1..@_){$_[0]eq$_[$_]&&return$_-1}-1}
+sub aIndex { for ( 1 .. @_ ) { $_[0] eq $_[$_] && return $_ - 1 } -1 }
