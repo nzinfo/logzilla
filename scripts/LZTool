@@ -78,6 +78,7 @@ GetOptions(
     'mtti!'           => \$options->{mtti},
     'mysql!'          => \$options->{mysql},
     'mvdate|mvd=s'    => \$options->{mvdate},
+    'yes|y'	      => \$options->{yes},
 ) or usage_and_exit(1);    # got some invalid options
 
 if ( $options->{help} ) {
@@ -846,6 +847,7 @@ sub makeview {
                 DEBUG( 1, "Executing SQL Statement: $sql" );
                 $dbh->do($sql) unless $options->{dryrun};
                 $log->INFO("View creation complete");
+		unless ($options->{yes}) {
                 my $ok = &getYN( "Data will be unavailable until indexed. Should I index the new data?", "y" );
                 if ( $ok =~ /[Yy]/ ) {
                     my $cores = $settings->{SPX_CPU_CORES};
@@ -853,6 +855,12 @@ sub makeview {
                         system("cd $ROOT_DIR/sphinx && bin/indexer  idx_log_arch_day_$y$m${d}_$i --rotate");
                     }
                 }
+		} else {
+                    my $cores = $settings->{SPX_CPU_CORES};
+                    for ( my $i = 0 ; $i < $cores ; $i++ ) {
+                        system("cd $ROOT_DIR/sphinx && bin/indexer  idx_log_arch_day_$y$m${d}_$i --rotate");
+                    }
+		}
             }
         } else {
             $log->ERR("Option -mvdate must be in the form YYYY-MM-DD");
