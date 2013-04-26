@@ -153,7 +153,7 @@ $("#export").click(function() {
             <option selected value="xls">Excel</option>
             <option value="xml">Excel 2007 (xml)</option>
             <option value="csv">CSV</option>
-            <!-- Removed for now - too ugly! <option value="pdf">Adobe PDF</option>-->
+            <option value="pdf">Adobe PDF</option>
             </select>
             </td>
             </table>
