@@ -3,7 +3,7 @@
 /*
  *
  * Developed by Clayton Dukes <cdukes@logzilla.pro>
- * Copyright (c) 2009 http://www.gdd.net
+ * Copyright (c) 2009 LogZilla Corporation
  * All rights reserved.
  *
  * Changelog:
@@ -34,6 +34,23 @@ include 'PHPExcel.php';
 include 'PHPExcel/Writer/Excel2007.php';
 include 'PHPExcel/IOFactory.php';
 
+$rendererName = PHPExcel_Settings::PDF_RENDERER_MPDF;
+$rendererLibrary = 'mPDF5.6.1';
+$rendererLibraryPath = dirname(__FILE__).'/mpdf/' . $rendererLibrary;
+echo "$rendererLibraryPath";
+if (!PHPExcel_Settings::setPdfRenderer(
+        $rendererName,
+        $rendererLibraryPath
+    )) {
+    die(
+        'Please set the $rendererName and $rendererLibraryPath values' .
+        PHP_EOL .
+        ' as appropriate for your directory structure'
+    );
+}
+
+
+
 $date = date("Y-m-d");
 $time = date("H:i:s");
 
@@ -53,7 +70,7 @@ function get_server() {
 $objPHPExcel = new PHPExcel();
 
 // Set properties
-$objPHPExcel->getProperties()->setCreator("LogZilla, LLC.");
+$objPHPExcel->getProperties()->setCreator("LogZilla Corporation");
 $objPHPExcel->getProperties()->setLastModifiedBy($_SESSION['username']);
 $objPHPExcel->getProperties()->setTitle("LogZilla Syslog Report");
 $objPHPExcel->getProperties()->setSubject("Syslog Report for $date $time");
@@ -79,10 +96,9 @@ $objPHPExcel->getActiveSheet()->SetCellValue('E1', 'Program');
 $objPHPExcel->getActiveSheet()->SetCellValue('F1', 'Mnemonic');
 $objPHPExcel->getActiveSheet()->SetCellValue('G1', 'Message');
 $objPHPExcel->getActiveSheet()->SetCellValue('H1', 'Received');
-$objPHPExcel->getActiveSheet()->SetCellValue('I1', 'Notes');
 
-$objPHPExcel->getActiveSheet()->getStyle('A1:I1')->getFont()->getColor()->setARGB(PHPExcel_Style_Color::COLOR_WHITE);
-$objPHPExcel->getActiveSheet()->getStyle('A1:I1')->getFont()->setSize(14); 
+$objPHPExcel->getActiveSheet()->getStyle('A1:H1')->getFont()->getColor()->setARGB(PHPExcel_Style_Color::COLOR_WHITE);
+$objPHPExcel->getActiveSheet()->getStyle('A1:H1')->getFont()->setSize(14); 
 
 $objPHPExcel->getActiveSheet()->duplicateStyleArray(
         array(
@@ -107,7 +123,7 @@ $objPHPExcel->getActiveSheet()->duplicateStyleArray(
                     ),
                 ),
             ),
-            'A1:I1'
+            'A1:H1'
             );
 
             for($i=0; $i < count($result_array); $i++) {
@@ -129,11 +145,10 @@ $objPHPExcel->getActiveSheet()->duplicateStyleArray(
                     $objPHPExcel->getActiveSheet()->SetCellValue("G{$r}", $row['msg']);
                 } else {
                     // Wrap long messages so that it fits in a pdf page.
-                    $msg = wordwrap($row['msg'], 40, "\n");
+                    $msg = wordwrap($row['msg'], 70, "\n");
                     $objPHPExcel->getActiveSheet()->SetCellValue("G{$r}", $msg);
                 }
                 $objPHPExcel->getActiveSheet()->SetCellValue("H{$r}", $row['lo']);
-                $objPHPExcel->getActiveSheet()->SetCellValue("I{$r}", $row['notes']);
                 if ( $r&1 ) {
                     $objPHPExcel->getActiveSheet()->duplicateStyleArray(
                             array(
@@ -144,7 +159,7 @@ $objPHPExcel->getActiveSheet()->duplicateStyleArray(
                                         ),
                                     ),
                                 ),
-                            "A${r}:I${r}"
+                            "A${r}:H${r}"
                             );
                 } else {
                     $objPHPExcel->getActiveSheet()->duplicateStyleArray(
@@ -156,7 +171,7 @@ $objPHPExcel->getActiveSheet()->duplicateStyleArray(
                                         ),
                                     ),
                                 ),
-                            "A${r}:I${r}"
+                            "A${r}:H${r}"
                             );
                 }
             }
@@ -180,7 +195,7 @@ $datetime = date("Y-m-d Hi a");
 $objPHPExcel->getActiveSheet()->setTitle("$datetime");
 // Autosize Columns
 // This doesn't seem to work and I don't know why - I searched the documentation and forums for PHPExcel but still couldn't get it to work
-foreach(range('A', 'I') as $columnID) {
+foreach(range('A', 'H') as $columnID) {
     $objPHPExcel->getActiveSheet()->getColumnDimension("$columnID")->setAutoSize(true);
 }
 
