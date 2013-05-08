@@ -550,11 +550,15 @@ sub process_line {
         }
 
         my $mne;
-        if ( $msg =~ /\%|#([^:]*\-\d+\-[A-Z\-\_\d]+?)(?:\:|\s)/ ) {
+        if ( $msg =~ /\%([^:]*\-\d+\-[A-Z\-\_\d]+?)(?:\:|\s)/ ) {
             $mne = $1;
             $prg = "Cisco Syslog";
         } else {
             $mne = "None";
+        }
+        if ( $msg =~ /#([^:]*\-\d+\-[A-Z\-\_\d]+?)(?:\:|\s)/ ) {
+            $mne = $1;
+            $prg = "Cisco Wireless";
         }
 
         # Cisco ASA's send their Mnemonic in the program field...
@@ -568,7 +572,7 @@ sub process_line {
         $prg =~ s/date=\d+-\d+-\d+/Fortigate Firewall/; # Added because Fortigate's don't follow IETF standards
         $prg =~ s/:$//; # Strip trailing colon from some programs (such as kernel)
         $msg =~ s/time=\d+:\d+:\d+\s//; # Added because Fortigate's don't s follow IETF standards
-        $prg =~ s/.*hcvlny.*/Cisco Syslog/; # Strip trailing colon from some programs (such as kernel)
+        $prg =~ s/.*hcvlny.*/Cisco Wireless/; # Special for CV - bad wlc's! they send their hostname as a program...ugh!
 
         # Catch-All:
         $prg =~ s/^\d+$/Cisco Syslog/; # Cisco Messages send the program as an int string.
