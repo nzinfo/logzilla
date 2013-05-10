@@ -37,7 +37,7 @@ include 'PHPExcel/IOFactory.php';
 $rendererName = PHPExcel_Settings::PDF_RENDERER_MPDF;
 $rendererLibrary = 'mPDF5.6.1';
 $rendererLibraryPath = dirname(__FILE__).'/mpdf/' . $rendererLibrary;
-echo "$rendererLibraryPath";
+#echo "$rendererLibraryPath";
 if (!PHPExcel_Settings::setPdfRenderer(
         $rendererName,
         $rendererLibraryPath
