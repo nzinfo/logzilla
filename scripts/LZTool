@@ -213,7 +213,6 @@ sub tblSync {
     $sth_sphinx = $dbh_sphinx->prepare($sql);
     DEBUG( 1, "Executing SQL Statement: $sql" );
     $sth_sphinx->execute();
-
     if ( $sth_sphinx->rows > 0 ) {
         $log->INFO( "Found %d ${spx_tbl}s", $sth_sphinx->rows );
         while ( $results = $sth_sphinx->fetchrow_hashref ) {
@@ -269,7 +268,7 @@ sub countUpdate {
         exit;
     } else {
         $log->INFO( "Verifying msg_sum cache", $sth_sphinx->rows );
-        my $spx_total = $dbh_sphinx->do('select * from idx_ondisk WHERE MATCH(\'@dummy dummy\') limit 1');
+        my $spx_total = $dbh_sphinx->do('SELECT * from idx_ondisk WHERE MATCH(\'@dummy dummy\') limit 1');
         my $spx_meta  = $dbh_sphinx->prepare('show meta');
         $spx_meta->execute();
         while ( $results = $spx_meta->fetchrow_hashref ) {
@@ -661,6 +660,7 @@ sub ss {
     DEBUG( 1, "Executing SQL Statement: $sql" );
     $sth_syslog->execute();
     $results = $sth_syslog->fetchrow_hashref;
+    my ($eps, $eph, $epd);
 
     if ( ( $results->{'avg'} ) > 1 ) {
 
@@ -668,15 +668,16 @@ sub ss {
         # Memory Stats
         #---
         $log->INFO("Memory Stats...");
-        my $spmem = `(cd $ROOT_DIR/sphinx/data && du -hsck *.spa | grep total | awk '{print \$1}')`;
+        my $spmem = `(cd $ROOT_DIR/sphinx/data && du -hsck *.spa *.spe *.sph *.spi *.spk *.spl *.spm *.sps | grep total | awk '{print \$1}')`;
         chomp($spmem);
         DEBUG( 1, "spmem = %s", $spmem );
         $results->{avg} = sprintf( "%0.f", $results->{avg} );
         $log->INFO( "Your current EPS average is %s (%s samples)", commify( $results->{avg} ), commify( $results->{samples} ) );
         store_metric( "lztool_eps_avg",         $results->{avg} );
         store_metric( "lztool_eps_avg_samples", $results->{samples} );
-        my $eph = $results->{avg} * 60 * 60;
-        my $epd = $results->{avg} * 60 * 60 * 24;
+        $eps = $results->{avg};
+        $eph = $results->{avg} * 60 * 60;
+        $epd = $results->{avg} * 60 * 60 * 24;
         my $attrs = `cat $ROOT_DIR/sphinx/sphinx.conf | grep sql_attr | grep -v "#" | wc -l`;
 
         $sql        = "SELECT count(*) AS count FROM events_per_hour";
@@ -692,7 +693,19 @@ sub ss {
             exit;
         }
         my $multiplier = $settings->{SPX_IDX_DIM} + 1;  # needed for current day
-        my $needed = ( 1 + $attrs ) * $epd * ( 4 * $multiplier ) / 1000;
+        # Search-time memory requirements for extern storage are (1+number_of_attrs)*number_of_docs*4 bytes, ie. 10 million docs with 2 groups and 1 timestamp will take (1+2+1)*10M*4 = 160 MB of RAM. This is PER DAEMON, ie. searchd will alloc 160 MB on startup, read the data and keep it shared between queries; the children will NOT allocate additional copies of this data.
+        my $count = 0;
+        my $tmp = $dbh_sphinx->do('SELECT * from idx_inmem limit 1');
+        my $spx_meta  = $dbh_sphinx->prepare('show meta');
+        $spx_meta->execute();
+        while ( $results = $spx_meta->fetchrow_hashref ) {
+            if ( $results->{'Variable_name'} eq "total_found" ) {
+                $count = $results->{'Value'};
+            }
+        }
+        chomp ($attrs);
+        my $needed = (( 2 + $attrs ) * ($count * 4  / 1000) * $multiplier);
+        DEBUG( 1, "(1 + %s Attributes) * %s Messages in idx_inmem * 4 = $needed", $attrs, $count);
         $log->INFO( "Expecting %s average EPD", commify($epd) );
         store_metric( "lztool_epd", $epd );
         my $total = `cat /proc/meminfo | grep MemTotal | awk '{print \$2}'`;
@@ -721,6 +734,7 @@ sub ss {
         # Disk Stats
         #---
         $log->INFO("Disk Stats...");
+        my $dbsize_kbytes = 0;
         my $spdsk = `(cd $ROOT_DIR/sphinx/data && du -hsck *.spd *.spe *.sph *.spi *.spk *.spl *.spm *.spp *.sps | grep total | awk '{print \$1}')`;
         chomp($spdsk);
         my $du = $spdsk; # define du here in case the only disk usage is from today (server only up for one day)
@@ -731,28 +745,32 @@ sub ss {
         DEBUG( 1, "Executing SQL Statement: $sql" );
         $sth_syslog->execute();
         $results = $sth_syslog->fetchrow_hashref;
-        $log->INFO( "Current DB size (on disk) is approximately %s", humanBytes( $results->{'dbsize_kbytes'} ) );
-        store_metric( "lztool_db_diskused_KB", $results->{'dbsize_kbytes'} );
+        $dbsize_kbytes = $results->{'dbsize_kbytes'};
+        $log->INFO( "Current DB size (on disk) is approximately %s", humanBytes( $dbsize_kbytes ) );
+        store_metric( "lztool_db_diskused_KB", $dbsize_kbytes );
 
 # below doesn't work because events/sec don't drop for data > $retention
 # $sql = "SELECT FROM_UNIXTIME(ts_from) as dt, ts_from AS ts FROM events_per_second limit 1";
         $sql = "SELECT UNIX_TIMESTAMP(fo) AS ts, fo AS dt FROM logs ORDER BY lo ASC LIMIT 1";
+        $sql = "SELECT (SELECT UNIX_TIMESTAMP(max(lo)) from logs) as ts, (SELECT min(fo) from logs) as fo, (SELECT max(lo) from logs) as lo";
         $sth_syslog = $dbh->prepare($sql);
         DEBUG( 1, "Executing SQL Statement: $sql" );
         $sth_syslog->execute();
         $results = $sth_syslog->fetchrow_hashref;
+        my $db_numdays = 0;
 
         if ( ( $results->{'ts'} ) > 1 ) {
             my $date = today();
-            my ( $ymd, undef ) = split( /\s+/, $results->{dt} );
-            my $diff = today() - date($ymd) + 1; # Note: add +1 here to include today in the disk usage calculation
-            DEBUG( 1, "YMD = %s, DB->dt = %s, DB->ts = %s, Date = %s, Diff = %s", $ymd, $results->{dt}, $results->{ts}, $date, $diff );
-            if ( $diff < 2 ) {
+            my ( $ymd, undef ) = split( /\s+/, $results->{fo} );
+            $db_numdays = today() - date($ymd) + 1; # Note: add +1 here to include today in the disk usage calculation
+            DEBUG( 1, "YMD = %s, DB->fo = %s, DB->lo = %s, DB->ts = %s, Date = %s, Diff = %s", $ymd, $results->{fo}, $results->{lo}, $results->{ts}, $date, $db_numdays );
+            if ( $db_numdays < 2 ) {
                 $log->WARN("Results may not be accurate, please run this tool after your server has been running for > 2 days");
             }
-            $du = sprintf( "%d", ( $spdsk / $diff ) );
-            DEBUG( 1, "spdisk = %s, diff = %s, du = %s", $spdsk, $diff, $du );
+            $du = sprintf( "%d", ( $spdsk / $db_numdays ) );
+            DEBUG( 1, "spdisk = %s, db_numdays = %s, du = %s", $spdsk, $db_numdays, $du );
             $log->INFO( "LogZilla indexes (excluding MySQL) should consume about %s of disk per day.", humanBytes($du) );
+            $log->INFO( "MySQL should consume about %s of disk per day.", humanBytes($dbsize_kbytes / $db_numdays) );
             store_metric( "lztool_estimated_disk_perday", "$du" );
         }
 
