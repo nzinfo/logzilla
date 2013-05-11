@@ -34,7 +34,7 @@ if (mysqli_connect_errno())
 
         // Find available dates
 
-        $sql_online = "SELECT lo div (24*60*60) as dst from distributed group by dst limit 512";
+        $sql_online = "SELECT lo div (24*60*60) as dst from idx_all group by dst limit 512";
         $result = $scl->query($sql_online);
 
         if ($result) {

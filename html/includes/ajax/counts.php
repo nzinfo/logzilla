@@ -30,7 +30,6 @@ switch ($data) {
 
     case "msgs":
         $sql = "SELECT value FROM cache where name='msg_sum'";
-        // $spx_sql = "select * from distributed limit 1";
     break;
 
     case "notes":

@@ -16,7 +16,7 @@ session_start();
 $basePath = dirname( __FILE__ );
 require_once ($basePath . "/../common_funcs.php");
 if ((has_portlet_access($_SESSION['username'], 'Programs') == TRUE) || ($_SESSION['AUTHTYPE'] == "none")) {
-    $array = spx_query("select *, count(*) x from distributed group by program order by x desc limit 10");
+    $array = spx_query("select *, count(*) x from idx_all group by program order by x desc limit 10");
     for ($i = 1; $i <= count($array); $i++) {
         $id = $array[$i][0];
         switch($id) {

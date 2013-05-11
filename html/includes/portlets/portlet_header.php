@@ -527,9 +527,9 @@ $tail_where = $where;
 // Run the search query to get results from Sphinx
 //------------------------------------------------------------
 if ($page == "Graph") {
-    $json_o = search_graph(json_encode($searchArr), $spx_max, "distributed", $spx_ip, $spx_port);
+    $json_o = search_graph(json_encode($searchArr), $spx_max, "idx_all", $spx_ip, $spx_port);
 } else {
-    $json_o = search(json_encode($searchArr), $spx_max, "distributed", $spx_ip, $spx_port);
+    $json_o = search(json_encode($searchArr), $spx_max, "idx_all", $spx_ip, $spx_port);
 }
 
 // Decode returned json object into an array:
