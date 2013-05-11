@@ -206,7 +206,7 @@ sub tblSync {
     $dbh->do($sql) unless $options->{dryrun};
 
     if ( $lzminor > 4 ) {
-        $sql = "SELECT $spx_tbl, sum(counter), max(lo) from idx_ondisk where match('\@dummy dummy') group by $spx_tbl limit 50000 OPTION max_matches=5000";
+        $sql = "SELECT $spx_tbl, sum(counter), max(lo) from idx_all where match('\@dummy dummy') group by $spx_tbl limit 50000 OPTION max_matches=5000";
     } else {
         $sql = "SELECT $spx_tbl, sum(counter), max(lo) from distributed group by $spx_tbl limit 50000 OPTION max_matches=5000";
     }
@@ -253,7 +253,7 @@ sub countUpdate {
     # Preparing replacement for updateCache db procedure: Count all counters
     # due to a bug in sphinxql when using sum you also need to use a group-by
     if ( $lzminor > 4 ) {
-        $sql = "SELECT severity, sum(counter) from idx_ondisk where match('\@dummy dummy') group by severity limit 50000 OPTION max_matches=5000";
+        $sql = "SELECT severity, sum(counter) from idx_all where match('\@dummy dummy') group by severity limit 50000 OPTION max_matches=5000";
     } else {
         $sql = "SELECT severity, sum(counter) from distributed group by severity limit 50000 OPTION max_matches=5000";
     }
@@ -268,7 +268,7 @@ sub countUpdate {
         exit;
     } else {
         $log->INFO( "Verifying msg_sum cache", $sth_sphinx->rows );
-        my $spx_total = $dbh_sphinx->do('SELECT * from idx_ondisk WHERE MATCH(\'@dummy dummy\') limit 1');
+        my $spx_total = $dbh_sphinx->do('SELECT * from idx_all WHERE MATCH(\'@dummy dummy\') limit 1');
         my $spx_meta  = $dbh_sphinx->prepare('show meta');
         $spx_meta->execute();
         while ( $results = $spx_meta->fetchrow_hashref ) {
@@ -321,7 +321,7 @@ sub updateHosts {
 
 # Note that DB's with host count > 5000 may be a problem here. This needs testing.
     if ( $lzminor > 4 ) {
-        $sql = "SELECT host_crc, sum(counter), max(lo) from idx_ondisk where match('\@dummy dummy') group by host_crc limit 50000 OPTION max_matches=5000";
+        $sql = "SELECT host_crc, sum(counter), max(lo) from idx_all where match('\@dummy dummy') group by host_crc limit 50000 OPTION max_matches=5000";
     } else {
         $sql = "SELECT host_crc, sum(counter), max(lo) from distributed group by host_crc limit 50000 OPTION max_matches=5000";
     }
