@@ -30,7 +30,7 @@ if ((has_portlet_access($_SESSION['username'], 'Graph Results') == TRUE) || ($_S
         //------------------------------------------------------------
 
         // #425: Moved below to portlet_header
-        // $json_o = search_graph(json_encode($searchArr), $spx_max, "distributed", $spx_ip, $spx_port);
+        // $json_o = search_graph(json_encode($searchArr), $spx_max, "idx_all", $spx_ip, $spx_port);
 
 
         //------------------------------------------------------------

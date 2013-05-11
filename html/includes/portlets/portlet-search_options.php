@@ -37,7 +37,7 @@ if ((has_portlet_access($_SESSION['username'], 'Search Options') == TRUE) || ($_
             $line = fetch_array($result);
             $msg_sum = $line['value'];
             // Get db row count from Sphinx because count(*) is too slow on large DB's
-            $spx_sql = 'select * from distributed limit 1';
+            $spx_sql = 'select * from idx_all limit 1';
             $array = spx_query($spx_sql);
             $count_star = $array[2][1];
              echo "msg_sum = ".humanReadable($msg_sum) . "\n";
