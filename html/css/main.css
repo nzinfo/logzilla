@@ -18,7 +18,7 @@ margin-right: auto;
 }
 
 .bg {
-    background: url(../images/p29.png) no-repeat 0 0 fixed; 
+    background: url(../images/lzbg.png) no-repeat center center fixed; 
     -webkit-background-size: cover;
     -moz-background-size: cover;
     -o-background-size: cover;

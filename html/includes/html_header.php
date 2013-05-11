@@ -37,4 +37,3 @@ getsettings();
 Note: Closing body tag is located in the html_footer.php file
 -->
 <body class="body bg">
-    <img src="images/LogZilla_147x40_transparent.png" alt="Logo" class="center" />
