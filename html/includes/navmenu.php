@@ -41,7 +41,7 @@ $(document).ready(function(){
 #ticker_container {
 position: absolute;
 top: 7px;
-right: 0px;
+right: 10px;
 }
 .ticker_text {
   font-size:10px; 
@@ -49,7 +49,7 @@ right: 0px;
   color: white;
   position: relative;
   top: 0px;
-  right: 10px;
+  right: 0px;
 }
 .ticker {
   font-size:10px; 
