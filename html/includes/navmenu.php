@@ -41,15 +41,15 @@ $(document).ready(function(){
 #ticker_container {
 position: absolute;
 top: 7px;
-right: 40px;
+right: 0px;
 }
 .ticker_text {
   font-size:10px; 
   font-family:Trebuchet MS; 
   color: white;
   position: relative;
-  top: 10px;
-  left: 10px;
+  top: 0px;
+  right: 10px;
 }
 .ticker {
   font-size:10px; 
@@ -57,7 +57,7 @@ right: 40px;
   color: white;
   position: relative;
   top: 0px;
-  left: 10px;
+  left: 0px;
 }
 
 
@@ -302,7 +302,7 @@ function reset_layout()
 <!-- END Reset UI Layout -->
 <!-- BEGIN Sparkline -->
 <div id='ticker_container'>
-<span class="ticker"></span> <span class="ticker_text"></span>
+<div class="ticker"></div> <div class="ticker_text"></div>
 </div>
 <script type="text/javascript" src="includes/js/jquery/plugins/jquery.sparkline.min.js"></script>
 
