@@ -138,6 +138,7 @@ my @counters_cfg = (
     { table => 'hosts',     table_field => 'host', message_field => 'host', crc => 0 },
     { table => 'programs',  table_field => 'name', message_field => 'prg',  crc => 1 },
     { table => 'mne',       table_field => 'name', message_field => 'mne',  crc => 1 },
+    { table => 'mac',       table_field => 'name', message_field => 'mac',  crc => 1 },
 );
 
 #if( $settings->{SNARE} ) { # CHECK THIS - 'if' removed to be compatible with old script
@@ -531,6 +532,7 @@ sub process_line {
 
         # FIXME - this is actually backslash and we remove first, not trailing!
         $msg =~ s/\\//;     # Some messages come in with a trailing slash 
+        $msg =~ s/-Traceback/Traceback/; # Remove - so searches are easier and don't have to escape negative boolean
 
         $msg =~ s/\t/ /g;   # remove any extra TABs
         $msg =~ s/\177/ /g; # Fix for NT Events Logs (they send 0x7f with the message)
@@ -549,7 +551,12 @@ sub process_line {
             }
         }
 
-        my $mne;
+        my ($mne, $mac);
+        if ( $msg =~ /(([0-9A-F]{2}[:-]){5}([0-9A-F]{2}))/i ) {
+            $mac = $1;
+        } else {
+            $mac = "None";
+        }
         if ( $msg =~ /\%([^:]*\-\d+\-[A-Z\-\_\d]+?)(?:\:|\s)/ ) {
             $mne = $1;
             $prg = "Cisco Syslog";
@@ -572,7 +579,7 @@ sub process_line {
         $prg =~ s/date=\d+-\d+-\d+/Fortigate Firewall/; # Added because Fortigate's don't follow IETF standards
         $prg =~ s/:$//; # Strip trailing colon from some programs (such as kernel)
         $msg =~ s/time=\d+:\d+:\d+\s//; # Added because Fortigate's don't s follow IETF standards
-        $prg =~ s/.*hcvlny.*/Cisco Wireless/; # Special for CV - bad wlc's! they send their hostname as a program...ugh!
+        $prg =~ s/wc\d+-.*/Cisco Wireless/; # Special for CV - bad wlc's! they send their hostname as a program...ugh!
 
         # Catch-All:
         $prg =~ s/^\d+$/Cisco Syslog/; # Cisco Messages send the program as an int string.
@@ -614,6 +621,7 @@ sub process_line {
             prg => $prg,
             msg => $msg,
             mne => $mne,
+            mac => $mac,
             eid => $eid,
             fo => $ts,
             lo => $ts,
@@ -668,12 +676,14 @@ sub load_deduplication_cache {
         "programs.name as prg, " .
         "l.msg as msg, " .
         "mne.name as mne, " .
+        "mac.name as mac, " .
         "l.eid as eid, " .
         "unix_timestamp(l.fo) as fo, " .
         "unix_timestamp(l.lo) as lo " .
         "FROM logs l " .
         "LEFT JOIN programs on l.program = programs.crc " .
         "LEFT JOIN mne on l.mne = mne.crc " .
+        "LEFT JOIN mac on l.mac = mac.crc " .
         "WHERE l.fo >= from_unixtime(?)";
     if( $to ) {
         $stmt .= " AND l.fo <= from_unixtime(?)";
