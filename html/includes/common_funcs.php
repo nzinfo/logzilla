@@ -151,7 +151,7 @@ function perform_query($query, $link, $filename='') {
 function logmsg ($msg) {
     list($usec, $sec) = explode(" ", microtime());
     $ms = ltrim(round($usec, 4), "0.");
-    $myFile = LOG_PATH . "/logzilla.log";
+    $myFile = LOG_PATH . "/logmsg.log";
     $fh = fopen($myFile, 'a') or die("can't open file $myFile");
     fwrite($fh, date("h:i:s") .".$ms: $msg \n");
     fclose($fh);
@@ -1018,7 +1018,9 @@ function search($json_o, $spx_max,$index="idx_logs idx_delta_logs",$spx_ip,$spx_
     }
     if ($json_a['programs']) {
         //        $cl->SetFilter( 'program', $prgs );
-        $sphinxfilters[] = "program in (".implode($prgs,',').")";
+        $trim = implode($prgs,',');
+        $trimmed = rtrim($trim,',');
+        $sphinxfilters[] = "program in ($trimmed)";
     }
 
     // this is not supported by sphinxql proto - due to the old code.
@@ -1473,7 +1475,9 @@ function search_graph($json_o, $spx_max,$index="idx_logs idx_delta_logs",$spx_ip
     }
     if ($json_a['programs']) {
         //        $cl->SetFilter( 'program', $prgs );
-        $sphinxfilters[] = "program in (".implode($prgs,',').")";
+        $trim = implode($prgs,',');
+        $trimmed = rtrim($trim,',');
+        $sphinxfilters[] = "program in ($trimmed)";
     }
 
     // this is not supported by sphinxql proto - due to the old code.
