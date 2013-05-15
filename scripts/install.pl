@@ -401,6 +401,10 @@ sub do_install {
     my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/mne.sql`;
     print $res;
 
+    # Create mnemonics table
+    my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/mac.sql`;
+    print $res;
+
     # Create snare_eid table
     create_snare_table();
 
@@ -1793,7 +1797,7 @@ sub verify_columns {
 # As of v4.0, we will just do this for all columns regardless of install or upgrade to make sure they exist.
       my $dbh = db_connect( $dbname, $lzbase, $dbroot, $dbrootpass );
       print "Verifying Table Columns...\n";
-      my @tables = ( 'hosts', 'programs', 'snare_eid', 'mne' );
+      my @tables = ( 'hosts', 'programs', 'snare_eid', 'mne', 'mac' );
       my @cols = ( 'lastseen', 'seen', 'hidden' );
       foreach (@tables) {
           print "Validating $_ table:\n";
