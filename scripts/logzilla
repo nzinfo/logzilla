@@ -304,6 +304,7 @@ sub save_messages {
                 $last_seen{$k}, 
                 $counts{$k},
             );
+            next if ($params[0] eq "MAC");
             DEBUG( 2, "Updating counter: %s with (%s)",
                 $counter->{sth}->{Statement}, join( ", ", @params ) );
             $counter->{sth}->execute( @params );
@@ -555,7 +556,7 @@ sub process_line {
         if ( $msg =~ /(([0-9A-F]{2}[:-]){5}([0-9A-F]{2}))/i ) {
             $mac = $1;
         } else {
-            $mac = "None";
+            $mac = "MAC";
         }
         if ( $msg =~ /\%([^:]*\-\d+\-[A-Z\-\_\d]+?)(?:\:|\s)/ ) {
             $mne = $1;
