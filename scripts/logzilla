@@ -676,14 +676,12 @@ sub load_deduplication_cache {
         "programs.name as prg, " .
         "l.msg as msg, " .
         "mne.name as mne, " .
-        "mac.name as mac, " .
         "l.eid as eid, " .
         "unix_timestamp(l.fo) as fo, " .
         "unix_timestamp(l.lo) as lo " .
         "FROM logs l " .
         "LEFT JOIN programs on l.program = programs.crc " .
         "LEFT JOIN mne on l.mne = mne.crc " .
-        "LEFT JOIN mac on l.mac = mac.crc " .
         "WHERE l.fo >= from_unixtime(?)";
     if( $to ) {
         $stmt .= " AND l.fo <= from_unixtime(?)";
