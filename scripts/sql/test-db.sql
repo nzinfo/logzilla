@@ -238,6 +238,26 @@ CREATE TABLE `mne` (
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
+-- Table structure for table `mac`
+--
+
+DROP TABLE IF EXISTS `mac`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `mac` (
+  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `name` varchar(255) NOT NULL,
+  `crc` int(10) unsigned NOT NULL,
+  `seen` int(10) unsigned NOT NULL DEFAULT '1',
+  `lastseen` datetime NOT NULL,
+  `hidden` enum('false','true') DEFAULT 'false',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `crc_id` (`crc`),
+  KEY `name` (`name`)
+) ENGINE=MyISAM AUTO_INCREMENT=1 DEFAULT CHARSET=latin1;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
 -- Table structure for table `programs`
 --
 
