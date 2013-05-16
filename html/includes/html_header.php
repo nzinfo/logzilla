@@ -37,4 +37,5 @@ getsettings();
 Note: Closing body tag is located in the html_footer.php file
 -->
 <body class="body bg">
-    <img src="images/LogZilla_147x40_transparent.png" alt="Logo" class="header_logo reflectBelow" />
+<!-- Leave this style tage here, do not move it to css -->
+    <img src="images/LogZilla_152x42_transparent_html_head.png" alt="Logo" id="header_logo"  style="top: 0px; height: 42px; display: block; margin-left: auto;  margin-right: auto;" class="reflect" />

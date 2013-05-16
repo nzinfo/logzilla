@@ -151,6 +151,12 @@ function savelayout(){
 <script type="text/javascript" src="includes/js/jquery/plugins/datatables/js/jquery.dataTables.min.js"></script>
 <!-- END Datatable -->
 
+<!-- BEGIN Image Refelector -->
+<script type="text/javascript" src="includes/js/reflection.js">
+$("#header_logo").reflect();
+</script>
+<!-- END Image Refelector -->
+
 <!-- BEGIN Tabs -->
 <script type="text/javascript">
 $(document).ready(function(){
