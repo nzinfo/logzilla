@@ -45,15 +45,19 @@ sub usage_and_exit {
         Apr 01 18:01:26 HOSTNAME PROGRAM[PID]: Message Text
     If your logs aren't in this format, you will need to edit the patterns in this file to suit your needs.
     Note2: I have added some extra code for extracting the severity of the incoming message if it is a Cisco message (they contain the sev)
+
     Usage: $myname [-o --option] 
     -h        : this (help) message
     -d        : debug level (0-5) (0 = disabled [default])
     -v        : Also print results to STDERR
     -c        : config file (defaults to $options->{config_file})
     -l        : log file (defaults to local dir
-    Example: cat logfile | $myname -l /var/log/foo.log -d 1 -v
-        or, to feed into LogZilla:
-    cat logfile | $myname | /var/www/logzilla/scripts/logzilla
+
+Example Usage:
+cat logfile | $myname -l /var/log/foo.log -d 1 -v
+ or, to feed into LogZilla:
+cat logfile | $myname | /var/www/logzilla/scripts/logzilla
+
     };
     exit($exit_code);
 }
@@ -66,6 +70,7 @@ GetOptions(
     'log-file|l=s'    => \$options->{logfile},
     'cisco_only!'     => \$options->{cisco_only},
     'makeview!'       => \$options->{makeview},
+    'sis!'            => \$options->{sis},
 ) or usage_and_exit(1);    # got some invalid options
 
 if ( $options->{help} ) {
@@ -116,12 +121,25 @@ sub read_settings_from_db {
 
 while ( my $line = <STDIN> ) {
     chomp $line;
-
     # Skip useless "MARK" messages
     next if ( $line =~ /-- MARK --/ );
-    my ( $month, $day, $hms, $host, $prg, $msg ) = split( '\s+', $line, 6 );
     DEBUG( 1, "Original Line = $line" );
-    if ( exists( $months_h{$month} ) ) {
+    my ( $ymd, $month, $day, $hms, $host, $prg, $msg );
+    if ( $options->{sis} ) {
+        $host = 'SomeHost';
+        $prg = 'MyProgram';
+        if ($line =~ /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun)\s+(.*)/) {
+            ( $month, $day, $hms, $msg ) = split( '\s+', $2, 4 );
+            $line = "$month $day $hms $host $prg $msg";
+            $log->WARN("Setting line to $line");
+        } else {
+            ( $ymd, $hms, $msg ) = split( '\s+', $line, 3 );
+            $line = "$ymd $hms $host $prg $msg";
+            $log->INFO("Setting line to $line");
+        }
+    }
+    if ($line =~ /^(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)/) {
+        ( $month, $day, $hms, $host, $prg, $msg ) = split( '\s+', $line, 6 );
         DEBUG( 1, "Incorrect Y-m-d value, converting..." );
         my ( $month, $day ) = split( '\s+', $line, 3 );
         DEBUG( 1, "Month found is $month" );
