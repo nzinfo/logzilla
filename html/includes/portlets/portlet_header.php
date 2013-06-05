@@ -539,15 +539,22 @@ $sphinx_results = json_decode($json_o, true);
 // If something goes wrong, search() will return an error
 //------------------------------------------------------------
 
-if (preg_match('/[Ee]rror|warning/', $sphinx_results[count($sphinx_results)-4]['Variable_name'])) {
-    $error =$sphinx_results[count($sphinx_results)-4]['Variable_name'];
-    if (preg_match('/:(.*)/', $sphinx_results[count($sphinx_results)-4]['Value'], $matches)) {
+
+$meta = array_slice($sphinx_results, $limit); 
+// echo "<br><br><br><br><pre>";
+// echo "Valname =" . $meta[0]['Value'];
+// echo "Varname =" . $meta[0]['Variable_name'];
+// echo "Meta 0 Value =" . $meta[0]['Value'];
+if (preg_match('/[Ee]rror/', $meta[0]['Variable_name'])) {
+    $error =$meta[0]['Variable_name'];
+    if (preg_match('/:(.*)/', $meta[0]['Value'], $matches)) {
         $error .= '<br>' . $matches[0];
     } else {
-        $error .= '<br>' . $sphinx_results[count($sphinx_results)-4]['Value'];
+        $error .= '<br>' . $meta[0]['Value'];
     }
-    // echo "<br><br><br>E: $error<pre>";
-    // die(print_r($sphinx_results));
+}
+if (preg_match('/Operation now in progress/', $meta[0]['Value'])) {
+    unset ($error);
 }
 if (!$sphinx_results) {
 $error = $json_o;
