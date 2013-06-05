@@ -35,9 +35,15 @@ if ((has_portlet_access($_SESSION['username'], 'Search Results') == TRUE) || ($_
         //------------------------------------------------------------
         // echo "<pre>";
         // die(print_r($sphinx_results));
-        $meta['total'] = $sphinx_results[$limit]['Value'];
-        $meta['total_found'] = $sphinx_results[$limit+1]['Value'];
-        $meta['time'] = $sphinx_results[$limit+2]['Value'];
+
+        // Remove any warnings if they exist
+        $meta = array_slice($sphinx_results, $limit); 
+        while ($meta[0]['Variable_name'] !== 'total') {
+            array_shift($meta);
+        }
+        $meta['total'] = $meta[0]['Value'];
+        $meta['total_found'] = $meta[1]['Value'];
+        $meta['time'] = $meta[2]['Value'];
         // Get totals
         $total = $meta['total'];
         $total_found = $meta['total_found'];
@@ -399,6 +405,7 @@ if ($total_found < $limit) {
 }
 ?>
 var total = '<?php echo $total?>'
+// console.log("Total = " + total);
 if (total < 1) {
     total = 'No results found for date range <?php echo "$start - $end<br>Time to search: $time seconds";?>'
 } else {
