@@ -539,87 +539,88 @@ $sphinx_results = json_decode($json_o, true);
 // If something goes wrong, search() will return an error
 //------------------------------------------------------------
 
-
-$meta = array_slice($sphinx_results, $limit); 
-// echo "<br><br><br><br><pre>";
-// echo "Valname =" . $meta[0]['Value'];
-// echo "Varname =" . $meta[0]['Variable_name'];
-// echo "Meta 0 Value =" . $meta[0]['Value'];
-if (preg_match('/[Ee]rror/', $meta[0]['Variable_name'])) {
-    $error =$meta[0]['Variable_name'];
-    if (preg_match('/:(.*)/', $meta[0]['Value'], $matches)) {
-        $error .= '<br>' . $matches[0];
-    } else {
-        $error .= '<br>' . $meta[0]['Value'];
-    }
-}
-if (preg_match('/Operation now in progress/', $meta[0]['Value'])) {
-    unset ($error);
-}
 if (!$sphinx_results) {
-$error = $json_o;
+	$error = $json_o;
+} else {
+
+	$meta = array_slice($sphinx_results, $limit); 
+	// echo "<br><br><br><br><pre>";
+	// echo "Valname =" . $meta[0]['Value'];
+	// echo "Varname =" . $meta[0]['Variable_name'];
+	// echo "Meta 0 Value =" . $meta[0]['Value'];
+	if (preg_match('/[Ee]rror/', $meta[0]['Variable_name'])) {
+		$error =$meta[0]['Variable_name'];
+		if (preg_match('/:(.*)/', $meta[0]['Value'], $matches)) {
+			$error .= '<br>' . $matches[0];
+		} else {
+			$error .= '<br>' . $meta[0]['Value'];
+		}
+	}
+	if (preg_match('/Operation now in progress/', $meta[0]['Value'])) {
+		unset ($error);
+	}
 }
 if ($error) {
-    //------------------------------------------------------------
-    // If Sphinx returns and error, let the user know
-    //------------------------------------------------------------
-    $lzbase = str_replace("html/includes/portlets", "", dirname( __FILE__ ));
-    if (preg_match("/.*failed to open.*spd/", "$json_o")) {
-        $error = "The Sphinx indexes are missing!<br>\n";
-        $error .= "Please be sure you have run the indexer on your server by typing:<br><br>\n";
-        $error .= "sudo ${lzbase}sphinx/indexer.sh full<br><br>";
-    } elseif (preg_match("/.*connection to.*failed.*/", "$json_o")) {
-        $error = "The Sphinx daemon is not running!<br>\n";
-        $error .= "Please be sure you have started the daemon on your server by typing:<br><br>\n";
-        $error .= "sudo ${lzbase}sphinx/bin/searchd -c ${lzbase}sphinx/sphinx.conf<br><br>";
-    }
-    ?>
-        <script type="text/javascript">
-        $(document).ready(function(){
-                var err = "<?php echo preg_replace("/\r?\n/", "\\n", addslashes($error)); ?>";
-                error('[Sphinx Error] ' + err);
-                // alert(err);
-                }); // end doc ready
-    </script>
-        <?php } 
-        //------------------------------------------------------------
-        // Set the query string to be passed to the browser
-        //------------------------------------------------------------
-        $qstring .= "&page=$page";
-        $qstring .= "&show_suppressed=$show_suppressed";
-        $qstring .= "&spx_max=$spx_max";
-        $qstring .= "&spx_ip=$spx_ip";
-        $qstring .= "&spx_port=$spx_port";
-        $qstring .= "&groupby=$groupby";
-        $qstring .= "&chart_type=$chart_type";
-        $qstring .= "&fo_checkbox=$fo_checkbox";
-        $qstring .= "&fo_date=".urlencode($fo_date);
-        $qstring .= "&fo_time_start=$fo_time_start";
-        $qstring .= "&fo_time_end=$fo_time_end";
-        $qstring .= "&lo_checkbox=$lo_checkbox";
-        $qstring .= "&lo_date=".urlencode($lo_date);
-        $qstring .= "&lo_time_start=$lo_time_start";
-        $qstring .= "&lo_time_end=$lo_time_end";
-        $qstring .= "&q_type=$q_type";
-        $qstring .= "&tail=$tail";
-        $qstring .= "&limit=$limit";
-        $qstring .= "&msg_mask=$searchText";
-        $qstring .= "&topx=$topx";
-        $qstring .= "&notes_mask=$notes_mask";
-        $qstring .= "&orderby=$orderby";
-        $qstring .= "&order=$order";
-        $qstring .= "&dupop=$dupop";
-        $qstring .= "&dupcount=$dupcount";
-        $qstring .= "&graphtype=$graphtype";
-        // spanid is used to indicate which menu item to save favorites to (Searches or Charts)
-        switch ($page) {
-            case "Results":
-                $spanid = 'search_history';
-                break;
-            case "Graph":
-                $spanid = 'chart_history';
-                break;
-        }
+	//------------------------------------------------------------
+	// If Sphinx returns and error, let the user know
+	//------------------------------------------------------------
+	$lzbase = str_replace("html/includes/portlets", "", dirname( __FILE__ ));
+	if (preg_match("/.*failed to open.*spd/", "$json_o")) {
+		$error = "The Sphinx indexes are missing!<br>\n";
+		$error .= "Please be sure you have run the indexer on your server by typing:<br><br>\n";
+		$error .= "sudo ${lzbase}sphinx/indexer.sh full<br><br>";
+	} elseif (preg_match("/.*connection to.*failed.*/", "$json_o")) {
+		$error = "The Sphinx daemon is not running!<br>\n";
+		$error .= "Please be sure you have started the daemon on your server by typing:<br><br>\n";
+		$error .= "sudo ${lzbase}sphinx/bin/searchd -c ${lzbase}sphinx/sphinx.conf<br><br>";
+	}
+	?>
+		<script type="text/javascript">
+		$(document).ready(function(){
+				var err = "<?php echo preg_replace("/\r?\n/", "\\n", addslashes($error)); ?>";
+				error('[Sphinx Error] ' + err);
+				// alert(err);
+				}); // end doc ready
+	</script>
+		<?php } 
+		//------------------------------------------------------------
+		// Set the query string to be passed to the browser
+		//------------------------------------------------------------
+		$qstring .= "&page=$page";
+		$qstring .= "&show_suppressed=$show_suppressed";
+		$qstring .= "&spx_max=$spx_max";
+		$qstring .= "&spx_ip=$spx_ip";
+		$qstring .= "&spx_port=$spx_port";
+		$qstring .= "&groupby=$groupby";
+		$qstring .= "&chart_type=$chart_type";
+		$qstring .= "&fo_checkbox=$fo_checkbox";
+		$qstring .= "&fo_date=".urlencode($fo_date);
+		$qstring .= "&fo_time_start=$fo_time_start";
+		$qstring .= "&fo_time_end=$fo_time_end";
+		$qstring .= "&lo_checkbox=$lo_checkbox";
+		$qstring .= "&lo_date=".urlencode($lo_date);
+		$qstring .= "&lo_time_start=$lo_time_start";
+		$qstring .= "&lo_time_end=$lo_time_end";
+		$qstring .= "&q_type=$q_type";
+		$qstring .= "&tail=$tail";
+		$qstring .= "&limit=$limit";
+		$qstring .= "&msg_mask=$searchText";
+		$qstring .= "&topx=$topx";
+		$qstring .= "&notes_mask=$notes_mask";
+		$qstring .= "&orderby=$orderby";
+		$qstring .= "&order=$order";
+		$qstring .= "&dupop=$dupop";
+		$qstring .= "&dupcount=$dupcount";
+		$qstring .= "&graphtype=$graphtype";
+		// spanid is used to indicate which menu item to save favorites to (Searches or Charts)
+		switch ($page) {
+			case "Results":
+				$spanid = 'search_history';
+				break;
+			case "Graph":
+				$spanid = 'chart_history';
+				break;
+		}
 // Replace ^& with ^? for URL saving
 $qstring = preg_replace('/^&(.*)/', '?$1', $qstring);
 
