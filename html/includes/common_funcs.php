@@ -1142,7 +1142,9 @@ function search($json_o, $spx_max,$index="idx_logs idx_delta_logs",$spx_ip,$spx_
         switch ($groupby) {
             case "mne":
                 $val = mne2crc('None');
-                $sphinxfilters[] = "mne!=$val";
+		if ($val) {
+                    $sphinxfilters[] = "mne!=$val";
+		}
                 //                $cl->SetFilter( 'mne', array($val), true );
                 break;
             case "eid":
@@ -1597,7 +1599,9 @@ function search_graph($json_o, $spx_max,$index="idx_logs idx_delta_logs",$spx_ip
         switch ($groupby) {
             case "mne":
                 $val = mne2crc('None');
-                $sphinxfilters[] = "mne!=$val";
+		if ($val) {
+                   $sphinxfilters[] = "mne!=$val";
+		}
                 //                $cl->SetFilter( 'mne', array($val), true );
                 break;
             case "eid":
