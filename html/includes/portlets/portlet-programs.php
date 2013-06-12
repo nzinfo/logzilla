@@ -51,28 +51,30 @@ if (cnt < 11) {
         $result = perform_query($sql, $dbLink, "portlet-programs.php"); 
         $i=0; 
         while($row = fetch_array($result)) { 
-        echo "<tr>";
-        echo "<td id='prg_sel'>";
-        echo "<input type=\"checkbox\" name=\"sel_prg[]\" value=\"$row[name]\" id='$row[name]'>";
-        echo "</td>";
-        echo "<td id='prg'>";
-        if (strlen($row['name']) < 26) {
-            echo "$row[name]";
-        } else {
-            if (strlen($row['name']) > 39) {
-                echo "<span style=\"font-size: xx-small\">$row[name]</span>";
+            // #463 Program portlet doesn't re-size when a program name has a space in it
+            $prg = preg_replace('/ /', '_', $row['name']);
+            echo "<tr>";
+            echo "<td id='prg_sel'>";
+            echo "<input type=\"checkbox\" name=\"sel_prg[]\" value=\"$prg\" id='$prg'>";
+            echo "</td>";
+            echo "<td id='prg'>";
+            if (strlen($prg) < 26) {
+                echo "$prg";
             } else {
-                echo "<span style=\"font-size: x-small\">$row[name]</span>";
+                if (strlen($prg) > 39) {
+                    echo "<span style=\"font-size: xx-small\">$prg</span>";
+                } else {
+                    echo "<span style=\"font-size: x-small\">$prg</span>";
+                }
             }
-            }
-        echo "</td>";
-        echo "<td id='seen'>";
-        echo humanReadable($row['seen']) . " times\n";
-        echo "</td>";
-        echo "<td id='lastseen'>";
-        echo getRelativeTime($row['lastseen']) . "\n";
-        echo "</td>";
-        echo "</tr>";
+            echo "</td>";
+            echo "<td id='seen'>";
+            echo humanReadable($row['seen']) . " times\n";
+            echo "</td>";
+            echo "<td id='lastseen'>";
+            echo getRelativeTime($row['lastseen']) . "\n";
+            echo "</td>";
+            echo "</tr>";
             $i++; 
         } 
         echo "</tbody>";
@@ -95,6 +97,6 @@ if (cnt < 11) {
 <?php
 } else { ?>
 <script type="text/javascript">
-$('#portlet_Programs').remove()
-</script>
+    $('#portlet_Programs').remove()
+    </script>
 <?php } ?>
