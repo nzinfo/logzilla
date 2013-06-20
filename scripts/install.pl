@@ -98,7 +98,7 @@ sub getYN {
 my $rcfile = ".lzrc";
 if ( -e $rcfile ) {
     open CONFIG, "$rcfile";
-    my $config = join "", <CONFIG>;
+    my $config = join '', <CONFIG>;
     close CONFIG;
     eval $config;
     die "Couldn't interpret the configuration file ($rcfile) that was given.\nError details follow: $@\n" if $@;
