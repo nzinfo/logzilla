@@ -26,7 +26,7 @@ TIME=`date +%T`
 # -------------------------------------------
 # Set logzilla base path
 # -------------------------------------------
-lzhome="/path_to_logzilla"
+lzhome="/var/www/logzilla"
 [ ! -d "$lzhome" ] && lzhome="/var/www/logzilla"
 
 sphinxhome="$lzhome/sphinx"
@@ -54,13 +54,10 @@ startsearchd='1'
 dbuser=`cat $lzconf | grep "DBADMIN'" | awk -F"'" '{print $4}'`
 dbpass=`cat $lzconf | grep "DBADMINPW'" | awk -F"'" '{print $4}'`
 db=`cat $lzconf | grep "DBNAME'" | awk -F"'" '{print $4}'`
-#FIXME! What about db address and db port?
-
-MYSQL="mysql -N -u$dbuser -p$dbpass $db"
-
-## FIX THIS IN THE RELEASE VERSION!
+dbhost=`cat $lzconf | grep "DBHOST'" | awk -F"'" '{print $4}'`
+dbport=`cat $lzconf | grep "DBPORT'" | awk -F"'" '{print $4}'`
+MYSQL="mysql -N -u$dbuser -p$dbpass -h$dbhost -P$dbport $db"
 logtable="logs" 
-## FIX THIS IN THE RELEASE VERSION!
 
 # -------------------------------------------
 # Check for Sphinx's searchd process ID
