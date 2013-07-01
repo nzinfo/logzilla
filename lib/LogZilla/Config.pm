@@ -149,8 +149,8 @@ sub _build_db_dsn {
             $self->db_name, $self->db_sock );
     }
     else {
-        return sprintf( "DBI:mysql:database=%s;host=%s;port=%s", 
-            $self->db_name, $self->db_host, $self->db_port );
+        return sprintf( "DBI:mysql:database=%s;host=%s;port=%s;mysql_local_infile=%s", 
+            $self->db_name, $self->db_host, $self->db_port, "1" );
     }
 }
 
