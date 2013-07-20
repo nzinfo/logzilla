@@ -163,7 +163,16 @@ if ((has_portlet_access($_SESSION['username'], 'Search Results') == TRUE) || ($_
                                         var values = $slider.slider('values');
                                         var startTime = $slider.data('startTime');
                                         aoData.push( { "name": "startTime", "value": startTime + values[0] } );
-                                        aoData.push( { "name": "endTime", "value": startTime + values[1] } );
+                                        // #466 - extend time window to 1 year, tail doesn't use slider, so just extend it out, 
+                                        // otherwise tail mode stops showing data after 2 hours
+                                        var tail = '<?php echo $tail?>';
+                                        if (tail > 0) {
+                                            var end = values[1];
+                                            end += 31557600; // 1 Year
+                                            aoData.push( { "name": "endTime", "value": startTime + end } );
+                                        } else {
+                                            aoData.push( { "name": "endTime", "value": startTime + values[1] } );
+                                        }
                                     }
                                 },
 
