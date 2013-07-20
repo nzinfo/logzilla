@@ -24,9 +24,9 @@ session_start();
  * you want to insert a non-database field (for example a counter or static image)
  */
 if ($_SESSION['DEDUP'] == "1") {
-$aColumns = array( 'id', 'eid', 'host', 'facility', 'severity', 'program', 'mne', 'msg', 'fo', 'lo', 'counter', 'notes' );
+    $aColumns = array( 'id', 'eid', 'host', 'facility', 'severity', 'program', 'mne', 'msg', 'fo', 'lo', 'counter', 'notes' );
 } else {
-$aColumns = array( 'id', 'eid', 'host', 'facility', 'severity', 'program', 'mne', 'msg', 'lo', 'notes' );
+    $aColumns = array( 'id', 'eid', 'host', 'facility', 'severity', 'program', 'mne', 'msg', 'lo', 'notes' );
 }
 
 /* Indexed column (used for fast and accurate table cardinality) */
@@ -51,10 +51,10 @@ $sTable = $_SESSION['viewname'];
  * MySQL connection
  */
 $gaSql['link'] =  mysql_pconnect( $gaSql['server'], $gaSql['user'], $gaSql['password']  ) or
-die( 'Could not open connection to server' );
+    die( 'Could not open connection to server' );
 
 mysql_select_db( $gaSql['db'], $gaSql['link'] ) or 
-die( 'Could not select database '. $gaSql['db'] );
+    die( 'Could not select database '. $gaSql['db'] );
 
 
 /* 
@@ -139,73 +139,73 @@ if (isset($_GET['startTime']) && preg_match('/^[0-9]+$/D', $_GET['startTime'])) 
     }
     $sWhere .= ' `lo` >= FROM_UNIXTIME(' . $_GET['startTime'] . ')';
 
-            $sql = 'SELECT FROM_UNIXTIME(' . $_GET['startTime'] . ')';
-                $result = mysql_query($sql, $gaSql['link']) or die(mysql_error());
-                while ($row = mysql_fetch_array($result)) {
-                $start_time_formatted = $row[0];
-                }
-                mysql_free_result($result);
-                }
+    $sql = 'SELECT FROM_UNIXTIME(' . $_GET['startTime'] . ')';
+    $result = mysql_query($sql, $gaSql['link']) or die(mysql_error());
+    while ($row = mysql_fetch_array($result)) {
+        $start_time_formatted = $row[0];
+    }
+    mysql_free_result($result);
+}
 
-                if (isset($_GET['endTime']) && preg_match('/^[0-9]+$/D', $_GET['endTime'])) {
-                if ( $sWhere == "" )
-                {
-                $sWhere = "WHERE ";
-                }
-                else
-                {
-                $sWhere .= " AND ";
-                }
-                $sWhere .= ' `lo` <= FROM_UNIXTIME(' . $_GET['endTime'] . ')';
+if (isset($_GET['endTime']) && preg_match('/^[0-9]+$/D', $_GET['endTime'])) {
+    if ( $sWhere == "" )
+    {
+        $sWhere = "WHERE ";
+    }
+    else
+    {
+        $sWhere .= " AND ";
+    }
+    $sWhere .= ' `lo` <= FROM_UNIXTIME(' . $_GET['endTime'] . ')';
 
-                    $sql = 'SELECT FROM_UNIXTIME(' . $_GET['endTime'] . ')';
-                        $result = mysql_query($sql, $gaSql['link']) or die(mysql_error());
-                        while ($row = mysql_fetch_array($result)) {
-                        $end_time_formatted = $row[0];
-                        }
-                        mysql_free_result($result);
-                        }
+    $sql = 'SELECT FROM_UNIXTIME(' . $_GET['endTime'] . ')';
+    $result = mysql_query($sql, $gaSql['link']) or die(mysql_error());
+    while ($row = mysql_fetch_array($result)) {
+        $end_time_formatted = $row[0];
+    }
+    mysql_free_result($result);
+}
 
-                        /*
-                         * SQL queries
-                         * Get data to display
-                         */
-                        $sQuery = "
-                        SELECT SQL_CALC_FOUND_ROWS ".str_replace(" , ", " ", implode(", ", $aColumns))."
-                        FROM   $sTable
-                        $sWhere
-                        $sOrder
-                        $sLimit
-                        ";
-                        $rResult = mysql_query( $sQuery, $gaSql['link'] ) or die(mysql_error());
-
-                    /* Data set length after filtering */
-    $sQuery = "
-SELECT FOUND_ROWS()
+/*
+ * SQL queries
+ * Get data to display
+ */
+$sQuery = "
+    SELECT SQL_CALC_FOUND_ROWS ".str_replace(" , ", " ", implode(", ", $aColumns))."
+    FROM   $sTable
+    $sWhere
+    $sOrder
+    $sLimit
     ";
-    $rResultFilterTotal = mysql_query( $sQuery, $gaSql['link'] ) or die(mysql_error());
-    $aResultFilterTotal = mysql_fetch_array($rResultFilterTotal);
-    $iFilteredTotal = $aResultFilterTotal[0];
+$rResult = mysql_query( $sQuery, $gaSql['link'] ) or die(mysql_error());
 
-    /* Total data set length */
-    $sQuery = "
+/* Data set length after filtering */
+$sQuery = "
+    SELECT FOUND_ROWS()
+    ";
+$rResultFilterTotal = mysql_query( $sQuery, $gaSql['link'] ) or die(mysql_error());
+$aResultFilterTotal = mysql_fetch_array($rResultFilterTotal);
+$iFilteredTotal = $aResultFilterTotal[0];
+
+/* Total data set length */
+$sQuery = "
     SELECT COUNT(".$sIndexColumn.")
     FROM   $sTable
     ";
-    $rResultTotal = mysql_query( $sQuery, $gaSql['link'] ) or die(mysql_error());
-    $aResultTotal = mysql_fetch_array($rResultTotal);
-    $iTotal = $aResultTotal[0];
+$rResultTotal = mysql_query( $sQuery, $gaSql['link'] ) or die(mysql_error());
+$aResultTotal = mysql_fetch_array($rResultTotal);
+$iTotal = $aResultTotal[0];
 
 
-    /*
-     * Output
-     */
-    $output = array(
-            "sEcho" => intval($_GET['sEcho']),
-            "iTotalRecords" => $iTotal,
-            "iTotalDisplayRecords" => $iFilteredTotal,
-            "aaData" => array()
-            );
+/*
+ * Output
+ */
+$output = array(
+    "sEcho" => intval($_GET['sEcho']),
+    "iTotalRecords" => $iTotal,
+    "iTotalDisplayRecords" => $iFilteredTotal,
+    "aaData" => array()
+);
 
 while ( $aRow = mysql_fetch_array( $rResult ) )
 {
@@ -222,7 +222,7 @@ while ( $aRow = mysql_fetch_array( $rResult ) )
             // cdukes: #338 - added htmlentities();
             /* #339 - Force utf-8 for msg column on foreign languages*/
             /* #362 - PHP's utf8_convert caused proiblems with IE9.
-               As a result, I had to write a special function to check for utf-8, then convert if not */
+            As a result, I had to write a special function to check for utf-8, then convert if not */
             $msg = htmlentities($aRow[ $aColumns[$i] ]);
             $row[] = utfconvert($msg);
         }
