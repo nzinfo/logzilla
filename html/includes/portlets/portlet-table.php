@@ -87,10 +87,19 @@ if ((has_portlet_access($_SESSION['username'], 'Search Results') == TRUE) || ($_
         $select_columns = "id,host,$sql_fac,$sql_sev,$sql_prg,$sql_mne,msg,eid,suppress,counter,fo,lo,notes";
         $_SESSION['select_columns'] = $select_columns;
 
-        // Generate a fairly random name for the view so they don't overlap. We'll cleanup these views in the nightly cleanup
+        // Generate a random name for the view so they don't overlap. We'll cleanup these views in the nightly cleanup from LZTool
         // TH: small bug-fix: use Hour in 24h format; views were only deleted once a day
         $uname_clean = preg_replace('/[^a-zA-Z0-9\s]/', '', $_SESSION['username']);
-        $_SESSION['viewname'] = date('His') . $uname_clean."_search_results";
+
+        // CD: #466 - Cleanup of views kills tail table when users run tail mode > 24 hours
+        // As a result, we'll use unix ts to set when the view should expire. This way LZTool will
+        // only delete views that are expired
+        if ($tail > 0) {
+            $exp = time() + (365 * 24 * 60 * 60);
+        } else {
+            $exp = time() + (24 * 60 * 60);
+        }
+        $_SESSION['viewname'] = "${exp}_${uname_clean}_search_results";
 
         switch ($show_suppressed):
         case "suppressed":
