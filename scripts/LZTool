@@ -231,14 +231,23 @@ sub tblSync {
 sub cleanup_old_views {
 
     # cleanup old search results
+    my $ts;
     $rc = 'drop view ';
     $sql = "SELECT table_name from information_schema.views where table_name like '%search_results'";
     $sth_syslog = $dbh->prepare($sql);
     DEBUG( 1, "Executing SQL Statement: $sql" );
     $sth_syslog->execute();
     while ( $results = $sth_syslog->fetchrow_hashref ) {
-        $rc = $rc . $results->{'table_name'};
-        $rc = $rc . ",";
+        # cdukes: #466 - Added TS check for expired view names 
+        DEBUG(1, "Checking expire date on %s", $results->{'table_name'});
+        ( $ts ) = split( /_/, $results->{'table_name'} );
+        DEBUG(1, "View TS = %d, Current TS = %d", $ts, time());
+        if ($ts <= time()) { 
+            $rc = $rc . $results->{'table_name'};
+            $rc = $rc . ",";
+        } else {
+            DEBUG(1, "%s has not expired, keeping view", $results->{'table_name'});
+        }
     }
     $rc = substr( $rc, 0, -1 );
     if ( $rc !~ /^drop view$/ ) {
