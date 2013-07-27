@@ -126,7 +126,6 @@ if ($lo_checkbox == "on") {
         list($start,$end) = explode(' to ', $lo_date);
         if($end=='') $end = "$start" ; 
         if(($start==$end) and ($lo_time_start>$lo_time_end)) {
-            $endx = strtotime($end);
             $endx = $endx+24*3600;
             $end = date('Y-m-d', mktime(0,0,0,date('m',$endx),date('d',$endx),date('Y',$endx))); }
 
@@ -134,460 +133,460 @@ if ($lo_checkbox == "on") {
             $end .= " $lo_time_end"; 
 
             if ($date_andor=='') $date_andor = 'AND';
+            // cdukes: #466 - extend tail view end date
+            if ($tail > 0) {
+                $date = new DateTime("$end");
+                $date->add(new DateInterval('P1Y'));
+                $end = $date->format('Y-m-d H:i:s');
+            }
             $where.= " ".strtoupper($date_andor)." lo BETWEEN '$start' AND '$end'";
             $filter_lo_start = "$start" ;
             $filter_lo_end = "$end" ;
     }
 }
-if ($tail > 0) {
-    if ($limit > 10) {
+if (($tail > 0) && ($limit > 10)) {
 ?>
-        <script type="text/javascript">
-        $(document).ready(function(){
-            $( "<div id='tail_error'><center><br><br>Auto setting tail limit to 10<br>The Maximum result set for the auto refresh page is 10.<br>Any more than that would simply scroll off the page before being seen.<br>Please check your 'limit' setting in the 'Search Options' portlet.</div></center>" ).dialog({
-                modal: true,
-                    width: "50%", 
-                    height: 240, 
-                    buttons: {
-                        Ok: function() {
-                            $( this ).dialog( "close" );
-                        }
+    <script type="text/javascript">
+    $(document).ready(function(){
+        $( "<div id='tail_error'><center><br><br>Auto setting tail limit to 10<br>The Maximum result set for the auto refresh page is 10.<br>Any more than that would simply scroll off the page before being seen.<br>Please check your 'limit' setting in the 'Search Options' portlet.</div></center>" ).dialog({
+            modal: true,
+                width: "50%", 
+                height: 240, 
+                buttons: {
+                    Ok: function() {
+                        $( this ).dialog( "close" );
                     }
-            });
-        }); // end doc ready
-        </script>
+                }
+        });
+    }); // end doc ready
+    </script>
 <?php
-        $limit = 10;
+    $limit = 10;
+};
+
+
+if ($severities) {
+    $where .= " AND SEVERITY IN (";
+    foreach ($severities as $sev) {
+        if (!preg_match("/^\d/", $sev)) {
+            $arr[] .= sev2int($sev);
+            $where .=  "'".sev2int($sev)."',";
+        } else {
+            $arr[] .= $sev;
+            $where .=  "'".$sev."',";
+        }
+        $qstring .= "&severities[]=".urlencode($sev);
     }
-    // cdukes: #466 - extend view create date by 1 year for tail op
-    $date = new DateTime("$lo_date");
-    $date->add(new DateInterval('P1Y'));
-    $lo_date = $date->format('Y-m-d');
+    $severities = $arr;
+    $searchArr['severities'] = $severities;
+    $where = rtrim($where, ",");
+    $where .= ")";	
+}
+
+if ($facilities) {
+    $where .= " AND FACILITY IN (";
+    foreach ($facilities as $fac) {
+        if (!preg_match("/^\d/", $fac)) {
+            $arr[] .= fac2int($fac);
+            $where .= "'".fac2int($fac)."',";
+        } else {
+            $arr[] .= $fac;
+            $where .= "'".$fac."',";
+        }
+        $qstring .= "&facilities[]=".urlencode($fac);
+    }
+    $facilities = $arr;
+    $searchArr['facilities'] = $facilities;
+    $where = rtrim($where, ",");
+    $where .= ")";
 }
 
 
-    if ($severities) {
-        $where .= " AND SEVERITY IN (";
-        foreach ($severities as $sev) {
-            if (!preg_match("/^\d/", $sev)) {
-                $arr[] .= sev2int($sev);
-                $where .=  "'".sev2int($sev)."',";
-            } else {
-                $arr[] .= $sev;
-                $where .=  "'".$sev."',";
-            }
-            $qstring .= "&severities[]=".urlencode($sev);
-        }
-        $severities = $arr;
-        $searchArr['severities'] = $severities;
-        $where = rtrim($where, ",");
-        $where .= ")";	
+
+
+
+$filter_dup_min = "0";
+$filter_dup_max = "999";
+$dupop_orig = $dupop;
+
+if (($dupop) && ($dupop != 'undefined')) {
+    switch ($dupop) {
+    case "gt":
+        $dupop = ">";
+        $filter_dup_min = $dupcount + 1;
+        break;
+
+    case "lt":
+        $dupop = "<";
+        $filter_dup_max = $dupcount - 1;
+        break;
+
+    case "eq":
+        $dupop = "=";
+        $filter_dup_min = $dupcount;
+        $filter_dup_max = $dupcount;
+        break;
+
+    case "gte":
+        $dupop = ">=";
+        $filter_dup_min = $dupcount;
+        break;
+        $filter_dup_min = $dupcount;
+    case "lte":
+        $dupop = "<=";
+
+        break;
     }
-
-    if ($facilities) {
-        $where .= " AND FACILITY IN (";
-        foreach ($facilities as $fac) {
-            if (!preg_match("/^\d/", $fac)) {
-                $arr[] .= fac2int($fac);
-                $where .= "'".fac2int($fac)."',";
-            } else {
-                $arr[] .= $fac;
-                $where .= "'".$fac."',";
-            }
-            $qstring .= "&facilities[]=".urlencode($fac);
-        }
-        $facilities = $arr;
-        $searchArr['facilities'] = $facilities;
-        $where = rtrim($where, ",");
-        $where .= ")";
-    }
+    $where.= " AND counter $dupop '$dupcount'"; 
+}
 
 
+//------------------------------------------------------------
+// Set defaults for the searchArr
+// This array is used to pass JSON requests to search()
+// Which is the Sphinx function that does the actual search
+//------------------------------------------------------------
+$searchArr['chart_type'] = $chart_type;
+$searchArr['lo_checkbox'] = $lo_checkbox;
+$searchArr['lo_date'] = $lo_date;
+$searchArr['lo_time_start'] = $lo_time_start;
+$searchArr['lo_time_end'] = $lo_time_end;
+$searchArr['orderby'] = $orderby;
+$searchArr['order'] = $order;
+$searchArr['limit'] = $limit;
+$searchArr['groupby'] = $groupby;
+$searchArr['tail'] = $tail;
+$searchArr['show_suppressed'] = $show_suppressed;
+$searchArr['q_type'] = $q_type;
+$searchArr['page'] = $page;
+$searchArr['dupop'] = $dupop_orig;
+$searchArr['dupcount'] = $dupcount;
+
+//------------------------------------------------------------
+// Get the search operator 
+// default is or (|) set in the search() function
+//------------------------------------------------------------
+$searchText = preg_replace('/^Enter Text To Search/', '',$searchText);
+if (preg_match("/\||&|!|\-/", "$searchText")) {
+    $searchArr['search_op'] = preg_replace ('/.*(\||&|!|\-).*/', '$1', $searchText);
+    $op = $searchArr['search_op'];
+}
 
 
-
-    $filter_dup_min = "0";
-    $filter_dup_max = "999";
-    $dupop_orig = $dupop;
-
-    if (($dupop) && ($dupop != 'undefined')) {
-        switch ($dupop) {
-        case "gt":
-            $dupop = ">";
-            $filter_dup_min = $dupcount + 1;
-            break;
-
-        case "lt":
-            $dupop = "<";
-            $filter_dup_max = $dupcount - 1;
-            break;
-
-        case "eq":
-            $dupop = "=";
-            $filter_dup_min = $dupcount;
-            $filter_dup_max = $dupcount;
-            break;
-
-        case "gte":
-            $dupop = ">=";
-            $filter_dup_min = $dupcount;
-            break;
-            $filter_dup_min = $dupcount;
-        case "lte":
-            $dupop = "<=";
-
-            break;
-        }
-        $where.= " AND counter $dupop '$dupcount'"; 
-    }
-
-
-    //------------------------------------------------------------
-    // Set defaults for the searchArr
-    // This array is used to pass JSON requests to search()
-    // Which is the Sphinx function that does the actual search
-    //------------------------------------------------------------
-    $searchArr['chart_type'] = $chart_type;
-    $searchArr['lo_checkbox'] = $lo_checkbox;
-    $searchArr['lo_date'] = $lo_date;
-    $searchArr['lo_time_start'] = $lo_time_start;
-    $searchArr['lo_time_end'] = $lo_time_end;
-    $searchArr['orderby'] = $orderby;
-    $searchArr['order'] = $order;
-    $searchArr['limit'] = $limit;
-    $searchArr['groupby'] = $groupby;
-    $searchArr['tail'] = $tail;
-    $searchArr['show_suppressed'] = $show_suppressed;
-    $searchArr['q_type'] = $q_type;
-    $searchArr['page'] = $page;
-    $searchArr['dupop'] = $dupop_orig;
-    $searchArr['dupcount'] = $dupcount;
-
-    //------------------------------------------------------------
-    // Get the search operator 
-    // default is or (|) set in the search() function
-    //------------------------------------------------------------
-    $searchText = preg_replace('/^Enter Text To Search/', '',$searchText);
-    if (preg_match("/\||&|!|\-/", "$searchText")) {
-        $searchArr['search_op'] = preg_replace ('/.*(\||&|!|\-).*/', '$1', $searchText);
-        $op = $searchArr['search_op'];
-    }
-
-
-    if (preg_match("/^@host/i", "$searchText")) {
-        $searchText = preg_replace('/^@[Hh][Oo][Ss][Tt][Ss]?\s+?(.*)/', '$1', $searchText);
-        if ($op) {
-            $h = explode("$op", $searchText);
-            foreach ($h as $host) {
-                $host = preg_replace('/\s+/', '',$host);
-                $hosts[] .= $host;
-                $searchText = preg_replace("/$host/", '', $searchText);
-            }
-            $searchText = preg_replace("/\\$op/", '', $searchText);
-        } else {
-            $hosts[] .= $searchText;
-            $searchText = preg_replace("/$searchText/", '', $searchText);
-        }
-    }
-
-    if (preg_match("/^@notes/i", "$searchText")) {
-        $searchText = preg_replace('/^@[Nn][Oo][Tt][Ee][Ss]?(.*)/', '$1', $searchText);
-        if ($op) {
-            $h = explode("$op", $searchText);
-            foreach ($h as $note) {
-                $note = preg_replace('/\s+/', '',$note);
-                $notes_mask[] .= $note;
-                $searchText = preg_replace("/$note/", '', $searchText);
-            }
-            $searchText = preg_replace("/\\$op/", '', $searchText);
-        } else {
-            $notes_mask[] .= $searchText;
-            $searchText = preg_replace("/$searchText/", '', $searchText);
-        }
-    }
-
-
-    //------------------------------------------------------------
-    // Set these after the matches on hosts and notes above 
-    // so that the mask is cleaned up by them
-    //------------------------------------------------------------
-    if ($searchText) { 
-        $searchArr['msg_mask'] = $searchText;
-        if ($tail > 0) {
-            $results = array();
-            if (preg_match("/^(\w+)/", $searchText, $matches)) {
-                $where .= " AND msg LIKE '%" . $matches[0] . "%'\n";
-            }
-
-            $word_to_capture = '(\w+)%';
-            $patterns[] = "%(&)" . $word_to_capture;
-            $patterns[] = "%(\|)" . $word_to_capture;
-            $patterns[] = "%(!)" . $word_to_capture;
-            $patterns[] = "%(-)" . $word_to_capture;
-
-            foreach($patterns as $p) {
-                preg_match($p,$searchText,$matches);
-                $results[] = $matches;
-            }
-            // print_r($results);
-
-            for($i=0; $i<count($results); $i++) {
-                if ($results[$i][2]) {
-                    if (preg_match("/!|-/", $results[$i][1])) {
-                        $where .= " AND msg NOT LIKE '%" . $results[$i][2] . "%'\n";
-                    } else {
-                        $where .= " AND msg LIKE '%" . $results[$i][2] . "%'\n";
-                    }
-                }
-            }
-        }
-    }
-    // echo "WHERE = $where<br>";
-    if (!is_array($hosts)) {
-        $hosts = explode(",", $hosts);
-    }
-
-    $searchArr['hosts'] = $hosts;
-
-    if ($sel_hosts) {
-        foreach ($sel_hosts as $host) {
+if (preg_match("/^@host/i", "$searchText")) {
+    $searchText = preg_replace('/^@[Hh][Oo][Ss][Tt][Ss]?\s+?(.*)/', '$1', $searchText);
+    if ($op) {
+        $h = explode("$op", $searchText);
+        foreach ($h as $host) {
+            $host = preg_replace('/\s+/', '',$host);
             $hosts[] .= $host;
+            $searchText = preg_replace("/$host/", '', $searchText);
         }
-        $searchArr['hosts'] = array_merge($sel_hosts, $hosts);
+        $searchText = preg_replace("/\\$op/", '', $searchText);
+    } else {
+        $hosts[] .= $searchText;
+        $searchText = preg_replace("/$searchText/", '', $searchText);
     }
+}
 
-    if ($eids) {
-        if (!is_array($eids)) {
-            $eids = explode(",", $eids);
+if (preg_match("/^@notes/i", "$searchText")) {
+    $searchText = preg_replace('/^@[Nn][Oo][Tt][Ee][Ss]?(.*)/', '$1', $searchText);
+    if ($op) {
+        $h = explode("$op", $searchText);
+        foreach ($h as $note) {
+            $note = preg_replace('/\s+/', '',$note);
+            $notes_mask[] .= $note;
+            $searchText = preg_replace("/$note/", '', $searchText);
         }
-        $searchArr['eids'] = $eids;
+        $searchText = preg_replace("/\\$op/", '', $searchText);
+    } else {
+        $notes_mask[] .= $searchText;
+        $searchText = preg_replace("/$searchText/", '', $searchText);
     }
-    if ($sel_eids) {
-        foreach ($sel_eids as $eid) {
-            $eids[] .= $eid;
-        }
-        $searchArr['eids'] = array_merge($sel_eids, $eids);
-    }
-    if ($searchArr['eids'])  {
-        $where .= " AND eid IN (";
-        foreach ($searchArr['eids'] as $eid) {
-            $qstring .= "&eids[]=$eid";
-            $where .= "'".$eid."',";
-        }
-        $where = rtrim($where, ",");
-        $where .= ")";
-    }
-
-    if ($mnemonics) {
-        if (!is_array($mnemonics)) {
-            $mnemonics = explode(",", $mnemonics);
-        }
-        $searchArr['mnemonics'] = $mnemonics;
-    }
-    if ($sel_mne) {
-        if ($mnemonics) {
-            $searchArr['mnemonics'] = array_merge($sel_mne, $mnemonics);
-        } else {
-            $searchArr['mnemonics'] = $sel_mne;
-        }
-    }
-    if ($searchArr['mnemonics'])  {
-        $where .= " AND mne IN (";
-        foreach ($searchArr['mnemonics'] as $mnemonic) {
-            $qstring .= "&mnemonics[]=$mnemonic";
-            $where .= "'".mne2crc($mnemonic)."',";
-        }
-        $where = rtrim($where, ",");
-        $where .= ")";
-    }
-
-    if ($programs) {
-        if (!is_array($programs)) {
-            $programs = explode(",", $programs);
-        }
-        $searchArr['programs'] = $programs;
-    }
-    if ($sel_prg) {
-        if ($programs) {
-            $searchArr['programs'] = array_merge($sel_prg, $programs);
-        } else {
-            $searchArr['programs'] = $sel_prg;
-        }
-    }
+}
 
 
-    unset($searchArr['sel_hosts']);
-    unset($searchArr['sel_eid']);
-    unset($searchArr['sel_mne']);
-    unset($searchArr['sel_prg']);
+//------------------------------------------------------------
+// Set these after the matches on hosts and notes above 
+// so that the mask is cleaned up by them
+//------------------------------------------------------------
+if ($searchText) { 
+    $searchArr['msg_mask'] = $searchText;
+    if ($tail > 0) {
+        $results = array();
+        if (preg_match("/^(\w+)/", $searchText, $matches)) {
+            $where .= " AND msg LIKE '%" . $matches[0] . "%'\n";
+        }
 
+        $word_to_capture = '(\w+)%';
+        $patterns[] = "%(&)" . $word_to_capture;
+        $patterns[] = "%(\|)" . $word_to_capture;
+        $patterns[] = "%(!)" . $word_to_capture;
+        $patterns[] = "%(-)" . $word_to_capture;
 
-    //------------------------------------------------------------
-    // This is insecure, needs to pass through get_input
-    //------------------------------------------------------------
-    if ($_POST) {
-        foreach ($_POST as $i => $value) {
-            if (preg_match("/^jqg_/", "$i")) {
-                $name_val = preg_replace('/jqg_(\w+grid)_(.*)/', '$1,$2', $i);
-                $array = explode(',', $name_val);
-                switch ($array[0]) {
-                case "mnegrid":
-                    $searchArr['mnemonics'][] .= $array[1];
-                    break;
-                case "eidgrid":
-                    $searchArr['eids'][] .= $array[1];
-                    break;
-                case "hostsgrid":
-                    $array[1] = preg_replace('/_/', '.', $array[1]);
-                    $searchArr['hosts'][] .= $array[1];
-                    break;
-                case "prggrid":
-                    $array[1] = preg_replace('/_/', '.', $array[1]);
-                    $searchArr['programs'][] .= $array[1];
-                    break;
+        foreach($patterns as $p) {
+            preg_match($p,$searchText,$matches);
+            $results[] = $matches;
+        }
+        // print_r($results);
 
+        for($i=0; $i<count($results); $i++) {
+            if ($results[$i][2]) {
+                if (preg_match("/!|-/", $results[$i][1])) {
+                    $where .= " AND msg NOT LIKE '%" . $results[$i][2] . "%'\n";
+                } else {
+                    $where .= " AND msg LIKE '%" . $results[$i][2] . "%'\n";
                 }
             }
         }
     }
+}
+// echo "WHERE = $where<br>";
+if (!is_array($hosts)) {
+    $hosts = explode(",", $hosts);
+}
 
-    if(is_array($searchArr['mnemonics'])) {
-        $where .= " AND mne IN (";
-        $searchArr['mnemonics'] = array_unique($searchArr['mnemonics']);
-        foreach ($searchArr['mnemonics'] as $mne) {
-            $qstring .= "&mnemonics[]=$mne";
-            $where.= "'".mne2crc($mne)."',";
-        }
-        $where = rtrim($where, ",");
-        $where .= ")";
+$searchArr['hosts'] = $hosts;
+
+if ($sel_hosts) {
+    foreach ($sel_hosts as $host) {
+        $hosts[] .= $host;
     }
+    $searchArr['hosts'] = array_merge($sel_hosts, $hosts);
+}
 
+if ($eids) {
+    if (!is_array($eids)) {
+        $eids = explode(",", $eids);
+    }
+    $searchArr['eids'] = $eids;
+}
+if ($sel_eids) {
+    foreach ($sel_eids as $eid) {
+        $eids[] .= $eid;
+    }
+    $searchArr['eids'] = array_merge($sel_eids, $eids);
+}
+if ($searchArr['eids'])  {
+    $where .= " AND eid IN (";
+    foreach ($searchArr['eids'] as $eid) {
+        $qstring .= "&eids[]=$eid";
+        $where .= "'".$eid."',";
+    }
+    $where = rtrim($where, ",");
+    $where .= ")";
+}
+
+if ($mnemonics) {
+    if (!is_array($mnemonics)) {
+        $mnemonics = explode(",", $mnemonics);
+    }
+    $searchArr['mnemonics'] = $mnemonics;
+}
+if ($sel_mne) {
+    if ($mnemonics) {
+        $searchArr['mnemonics'] = array_merge($sel_mne, $mnemonics);
+    } else {
+        $searchArr['mnemonics'] = $sel_mne;
+    }
+}
+if ($searchArr['mnemonics'])  {
+    $where .= " AND mne IN (";
+    foreach ($searchArr['mnemonics'] as $mnemonic) {
+        $qstring .= "&mnemonics[]=$mnemonic";
+        $where .= "'".mne2crc($mnemonic)."',";
+    }
+    $where = rtrim($where, ",");
+    $where .= ")";
+}
+
+if ($programs) {
+    if (!is_array($programs)) {
+        $programs = explode(",", $programs);
+    }
+    $searchArr['programs'] = $programs;
+}
+if ($sel_prg) {
+    if ($programs) {
+        $searchArr['programs'] = array_merge($sel_prg, $programs);
+    } else {
+        $searchArr['programs'] = $sel_prg;
+    }
+}
+
+
+unset($searchArr['sel_hosts']);
+unset($searchArr['sel_eid']);
+unset($searchArr['sel_mne']);
+unset($searchArr['sel_prg']);
+
+
+//------------------------------------------------------------
+// This is insecure, needs to pass through get_input
+//------------------------------------------------------------
+if ($_POST) {
+    foreach ($_POST as $i => $value) {
+        if (preg_match("/^jqg_/", "$i")) {
+            $name_val = preg_replace('/jqg_(\w+grid)_(.*)/', '$1,$2', $i);
+            $array = explode(',', $name_val);
+            switch ($array[0]) {
+            case "mnegrid":
+                $searchArr['mnemonics'][] .= $array[1];
+                break;
+            case "eidgrid":
+                $searchArr['eids'][] .= $array[1];
+                break;
+            case "hostsgrid":
+                $array[1] = preg_replace('/_/', '.', $array[1]);
+                $searchArr['hosts'][] .= $array[1];
+                break;
+            case "prggrid":
+                $array[1] = preg_replace('/_/', '.', $array[1]);
+                $searchArr['programs'][] .= $array[1];
+                break;
+
+            }
+        }
+    }
+}
+
+if(is_array($searchArr['mnemonics'])) {
+    $where .= " AND mne IN (";
+    $searchArr['mnemonics'] = array_unique($searchArr['mnemonics']);
+    foreach ($searchArr['mnemonics'] as $mne) {
+        $qstring .= "&mnemonics[]=$mne";
+        $where.= "'".mne2crc($mne)."',";
+    }
+    $where = rtrim($where, ",");
+    $where .= ")";
+}
+
+if(is_array($searchArr['hosts'])) {
+    $searchArr['hostssel'] = array_unique($searchArr['hosts']);
+    unset($searchArr['hosts']);  
+    foreach ($searchArr['hostssel'] as $host) {
+        $sql = "SELECT rbac(".$_SESSION['rbac'].", (select rbac_key from hosts where host='".$host."'))";
+        $result = perform_query($sql, $dbLink, $_SERVER['PHP_SELF']);
+        $row = mysql_fetch_array($result, MYSQL_NUM);  
+        if ( $row[0] == 1 ) { 
+            $searchArr['hosts'][] .= $host;
+        }
+    }
+}
+
+
+if ($searchArr['hosts'][0]=='') {
+    $where .= " AND host_crc IN (";
+    // only look for hosts inside the lo area 
+    $sql = "SELECT crc32(host) FROM hosts where rbac(".$_SESSION['rbac'].", rbac_key) and lastseen>='".$filter_lo_start."'";
+    $result = perform_query($sql, $dbLink, $_SERVER['PHP_SELF']); 
+    while ($row = mysql_fetch_array($result, MYSQL_NUM)) {
+        $searchArr['hosts'][] = $row[0];
+        $where.= "'".$row[0]."',";
+    }
+    $where = rtrim($where, ",");
+    $where .= ")";
+}
+else {
     if(is_array($searchArr['hosts'])) {
-        $searchArr['hostssel'] = array_unique($searchArr['hosts']);
-        unset($searchArr['hosts']);  
-        foreach ($searchArr['hostssel'] as $host) {
-            $sql = "SELECT rbac(".$_SESSION['rbac'].", (select rbac_key from hosts where host='".$host."'))";
-            $result = perform_query($sql, $dbLink, $_SERVER['PHP_SELF']);
-            $row = mysql_fetch_array($result, MYSQL_NUM);  
-            if ( $row[0] == 1 ) { 
-                $searchArr['hosts'][] .= $host;
-            }
+        $where .= " AND host IN (";
+        foreach ($searchArr['hosts'] as $host) {
+            $qstring .= "&hosts[]=$host";
+            $where.= "'$host',";
         }
+    } else {
+        // If the user have no host access fill with dummy value
+        $searchArr['hosts'][] = '0.0.0.0';
+        $qstring .= "&hosts[]=0.0.0.0";
+        $where.= " AND HOST IN ('0.0.0.0',";
     }
+    $where = rtrim($where, ",");
+    $where .= ")";
+}
 
 
-    if ($searchArr['hosts'][0]=='') {
-        $where .= " AND host_crc IN (";
-        // only look for hosts inside the lo area 
-        $sql = "SELECT crc32(host) FROM hosts where rbac(".$_SESSION['rbac'].", rbac_key) and lastseen>='".$filter_lo_start."'";
-        $result = perform_query($sql, $dbLink, $_SERVER['PHP_SELF']); 
-        while ($row = mysql_fetch_array($result, MYSQL_NUM)) {
-            $searchArr['hosts'][] = $row[0];
-            $where.= "'".$row[0]."',";
-        }
-        $where = rtrim($where, ",");
-        $where .= ")";
+if(is_array($searchArr['eids'])) {
+    $where .= " AND eid IN (";
+    $searchArr['eids'] = array_unique($searchArr['eids']);
+    foreach ($searchArr['eids'] as $eid) {
+        $qstring .= "&eids[]=$eid";
+        $where.= "'$eid',";
     }
-    else {
-        if(is_array($searchArr['hosts'])) {
-            $where .= " AND host IN (";
-            foreach ($searchArr['hosts'] as $host) {
-                $qstring .= "&hosts[]=$host";
-                $where.= "'$host',";
-            }
+    $where = rtrim($where, ",");
+    $where .= ")";
+}
+
+if(is_array($searchArr['programs'])) {
+    $where .= " AND program IN (";
+    $searchArr['programs'] = array_unique($searchArr['programs']);
+    foreach ($searchArr['programs'] as $program) {
+        $qstring .= "&programs[]=" . rawurlencode($program);
+        $where.= "'".prg2crc($program)."',";
+    }
+    $where = rtrim($where, ",");
+    $where .= ")";
+}
+$tail_where = $where;
+
+//------------------------------------------------------------
+// Run the search query to get results from Sphinx
+//------------------------------------------------------------
+if ($page == "Graph") {
+    $json_o = search_graph(json_encode($searchArr), $spx_max, "idx_all", $spx_ip, $spx_port);
+} else {
+    $json_o = search(json_encode($searchArr), $spx_max, "idx_all", $spx_ip, $spx_port);
+}
+
+// Decode returned json object into an array:
+$sphinx_results = json_decode($json_o, true);
+
+//------------------------------------------------------------
+// If something goes wrong, search() will return an error
+//------------------------------------------------------------
+
+if (!$sphinx_results) {
+    $error = $json_o;
+} else {
+
+    $meta = array_slice($sphinx_results, $limit); 
+    // echo "<br><br><br><br><pre>";
+    // echo "Valname =" . $meta[0]['Value'];
+    // echo "Varname =" . $meta[0]['Variable_name'];
+    // echo "Meta 0 Value =" . $meta[0]['Value'];
+    if (preg_match('/[Ee]rror/', $meta[0]['Variable_name'])) {
+        $error =$meta[0]['Variable_name'];
+        if (preg_match('/:(.*)/', $meta[0]['Value'], $matches)) {
+            $error .= '<br>' . $matches[0];
         } else {
-            // If the user have no host access fill with dummy value
-            $searchArr['hosts'][] = '0.0.0.0';
-            $qstring .= "&hosts[]=0.0.0.0";
-            $where.= " AND HOST IN ('0.0.0.0',";
+            $error .= '<br>' . $meta[0]['Value'];
         }
-        $where = rtrim($where, ",");
-        $where .= ")";
     }
-
-
-    if(is_array($searchArr['eids'])) {
-        $where .= " AND eid IN (";
-        $searchArr['eids'] = array_unique($searchArr['eids']);
-        foreach ($searchArr['eids'] as $eid) {
-            $qstring .= "&eids[]=$eid";
-            $where.= "'$eid',";
-        }
-        $where = rtrim($where, ",");
-        $where .= ")";
+    if (preg_match('/Operation now in progress/', $meta[0]['Value'])) {
+        unset ($error);
     }
-
-    if(is_array($searchArr['programs'])) {
-        $where .= " AND program IN (";
-        $searchArr['programs'] = array_unique($searchArr['programs']);
-        foreach ($searchArr['programs'] as $program) {
-            $qstring .= "&programs[]=" . rawurlencode($program);
-            $where.= "'".prg2crc($program)."',";
-        }
-        $where = rtrim($where, ",");
-        $where .= ")";
-    }
-    $tail_where = $where;
-
+}
+if ($error) {
     //------------------------------------------------------------
-    // Run the search query to get results from Sphinx
+    // If Sphinx returns and error, let the user know
     //------------------------------------------------------------
-    if ($page == "Graph") {
-        $json_o = search_graph(json_encode($searchArr), $spx_max, "idx_all", $spx_ip, $spx_port);
-    } else {
-        $json_o = search(json_encode($searchArr), $spx_max, "idx_all", $spx_ip, $spx_port);
+    $lzbase = str_replace("html/includes/portlets", "", dirname( __FILE__ ));
+    if (preg_match("/.*failed to open.*spd/", "$json_o")) {
+        $error = "The Sphinx indexes are missing!<br>\n";
+        $error .= "Please be sure you have run the indexer on your server by typing:<br><br>\n";
+        $error .= "sudo ${lzbase}sphinx/indexer.sh full<br><br>";
+    } elseif (preg_match("/.*connection to.*failed.*/", "$json_o")) {
+        $error = "The Sphinx daemon is not running!<br>\n";
+        $error .= "Please be sure you have started the daemon on your server by typing:<br><br>\n";
+        $error .= "sudo ${lzbase}sphinx/bin/searchd -c ${lzbase}sphinx/sphinx.conf<br><br>";
     }
-
-    // Decode returned json object into an array:
-    $sphinx_results = json_decode($json_o, true);
-
-    //------------------------------------------------------------
-    // If something goes wrong, search() will return an error
-    //------------------------------------------------------------
-
-    if (!$sphinx_results) {
-        $error = $json_o;
-    } else {
-
-        $meta = array_slice($sphinx_results, $limit); 
-        // echo "<br><br><br><br><pre>";
-        // echo "Valname =" . $meta[0]['Value'];
-        // echo "Varname =" . $meta[0]['Variable_name'];
-        // echo "Meta 0 Value =" . $meta[0]['Value'];
-        if (preg_match('/[Ee]rror/', $meta[0]['Variable_name'])) {
-            $error =$meta[0]['Variable_name'];
-            if (preg_match('/:(.*)/', $meta[0]['Value'], $matches)) {
-                $error .= '<br>' . $matches[0];
-            } else {
-                $error .= '<br>' . $meta[0]['Value'];
-            }
-        }
-        if (preg_match('/Operation now in progress/', $meta[0]['Value'])) {
-            unset ($error);
-        }
-    }
-    if ($error) {
-        //------------------------------------------------------------
-        // If Sphinx returns and error, let the user know
-        //------------------------------------------------------------
-        $lzbase = str_replace("html/includes/portlets", "", dirname( __FILE__ ));
-        if (preg_match("/.*failed to open.*spd/", "$json_o")) {
-            $error = "The Sphinx indexes are missing!<br>\n";
-            $error .= "Please be sure you have run the indexer on your server by typing:<br><br>\n";
-            $error .= "sudo ${lzbase}sphinx/indexer.sh full<br><br>";
-        } elseif (preg_match("/.*connection to.*failed.*/", "$json_o")) {
-            $error = "The Sphinx daemon is not running!<br>\n";
-            $error .= "Please be sure you have started the daemon on your server by typing:<br><br>\n";
-            $error .= "sudo ${lzbase}sphinx/bin/searchd -c ${lzbase}sphinx/sphinx.conf<br><br>";
-        }
 ?>
-        <script type="text/javascript">
-        $(document).ready(function(){
-            var err = "<?php echo preg_replace("/\r?\n/", "\\n", addslashes($error)); ?>";
-            error('[Sphinx Error] ' + err);
-            // alert(err);
-        }); // end doc ready
-        </script>
+    <script type="text/javascript">
+    $(document).ready(function(){
+        var err = "<?php echo preg_replace("/\r?\n/", "\\n", addslashes($error)); ?>";
+        error('[Sphinx Error] ' + err);
+        // alert(err);
+    }); // end doc ready
+    </script>
 <?php } 
 //------------------------------------------------------------
 // Set the query string to be passed to the browser
