@@ -50,6 +50,14 @@ switch ($action) {
         break;
 
     case "get":
+        // cdukes: fix for #483 - Admin page blank on php 5.4
+        $data = new stdClass();
+        $data->name = "";
+        $data->value = "";
+        $data->type = "";
+        $data->options = "";
+        $data->default = "";
+        $data->description = "";
         $sql = "SELECT * FROM settings WHERE name='$name'";
         $result = perform_query($sql, $dbLink, $_SERVER['PHP_SELF']);
         while($row = fetch_array($result)) { 
