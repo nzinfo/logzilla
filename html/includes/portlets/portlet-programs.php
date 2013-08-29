@@ -51,8 +51,7 @@ if (cnt < 11) {
         $result = perform_query($sql, $dbLink, "portlet-programs.php"); 
         $i=0; 
         while($row = fetch_array($result)) { 
-            // #463 Program portlet doesn't re-size when a program name has a space in it
-            $prg = preg_replace('/ /', '_', $row['name']);
+            $prg = $row['name'];
             echo "<tr>";
             echo "<td id='prg_sel'>";
             echo "<input type=\"checkbox\" name=\"sel_prg[]\" value=\"$prg\" id='$prg'>";

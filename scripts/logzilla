@@ -614,6 +614,7 @@ sub process_line {
         # This won't work well in non-english environments...
         # $prg = "Unknown" if ($prg !~ /^[\w\'-\s]+$/);
         $prg = 'Unknown' unless ( $prg =~ m{^[-'\w\s]{3,}$} and $prg =~ m{[A-Za-z]{3,}} );
+        $prg =~ s/ /_/; # #463 - Spaces in names cause Grids to fail (selector IDs cannot contain a space)
 
         my $message = {
             host => $host,

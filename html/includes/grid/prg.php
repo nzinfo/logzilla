@@ -31,7 +31,7 @@ $conn->query("SET NAMES utf8");
 $grid = new jqGridRender($conn);
 // Write the SQL Query
 // #463 Program portlet doesn't re-size when a program name has a space in it
-$grid->SelectCommand = "SELECT REPLACE( name, ' ', '_' ) as Program, seen as Seen, lastseen as LastSeen FROM programs where hidden='false'";
+$grid->SelectCommand = "SELECT name as Program, seen as Seen, lastseen as LastSeen FROM programs where hidden='false'";
 // set the ouput format to json
 $grid->dataType = 'json';
 // Let the grid create the model
