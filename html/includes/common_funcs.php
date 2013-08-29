@@ -732,7 +732,6 @@ function crc2prg ($crc) {
 }
 function prg2crc ($prog) {
     $dbLink = db_connect_syslog(DBADMIN, DBADMINPW);
-    $prog = preg_replace('/_/', ' ',$prog);
     $sql = "SELECT crc FROM programs WHERE name='$prog'";
     $result = perform_query($sql, $dbLink, "common_funcs.php");
     $row = fetch_array($result);
