@@ -394,15 +394,15 @@ sub do_install {
     print $res;
 
     # Create hosts table
-    my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/hosts.sql`;
+    $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/hosts.sql`;
     print $res;
 
     # Create mnemonics table
-    my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/mne.sql`;
+    $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/mne.sql`;
     print $res;
 
     # Create mnemonics table
-    my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/mac.sql`;
+    $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/mac.sql`;
     print $res;
 
     # Create snare_eid table
@@ -412,19 +412,19 @@ sub do_install {
     do_programs();
 
     # Create suppress table
-    my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/suppress.sql`;
+    $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/suppress.sql`;
     print $res;
 
     # Create facilities table
-    my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/facilities.sql`;
+    $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/facilities.sql`;
     print $res;
 
     # Create severities table
-    my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/severities.sql`;
+    $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/severities.sql`;
     print $res;
 
     # Create ban table
-    my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/banned_ips.sql`;
+    $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/banned_ips.sql`;
     print $res;
 
     # Create epx tables
@@ -434,19 +434,19 @@ sub do_install {
     do_email_alerts();
 
     # Groups
-    my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/groups.sql`;
+    $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/groups.sql`;
     print $res;
 
     # Insert totd data
-    my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/totd.sql`;
+    $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/totd.sql`;
     print $res;
 
     # Insert LZECS data
-    my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/lzecs.sql`;
+    $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/lzecs.sql`;
     print $res;
 
     # Insert Suppress data
-    my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/suppress.sql`;
+    $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/suppress.sql`;
     print $res;
 
     # Insert ui_layout data
@@ -457,19 +457,19 @@ sub do_install {
     }
 
     # Insert help data
-    my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/help.sql`;
+    $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/help.sql`;
     print $res;
 
     # Insert history table
-    my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/history.sql`;
+    $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/history.sql`;
     print $res;
 
     # Insert users table
-    my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/users.sql`;
+    $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/users.sql`;
     print $res;
 
     # Insert system_log table
-    my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/system_log.sql`;
+    $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/system_log.sql`;
     print $res;
 
     # Insert rbac table
@@ -505,9 +505,9 @@ sub update_paths {
         print "Modifying $file\n";
         system "perl -i -pe 's|$search|$lzbase|g' $file" and warn "Could not modify $file $!\n";
     }
-    my $search = "/path_to" . "_logs";
+    $search = "/path_to" . "_logs";
     print "Updating log paths\n";
-    my @flist = `find ../ -name '*.sh' -o -name '*.pl' -o -name '*.conf' -o -name '*.rc' -o -name 'logzilla.*' -type f | egrep -v '/install.pl|sphinx\/src|\\.svn|\\.lzrc' | xargs grep -l "$search"`;
+    @flist = `find ../ -name '*.sh' -o -name '*.pl' -o -name '*.conf' -o -name '*.rc' -o -name 'logzilla.*' -type f | egrep -v '/install.pl|sphinx\/src|\\.svn|\\.lzrc' | xargs grep -l "$search"`;
 
     #print "@flist\n";
     foreach my $file (@flist) {
@@ -528,7 +528,7 @@ sub make_logfiles {
     }
     chmod 0666, "$logpath/logzilla.log";
     close(LOG);
-    my $logfile = "$logpath/mysql_query.log";
+    $logfile = "$logpath/mysql_query.log";
     open( LOG, ">>$logfile" );
     if ( !-f $logfile ) {
         print STDOUT "Unable to open log file \"$logfile\" for writing...$!\n";
@@ -536,7 +536,7 @@ sub make_logfiles {
     }
     close(LOG);
     chmod 0666, "$logpath/mysql_query.log";
-    my $logfile = "$logpath/audit.log";
+    $logfile = "$logpath/audit.log";
     open( LOG, ">>$logfile" );
     if ( !-f $logfile ) {
         print STDOUT "Unable to open log file \"$logfile\" for writing...$!\n";
@@ -642,10 +642,10 @@ sub do_events {
         " ) or die "Could not create partition events: $DBI::errstr";
     $sth->execute;
 
-    my $event = qq{
+    $event = qq{
     CREATE EVENT logs_del_partition ON SCHEDULE EVERY 1 DAY STARTS '$dateTomorrow 00:15:00' ON COMPLETION NOT PRESERVE ENABLE DO CALL logs_delete_part_proc();
     };
-    my $sth = $dbh->prepare( "
+    $sth = $dbh->prepare( "
         $event
         " ) or die "Could not create partition events: $DBI::errstr";
     $sth->execute;
@@ -724,7 +724,7 @@ sub do_procs {
         " ) or die "Could not create partition events: $DBI::errstr";
     $sth->execute;
 
-    my $event = qq{
+    $event = qq{
     CREATE PROCEDURE logs_delete_part_proc()
     SQL SECURITY DEFINER
     COMMENT 'Deletes old partitions - based on value of settings>retention' 
@@ -753,12 +753,12 @@ sub do_procs {
     update sph_counter set max_id=\@h-1 where counter_id=2;
     END 
     };
-    my $sth = $dbh->prepare( "
+    $sth = $dbh->prepare( "
         $event
         " ) or die "Could not create partition events: $DBI::errstr";
     $sth->execute;
 
-    my $event = qq{
+    $event = qq{
     CREATE PROCEDURE export()
     SQL SECURITY DEFINER
     COMMENT 'Acrhive all old data to a file'
@@ -774,13 +774,13 @@ sub do_procs {
     INSERT IGNORE INTO archives (archive, records) VALUES (export,(SELECT COUNT(*) FROM `$dbtable` WHERE lo BETWEEN DATE_SUB(CONCAT(CURDATE(), ' 00:00:00'), INTERVAL 1 DAY) AND DATE_SUB(CONCAT(CURDATE(), ' 23:59:59'), INTERVAL  1 DAY))); END 
     };
 
-    my $sth = $dbh->prepare( "
+    $sth = $dbh->prepare( "
         $event
         " ) or die "Could not create export Procedure: $DBI::errstr";
     $sth->execute;
 
     # TH: adding import procedure
-    my $event = qq{
+    $event = qq{
     CREATE PROCEDURE `import`( `i_id` bigint(20) unsigned ,
     `i_host` varchar(128),
     `i_facility` int(2) unsigned,
@@ -804,14 +804,14 @@ sub do_procs {
     i_fo, i_lo, i_notes); 
     END
     };
-    my $sth = $dbh->prepare( "
+    $sth = $dbh->prepare( "
         $event
         " ) or die "Could not create import Procedure: $DBI::errstr";
     $sth->execute;
 
     # Turn the event scheduler on
 
-    my $sth = $dbh->prepare( "
+    $sth = $dbh->prepare( "
         SET GLOBAL event_scheduler = 1;
         " ) or die "Could not enable the Global event scheduler: $DBI::errstr";
     $sth->execute;
@@ -844,8 +844,8 @@ sub make_dbuser {
         $grant
         " ) or die "Could not temporarily drop the $dbadmin user on $dbname: $DBI::errstr";
     $sth->execute;
-    my $grant = qq{DROP USER '$dbadmin'\@'$localip';};
-    my $sth   = $dbh->prepare( "
+    $grant = qq{DROP USER '$dbadmin'\@'$localip';};
+    $sth   = $dbh->prepare( "
         $grant
         " ) or die "Could not temporarily drop the $dbadmin user on $dbname: $DBI::errstr";
     $sth->execute;
@@ -853,17 +853,17 @@ sub make_dbuser {
     print "Adding $dbadmin to $localip\n";
 
     # Grant access to $dbadmin
-    my $grant = qq{GRANT SELECT, INSERT, UPDATE, DELETE, CREATE, DROP, GRANT OPTION, REFERENCES, INDEX, ALTER, CREATE TEMPORARY TABLES, LOCK TABLES, CREATE VIEW, SHOW VIEW, CREATE ROUTINE, ALTER ROUTINE, EXECUTE, EVENT, TRIGGER ON `$dbname`.* TO '$dbadmin'\@'$localip'  IDENTIFIED BY '$dbadminpw'};
+    $grant = qq{GRANT SELECT, INSERT, UPDATE, DELETE, CREATE, DROP, GRANT OPTION, REFERENCES, INDEX, ALTER, CREATE TEMPORARY TABLES, LOCK TABLES, CREATE VIEW, SHOW VIEW, CREATE ROUTINE, ALTER ROUTINE, EXECUTE, EVENT, TRIGGER ON `$dbname`.* TO '$dbadmin'\@'$localip'  IDENTIFIED BY '$dbadminpw'};
 
 #my $grant = qq{GRANT ALL PRIVILEGES ON `$dbname.*` TO '$dbadmin'\@'$localip' IDENTIFIED BY '$dbadminpw';};
-    my $sth = $dbh->prepare( "
+    $sth = $dbh->prepare( "
         $grant
         " ) or die "Could not create $dbadmin user on $dbname: $DBI::errstr";
     $sth->execute;
 
     # CDUKES: [[ticket:16]]
-    my $grant = qq{GRANT FILE ON *.* TO '$dbadmin'\@'$localip' IDENTIFIED BY '$dbadminpw';};
-    my $sth = $dbh->prepare( "
+    $grant = qq{GRANT FILE ON *.* TO '$dbadmin'\@'$localip' IDENTIFIED BY '$dbadminpw';};
+    $sth = $dbh->prepare( "
         $grant
         " ) or die "Could not create $dbadmin user on $dbname: $DBI::errstr";
     $sth->execute;
@@ -872,37 +872,37 @@ sub make_dbuser {
     # Remove old user in case this is an upgrade
     # Have to do this for the new LOAD DATA INFILE
     print "Temporarily removing $dbadmin from localhost\n";
-    my $grant = qq{GRANT USAGE ON *.* TO '$dbadmin'\@'localhost';};
-    my $sth   = $dbh->prepare( "
+    $grant = qq{GRANT USAGE ON *.* TO '$dbadmin'\@'localhost';};
+    $sth   = $dbh->prepare( "
         $grant
         " ) or die "Could not temporarily drop the $dbadmin user on $dbname: $DBI::errstr";
     $sth->execute;
-    my $grant = qq{DROP USER '$dbadmin'\@'localhost';};
-    my $sth   = $dbh->prepare( "
+    $grant = qq{DROP USER '$dbadmin'\@'localhost';};
+    $sth   = $dbh->prepare( "
         $grant
         " ) or die "Could not temporarily drop the $dbadmin user on $dbname: $DBI::errstr";
     $sth->execute;
 
     # Grant access to $dbadmin
     print "Adding $dbadmin to localhost\n";
-    my $grant = qq{GRANT SELECT, INSERT, UPDATE, DELETE, CREATE, DROP, GRANT OPTION, REFERENCES, INDEX, ALTER, CREATE TEMPORARY TABLES, LOCK TABLES, CREATE VIEW, SHOW VIEW, CREATE ROUTINE, ALTER ROUTINE, EXECUTE, EVENT, TRIGGER ON `$dbname`.* TO '$dbadmin'\@'localhost'  IDENTIFIED BY '$dbadminpw'};
+    $grant = qq{GRANT SELECT, INSERT, UPDATE, DELETE, CREATE, DROP, GRANT OPTION, REFERENCES, INDEX, ALTER, CREATE TEMPORARY TABLES, LOCK TABLES, CREATE VIEW, SHOW VIEW, CREATE ROUTINE, ALTER ROUTINE, EXECUTE, EVENT, TRIGGER ON `$dbname`.* TO '$dbadmin'\@'localhost'  IDENTIFIED BY '$dbadminpw'};
 
 #my $grant = qq{GRANT ALL PRIVILEGES ON `$dbname.*` TO '$dbadmin'\@'localhost' IDENTIFIED BY '$dbadminpw';};
-    my $sth = $dbh->prepare( "
+    $sth = $dbh->prepare( "
         $grant
         " ) or die "Could not create $dbadmin user on $dbname: $DBI::errstr";
     $sth->execute;
 
     # CDUKES: [[ticket:16]]
-    my $grant = qq{GRANT FILE ON *.* TO '$dbadmin'\@'localhost' IDENTIFIED BY '$dbadminpw';};
-    my $sth = $dbh->prepare( "
+    $grant = qq{GRANT FILE ON *.* TO '$dbadmin'\@'localhost' IDENTIFIED BY '$dbadminpw';};
+    $sth = $dbh->prepare( "
         $grant
         " ) or die "Could not create $dbadmin user on $dbname: $DBI::errstr";
     $sth->execute;
 
     # THOMAS HONZIK: [[ticket:16]]
     my $flush = qq{FLUSH PRIVILEGES;};
-    my $sth   = $dbh->prepare( "
+    $sth   = $dbh->prepare( "
         $flush
         " ) or die "Could not FLUSH PRIVILEGES: $DBI::errstr";
     $sth->execute;
@@ -936,7 +936,7 @@ sub create_views {
         " ) or die "Could not create $dbtable table: $DBI::errstr";
     $sth->execute;
 
-    my $sth = $dbh->prepare( "
+    $sth = $dbh->prepare( "
         Create view logs_unsuppressed as
         select *
         from $dbtable where (($dbtable.`suppress` < now()) and
@@ -977,31 +977,31 @@ sub update_settings {
         update settings set value='$url' where name='SITE_URL';
         " ) or die "Could not update settings table: $DBI::errstr";
     $sth->execute;
-    my $sth = $dbh->prepare( "
+    $sth = $dbh->prepare( "
         update settings set value='$email' where name='ADMIN_EMAIL';
         " ) or die "Could not update settings table: $DBI::errstr";
     $sth->execute;
-    my $sth = $dbh->prepare( "
+    $sth = $dbh->prepare( "
         update settings set value='$siteadmin' where name='ADMIN_NAME';
         " ) or die "Could not update settings table: $DBI::errstr";
     $sth->execute;
-    my $sth = $dbh->prepare( "
+    $sth = $dbh->prepare( "
         update settings set value='$lzbase' where name='PATH_BASE';
         " ) or die "Could not update settings table: $DBI::errstr";
     $sth->execute;
-    my $sth = $dbh->prepare( "
+    $sth = $dbh->prepare( "
         update settings set value='$sitename' where name='SITE_NAME';
         " ) or die "Could not update settings table: $DBI::errstr";
     $sth->execute;
-    my $sth = $dbh->prepare( "
+    $sth = $dbh->prepare( "
         update settings set value='$dbtable' where name='TBL_MAIN';
         " ) or die "Could not update settings table: $DBI::errstr";
     $sth->execute;
-    my $sth = $dbh->prepare( "
+    $sth = $dbh->prepare( "
         update settings set value='$logpath' where name='PATH_LOGS';
         " ) or die "Could not update settings table: $DBI::errstr";
     $sth->execute;
-    my $sth = $dbh->prepare( "
+    $sth = $dbh->prepare( "
         update settings set value='$retention' where name='RETENTION';
         " ) or die "Could not update settings table: $DBI::errstr";
     $sth->execute;
@@ -1010,12 +1010,12 @@ sub update_settings {
     }
     # Added for larger systems where we don't need to use *all* cores - leaves some for mysql
     $spx_cores = 12 if ($spx_cores > 12);
-    my $sth = $dbh->prepare( "
+    $sth = $dbh->prepare( "
         update settings set value='$spx_cores' where name='SPX_CPU_CORES';
         " ) or die "Could not update settings table: $DBI::errstr";
     $sth->execute;
     # workaround for v4.25->v4.5 upgrades
-    my $sth = $dbh->prepare( "
+    $sth = $dbh->prepare( "
         update settings set description='This variable is used to determine the number of days to keep data in the database. <br>Any data older than this setting will be automatically purged.' where name='RETENTION';
         " ) or die "Could not update settings table: $DBI::errstr";
     $sth->execute;
@@ -1029,24 +1029,24 @@ sub update_settings {
             delete from ui_layout where header='Snare EventId' and userid>0;
             " ) or die "Could not update ui layout for snare: $DBI::errstr";
         $sth->execute;
-        my $sth = $dbh->prepare( "
+        $sth = $dbh->prepare( "
             update settings set value=0 where name='SNARE';
             " ) or die "Could not update settings table: $DBI::errstr";
         $sth->execute;
     }
-    my $sth = $dbh->prepare( "
+    $sth = $dbh->prepare( "
         update triggers set mailto='$email', mailfrom='$email';
         " ) or die "Could not update triggers table: $DBI::errstr";
     $sth->execute;
-    my $sth = $dbh->prepare( "
+    $sth = $dbh->prepare( "
         update users set username='$siteadmin' where username='admin';
         " ) or die "Could not insert user data: $DBI::errstr";
     $sth->execute;
-    my $sth = $dbh->prepare( "
+    $sth = $dbh->prepare( "
         update users set pwhash=MD5('$siteadminpw') where username='$siteadmin';
         " ) or die "Could not insert user data: $DBI::errstr";
     $sth->execute;
-    my $sth = $dbh->prepare( "
+    $sth = $dbh->prepare( "
         delete from users where username='guest';
         " ) or die "Could not insert user data: $DBI::errstr";
     $sth->execute;
@@ -1409,7 +1409,7 @@ sub setup_apparmor {
                   close $config;
               }
               print "\n\nAppArmor must be restarted, would you like to restart it now?\n";
-              my $ok = &getYN( "Ok to continue?", "y" );
+              $ok = &getYN( "Ok to continue?", "y" );
               if ( $ok =~ /[Yy]/ ) {
                   my $r = `/etc/init.d/apparmor restart`;
               } else {
@@ -1826,7 +1826,7 @@ sub verify_columns {
       }
 
       # Test for RBAC
-      my @tables = ( 'hosts', 'users' );
+      @tables = ( 'hosts', 'users' );
       foreach (@tables) {
           my $table = $_;
           if ( colExists( "$table", "rbac_key" ) eq 0 ) {
@@ -1867,7 +1867,7 @@ sub update_version {
         update settings set value='$version' where name='VERSION';
         " ) or die "Could not update settings table: $DBI::errstr";
       $sth->execute;
-      my $sth = $dbh->prepare( "
+      $sth = $dbh->prepare( "
         update settings set value='$subversion' where name='VERSION_SUB';
         " ) or die "Could not update settings table: $DBI::errstr";
       $sth->execute;
@@ -1994,27 +1994,27 @@ sub tbl_logs_alter_from_299 {
           my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/sph_counter.sql`;
 
           print "Adding Cache Table\n";
-          my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/cache.sql`;
+          $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/cache.sql`;
           print $res;
 
           print "Adding Groups Table\n";
-          my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/groups.sql`;
+          $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/groups.sql`;
           print $res;
 
           print "Adding History Table\n";
-          my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/history.sql`;
+          $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/history.sql`;
           print $res;
 
           print "Adding lzecs Table\n";
-          my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/lzecs.sql`;
+          $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/lzecs.sql`;
           print $res;
 
           print "Creating Suppress Table\n";
-          my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/suppress.sql`;
+          $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/suppress.sql`;
           print $res;
 
           print "Creating Totd Table\n";
-          my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/totd.sql`;
+          $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/totd.sql`;
 
           print "Creating views\n";
           create_views();
@@ -2137,7 +2137,7 @@ sub update_procs {
       print $res;
 
       # Insert system_log table
-      my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/system_log.sql`;
+      $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/system_log.sql`;
       print $res;
 
       # Insert rbac table
@@ -2268,10 +2268,13 @@ sub install_license {
 
           print "requesting license file for IP $ip and MAC $mac through hash $hash\n"; #for debugging purposes only
 
-          my $url  = "http://licserv.logzilla.pro/files/$hash.txt";
+          my $url  = "http://lic.logzilla.net/$hash.txt";
+          my $oldurl  = "http://licserv.logzilla.pro/files/$hash.txt";
           my $file = "$lzbase/html/license.txt";
 
           if ( is_success( getstore( $url, $file ) ) ) {
+              print "License Installed Successfully\n";
+          } elsif ( is_success( getstore( $oldurl, $file ) ) ) {
               print "License Installed Successfully\n";
           } else {
               print "\n\033[1m[ERROR] Failed to download: $url\n\033[0m";
