@@ -7,10 +7,9 @@ hn=`hostname`
 apache_log="/var/log/apache2/error.log"
 apache_conf="/etc/apache2/sites-enabled/000-default"
 lz="/var/www/logzilla"
+logdir="/var/log/logzilla"
 ngconf="/etc/syslog-ng/syslog-ng.conf"
 phpini="/etc/php5/apache2/php.ini"
-idx_log="/var/log/logzilla/sphinx_indexer.log"
-qry_log="/var/log/logzilla/sphinx_query.log"
 mycnf="/etc/mysql/my.cnf"
 mycnf_lz="/etc/mysql/conf.d/logzilla"
 lzcnf_php="$lz/html/config/config.php"
@@ -21,162 +20,181 @@ WORKING_DIR="$hn-support-`date +%F-%T | tr -s ":" "_"`"
 
 usage() {
     cat >&2 <<EOF 
-Usage: $ME [-e|--extended] [-h|--help]
-Collects information and generates an archive to be provided to Logzilla support.
-$ME has to be run as root (using "sudo $ME" or "su -c $ME")
-Options:
-  -e, --extended : enable extended collection (includes longer stats sampling...)
-  -h, --help     : prints this help
+    Usage: $ME [-e|--extended] [-h|--help]
+    Collects information and generates an archive to be provided to Logzilla support.
+    $ME has to be run as root (using "sudo $ME" or "su -c $ME")
+    Options:
+    -e, --extended : enable extended collection (includes longer stats sampling...)
+    -h, --help     : prints this help
 EOF
 }
 
 if [[ $EUID -ne 0 ]]; then
     cat  1>&2  <<EOF
-This script must be run as root.
-if you are using Ubuntu, try \"sudo $ME\"
-or \"su -c $ME\"
+    This script must be run as root.
+    if you are using Ubuntu, try \"sudo $ME\"
+        or \"su -c $ME\"
 EOF
-    exit 1
-fi
+        exit 1
+    fi
 
-while [ $# -gt 0 ] ; do 
-    case "$1" in 
-	-e|--extended)
-	    EXTENDED=yes
-	    ;;
-	-h|--help)
-	    usage
-	    exit 0
-	    ;;
-    esac
-    shift
-done
+    while [ $# -gt 0 ] ; do 
+        case "$1" in 
+            -e|--extended)
+                EXTENDED=yes
+                ;;
+            -h|--help)
+                usage
+                exit 0
+                ;;
+        esac
+        shift
+    done
 
-#######################################
-# Prompt for a value
-#######################################
-f_ANSWER()
-{
+    #######################################
+    # Prompt for a value
+    #######################################
+    f_ANSWER()
+    {
         printf "%s " "$1"
         if [ "$2" != "" ] ; then
-                printf "[%s] " "$2"
+            printf "[%s] " "$2"
         fi 
         if [ "${DEFAULT:-0}" -eq 0 ] ; then
-                read ANSWER
+            read ANSWER
         else
-                printf "%s\n" "$2"
+            printf "%s\n" "$2"
         fi
         if [ "$ANSWER" = "" ] ; then
-                ANSWER="$2"
+            ANSWER="$2"
         fi
-}
+    }
 
-do_extended_collection() {
-#    du -ax / >$hn.du.log  
-    mkdir var_log_syslog; cp /var/log/syslog*  var_log_syslog
-    mkdir var_log_messages; cp /var/log/messages*  var_log_messages
-    do_extended_sampling
-    do_wait_extended_sampling
-}
+    get_logs() {
+        if [ ! -d "$logdir" ]; then
+            echo "Unable to locate your LogZilla log directory"
+            f_ANSWER "Where is your LogZilla log directory located?" "$logdir"
+            logdir=$ANSWER
+        else
+            for file in `ls $logdir/*.*`
+            do
+                #echo "Processing $file"
+                b=`basename $file .gz`
+                b=`echo $b | awk -F'.' '{print $1}'`
+                zcat -f $(ls -tr $file) >> $hn.$b.log
+            done
+        fi
+    }
+    do_extended_collection() {
+        #    du -ax / >$hn.du.log  
+        mkdir var_log_syslog; cp /var/log/syslog*  var_log_syslog
+        mkdir var_log_messages; cp /var/log/messages*  var_log_messages
+        do_extended_sampling
+        do_wait_extended_sampling
+    }
 
-do_extended_sampling() {
-    echo "Starting extended collection (this will take ~$SAMPLING_TIME seconds)"
-    vmstat 1 $SAMPLING_TIME >$hn.vmstat.log &
-    iostat 1 $SAMPLING_TIME >$hn.iostat.log & 
-    top -bn $SAMPLING_TIME >$hn.top.log &
-}
+    do_extended_sampling() {
+        echo "Starting extended collection (this will take ~$SAMPLING_TIME seconds)"
+        vmstat 1 $SAMPLING_TIME >$hn.vmstat.log &
+        iostat 1 $SAMPLING_TIME >$hn.iostat.log & 
+        top -bn $SAMPLING_TIME >$hn.top.log &
+    }
 
-do_wait_extended_sampling() {
-    #!FIXME: need better child control, maybe using "jobs -p"
-    sleep $(( $SAMPLING_TIME + 3 ))
-}
+    do_wait_extended_sampling() {
+        #!FIXME: need better child control, maybe using "jobs -p"
+        sleep $(( $SAMPLING_TIME + 3 ))
+    }
 
-echo "Collecting Logzilla Support Information..."
-mkdir $WORKING_DIR
-cd $WORKING_DIR
+    echo "Collecting Logzilla Support Information..."
+    mkdir $WORKING_DIR
+    cd $WORKING_DIR
 
-ifconfig -a > $hn.ifconfig.log
+    ifconfig -a > $hn.ifconfig.log
 
-$lz/scripts/tools/summary > $hn.summary.log
+    $lz/scripts/tools/summary > $hn.summary.log
 
-dmesg >$hn.dmesg.log
+    dmesg >$hn.dmesg.log
 
-free -m >$hn.free.log
+    free -m >$hn.free.log
 
-ps aux | sort -k6 -n >$hn.ps.log
+    ps aux | sort -k6 -n >$hn.ps.log
 
-[ "$EXTENDED" = yes ] && do_extended_collection
+    [ "$EXTENDED" = yes ] && do_extended_collection
 
-if [ -e "$apache_log" ]; then
-    tail -20 /var/log/apache2/error.log > $hn.apache_error.log
-else
-    echo "Unable to locate your apache error log"
-    f_ANSWER "Where is your Apache Error log located?" "$apache_log"
-    apachelog=$ANSWER
-fi
-if [ -e "$ngconf" ]; then
-    cat $ngconf > $hn.syslog-ng.conf.log
-else
-    echo "Unable to locate your Syslog-ng config"
-    f_ANSWER "Where is your syslog-ng config located?" "$ngconf"
-    ngconf=$ANSWER
-    cat $ngconf > $hn.syslog-ng.conf.log
-fi
-if [ -e "$phpini" ]; then
-    cat $phpini > $hn.php.ini.log
-else
-    echo "Unable to locate your Syslog-ng config"
-    f_ANSWER "Where is your syslog-ng config located?" "$phpini"
-    phpini=$ANSWER
-    cat $phpini > $hn.php.ini.log
-fi
-e=`grep -i logzilla $apache_conf`
-if [ "$e" ]; then
-    cat $apache_conf > $hn.apache.conf.log
-else
-    echo "Unable to locate your Apache config"
-    f_ANSWER "Where is your Apache config for the LogZilla website located?" "$apache_conf"
-    apache_conf=$ANSWER
-    cat $apache_conf > $hn.apache.conf.log
-fi
-if [ -e "$idx_log" ]; then
-    tail -5000 $idx_log > $hn.sphinx_indexer.log
-fi
-if [ -e "$qry_log" ]; then
-    tail -5000 $qry_log > $hn.sphinx_query.log
-fi
+    if [ -e "$apache_log" ]; then
+        tail -20 /var/log/apache2/error.log > $hn.apache_error.log
+    else
+        echo "Unable to locate your apache error log"
+        f_ANSWER "Where is your Apache Error log located?" "$apache_log"
+        apachelog=$ANSWER
+    fi
+    if [ -e "$ngconf" ]; then
+        cat $ngconf > $hn.syslog-ng.conf.log
+    else
+        echo "Unable to locate your Syslog-ng config"
+        f_ANSWER "Where is your syslog-ng config located?" "$ngconf"
+        ngconf=$ANSWER
+        cat $ngconf > $hn.syslog-ng.conf.log
+    fi
+    if [ -e "$phpini" ]; then
+        cat $phpini > $hn.php.ini.log
+    else
+        echo "Unable to locate your Syslog-ng config"
+        f_ANSWER "Where is your syslog-ng config located?" "$phpini"
+        phpini=$ANSWER
+        cat $phpini > $hn.php.ini.log
+    fi
+    e=`grep -i logzilla $apache_conf`
+    if [ "$e" ]; then
+        cat $apache_conf > $hn.apache.conf.log
+    else
+        echo "Unable to locate your Apache config"
+        f_ANSWER "Where is your Apache config for the LogZilla website located?" "$apache_conf"
+        apache_conf=$ANSWER
+        cat $apache_conf > $hn.apache.conf.log
+    fi
 
-if [ -e "$mycnf" ]; then
-    cat $mycnf > $hn.my.conf.log
-else
-    echo "Unable to locate your Syslog-ng config"
-    f_ANSWER "Where is your mysql config located?" "$mycnf"
-    mycnf=$ANSWER
-    cat $mycnf > $hn.my.conf.log
-fi
-if [ -e "$mycnf_lz" ]; then
-    cat $mycnf_lz > $hn.mycnf_lz.log
-fi
-if [ -e "$lzcnf_php" ]; then
-    cat $lzcnf_php > $hn.lzcnf_php.log
-fi
-if [ -e "$lzmy" ]; then
-    cat $lzmy > $hn.lzmy.log
-fi
-user=`cat $lzmy | grep user | awk '{print $3}'`
-pass=`cat $lzmy | grep pass | awk '{print $3}'`
-db=`cat $lzmy | grep database | awk '{print $3}'`
+    if [ -e "$mycnf" ]; then
+        cat $mycnf > $hn.my.conf.log
+    else
+        echo "Unable to locate your MySQL config"
+        f_ANSWER "Where is your mysql config located?" "$mycnf"
+        mycnf=$ANSWER
+        cat $mycnf > $hn.my.conf.log
+    fi
 
-mysql -u$user -p$pass -e "select name,value from $db.settings" > $hn.db_settings.log
+    if [ -e "$mycnf_lz" ]; then
+        cat $mycnf_lz > $hn.mycnf_lz.log
+    else
+        echo "No $mycnf_lz found" > $hn.mycnf_lz.log
+    fi
 
-printf "`date \"+%Y-%m-%d %H:%M:%S\"`\ttest\t190\tCRON\tTest From LogZilla Support\n" | $lz/scripts/logzilla -v -d 2 -dd 1 > $hn.insert_test  2>&1 
+    if [ -e "$lzcnf_php" ]; then
+        cat $lzcnf_php > $hn.lzcnf_php.log
+    else
+        echo "No $lzcnf_php found" > $hn.lzcnf_php.log
+    fi
+    if [ -e "$lzmy" ]; then
+        cat $lzmy > $hn.lzmy.log
+    else
+        echo "No $lzmy found" > $hn.lzmy.log
+    fi
+    user=`cat $lzmy | grep user | awk '{print $3}'`
+    pass=`cat $lzmy | grep pass | awk '{print $3}'`
+    db=`cat $lzmy | grep database | awk '{print $3}'`
 
-cat $lz/scripts/install.pl | grep -E "version\s+=" > $hn.lzver.log 2>&1
+    mysql -u$user -p$pass -e "select name,value from $db.settings" > $hn.db_settings.log
 
-cd .. 
-tar cvfz $WORKING_DIR.tgz $WORKING_DIR
-rm -Rf $WORKING_DIR
-echo
-echo "Completed."
-echo "Please email $WORKING_DIR.tgz to support@logzilla.pro, or visit http://support.logzilla.pro an attach to your ticket online"
+    printf "`date \"+%Y-%m-%d %H:%M:%S\"`\ttest\t190\tCRON\tTest From LogZilla Support\n" | $lz/scripts/logzilla -v -d 2 -dd 1 > $hn.insert_test  2>&1 
+
+    cat $lz/scripts/install.pl | grep -E "version\s+=" > $hn.lzver.log 2>&1
+
+    get_logs
+
+    cd .. 
+    tar cvfz $WORKING_DIR.tgz $WORKING_DIR
+    rm -Rf $WORKING_DIR
+    echo
+    echo "Completed."
+    echo "Please email $WORKING_DIR.tgz to support@logzilla.pro, or visit http://support.logzilla.pro an attach to your ticket online"
 
