@@ -52,6 +52,7 @@ sub usage_and_exit {
     -v        : Also print results to STDERR
     -c        : config file (defaults to $options->{config_file})
     -l        : log file (defaults to local dir
+    -ct       : Use current timestamp for all incoming logs instead of their original timestamps
 
 Example Usage:
 cat logfile | $myname -l /var/log/foo.log -d 1 -v
@@ -71,6 +72,7 @@ GetOptions(
     'cisco_only!'     => \$options->{cisco_only},
     'makeview!'       => \$options->{makeview},
     'sis!'            => \$options->{sis},
+    'curtime|ct!'     => \$options->{ct},
 ) or usage_and_exit(1);    # got some invalid options
 
 if ( $options->{help} ) {
@@ -172,7 +174,9 @@ while ( my $line = <STDIN> ) {
 
     my $fac = 23;    # Manually set Local7 since we don't know the IETF facility
     my $pri = ( 23 * 8 + $sev );
-    print "$ymd $hms\t$host\t$pri\t$prg\t$msg\n";
+    my $ymdhms = "$ymd $hms";
+    $ymdhms = strftime "%Y-%m-%d %H:%M:%S", localtime if ($options->{ct});
+    print "$ymdhms\t$host\t$pri\t$prg\t$msg\n";
     push( @ymds, $ymd ) if ( $options->{makeview} );
 }
 makeview() if ( $options->{makeview} );
