@@ -274,6 +274,8 @@ if (preg_match("/\||&|!|\-/", "$searchText")) {
 
 
 if (preg_match("/^@host/i", "$searchText")) {
+    // Wildcards not allow in @host searches
+    $searchText = str_replace('*', '', $searchText);
     $searchText = preg_replace('/^@[Hh][Oo][Ss][Tt][Ss]?\s+?(.*)/', '$1', $searchText);
     if ($op) {
         $h = explode("$op", $searchText);
