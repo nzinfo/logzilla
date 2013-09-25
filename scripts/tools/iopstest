@@ -46,7 +46,7 @@ http://benjamin-schweizer.de/measuring-disk-io-performance.html
 
 usage:
 
-    iops [-n|--num_threads threads] [-t|--time time] <device>
+    iopstest [-n|--num_threads threads] [-t|--time time] <device>
 
     threads := number of concurrent io threads, default 1
     time    := time in seconds, default 10
@@ -54,10 +54,10 @@ usage:
 
 example:
 
-    iops /dev/sda
-    iops -n 8 -t 2 /dev/disk0
-    iops --num_threads 1 --time 2 /dev/md1
-    iops --num_threads 16 --time 2 /dev/md1
+    iopstest /dev/sda
+    iopstest -n 8 -t 2 /dev/disk0
+    iopstest --num_threads 1 --time 2 /dev/md1
+    iopstest --num_threads 16 --time 2 /dev/md1
 
 """
 
