@@ -52,7 +52,7 @@ The login/password for MySQL root is root/mysql
 $linfo
 
 More Information and Help:
-Please read /var/www/logzilla/VM-README.txt
+Please read /path_to_logzilla/VM-README.txt
 
 Please report any trouble to http://support.logzilla.pro                       
 #######################################################################

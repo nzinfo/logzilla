@@ -165,6 +165,30 @@ if ((has_portlet_access($_SESSION['username'], 'Search Results') == TRUE) || ($_
                             // disabled in this version since there is currently no way to enter notes
                             // { "sWidth": "15%" }, // Notes
                             ],
+			    "fnInitComplete": function(oSettings) {
+				    for ( var i=0, iLen=oSettings.aoData.length ; i<iLen ; i++ ) {
+					    var sev = oSettings.aoData[i]._aData[4];
+					    var colorCSS;
+					    if(sev === 'emerg') {
+						    colorCSS = 'TBL_SEV_0_EMERG';
+					    } else if(sev === 'crit') {
+						    colorCSS = 'TBL_SEV_1_CRIT';
+					    } else if(sev === 'alert') {
+						    colorCSS = 'TBL_SEV_2_ALERT';
+					    } else if(sev === 'err') {
+						    colorCSS = 'TBL_SEV_3_ERROR';
+					    } else if(sev === 'warning') {
+						    colorCSS = 'TBL_SEV_4_WARN';
+					    } else if(sev === 'notice') {
+						    colorCSS = 'TBL_SEV_5_NOTICE';
+					    } else if(sev === 'info') {
+						    colorCSS = 'TBL_SEV_6_INFO';
+					    } else if(sev === 'debug') {
+						    colorCSS = 'TBL_SEV_7_DEBUG';
+					    }
+					    oSettings.aoData[i].nTr.className += " "+colorCSS;
+				    }
+			    },
                             "aaSorting": [[ 0, "desc" ]],
                                 "fnServerParams": function ( aoData ) {
                                     var $slider = $('#slider');
@@ -427,7 +451,7 @@ var total = '<?php echo $total?>'
 if (total < 1) {
     total = 'No results found for date range <?php echo "$start - $end<br>Time to search: $time seconds";?>'
 } else {
-    total = '<?php echo "Displaying Top ".commify($total)." Matches of ".commify($total_found)." possible<br>Date Range: $start - $end<br>Time to search: $time seconds";?>';
+    total = '<?php echo "Displaying Top ".commify($limit)." Matches of ".commify($total_found)." possible<br>Date Range: $start - $end<br>Time to search: $time seconds";?>';
 }
 
 $("#portlet-header_Search_Results").html("<div style='text-align: center'>" + total + "</div>");
