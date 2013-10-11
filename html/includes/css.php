@@ -68,3 +68,22 @@ This file contains any custom css that I've written
 <!-- BEGIN Notify -->
 <link type="text/css" rel="stylesheet" href="<?php echo $_SESSION['SITE_URL']?>includes/notify/ui.notify.css" />
 <!-- END Notify -->
+
+<!-- BEGIN Severity Colors for results display -->
+<?php
+    $sql = "SELECT name,value FROM settings WHERE name='TBL_SEV_SHOWCOLORS'";
+    $result = perform_query($sql, $dbLink, $_SERVER['PHP_SELF']); 
+    while($row = fetch_array($result)) {
+	    $showSevColors = $row['value'];
+    }
+    $sql = "SELECT name,value FROM settings WHERE name LIKE 'TBL_SEV%'";
+    $result = perform_query($sql, $dbLink, $_SERVER['PHP_SELF']); 
+    if ($showSevColors > 0) {
+	    echo "<!-- Severity Styles -->\n<style>\n";
+	    while($row = fetch_array($result)) {
+		    echo ".".$row['name']." { background-color:#".$row['value']." !important; }\n";
+	    }
+	    echo "</style>\n";
+    }
+?>
+<!-- END Severity Colors for results display -->

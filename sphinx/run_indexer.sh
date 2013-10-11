@@ -26,7 +26,7 @@ TIME=`date +%T`
 # -------------------------------------------
 # Set logzilla base path
 # -------------------------------------------
-lzhome="/var/www/logzilla"
+lzhome="/path_to_logzilla"
 [ ! -d "$lzhome" ] && lzhome="/var/www/logzilla"
 
 sphinxhome="$lzhome/sphinx"

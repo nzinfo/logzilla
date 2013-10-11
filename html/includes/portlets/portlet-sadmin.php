@@ -1,6 +1,6 @@
 <?php
 /*
-* portlet-table.php
+* portlet-sadmin.php
 *
 * Developed by Clayton Dukes <cdukes@logzilla.pro>
 * Copyright (c) 2010 LogZilla, LLC
@@ -30,7 +30,7 @@ if ((has_portlet_access($_SESSION['username'], 'Server Settings') == TRUE) || ($
 <script>
     $(function() {
         $( "#div_admin_accordian" ).accordion({
-            navigation: true,
+            active: false,
             collapsible: true
         });
     });
@@ -38,7 +38,7 @@ if ((has_portlet_access($_SESSION['username'], 'Server Settings') == TRUE) || ($
 
 <h3 class="docs">Changing some of these settings will render your server unusable, proceed with CAUTION!!!</h3>
 
-<div id="div_adminMenu" style="padding:2px; width:20%; height:600px;" class="ui-widget-content">
+<div id="div_adminMenu" style="padding:2px; width:20%; height:100%;" class="ui-widget-content">
 
     <div id="div_admin_accordian">
         <h3><a href="#">Basic Settings</a></h3>
@@ -141,6 +141,18 @@ if ((has_portlet_access($_SESSION['username'], 'Server Settings') == TRUE) || ($
         <h3><a href="#">Windows Events</a></h3>
         <div>
             <a href="#" class='adminItem' id='SNARE'>SNARE Windows Event Processing</a><br />
+        </div>
+        <h3><a href="#">Table Display</a></h3>
+        <div>
+            <a href="#" class='adminItem' id='TBL_SEV_SHOWCOLORS'>Show Colors</a><br />
+            <a href="#" class='adminItem' id='TBL_SEV_0_EMERG'>Severity 0 (Emergency)</a><br />
+            <a href="#" class='adminItem' id='TBL_SEV_1_CRIT'>Severity 1 (Critical)</a><br />
+            <a href="#" class='adminItem' id='TBL_SEV_2_ALERT'>Severity 2 (Alert)</a><br />
+            <a href="#" class='adminItem' id='TBL_SEV_3_ERROR'>Severity 3 (Error)</a><br />
+            <a href="#" class='adminItem' id='TBL_SEV_4_WARN'>Severity 4 (Warning)</a><br />
+            <a href="#" class='adminItem' id='TBL_SEV_5_NOTICE'>Severity 5 (Notice)</a><br />
+            <a href="#" class='adminItem' id='TBL_SEV_6_INFO'>Severity 6 (Informational)</a><br />
+            <a href="#" class='adminItem' id='TBL_SEV_7_DEBUG'>Severity 7 (Debug)</a><br />
         </div>
     </div>
 
