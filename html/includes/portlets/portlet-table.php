@@ -165,7 +165,7 @@ if ((has_portlet_access($_SESSION['username'], 'Search Results') == TRUE) || ($_
                             // disabled in this version since there is currently no way to enter notes
                             // { "sWidth": "15%" }, // Notes
                             ],
-			    "fnInitComplete": function(oSettings) {
+			    "fnDrawCallback": function(oSettings) {
 				    for ( var i=0, iLen=oSettings.aoData.length ; i<iLen ; i++ ) {
 					    var sev = oSettings.aoData[i]._aData[4];
 					    var colorCSS;
