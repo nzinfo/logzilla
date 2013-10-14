@@ -91,7 +91,7 @@ $tester->check_last_seen( 'hosts', 3, bag(
 
 $tester->check_last_seen( 'programs', 3, bag(
         superhashof({ lastseen => '2012-01-01 03:00:00', seen => 1, name => 'prog2' }),
-        superhashof({ lastseen => '2012-01-01 03:00:00', seen => 3, name => 'Cisco Syslog' }),
+        superhashof({ lastseen => '2012-01-01 03:00:00', seen => 3, name => 'Cisco_Syslog' }),
         superhashof({ lastseen => '2012-01-01 03:00:00', seen => 2, name => 'Security' }),
     ) );
 
@@ -117,7 +117,7 @@ $tester->process_data( data => [
 # It should stay last before this command, only counter for prog2 should change
 $tester->check_last_seen( 'programs', 3, bag(
         superhashof({ lastseen => '2012-01-01 03:00:00', seen => 2, name => 'prog2' }),
-        superhashof({ lastseen => '2012-01-01 03:00:00', seen => 3, name => 'Cisco Syslog' }),
+        superhashof({ lastseen => '2012-01-01 03:00:00', seen => 3, name => 'Cisco_Syslog' }),
         superhashof({ lastseen => '2012-01-01 03:00:00', seen => 2, name => 'Security' }),
     ) );
 
