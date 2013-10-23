@@ -16,13 +16,13 @@ getsettings();
 <?php echo "<title>".$addTitle.": ".$_SESSION['PROGNAME']." ".$_SESSION['VERSION']."</title>\n"; ?>
 <meta name="Description" "LogZilla (http://www.logzilla.pro)">
 <meta name="Keywords" 'LogZilla', 'Syslog', 'Syslog Tool', 'Syslog Analysis', 'Syslog Analyzer', 'Syslog Management'>
-<meta name="Copyright" 'LogZilla, LLC'>
+<meta name="Copyright" 'LogZilla Corporation'>
 <meta name="Author" 'Clayton Dukes - cdukes@logzilla.pro'>
 <meta http-equiv="Content-Language" content="EN">
-<meta http-equiv="content-type" content="application/xhtml+xml; charset=UTF-8" />
 <meta http-equiv="cache-control" content="no-cache,no-store,must-revalidate">
 <meta http-equiv="pragma" content="no-cache">
 <meta http-equiv="expires" content="0">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
 
 <!-- BEGIN Import CSS -->
 <?php include ("css.php");?>
