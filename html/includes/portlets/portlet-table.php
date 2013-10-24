@@ -299,7 +299,7 @@ if (tail > 0) {
     $("button").button();
     $("#sliderValues").hide();
     $("#slider").hide();
-    $("#results_length").hide();
+    //$("#results_length").hide();
     $("#results_processing").hide();
     $("#results_paginate").hide();
 } else {
