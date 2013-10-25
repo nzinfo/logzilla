@@ -52,14 +52,16 @@ sub usage_and_exit {
     -v        : Also print results to STDERR
     -c        : config file (defaults to $options->{config_file})
     -l        : log file (defaults to local dir
+    -mv	      : Create associated view tables in the DB - needed when importing data older than today.
+    -csco     : Only import cisco-type events (matching Cisco mnemonics)
     -ct       : Use current timestamp for all incoming logs instead of their original timestamps
 
 Example Usage:
 cat logfile | $myname -l /var/log/foo.log -d 1 -v
  or, to feed into LogZilla:
 cat logfile | $myname | /var/www/logzilla/scripts/logzilla
-
     };
+    print "\n";
     exit($exit_code);
 }
 
@@ -69,8 +71,8 @@ GetOptions(
     'verbose|v!'      => \$options->{verbose},
     'config-file|c=s' => \$options->{config_file},
     'log-file|l=s'    => \$options->{logfile},
-    'cisco_only!'     => \$options->{cisco_only},
-    'makeview!'       => \$options->{makeview},
+    'cisco_only|csco!'=> \$options->{cisco_only},
+    'makeview|mv!'    => \$options->{makeview},
     'sis!'            => \$options->{sis},
     'curtime|ct!'     => \$options->{ct},
 ) or usage_and_exit(1);    # got some invalid options
@@ -135,7 +137,7 @@ while ( my $line = <STDIN> ) {
             $line = "$month $day $hms $host $prg $msg";
             $log->WARN("Setting line to $line");
         } else {
-            ( $ymd, $hms, $msg ) = split( '\s+', $line, 3 );
+            ( $ymd, $hms, $msg ) = split( '\s+', $line );
             $line = "$ymd $hms $host $prg $msg";
             $log->INFO("Setting line to $line");
         }
