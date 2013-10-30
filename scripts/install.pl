@@ -68,7 +68,7 @@ sub prompt {
 }
 
 my $version    = "4.5";
-my $subversion = ".484";
+my $subversion = ".491";
 
 # Grab the base path
 my $lzbase = getcwd;
@@ -1059,9 +1059,11 @@ sub update_settings {
 
 sub add_logrotate {
     if ( -d "/etc/logrotate.d" ) {
-        print "\nAdding LogZilla logrotate.d file to /etc/logrotate.d\n";
-        my $ok = &getYN( "Ok to continue?", "y" );
-        if ( $ok =~ /[Yy]/ ) {
+    if ( $logrotate !~ /[YyNn]/ ) { # i.e. undefined in .lzrc
+	    print "\nAdding LogZilla logrotate.d file to /etc/logrotate.d\n";
+	    $logrotate = &getYN( "Ok to continue?", "y" );
+	}
+        if ( $logrotate =~ /[Yy]/ ) {
             system("cp contrib/system_configs/logzilla.logrotate /etc/logrotate.d/logzilla");
         } else {
             print "Skipped logrotate.d file, you will need to manually copy:\n";
