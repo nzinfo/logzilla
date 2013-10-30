@@ -82,6 +82,8 @@ my ( $year, $mon, $mday ) = Date::Calc::Add_Delta_Days( $curyear, $curmon, $curm
 my $pAdd = "p" . $year . sprintf( "%02d", $mon ) . sprintf( "%02d", $mday );
 my $dateTomorrow = $year . "-" . sprintf( "%02d", $mon ) . "-" . sprintf( "%02d", $mday );
 my ( $dbroot, $dbrootpass, $dbname, $dbtable, $dbhost, $dbport, $dbadmin, $dbadminpw, $siteadmin, $siteadminpw, $email, $sitename, $url, $logpath, $retention, $snare, $j4, $arch, $skipcron, $skipdb, $skipsysng, $skiplogrot, $skipsudo, $skipfb, $skiplic, $sphinx_compile, $sphinx_index, $skip_ioncube,$skipapparmor, $syslogng_conf, $webuser, $syslogng_source, $upgrade, $test, $autoyes, $spx_cores );
+my ( $installdb );
+
 
 sub getYN {
     unless ( $autoyes =~ /[Yy]/ ) {
@@ -239,9 +241,11 @@ genconfig();
 
 
 if ( $skipdb !~ /[Yy]/ ) {
-    print "All data will be installed into the $dbname database\n";
-    my $ok = &getYN( "Ok to continue?", "y" );
-    if ( $ok =~ /[Yy]/ ) {
+    if ( $installdb !~ /[YyNn]/ ) { # i.e. undefined in .lzrc
+	print "All data will be installed into the $dbname database\n";
+	$installdb = &getYN( "Ok to continue?", "y" );
+    }
+    if ( $installdb =~ /[Yy]/ ) {
         my $dbh = DBI->connect( "DBI:mysql:mysql:$dbhost:$dbport", $dbroot, $dbrootpass );
         my $sth = $dbh->prepare("SELECT version()") or die "Could not get MySQL version: $DBI::errstr";
         $sth->execute;
