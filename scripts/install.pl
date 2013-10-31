@@ -68,7 +68,7 @@ sub prompt {
 }
 
 my $version    = "4.5";
-my $subversion = ".491";
+my $subversion = ".492";
 
 # Grab the base path
 my $lzbase = getcwd;
@@ -82,7 +82,7 @@ my ( $year, $mon, $mday ) = Date::Calc::Add_Delta_Days( $curyear, $curmon, $curm
 my $pAdd = "p" . $year . sprintf( "%02d", $mon ) . sprintf( "%02d", $mday );
 my $dateTomorrow = $year . "-" . sprintf( "%02d", $mon ) . "-" . sprintf( "%02d", $mday );
 my ( $dbroot, $dbrootpass, $dbname, $dbtable, $dbhost, $dbport, $dbadmin, $dbadminpw, $siteadmin, $siteadminpw, $email, $sitename, $url, $logpath, $retention, $snare, $j4, $arch, $skipcron, $skipdb, $skipsysng, $skiplogrot, $skipsudo, $skipfb, $skiplic, $sphinx_compile, $sphinx_index, $skip_ioncube,$skipapparmor, $syslogng_conf, $webuser, $syslogng_source, $upgrade, $test, $autoyes, $spx_cores );
-my ( $installdb );
+my ( $installdb, $logrotate );
 
 
 sub getYN {
@@ -1059,7 +1059,7 @@ sub update_settings {
 
 sub add_logrotate {
     if ( -d "/etc/logrotate.d" ) {
-    if ( $logrotate !~ /[YyNn]/ ) { # i.e. undefined in .lzrc
+	if ( $logrotate !~ /[YyNn]/ ) { # i.e. undefined in .lzrc
 	    print "\nAdding LogZilla logrotate.d file to /etc/logrotate.d\n";
 	    $logrotate = &getYN( "Ok to continue?", "y" );
 	}
