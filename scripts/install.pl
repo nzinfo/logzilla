@@ -1146,7 +1146,7 @@ source s_logzilla {
 
 destination d_logzilla {
     program(
-        "/var/www/logzilla/scripts/logzilla -d 1"
+        "/var/www/logzilla/scripts/logzilla"
         log_fifo_size(1000)
         flush_lines(100)
         flush_timeout(1)
