@@ -26,14 +26,14 @@ foreach my $mod (@mods) {
         system("(echo o conf prerequisites_policy follow;echo o conf commit)|cpan");
         #my $ok = &getYN( "Shall I attempt to install it for you?", "y" );
         #if ( $ok =~ /[Yy]/ ) {
-            require CPAN;
-            CPAN::install($mod);
-            #} else {
-            #print "LogZilla requires $mod\n";
-            #exit;
-            #}
-	print "Module installation complete. Please re-run install\n";
-	exit;
+        require CPAN;
+        CPAN::install($mod);
+        #} else {
+        #print "LogZilla requires $mod\n";
+        #exit;
+        #}
+        print "Module installation complete. Please re-run install\n";
+        exit;
     }
 }
 
@@ -68,7 +68,7 @@ sub prompt {
 }
 
 my $version    = "4.5";
-my $subversion = ".492";
+my $subversion = ".493";
 
 # Grab the base path
 my $lzbase = getcwd;
@@ -242,8 +242,8 @@ genconfig();
 
 if ( $skipdb !~ /[Yy]/ ) {
     if ( $installdb !~ /[YyNn]/ ) { # i.e. undefined in .lzrc
-	print "All data will be installed into the $dbname database\n";
-	$installdb = &getYN( "Ok to continue?", "y" );
+        print "All data will be installed into the $dbname database\n";
+        $installdb = &getYN( "Ok to continue?", "y" );
     }
     if ( $installdb =~ /[Yy]/ ) {
         my $dbh = DBI->connect( "DBI:mysql:mysql:$dbhost:$dbport", $dbroot, $dbrootpass );
@@ -347,11 +347,11 @@ sub make_archive_tables {
         $dbh->do( "CREATE OR REPLACE VIEW log_arch_hr_$i AS SELECT * FROM $dbtable where id>2 and id<1;
             " ) or die "Could not create log_arch_hr_$i: $DBI::errstr";
     }
-    
+
     # TH: seed the quad-hourly views with the no record
     # quad-Hourly
     for ( $i = 0 ; $i <= 3 ; $i++ ) {
-    	$j = $i*15;
+        $j = $i*15;
         $dbh->do( "CREATE OR REPLACE VIEW log_arch_qrhr_$j AS SELECT * FROM $dbtable where id>2 and id<1;
             " ) or die "Could not create log_arch_hr_$i: $DBI::errstr";
     }
@@ -483,13 +483,13 @@ sub do_install {
         my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/rbac.sql`;
     }
 
-  # Insert view_limits table
-  # cdukes: moved down to verify_columns()
-  #if ( tblExists("view_limits") eq 1 ) {
-  #copy_old_view_limits();
-  #} else {
-  #my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/view_limits.sql`;
-  #}
+    # Insert view_limits table
+    # cdukes: moved down to verify_columns()
+    #if ( tblExists("view_limits") eq 1 ) {
+    #copy_old_view_limits();
+    #} else {
+    #my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/view_limits.sql`;
+    #}
     make_partitions();
     create_views();
     make_dbuser();
@@ -568,19 +568,19 @@ sub genconfig {
 # Enabling query logging will degrade performance.
 DEFINE('LOG_QUERIES', 'FALSE');
 };
-    my $file = "$lzbase/html/config/config.php";
-    open( CNF, ">$file" ) || die("Cannot Open $file: $!");
-    print CNF "$config";
-    my $rfile = "$lzbase/scripts/sql/regexp.txt";
-    open( FILE, $rfile ) || die("Cannot Open file: $!");
-    my @data = <FILE>;
+my $file = "$lzbase/html/config/config.php";
+open( CNF, ">$file" ) || die("Cannot Open $file: $!");
+print CNF "$config";
+my $rfile = "$lzbase/scripts/sql/regexp.txt";
+open( FILE, $rfile ) || die("Cannot Open file: $!");
+my @data = <FILE>;
 
-    foreach my $line (@data) {
-        print CNF "$line";
-    }
-    print CNF "?>\n";
-    close(CNF);
-    close(FILE);
+foreach my $line (@data) {
+    print CNF "$line";
+}
+print CNF "?>\n";
+close(CNF);
+close(FILE);
 }
 
 sub make_partitions {
@@ -671,40 +671,40 @@ sub do_procs {
 
     # Drop procs and recreate them whether this is a new install or an upgrade.
     $dbh->do( "
-    DROP PROCEDURE IF EXISTS updateHosts;
+        DROP PROCEDURE IF EXISTS updateHosts;
         " ) or die "$DBI::errstr";
     $dbh->do( "
-    DROP PROCEDURE IF EXISTS updateMne;
+        DROP PROCEDURE IF EXISTS updateMne;
         " ) or die "$DBI::errstr";
     $dbh->do( "
-    DROP PROCEDURE IF EXISTS updateEid;
+        DROP PROCEDURE IF EXISTS updateEid;
         " ) or die "$DBI::errstr";
     $dbh->do( "
-    DROP PROCEDURE IF EXISTS export;
+        DROP PROCEDURE IF EXISTS export;
         " ) or die "$DBI::errstr";
     $dbh->do( "
-    DROP PROCEDURE IF EXISTS import;
+        DROP PROCEDURE IF EXISTS import;
         " ) or die "$DBI::errstr";
     $dbh->do( "
-    DROP PROCEDURE IF EXISTS cleanup;
+        DROP PROCEDURE IF EXISTS cleanup;
         " ) or die "$DBI::errstr";
     $dbh->do( "
-    DROP PROCEDURE IF EXISTS log_arch_daily_proc;
+        DROP PROCEDURE IF EXISTS log_arch_daily_proc;
         " ) or die "$DBI::errstr";
     $dbh->do( "
-    DROP PROCEDURE IF EXISTS log_arch_hr_proc;
+        DROP PROCEDURE IF EXISTS log_arch_hr_proc;
         " ) or die "$DBI::errstr";
     $dbh->do( "
-    DROP PROCEDURE IF EXISTS log_arch_qrthr_proc;
+        DROP PROCEDURE IF EXISTS log_arch_qrthr_proc;
         " ) or die "$DBI::errstr";
     $dbh->do( "
-    DROP PROCEDURE IF EXISTS logs_add_archive_proc;
+        DROP PROCEDURE IF EXISTS logs_add_archive_proc;
         " ) or die "$DBI::errstr";
     $dbh->do( "
-    DROP PROCEDURE IF EXISTS logs_add_part_proc;
+        DROP PROCEDURE IF EXISTS logs_add_part_proc;
         " ) or die "$DBI::errstr";
     $dbh->do( "
-    DROP PROCEDURE IF EXISTS logs_delete_part_proc;
+        DROP PROCEDURE IF EXISTS logs_delete_part_proc;
         " ) or die "$DBI::errstr";
 
     my $event = qq{
@@ -740,8 +740,8 @@ sub do_procs {
 
     FROM INFORMATION_SCHEMA.partitions
     WHERE table_schema = '$dbname'
-    AND table_name = '$dbtable'
-    AND partition_description <
+        AND table_name = '$dbtable'
+        AND partition_description <
     TO_DAYS(DATE_SUB(CURDATE(), INTERVAL (SELECT value from settings WHERE name='RETENTION') DAY))
     GROUP BY TABLE_NAME;
 
@@ -1023,7 +1023,7 @@ sub update_settings {
         update settings set description='This variable is used to determine the number of days to keep data in the database. <br>Any data older than this setting will be automatically purged.' where name='RETENTION';
         " ) or die "Could not update settings table: $DBI::errstr";
     $sth->execute;
-        if ( $snare =~ /[Yy]/ ) {
+    if ( $snare =~ /[Yy]/ ) {
         my $sth = $dbh->prepare( "
             update settings set value=1 where name='SNARE';
             " ) or die "Could not update settings table: $DBI::errstr";
@@ -1054,15 +1054,15 @@ sub update_settings {
         delete from users where username='guest';
         " ) or die "Could not insert user data: $DBI::errstr";
     $sth->execute;
-    
+
 }
 
 sub add_logrotate {
     if ( -d "/etc/logrotate.d" ) {
-	if ( $logrotate !~ /[YyNn]/ ) { # i.e. undefined in .lzrc
-	    print "\nAdding LogZilla logrotate.d file to /etc/logrotate.d\n";
-	    $logrotate = &getYN( "Ok to continue?", "y" );
-	}
+        if ( $logrotate !~ /[YyNn]/ ) { # i.e. undefined in .lzrc
+            print "\nAdding LogZilla logrotate.d file to /etc/logrotate.d\n";
+            $logrotate = &getYN( "Ok to continue?", "y" );
+        }
         if ( $logrotate =~ /[Yy]/ ) {
             system("cp contrib/system_configs/logzilla.logrotate /etc/logrotate.d/logzilla");
         } else {
@@ -1098,96 +1098,117 @@ sub add_syslog_conf {
     if ( -e $file ) {
         open my $config, '+<', "$file";
         my @arr = <$config>;
-        if ( !grep( /logzilla|lzconfig/, @arr ) ) {
-            print "Creating LogZilla configuration for syslog-ng at $file\n";
-            open FILE, ">>$file" or die $!;
-            print FILE <<EOF;
+        my $sconf = qq{
 #<lzconfig> BEGIN LogZilla settings
 # LogZilla "standard" config - this may or may not work well for your environment
 # It is advisable that you learn what is best for your server.
 # There's a great web gui available at http://mitzkia.github.com/syslog-ng-ose-configurator/#/howtouse
 # Install Date: $now
-
+};
+my $sconf2 = q{
 # Global Options
 options {
     chain_hostnames(no);
     keep_hostname(yes);
     #threaded(yes); # enable if using Syslog-NG 3.3.x
-    #use_fqdn(no); #disable in high scale environments
-    #use_dns(no); #disable in high scale environments
+    #use_fqdn(no); # This should be set to no in high scale environments
+    #use_dns(no); # This should be set to no in high scale environments
+};
+
+# Capture the program name for SNARE events
+rewrite r_snare { 
+    subst("MSWinEventLog.+(Security|Application|System).+", "MSWin_$1", value("PROGRAM") flags(global)); 
+};
+
+# Snare sends TAB delimited messages, we need pipes...
+rewrite r_snare2pipe { 
+    subst("\t", "|", value("MESSAGE") 
+    flags(global)
+    ); 
+};
+
+# Grab Cisco Mnemonics and write program name
+filter f_rw_cisco { match('^(%[A-Z]+\-\d\-[0-9A-Z]+): ([^\n]+)' value("MSGONLY") type("pcre") flags("store-matches" "nobackref")); };
+filter f_rw_cisco_2 { match('^[\*\.]?(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\s+\d{1,2}\s\d{1,2}:\d{1,2}:\d{1,2}(?:\.\d+)?(?: [A-Z]{3})?: (%[^:]+): ([^\n]+)' value("MSGONLY") type("pcre") flags("store-matches" "nobackref")); };
+filter f_rw_cisco_3 { match('^\d+[ywdh]\d+[ywdh]: (%[^:]+): ([^\n]+)' value("MSGONLY") type("pcre") flags("store-matches" "nobackref")); };
+filter f_rw_cisco_4 { match('^\d{6}: [\*\.]?(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\s+\d{1,2}\s\d{1,2}:\d{1,2}:\d{1,2}(?:\.\d+)?(?: [A-Z]{3})?: (%[^:]+): ([^\n]+)' value("MSGONLY") type("pcre") flags("store-matches" "nobackref")); };
+
+rewrite r_cisco_program {
+    set("Cisco_Syslog", value("PROGRAM") condition(filter(f_rw_cisco) or filter(f_rw_cisco_2) or filter(f_rw_cisco_3) or filter(f_rw_cisco_4)));
+    set("$1: $2", value("MESSAGE") condition(filter(f_rw_cisco) or filter(f_rw_cisco_2) or filter(f_rw_cisco_3) or filter(f_rw_cisco_4)));
 };
 
 source s_logzilla {
-    tcp(
-        # log_fetch_limit(100) # uncomment in high scale environments
-        # log_iw_size(5000) # uncomment in high scale environments
-       );
-    udp(
-        # so_rcvbuf(1048576) # uncomment in high scale environments
-       );
+    # Use no-multi-line so that java events get read properly
+    tcp(flags(no-multi-line));
+    udp(flags(no-multi-line));
 };
 
 destination d_logzilla {
     program(
-            "$lzbase/scripts/logzilla"
-            log_fifo_size(1000)
-            flush_lines(100)
-            flush_timeout(1)
-            template("\$R_YEAR-\$R_MONTH-\$R_DAY \$R_HOUR:\$R_MIN:\$R_SEC\\t\$HOST\\t\$PRI\\t\$PROGRAM\\t\$MSGONLY\\n")
-            template_escape(yes)
-           );
+        "/var/www/logzilla/scripts/logzilla -d 1"
+        log_fifo_size(1000)
+        flush_lines(100)
+        flush_timeout(1)
+        template("$R_YEAR-$R_MONTH-$R_DAY $R_HOUR:$R_MIN:$R_SEC\t$HOST\t$PRI\t$PROGRAM\t$MSGONLY\n")
+    );
 };
 
 destination df_logzilla {
-    file("$logpath/DEBUG.log"
-            template("\$R_YEAR-\$R_MONTH-\$R_DAY \$R_HOUR:\$R_MIN:\$R_SEC\\t\$HOST\\t\$PRI\\t\$PROGRAM\\t\$MSGONLY\\n")
-            template_escape(yes)
-        ); 
+    file("/var/log/logzilla/DEBUG.log"
+        template("$R_YEAR-$R_MONTH-$R_DAY $R_HOUR:$R_MIN:$R_SEC\t$HOST\t$PRI\t$PROGRAM\t$MSGONLY\n")
+    ); 
 };
 
 log {
     source(s_logzilla);
+    rewrite(r_snare);
+    rewrite(r_snare2pipe);
+    rewrite(r_cisco_program);
     destination(d_logzilla);
     # Uncomment below and restart syslog-ng for debugging
     # destination(df_logzilla);
     flags(flow-control);
 };
 #</lzconfig> END LogZilla settings
-
-EOF
-        }
-    } else {
-        print("\n\033[1m\tERROR!\n\033[0m");
-        print "Unable to locate your syslog-ng config\n";
-    }
+};
+if ( !grep( /logzilla|lzconfig/, @arr ) ) {
+    print "Creating LogZilla configuration for syslog-ng at $file\n";
+    open FILE, ">>$file" or die $!;
+    print FILE $sconf . $sconf2;
+} else {
+    print("\n\033[1m\tERROR!\n\033[0m");
+    print "Unable to locate your syslog-ng config\n";
+}
+}
 }
 
 sub setup_cron {
 
-      # Cronjob  Setup
-      print("\n\033[1m\n\n========================================\033[0m\n");
-      print("\n\033[1m\tCron Setup\n\033[0m");
-      print("\n\033[1m========================================\n\n\033[0m\n");
-      print "\n";
-      print "Cron is used to run backend indexing and data exports.\n";
-      print "Install will attempt to do this automatically for you by adding it to /etc/cron.d\n";
-      print "In the event that something fails or you skip this step, \n";
-      print "You MUST create it manually or create the entries in your root's crontab file.\n";
-      my $crondir;
-      my $ok = &getYN( "Ok to continue?", "y" );
+    # Cronjob  Setup
+    print("\n\033[1m\n\n========================================\033[0m\n");
+    print("\n\033[1m\tCron Setup\n\033[0m");
+    print("\n\033[1m========================================\n\n\033[0m\n");
+    print "\n";
+    print "Cron is used to run backend indexing and data exports.\n";
+    print "Install will attempt to do this automatically for you by adding it to /etc/cron.d\n";
+    print "In the event that something fails or you skip this step, \n";
+    print "You MUST create it manually or create the entries in your root's crontab file.\n";
+    my $crondir;
+    my $ok = &getYN( "Ok to continue?", "y" );
 
-      if ( $ok =~ /[Yy]/ ) {
-          my $minute;
+    if ( $ok =~ /[Yy]/ ) {
+        my $minute;
 
 # due hourly views cron can always run every minute
 #        my $sml = &getYN( "\n\nWill this copy of LogZilla be used to process more than 1 Million messages per day?\nNote: Your answer here only determines how often to run indexing.", "n" );
 #        if ( $sml =~ /[Yy]/ ) {
 #            $minute = 5;
 #        } else {
-          $minute = 1;
+        $minute = 1;
 
-          #        }
-          my $cron = qq{
+        #        }
+        my $cron = qq{
 #####################################################
 # BEGIN LogZilla Cron Entries
 # http://www.logzilla.pro
@@ -1215,32 +1236,32 @@ sub setup_cron {
 # END LogZilla Cron Entries
 #####################################################
 };
-          $crondir = "/etc/cron.d";
-          unless ( -d "$crondir" ) {
-              $crondir = &prompt( "What is the correct path to your cron.d?", "/etc/cron.d" );
-          }
-          if ( -d "$crondir" ) {
-              my $file = "$crondir/logzilla";
-              open FILE, ">$file" or die "cannot open $file: $!";
-              print FILE $cron;
-              close FILE;
-              print "Cronfile added to $crondir\n";
-              hup_crond();
-          } else {
-              print "$crondir does not exist\n";
-              print "You will need to manually copy $lzbase/scripts/contrib/system_configs/logzilla.crontab to /etc/cron.d\n";
-              print "or use 'crontab -e' as root and paste the contents of $lzbase/scripts/contrib/system_configs/logzilla.crontab into it.\n";
-              print "If you add it manually as root's personal crontab, then be sure to remove the \"root\" username from the last entry.\n";
-          }
+$crondir = "/etc/cron.d";
+unless ( -d "$crondir" ) {
+    $crondir = &prompt( "What is the correct path to your cron.d?", "/etc/cron.d" );
+}
+if ( -d "$crondir" ) {
+    my $file = "$crondir/logzilla";
+    open FILE, ">$file" or die "cannot open $file: $!";
+    print FILE $cron;
+    close FILE;
+    print "Cronfile added to $crondir\n";
+    hup_crond();
+} else {
+    print "$crondir does not exist\n";
+    print "You will need to manually copy $lzbase/scripts/contrib/system_configs/logzilla.crontab to /etc/cron.d\n";
+    print "or use 'crontab -e' as root and paste the contents of $lzbase/scripts/contrib/system_configs/logzilla.crontab into it.\n";
+    print "If you add it manually as root's personal crontab, then be sure to remove the \"root\" username from the last entry.\n";
+}
       } else {
           print "Skipping Crontab setup.\n";
           print "You will need to manually copy $lzbase/scripts/contrib/system_configs/logzilla.crontab to /etc/cron.d\n";
           print "or use 'crontab -e' as root and paste the contents of $lzbase/scripts/contrib/system_configs/logzilla.crontab into it.\n";
           print "If you add it manually as root's personal crontab, then be sure to remove the \"root\" username from the last entry.\n";
       }
-}
+  }
 
-sub setup_sudo {
+  sub setup_sudo {
 
       # Sudo Access Setup
       print("\n\033[1m\n\n========================================\033[0m\n");
@@ -1328,9 +1349,9 @@ sub setup_sudo {
           print "# </lzconfig> END: Added by LogZilla installation on $now\n";
 
       }
-}
+  }
 
-sub kill {
+  sub kill {
       my $PROGRAM = shift;
       my @ps      = `ps ax`;
       @ps = map { m/(\d+)/; $1 } grep { /\Q$PROGRAM\E/ } @ps;
@@ -1340,9 +1361,9 @@ sub kill {
       my $time = gmtime();
 
       #print "Killed $PROGRAM @ps\n";
-}
+  }
 
-sub install_sphinx {
+  sub install_sphinx {
 
       # [[ticket:306]]
       my $now   = strftime( '%Y-%m-%d %H:%M:%S', localtime );
@@ -1387,9 +1408,9 @@ sub install_sphinx {
       } else {
           print "Skipping Sphinx Installation\n";
       }
-}
+  }
 
-sub setup_apparmor {
+  sub setup_apparmor {
 
       # Attempt to fix AppArmor
       my $file = "/etc/apparmor.d/usr.sbin.mysqld";
@@ -1423,9 +1444,9 @@ sub setup_apparmor {
               }
           }
       }
-}
+  }
 
-sub setup_rclocal {
+  sub setup_rclocal {
       my $file = "/etc/rc.local";
       if ( -e "$file" ) {
           open my $config, '+<', "$file" or warn "FAILED: $!\n";
@@ -1443,9 +1464,9 @@ sub setup_rclocal {
           print "Sphinx startup command:\n";
           print "$lzbase/sphinx/bin/searchd -c $lzbase/sphinx/sphinx.conf\n";
       }
-}
+  }
 
-sub fbutton {
+  sub fbutton {
       my $dbh = db_connect( $dbname, $lzbase, $dbroot, $dbrootpass );
 
       # Feedback button
@@ -1461,13 +1482,13 @@ sub fbutton {
       my $ok = &getYN( "Ok to add support and feedback?", "y" );
       if ( $ok =~ /[Yy]/ ) {
           my $sth = $dbh->prepare( "
-            update settings set value='1' where name='FEEDBACK';
-            " ) or die "Could not update settings table: $DBI::errstr";
+              update settings set value='1' where name='FEEDBACK';
+              " ) or die "Could not update settings table: $DBI::errstr";
           $sth->execute;
       }
-}
+  }
 
-sub hup_syslog {
+  sub hup_syslog {
 
       # syslog-ng HUP
       print "\n\n";
@@ -1487,9 +1508,9 @@ sub hup_syslog {
               print("\033[1m\n\tPlease be sure to restart syslog-ng..\n\033[0m");
           }
       }
-}
+  }
 
-sub hup_crond {
+  sub hup_crond {
       print "\n\n";
       my $checkprocess = `cat /var/run/crond.pid`;
       if ($checkprocess) {
@@ -1507,12 +1528,12 @@ sub hup_crond {
               print("\033[1m\n\tPlease be sure to restart CRON..\n\033[0m");
           }
       }
-}
+  }
 
-print("\n\033[1m\tLogZilla installation complete!\n\033[0m");
+  print("\n\033[1m\tLogZilla installation complete!\n\033[0m");
 
 # Wordwrap system: deal with the next character
-sub wrap_one_char {
+  sub wrap_one_char {
       my $output   = shift;
       my $pos      = shift;
       my $word     = shift;
@@ -1532,8 +1553,8 @@ sub wrap_one_char {
       $length = length($word) + $reserved;
       if ( ( $pos + $length ) > $cTerminalLineSize ) {
 
-       # The last word doesn't fit in the end of the line. Break the line before
-       # it
+          # The last word doesn't fit in the end of the line. Break the line before
+          # it
           $output .= "\n";
           $pos = 0;
       }
@@ -1550,10 +1571,10 @@ sub wrap_one_char {
       }
 
       return ( $output, $pos, $word );
-}
+  }
 
 # Wordwrap system: word-wrap a string plus some reserved trailing space
-sub wrap {
+  sub wrap {
       my $input    = shift;
       my $reserved = shift;
       my $output;
@@ -1577,17 +1598,17 @@ sub wrap {
       ( $output, $pos, $word ) = wrap_one_char( $output, $pos, $word, '', $reserved );
 
       return $output;
-}
+  }
 
 # Print message
-sub msg {
+  sub msg {
       my $msg = shift;
 
       print $msg . "\n";
       exit;
-}
+  }
 
-sub do_upgrade {
+  sub do_upgrade {
       my $rev = shift;
       print("\n\033[1m\tUpgrading, please be patient!\nIf you have a large DB, this could take a long time...\n\033[0m");
       my $dbh = db_connect( $dbname, $lzbase, $dbroot, $dbrootpass );
@@ -1692,15 +1713,15 @@ sub do_upgrade {
       }
       update_settings();
       hup_syslog();
-}
+  }
 
-sub db_connect {
+  sub db_connect {
       my $dbname     = shift;
       my $lzbase     = shift;
       my $dbroot     = shift;
       my $dbrootpass = shift;
       my $dsn        = "DBI:mysql:$dbname:;mysql_read_default_group=logzilla;"
-        . "mysql_read_default_file=$lzbase/scripts/sql/lzmy.cnf";
+      . "mysql_read_default_file=$lzbase/scripts/sql/lzmy.cnf";
       my $dbh = DBI->connect( $dsn, $dbroot, $dbrootpass );
 
       if ( !$dbh ) {
@@ -1709,9 +1730,9 @@ sub db_connect {
       }
 
       return $dbh;
-}
+  }
 
-sub db_exists {
+  sub db_exists {
       my $dbh = DBI->connect( "DBI:mysql:mysql:$dbhost:$dbport", $dbroot, $dbrootpass );
       my $sth = $dbh->prepare("show databases like '$dbname'") or die "Could not get DB's: $DBI::errstr";
       $sth->execute;
@@ -1722,14 +1743,14 @@ sub db_exists {
               return 0;
           }
       }
-}
+  }
 
-sub getVer {
+  sub getVer {
       my $dbh = db_connect( $dbname, $lzbase, $dbroot, $dbrootpass );
       if ( colExists( "settings", "id" ) eq 1 ) {
           my $ver = $dbh->selectrow_array( "
-            SELECT value from settings where name='VERSION';
-            " );
+              SELECT value from settings where name='VERSION';
+              " );
           my ( $major, $minor ) = split( /\./, $ver );
           my $sub = $dbh->selectrow_array("SELECT value from settings where name='VERSION_SUB'; ");
           $sub =~ s/^\.//;
@@ -1739,26 +1760,26 @@ sub getVer {
           # If there is no settings table in the DB, it's php-syslog-ng v2.x
           return ( 2, 99, 0 );
       }
-}
+  }
 
-sub add_table_triggers {
+  sub add_table_triggers {
       my $dbh = db_connect( $dbname, $lzbase, $dbroot, $dbrootpass );
       print "Dropping Table Triggers...\n";
       $dbh->do("DROP TRIGGER IF EXISTS counts") or die "Could not drop trigger: $DBI::errstr";
       $dbh->do("DROP TRIGGER IF EXISTS system_log") or die "Could not drop trigger: $DBI::errstr";
       print "Adding Table Triggers...\n";
       $dbh->do( "
-        CREATE TRIGGER `system_log`
-        BEFORE INSERT ON system_log
-        FOR EACH ROW
-        BEGIN
-        SET NEW.timestamp = NOW();
-        END
-        " ) or die "Could not add triggers: $DBI::errstr";
+          CREATE TRIGGER `system_log`
+          BEFORE INSERT ON system_log
+          FOR EACH ROW
+          BEGIN
+          SET NEW.timestamp = NOW();
+          END
+          " ) or die "Could not add triggers: $DBI::errstr";
 
-}
+  }
 
-sub add_snare_to_logtable {
+  sub add_snare_to_logtable {
       if ( colExists( "$dbtable", "eid" ) eq 0 ) {
           my $dbh = db_connect( $dbname, $lzbase, $dbroot, $dbrootpass );
           print "Adding SNARE eids to $dbtable...\n";
@@ -1766,9 +1787,9 @@ sub add_snare_to_logtable {
           print "Adding SNARE index to $dbtable...\n";
           $dbh->do("ALTER TABLE $dbtable ADD index eid(eid)") or die "Could not update $dbtable: $DBI::errstr";
       }
-}
+  }
 
-sub create_snare_table {
+  sub create_snare_table {
       my $dbh = db_connect( $dbname, $lzbase, $dbroot, $dbrootpass );
       if ( tblExists("snare_eid") eq 1 ) {
           copy_old_snare();
@@ -1776,9 +1797,9 @@ sub create_snare_table {
           print "Adding SNARE table...\n";
           my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/snare_eid.sql`;
       }
-}
+  }
 
-sub copy_old_snare {
+  sub copy_old_snare {
       my $dbh = db_connect( $dbname, $lzbase, $dbroot, $dbrootpass );
       print "Updating SNARE table...\n";
       $dbh->do("RENAME TABLE snare_eid TO snare_eid_orig") or die "Could not update $dbname: $DBI::errstr";
@@ -1786,9 +1807,9 @@ sub copy_old_snare {
       print $res;
       $dbh->do("REPLACE INTO snare_eid SELECT * FROM snare_eid_orig; ") or die "Could not update $dbname: $DBI::errstr";
       $dbh->do("DROP TABLE snare_eid_orig") or die "Could not update $dbname: $DBI::errstr";
-}
+  }
 
-sub copy_old_archives {
+  sub copy_old_archives {
       my $dbh = db_connect( $dbname, $lzbase, $dbroot, $dbrootpass );
       print "Updating Archives table...\n";
       $dbh->do("RENAME TABLE archives TO archives_orig") or die "Could not update $dbname: $DBI::errstr";
@@ -1796,9 +1817,9 @@ sub copy_old_archives {
       print $res;
       $dbh->do("REPLACE INTO archives SELECT * FROM archives_orig; ") or die "Could not update $dbname: $DBI::errstr";
       $dbh->do("DROP TABLE archives_orig") or die "Could not update $dbname: $DBI::errstr";
-}
+  }
 
-sub verify_columns {
+  sub verify_columns {
 
 # As of v4.0, we will just do this for all columns regardless of install or upgrade to make sure they exist.
       my $dbh = db_connect( $dbname, $lzbase, $dbroot, $dbrootpass );
@@ -1865,21 +1886,21 @@ sub verify_columns {
           print "Building view limits\n";
           system("for f in `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport INFORMATION_SCHEMA --skip-column-names --batch -e \"select table_name from tables where table_type = 'VIEW' and table_schema = '$dbname'\"  | grep \"log_arch_day\"`; do mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname -e \"insert ignore into view_limits (view_name, min_id, max_id) values ('\$f', (select min(id) from \$f), (select max(id) from \$f))\"; done");
       }
-}
+  }
 
-sub update_version {
+  sub update_version {
       my $dbh = db_connect( $dbname, $lzbase, $dbroot, $dbrootpass );
       my $sth = $dbh->prepare( "
-        update settings set value='$version' where name='VERSION';
-        " ) or die "Could not update settings table: $DBI::errstr";
+          update settings set value='$version' where name='VERSION';
+          " ) or die "Could not update settings table: $DBI::errstr";
       $sth->execute;
       $sth = $dbh->prepare( "
-        update settings set value='$subversion' where name='VERSION_SUB';
-        " ) or die "Could not update settings table: $DBI::errstr";
+          update settings set value='$subversion' where name='VERSION_SUB';
+          " ) or die "Could not update settings table: $DBI::errstr";
       $sth->execute;
-}
+  }
 
-sub tbl_logs_alter_from_30 {
+  sub tbl_logs_alter_from_30 {
       my $dbh = db_connect( $dbname, $lzbase, $dbroot, $dbrootpass );
       print "Attempting to modify an older logs table to work with the new version.\n";
       print "This could take a VERY long time, DO NOT cancel this operation\n";
@@ -1902,9 +1923,9 @@ sub tbl_logs_alter_from_30 {
           print "Adding Sphinx Counter table\n";
           my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/sph_counter.sql`;
       }
-}
+  }
 
-sub tbl_logs_alter_from_299 {
+  sub tbl_logs_alter_from_299 {
       my $dbh = db_connect( $dbname, $lzbase, $dbroot, $dbrootpass );
       print("\n\033[1m\tWARNING!\n\033[0m");
       print "Attempting to modify an older logs table to work with the new version.\n";
@@ -2025,9 +2046,9 @@ sub tbl_logs_alter_from_299 {
           print "Creating views\n";
           create_views();
       }
-}
+  }
 
-sub do_email_alerts {
+  sub do_email_alerts {
       my $dbh = db_connect( $dbname, $lzbase, $dbroot, $dbrootpass );
       if ( tblExists("triggers") eq 0 ) {
           print "Adding Email Alerts...\n";
@@ -2054,9 +2075,9 @@ sub do_email_alerts {
           $dbh->do("REPLACE INTO triggers SELECT * FROM triggers_orig; ") or die "Could not update $dbname: $DBI::errstr";
           $dbh->do("DROP TABLE triggers_orig") or die "Could not update $dbname: $DBI::errstr";
       }
-}
+  }
 
-sub do_programs {
+  sub do_programs {
       my $dbh = db_connect( $dbname, $lzbase, $dbroot, $dbrootpass );
       if ( tblExists("programs") eq 0 ) {
           print "Adding Programs Table...\n";
@@ -2069,31 +2090,31 @@ sub do_programs {
           $dbh->do("REPLACE INTO programs SELECT * FROM programs_orig; ") or die "Could not update $dbname: $DBI::errstr";
           $dbh->do("DROP TABLE programs_orig") or die "Could not update $dbname: $DBI::errstr";
       }
-}
+  }
 
-sub tbl_add_severities {
+  sub tbl_add_severities {
       if ( tblExists("severities") eq 0 ) {
           print "Adding Severities Table...\n";
           my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/severities.sql`;
           print $res;
       }
-}
+  }
 
-sub tbl_add_facilities {
+  sub tbl_add_facilities {
       if ( tblExists("facilities") eq 0 ) {
           print "Adding Facilities Table...\n";
           my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/facilities.sql`;
           print $res;
       }
-}
+  }
 
-sub update_help {
+  sub update_help {
       print "Updating help files...\n";
       my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/help.sql`;
       print $res;
-}
+  }
 
-sub upgrade_ui_layout {
+  sub upgrade_ui_layout {
       my $dbh = db_connect( $dbname, $lzbase, $dbroot, $dbrootpass );
       print "Updating UI Layout...\n";
       $dbh->do("RENAME TABLE ui_layout TO ui_layout_orig") or die "Could not update $dbname: $DBI::errstr";
@@ -2101,9 +2122,9 @@ sub upgrade_ui_layout {
       print $res;
       $dbh->do("REPLACE INTO ui_layout SELECT * FROM ui_layout_orig; ") or die "Could not update $dbname: $DBI::errstr";
       $dbh->do("DROP TABLE ui_layout_orig") or die "Could not update $dbname: $DBI::errstr";
-}
+  }
 
-sub copy_old_settings {
+  sub copy_old_settings {
       my $dbh = db_connect( $dbname, $lzbase, $dbroot, $dbrootpass );
       print "Updating Settings...\n";
       $dbh->do("RENAME TABLE settings TO settings_orig") or die "Could not update $dbname: $DBI::errstr";
@@ -2111,9 +2132,9 @@ sub copy_old_settings {
       print $res;
       $dbh->do("REPLACE INTO settings SELECT * FROM settings_orig; ") or die "Could not update $dbname: $DBI::errstr";
       $dbh->do("DROP TABLE settings_orig") or die "Could not update $dbname: $DBI::errstr";
-}
+  }
 
-sub copy_old_rbac {
+  sub copy_old_rbac {
       my $dbh = db_connect( $dbname, $lzbase, $dbroot, $dbrootpass );
       print "Updating RBAC...\n";
       $dbh->do("RENAME TABLE rbac TO rbac_orig") or die "Could not update $dbname: $DBI::errstr";
@@ -2121,9 +2142,9 @@ sub copy_old_rbac {
       print $res;
       $dbh->do("REPLACE INTO rbac SELECT * FROM rbac_orig; ") or die "Could not update $dbname: $DBI::errstr";
       $dbh->do("DROP TABLE rbac_orig") or die "Could not update $dbname: $DBI::errstr";
-}
+  }
 
-sub copy_old_view_limits {
+  sub copy_old_view_limits {
       my $dbh = db_connect( $dbname, $lzbase, $dbroot, $dbrootpass );
       print "Updating view_limits...\n";
       $dbh->do("RENAME TABLE view_limits TO view_limits_orig") or die "Could not update $dbname: $DBI::errstr";
@@ -2131,9 +2152,9 @@ sub copy_old_view_limits {
       print $res;
       $dbh->do("REPLACE INTO view_limits SELECT * FROM view_limits_orig; ") or die "Could not update $dbname: $DBI::errstr";
       $dbh->do("DROP TABLE view_limits_orig") or die "Could not update $dbname: $DBI::errstr";
-}
+  }
 
-sub update_procs {
+  sub update_procs {
       my $dbh = db_connect( $dbname, $lzbase, $dbroot, $dbrootpass );
       print "Updating SQL Procedures...\n";
 
@@ -2162,14 +2183,14 @@ sub update_procs {
           system("for f in `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport INFORMATION_SCHEMA --skip-column-names --batch -e \"select table_name from tables where table_type = 'VIEW' and table_schema = '$dbname'\"  | grep \"log_arch_day\"`; do mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname -e \"insert ignore into view_limits (view_name, min_id, max_id) values ('\$f', (select min(id) from \$f), (select max(id) from \$f))\"; done");
       }
 
-}
+  }
 
-sub insert_test {
+  sub insert_test {
       print "Inserting first message as a test ...\n";
       system("$lzbase/scripts/test/genlog -hn 1 -n 1 | $lzbase/scripts/logzilla -d 1 -v");
-}
+  }
 
-sub colExists {
+  sub colExists {
       my $table = shift;
       my $col   = shift;
       my $dbh   = db_connect( $dbname, $lzbase, $dbroot, $dbrootpass );
@@ -2184,9 +2205,9 @@ sub colExists {
       } else {
           return 0;
       }
-}
+  }
 
-sub tblExists {
+  sub tblExists {
       my $tbl = shift;
       my $dbh = db_connect( $dbname, $lzbase, $dbroot, $dbrootpass );
       my $sth = $dbh->table_info( undef, undef, $tbl, "TABLE" );
@@ -2195,9 +2216,9 @@ sub tblExists {
       } else {
           return 0;
       }
-}
+  }
 
-sub add_ioncube {
+  sub add_ioncube {
       print("\n\033[1m\n\n========================================\033[0m\n");
       print("\n\033[1m\tIONCube License Manager\n\033[0m");
       print("\n\033[1m========================================\n\n\033[0m\n\n");
@@ -2244,9 +2265,9 @@ sub add_ioncube {
       } else {
           print "\nWARNING: Your PHP version ($ver) does not appear to be a candidate for auto-populating the php.ini file.\nPlease read /usr/local/ioncube/README.txt for more information.\n";
       }
-}
+  }
 
-sub install_license {
+  sub install_license {
 
       print("\n\033[1m\n\n========================================\033[0m\n");
       print("\n\033[1m\tLicense\n\033[0m");
@@ -2288,9 +2309,9 @@ sub install_license {
               print "You can try using the web interface or contact LogZilla support (support\@logzilla.pro) for assistance\n";
           }
       }
-}
+  }
 
-sub rm_config_block {
+  sub rm_config_block {
       my $d = strftime( '%m%d%H%M', localtime );
       my $file = shift;
       if ( -e $file ) {
@@ -2311,9 +2332,9 @@ sub rm_config_block {
       } else {
           print "$file does not exist\n";
       }
-}
+  }
 
-sub run_tests {
+  sub run_tests {
       print("\n\033[1m\n\n========================================\033[0m\n");
       print("\n\033[1m\tPost-Install Self Tests\n\033[0m");
       print("\n\033[1m========================================\n\n\033[0m\n\n");
@@ -2356,9 +2377,9 @@ sub run_tests {
           }
       }
       closedir(DIR);
-}
+  }
 
-sub EULA {
+  sub EULA {
       print <<EOF;
 
 SOFTWARE LICENSE & SUPPORT SUBSCRIPTION AGREEMENT STANDARD TERMS AND CONDITIONS
@@ -2366,7 +2387,7 @@ SOFTWARE LICENSE & SUPPORT SUBSCRIPTION AGREEMENT STANDARD TERMS AND CONDITIONS
 THIS SOFTWARE LICENSE AND SUPPORT SUBSCRIPTION AGREEMENT (this "Agreement") is entered into and effective as of the date you ("Customer") receive the licensed Software which it accompanies (the "Effective Date").
 
 THE PROVISIONS OF THIS AGREEMENT ALLOCATE THE RISKS BETWEEN CUSTOMER AND LOGZILLA.  
- 
+
 1.  Definitions.  
 
 "Development Use" means use of the Software by customer to design, develop and/or test new applications for Production Use.
@@ -2443,16 +2464,16 @@ Department of Defense Customers: If the Software is acquired by or on behalf of 
 Civilian Agency  Customers: If the Software is acquired by or on behalf of civilian agencies of the United States Government, then, pursuant to FAR Section 12.212 and its successors (48 C.F.R. 12.212), the Government's right to use, reproduce or disclose the Software and any accompanying Documentation acquired under this Agreement is subject to the restrictions of this Agreement. 
 
 
- 
+
 
 ENTIRE AGREEMENT.  Any amendment or modification to the Agreement must be in writing signed by both parties. This Agreement constitutes the entire agreement and supersedes all prior or contemporaneous oral or written agreements regarding the subject matter hereof.  Customer agrees that (i) any and all Orders will be governed by these Standard Terms and Conditions and (ii) the appropriate fees will be timely paid.  The terms and conditions of this Agreement shall prevail regardless of any preprinted or conflicting terms on Orders.  
 
- 
+
     EXHIBIT A
 END USER SUPPORT SERVICES ADDENDUM
     STANDARD TERMS AND CONDITIONS
 
- 
+
 1.  Definitions.
 
 "Error" means either (a) a failure of the Software to conform to the specifications set forth in the Documentation, resulting in the inability to use, or restriction in the use of, the Software, and/or (b) a problem requiring new procedures, clarifications, additional information and/or requests for product enhancements.
@@ -2462,7 +2483,7 @@ END USER SUPPORT SERVICES ADDENDUM
 "Upgrade" means a revision of the Software released by LogZilla to its end user customers generally, during the Support Services Term, to add new and different functions or to increase the capacity of the Software.  Upgrade does not include the release of a new product or added features for which there may be a separate charge. 
 
 2.  LogZilla Customer Support Services. On the Order, Customer may select either (a) LogZilla Production Support for Production Use licenses or (b) LogZilla Development Support for Development Use licenses.  Each includes Maintenance Releases and support.  Subject to additional terms and conditions, Customer may also order customized Support Options and/or Mission Critical Support.
- 
+
 3.  Updates.   LogZilla will make commercially reasonable efforts to provide an Update designed to solve or by-pass a reported Error. If such Error has been corrected in a Maintenance Release, Customer must install and implement the applicable Maintenance Release; otherwise, the Update may be provided in the form of a temporary fix, procedure or routine, to be used until a Maintenance Release containing the permanent Update is available. Customer shall reasonably determine the priority level of Errors, pursuant to the following protocols.  
 
 After Customer provides LogZilla with notice of an Error, LogZilla will make commercial best efforts to begin working on a solution to the reported Error within 12 hours.
@@ -2479,4 +2500,4 @@ EOF
           print "Please try again when you are ready to accept.\n";
           exit 1;
       }
-}
+  }
