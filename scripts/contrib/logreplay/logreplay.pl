@@ -15,6 +15,7 @@ use strict;
 
 $| = 1;
 
+use Find::Lib qw(Log-Syslog-Fast-0.61/lib);
 use POSIX qw/strftime/;
 use vars qw/ %opt /;
 use Log::Syslog::Fast ':all';

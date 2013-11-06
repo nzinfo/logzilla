@@ -197,7 +197,9 @@ $log->INFO( "Program initialized successfully" );
 $log->INFO( "Debug level: $options->{debug}" );
 $log->INFO( "Database: " . $cfg->db_dsn );
 $log->INFO( "Deduplication feature: " . ( $settings->{DEDUP} || 0 ) );
-$log->INFO( "Snare " . ( $options->{SNARE} ? 'enabled' : 'disabled' ) );
+
+# Snare enable/disable No longer needed as of LZ v4.5.493 
+# $log->INFO( "Snare " . ( $options->{SNARE} ? 'enabled' : 'disabled' ) );
 
 my $triggers = load_triggers();
 
@@ -442,25 +444,22 @@ sub save_messages {
 sub process_line {
     my( $line ) = @_;
 
-    my $win = "";
-    my $eid = 0;
-    my $facilityname = "";
 
     DEBUG( 1, "INCOMING MESSAGE: $line" );
 
-    if ( $line =~ m/MSWinEventLog.+?(Security|Application|System).+?/ ) {
-        $win = "MSWinEventLog";
-        $facilityname = $1;
-        if( ( $line =~ m/201\d(\d+)$facilityname/ ) || 
-            ( $line =~ m/\d+:\d+:\d+\s+201\d(\d+)/ ) || 
-            ( $line =~ m/\d+:\d+:\d+ 20\d+\\011(\d+)\\011/ ) ) {
-            $eid = $1;
-        }
-    }
+    #if ( $line =~ m/MSWinEventLog.+?(Security|Application|System).+?/ ) {
+        #$win = "MSWinEventLog";
+        #$facilityname = $1;
+        #if( ( $line =~ m/201\d(\d+)$facilityname/ ) || 
+            #( $line =~ m/\d+:\d+:\d+\s+201\d(\d+)/ ) || 
+            #( $line =~ m/\d+:\d+:\d+ 20\d+\\011(\d+)\\011/ ) ) {
+            #$eid = $1;
+        #}
+    #}
 
     if ( $line =~ /(\S+ \S+)\t(\S+)\t(\d+)\t(\S+)?.*\t(.*)/ ) {
 
-        # v3.2 Fields are: TS, Host, PRI, Program,  and MSG
+        # v3.2 and up Fields are: TS, Host, PRI, Program,  and MSG
         my $ts       = $1;
         my $host     = $2;
         my $pri      = $3;
@@ -496,40 +495,21 @@ sub process_line {
         }
 
         # Handle Snare Format
-        if ( $win ) {
-            $prg = $win;
-
-            $facility = {
-                Application => 23,
-                Security => 4,
-                System => 3,
-            }->{$facilityname} || 16;
-
-            # FIXME - optimize and simplify, but first get real log entry matching and make sure
-            # this works at all (shouldn't those be \011 instead?)
-            if ( $msg =~ m/.*\\011(.*)\\011(.*)\\011(.*)\\011(.*)\\011(.*)\\011(.*)\\011(.*)\\011.*\\011(.*)\\011.*/ ) {
-                #$eid = $1 if ( $eid = "" );
-                my $source      = $2;
-                my $username    = $3;
-                my $usertype    = $4;
-                my $type        = $5;
-                my $computer    = $6;
-                my $category    = $7;
-                my $description = $8;
-                $prg = $source;
-
-                $msg = 
-                "Log=" . $facilityname . ", " .
-                "Source=" . $source . ", " .
-                "Category=" . $category . ", " .
-                "Type=" . $type . ", " .
-                "EventID=" . $eid . ", " . 
-                "Username=" . $username . ", " .
-                "Usertype=" . $usertype . ", " .
-                "Computer=" . $computer . ", " .
-                "Description=" . $description;
-            }
-        }
+	# Fix for #497, note that you must be using the new syslog-ng config as of v4.5.495 for this to work!
+	my ($facilityname, $eid, $source, $audit_type, $pcname, $category, $msgtext);
+        if ( $prg =~ /MSWin_(Security|Application|System)/  ) {
+	$log->INFO("Windows Event Detected");
+	$facilityname = $1;
+	$facility = { Application => 23, Security => 4, System => 3, }->{$facilityname} || 16;
+	(undef, $eid, $source, undef, undef, $audit_type, $pcname, $category, undef, $msgtext) = split (/\|/, $msg);
+	$msg = 
+		"EventID=" . $eid . ", " . 
+		"Source=" . $source . ", " .
+		"Type=" . $audit_type . ", " .
+		"Computer=" . $pcname . ", " .
+		"Category=" . $category . ", " .
+		"MessageText=" . $msgtext;
+	}
 
         # FIXME - this is actually backslash and we remove first, not trailing!
         $msg =~ s/\\//;     # Some messages come in with a trailing slash 
@@ -855,7 +835,7 @@ sub read_settings_from_db {
     while( my $r = $sth->fetchrow_arrayref ) {
         $settings{$r->[0]} = $r->[1];
     }
-    $settings{SNARE} = 0 if $settings{SNARE} != 1;
+    #$settings{SNARE} = 0 if $settings{SNARE} != 1;
     return \%settings;
 }
 
