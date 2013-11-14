@@ -187,7 +187,33 @@ if ((has_portlet_access($_SESSION['username'], 'Search Results') == TRUE) || ($_
 						    colorCSS = 'TBL_SEV_7_DEBUG';
 					    }
 					    oSettings.aoData[i].nTr.className += " "+colorCSS;
+                                            $("tr td:nth-child(7)").addClass('msg');
 				    }
+                                    // #499 - BEGIN: highlight search function
+                                    function getSelectionText() {
+                                        var text = "";
+                                        if (window.getSelection) {
+                                            text = window.getSelection().toString();
+                                        } else if (document.selection && document.selection.type != "Control") {
+                                            text = document.selection.createRange().text;
+                                        }
+                                        return text;
+                                    }
+                                    $(document).ready(function (){
+                                        $('#results td.msg').mouseup(function (e){
+                                            var searchText = getSelectionText();
+                                            if(searchText !== "") {
+                                                if (searchText.length > 2) {
+                                                    var qstring = '<?php echo $qstring?>';
+                                                    var url = qstring.replace(/msg_mask=(.*?)&/im, "msg_mask=*" + searchText + "*&");
+                                                    window.location = url;
+                                                } else {
+                                                    error("Searches must be > 2 characters.");
+                                                }
+                                            }
+                                        })
+                                    });
+                                    // #499 - END: Added highlight > search function
 			    },
                             "aaSorting": [[ 0, "desc" ]],
                                 "fnServerParams": function ( aoData ) {
@@ -225,51 +251,50 @@ if ((has_portlet_access($_SESSION['username'], 'Search Results') == TRUE) || ($_
                                         var min = 0;
                                         var max = endTime - startTime;
                                         $slider.slider({
-range: true,
-min: min,
-max: max,
-values: [min, max],
-change: function (event, ui) {
-var values = $slider.slider('values');
+                                            range: true,
+                                                min: min,
+                                                max: max,
+                                                values: [min, max],
+                                                change: function (event, ui) {
+                                                    var values = $slider.slider('values');
 
-// refresh the table
-var table = $('#results').dataTable();
-table.fnDraw(true);
+                                                    // refresh the table
+                                                    var table = $('#results').dataTable();
+                                                    table.fnDraw(true);
 
-}
-});
+                                                }
+                                        });
 
-if (data.startTimeFormatted && data.endTimeFormatted) {
-    $('#sliderStart').html(data.startTimeFormatted);
-    $('#sliderEnd').html(data.endTimeFormatted);
-}
-} 
+                                        if (data.startTimeFormatted && data.endTimeFormatted) {
+                                            $('#sliderStart').html(data.startTimeFormatted);
+                                            $('#sliderEnd').html(data.endTimeFormatted);
+                                        }
+                                        } 
 
-if (data.startTimeFormatted && data.endTimeFormatted) {
-    $('#sliderValues').html('Slide below to filter by time.<br>Current range: ' + data.startTimeFormatted + ' - ' + data.endTimeFormatted);
-}
+                                        if (data.startTimeFormatted && data.endTimeFormatted) {
+                                            $('#sliderValues').html('Slide below to filter by time.<br>Current range: ' + data.startTimeFormatted + ' - ' + data.endTimeFormatted);
+                                        }
 
-fnCallback(data, textStatus, jqXHR);
-}
-});
-},
-    "sAjaxSource": "includes/ajax/json.results.php"
-    } );
-function fnShowHide( iCol )
-{
-        /* Get the DataTables object again - this is not a recreation, just a get of the object */
-        var oTable = $('#results').dataTable();
-             
-            var bVis = oTable.fnSettings().aoColumns[iCol].bVisible;
-                oTable.fnSetColumnVis( iCol, bVis ? false : true );
-}
-// Hide the Database ID column - we only use it to sort on
-fnShowHide(0);
-<?php if($_SESSION['SNARE'] == "0") {?>
-    // hide the EID column
-    fnShowHide(1);
-    <?php } ?>
+                                        fnCallback(data, textStatus, jqXHR);
+                                        }
+                                });
+                            },
+                                "sAjaxSource": "includes/ajax/json.results.php"
+                        } );
+                        function fnShowHide( iCol )
+                        {
+                            /* Get the DataTables object again - this is not a recreation, just a get of the object */
+                            var oTable = $('#results').dataTable();
 
+                            var bVis = oTable.fnSettings().aoColumns[iCol].bVisible;
+                            oTable.fnSetColumnVis( iCol, bVis ? false : true );
+                        }
+                        // Hide the Database ID column - we only use it to sort on
+                        fnShowHide(0);
+                        <?php if($_SESSION['SNARE'] == "0") {?>
+                        // hide the EID column
+                        fnShowHide(1);
+                        <?php } ?>
 
 //------------------------------------
 // BEGIN auto-refresh 

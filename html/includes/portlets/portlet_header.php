@@ -30,7 +30,7 @@ $start_time = microtime(true);
 // Where possible, list all get_input's here for readability
 //------------------------------------------------------------
 $page = get_input('page');
-$show_suppressed = get_input('show_suppressed');
+// $show_suppressed = get_input('show_suppressed');
 $spx_max = get_input('spx_max');
 $spx_ip = get_input('spx_ip');
 $spx_port = get_input('spx_port');
@@ -50,7 +50,7 @@ $q_type = get_input('q_type');
 $tail = get_input('tail');
 $limit = get_input('limit');
 $searchText = get_input('msg_mask');
-$notes_mask = get_input('notes_mask');
+// $notes_mask = get_input('notes_mask');
 $orderby = get_input('orderby');
 $order = get_input('order');
 $dupop = get_input('dupop');
@@ -65,7 +65,7 @@ $mnemonics = get_input('mnemonics');
 $sel_mne = get_input('sel_mne');
 $programs = get_input('programs');
 $sel_prg = get_input('sel_prg');
-$topx = get_input('topx');
+// $topx = get_input('topx');
 $graphtype = get_input('graphtype');
 $chartdays = get_input('chartdays');
 
@@ -256,7 +256,7 @@ $searchArr['order'] = $order;
 $searchArr['limit'] = $limit;
 $searchArr['groupby'] = $groupby;
 $searchArr['tail'] = $tail;
-$searchArr['show_suppressed'] = $show_suppressed;
+// $searchArr['show_suppressed'] = $show_suppressed;
 $searchArr['q_type'] = $q_type;
 $searchArr['page'] = $page;
 $searchArr['dupop'] = $dupop_orig;
@@ -594,7 +594,7 @@ if ($error) {
 // Set the query string to be passed to the browser
 //------------------------------------------------------------
 $qstring .= "&page=$page";
-$qstring .= "&show_suppressed=$show_suppressed";
+// $qstring .= "&show_suppressed=$show_suppressed";
 $qstring .= "&spx_max=$spx_max";
 $qstring .= "&spx_ip=$spx_ip";
 $qstring .= "&spx_port=$spx_port";
@@ -612,8 +612,8 @@ $qstring .= "&q_type=$q_type";
 $qstring .= "&tail=$tail";
 $qstring .= "&limit=$limit";
 $qstring .= "&msg_mask=$searchText";
-$qstring .= "&topx=$topx";
-$qstring .= "&notes_mask=$notes_mask";
+// $qstring .= "&topx=$topx";
+// $qstring .= "&notes_mask=$notes_mask";
 $qstring .= "&orderby=$orderby";
 $qstring .= "&order=$order";
 $qstring .= "&dupop=$dupop";
