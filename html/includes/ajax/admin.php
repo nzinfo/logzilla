@@ -43,7 +43,7 @@ switch ($action) {
                     $_SESSION[$row["name"]] = $row["value"];
                 }
             }
-            echo "<br />Sucessfully modified $name to $new_value<br>";
+            echo " changed to $new_value<br>";
         } else {
             echo "Error" . mysql_error() . "<br />";
         }
