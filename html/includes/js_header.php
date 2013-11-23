@@ -63,6 +63,11 @@ $('body').css('display','block');
 <script type="text/javascript" src="includes/js/common_funcs.js"></script>
 <!-- END Common -->
 
+<!-- BEGIN contextMenu -->
+<script type="text/javascript" src="includes/contextMenu/jquery.ui.position.js"></script>
+<script type="text/javascript" src="includes/contextMenu/jquery.contextMenu.js"></script>
+<!-- END contextMenu -->
+
 <!-- BEGIN Demo Site Tracker -->
 <script type="text/javascript"> 
 /*
