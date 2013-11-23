@@ -15,6 +15,14 @@
 /*!40101 SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='NO_AUTO_VALUE_ON_ZERO' */;
 /*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */;
 
+DROP TABLE IF EXISTS `mails_sent`;
+CREATE TABLE `mails_sent` (
+      `trigger_id` int(10) unsigned NOT NULL,
+      `md5sum` varchar(32) NOT NULL,
+      `send_time` int(10) unsigned DEFAULT NULL,
+      UNIQUE KEY `trigger_id` (`trigger_id`,`md5sum`)
+) ENGINE=InnoDB;
+
 --
 -- Table structure for table `triggers`
 --

@@ -190,6 +190,14 @@ my $prep_sth = {
     last_insert_id => $dbh->prepare( 
         "SELECT LAST_INSERT_ID()"
     ),
+    check_mails_sent => $dbh->prepare(
+        "SELECT send_time FROM mails_sent WHERE trigger_id = ? AND md5sum = ?"
+    ),
+    update_mails_sent => $dbh->prepare(
+        "INSERT INTO mails_sent (trigger_id, md5sum, send_time) " .
+        "VALUES (?, ?, ?) " .
+        "ON DUPLICATE KEY UPDATE send_time = values(send_time)"
+    ),
 };
 
 # Finally we are initialized, announce this to the world :-)
@@ -595,6 +603,7 @@ sub process_line {
         # $prg = "Unknown" if ($prg !~ /^[\w\'-\s]+$/);
         $prg = 'Unknown' unless ( $prg =~ m{^[-'\w\s]{3,}$} and $prg =~ m{[A-Za-z]{3,}} );
         $prg =~ s/ /_/; # #463 - Spaces in names cause Grids to fail (selector IDs cannot contain a space)
+        $eid = 0 if ((!defined $eid) || ($eid eq "")); 
 
         my $message = {
             host => $host,
@@ -609,7 +618,6 @@ sub process_line {
             lo => $ts,
             counter => 1,
         };
-
         return $message;
     } 
     else {
@@ -940,6 +948,26 @@ sub trigger_mail {
     DEBUG( 1, "Subject = $subject" );
     DEBUG( 1, "Body = $body" );
     DEBUG( 1, "Message = $msg" );
+
+    my $now = time();
+    my $block_time = $settings->{MAIL_DUPLICATE_BLOCKING_TIME} || 0;
+    
+    if( $block_time > 0 ) {
+        my $md5sum = md5_hex(join("\0", $subject, $body));
+        DEBUG(1, "Mail MD5=$md5sum (for blocking duplicates)");
+        $prep_sth->{check_mails_sent}->execute($trigger->{id}, $md5sum);
+        my $r = $prep_sth->{check_mails_sent}->fetchrow_arrayref();
+        if($r && $now - $r->[0] < $block_time) {
+            DEBUG(1, 'Skipping mail as it was already sent ' .
+                " in last $block_time seconds");
+            return;
+        }
+        else {
+            $prep_sth->{update_mails_sent}->execute(
+                $trigger->{id}, $md5sum, $now
+            );
+        }
+    }
 
     my $mailmsg = MIME::Lite->new(
         From    => $trigger->{mailfrom},
