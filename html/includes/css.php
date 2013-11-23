@@ -86,4 +86,7 @@ This file contains any custom css that I've written
 	    echo "</style>\n";
     }
 ?>
+<!-- BEGIN contextMenu -->
+<!-- END contextMenu -->
+<link type="text/css" rel="stylesheet" href="<?php echo $_SESSION['SITE_URL']?>includes/contextMenu/jquery.contextMenu.css" />
 <!-- END Severity Colors for results display -->
