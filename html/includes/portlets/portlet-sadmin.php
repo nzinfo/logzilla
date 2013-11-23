@@ -54,6 +54,7 @@ if ((has_portlet_access($_SESSION['username'], 'Server Settings') == TRUE) || ($
         </div>
         <h3><a href="#">Alerts</a></h3>
         <div>
+            <a href="#" class='adminItem' id='MAIL_DUPLICATE_BLOCKING_TIME'>Duplicate Alert Timer</a><br />
             <a href="#" class='adminItem' id='MAILHOST'>Mail Host</a><br />
             <a href="#" class='adminItem' id='MAILHOST_PORT'>Mail Host Port</a><br />
             <a href="#" class='adminItem' id='MAILHOST_USER'>Mail Host User (Optional)</a><br />
