@@ -1,18 +1,18 @@
 <?php
 /*
-* portlet-sadmin.php
-*
-* Developed by Clayton Dukes <cdukes@logzilla.pro>
-* Copyright (c) 2010 LogZilla, LLC
-* All rights reserved.
-* Last updated on 2010-06-15
-*
-* Pagination and table formatting created using 
-* http://www.frequency-decoder.com/2007/10/19/client-side-table-pagination-script/
-* Changelog:
-* 2010-02-28 - created
-*
-*/
+ * portlet-sadmin.php
+ *
+ * Developed by Clayton Dukes <cdukes@logzilla.pro>
+ * Copyright (c) 2010 LogZilla, LLC
+ * All rights reserved.
+ * Last updated on 2010-06-15
+ *
+ * Pagination and table formatting created using 
+ * http://www.frequency-decoder.com/2007/10/19/client-side-table-pagination-script/
+ * Changelog:
+ * 2010-02-28 - created
+ *
+ */
 
 $basePath = dirname( __FILE__ );
 require_once ($basePath . "/../common_funcs.php");
@@ -27,14 +27,14 @@ $dbLink = db_connect_syslog(DBADMIN, DBADMINPW);
 if ((has_portlet_access($_SESSION['username'], 'Server Settings') == TRUE) || ($_SESSION['AUTHTYPE'] == "none")) { 
 ?>
 
-<script>
+    <script>
     $(function() {
         $( "#div_admin_accordian" ).accordion({
             active: false,
-            collapsible: true
+                collapsible: true
         });
     });
-</script>
+    </script>
 
 <h3 class="docs">Changing some of these settings will render your server unusable, proceed with CAUTION!!!</h3>
 
@@ -157,145 +157,136 @@ if ((has_portlet_access($_SESSION['username'], 'Server Settings') == TRUE) || ($
     </div>
 
 </div><!-- End div_adminMenu -->
-    <div id="dlg" class="dialog"><span id="dlg_content"></span></div>
-    <div id="dlg_desc" class="dialog"><span id="dlg_desc_content"></span></div>
-
-<script type="text/javascript"> 
+<style>
+    body {
+        margin:0; padding:0;
+    }
+    .tableWrapper {
+        position: absolute;
+        border: 1px solid #246591;
+        width: 60% /* width of your table*/; 
+        top: 17%;
+        left: 24%;
+        margin:0 
+        auto;
+    }
+    #settingsSaveResultBox {
+        position: absolute;
+        border: 1px solid #00FF00;
+        width: 60% /* width of your table*/; 
+        top: 17%;
+        left: 24%;
+        margin:0 
+        auto;
+    }
+</style>
+<div class="tableWrapper">
+</style>
+<table>
+    <th><span id="settingsTitle"></span></th>
+    <th><span id="settingsDesc"></span></th>
+    <tbody>
+        <tr>
+            <td><span id="settingsDescription"></span></td>
+            <td><span id="settingsContent"></span></td>
+            <td><button id='settingsButton'>Submit</button></td>
+        </tr>
+    </table>
+</div>
+<div id="settingsSaveResultBox"><div id="settingsSaveResultContent" style="text-align:center"></div></div>
+    <script type="text/javascript"> 
+    // Map the enter key to the submit button
+    $(document).bind('keypress', function(e){
+        if(e.which === 13) { // return
+            $('#settingsButton').trigger('click');
+        }
+    });
     $(document).ready(function(){
-            var name = "";
-            var value = "";
+        $("#settingsButton").button();
+        $("#settingsButton").hide();
+        $(".tableWrapper").hide();
+        $("#settingsSaveResultBox").hide();
+        var name = "";
+        var curValue = "";
+        var type = "";
+        var options = "";
+        var def = "";
+        var selected = "";
+        var clickedItem = "";
+        $('.adminItem').click(function() {
+            $("#settingsContent").show();
+            $("#settingsButton").show();
+            $(".tableWrapper").show('fast');
+            $("#settingsSaveResultBox").hide();
+            name = $(this).attr('id');
+            clickedItem = $(this).text();
+            $.get("includes/ajax/admin.php?action=get&name=" +name,
+                function(data){
+                    // Return data sample: 
+                    // Object {name: "FEEDBACK", value: "1", type: "enum", options: "0,1", default: "0"}
+                    // def: "0"
+                    // default: ""
+                    // description: "This variable will enable or disable the "Submit Idea" button on the bottom right of the screen.<br>
+                    // ?Servers with no internet access should disable this."
+                    // name: "FEEDBACK"
+                    // options: "0,1"
+                    // type: "enum"
+                    // value: "1"
+                    name = data.name;
+                    curValue = data.value;
+                    type = data.type;
+                    options = data.options;
+                    def = data.default;
+                    var opts = "";
+                    if (type == "enum") {
+                        var options = data.options.split(",");
+                        for(i = 0; i < options.length; i++){
+                            if(options[i] == curValue) {
+                                opts += '<option selected value="'+options[i]+'">'+options[i]+'</option>';
+                            } else {
+                                opts += '<option value="'+options[i]+'">'+options[i]+'</option>';
+                            }
+                        }
+                        $("#settingsContent").html('<select id="sel_value" multiple size=0>'+opts+'</select><span id="result"></span>');
+                        $("#sel_value").multiselect({
+                            show: ["blind", 200],
+                                hide: ["drop", 200],
+                                selectedList: 1,
+                                multiple: false,
+                                noneSelectedText: 'Select',
+                        });
+                    } else {
+                        $("#settingsContent").html('<input type=text class="rounded ui-widget ui-corner-all" id="inp_'+name+'" value="'+curValue+'"  /><span id="result"></span>');
+                    }
+                    $("#settingsDescription").html("<div style='padding:10px;'>" + data.description + "<br>Default: " + data.def + "<div>");
+                }, "json");
 
-            $('.adminItem').click(function() {
-                name = $(this).attr('id');
+        })
+            $('#settingsButton').click(function() {
+                if (type == "enum") {
+                    selected = $('#sel_value').val();
+                } else {
+                    selected = $('#inp_'+name).val();
+                }
+                // console.log("DEBUG Selected = " + selected);
                 $.get("includes/ajax/admin.php?action=get&name=" +name,
                     function(data){
-                    value = data.value;
-                    switch (data.type) {
-                    case "varchar":
-                    $("#dlg_content").html('<input type=text class="rounded ui-widget ui-corner-all" id="inp_'+name+'" value="'+value+'"  /><span id="result"></span>');
-                    $( "#dlg" ).dialog({ title: name, buttons: [
-                        {
-text: "Modify",
-click: function() { 
-var selected = $('#inp_'+name).val();
-$.get("includes/ajax/admin.php?action=save&name=" +name+"&orig_value="+value+"&new_value="+selected,
-    function(data){
-$("#result").html(data);
-    })
-}
-}
-] });
-$("#sel_value").multiselect({
-show: ["blind", 200],
-hide: ["drop", 200],
-selectedList: 1,
-multiple: false,
-noneSelectedText: 'Select',
-});
-break;
-                    case "enum":
-                    var opts = "";
-                    var options = data.options.split(",");
-
-                    for(i = 0; i < options.length; i++){
-                    if(options[i] == value) {
-                        opts += '<option selected value="'+options[i]+'">'+options[i]+'</option>';
-                    } else {
-                        opts += '<option value="'+options[i]+'">'+options[i]+'</option>';
-                    }
-                    }
-$("#dlg_content").html('<select id="sel_value" multiple size=0>'+opts+'</select><span id="result"></span>');
-$( "#dlg" ).dialog({ title: name, buttons: [
-        {
-text: "Modify",
-click: function() { 
-var selected = $('#sel_value').val();
-$.get("includes/ajax/admin.php?action=save&name=" +name+"&orig_value="+value+"&new_value="+selected,
-    function(data){
-$("#result").html(data);
-    })
-}
-}
-] });
-$("#sel_value").multiselect({
-show: ["blind", 200],
-hide: ["drop", 200],
-selectedList: 1,
-multiple: false,
-noneSelectedText: 'Select',
-});
-break;
-                    case "int":
-                    $("#dlg_content").html('<input type=text class="rounded ui-widget ui-corner-all" id="inp_'+name+'" value="'+value+'"  /><span id="result"></span>');
-                    $( "#dlg" ).dialog({ title: name, buttons: [
-                        {
-text: "Modify",
-click: function() { 
-var selected = $('#inp_'+name).val();
-$.get("includes/ajax/admin.php?action=save&name=" +name+"&orig_value="+value+"&new_value="+selected,
-    function(data){
-$("#result").html(data);
-    })
-}
-}
-] });
-$("#sel_value").multiselect({
-show: ["blind", 200],
-hide: ["drop", 200],
-selectedList: 1,
-multiple: false,
-noneSelectedText: 'Select',
-});
-break;
-}
-$( "#dlg_desc" ).dialog({ title: "Description", width: 350, height: 350 });
-$("#dlg_desc_content").html("Default: " + data.def + "<br /><br />" +data.description);
-$(".ui-dialog-titlebar-close").remove();
-}, "json");
-
-//------------------------------------------------------------------------
-// Set Dialog box positions
-//------------------------------------------------------------------------
-$(".dialog").each(function(index){
-        // Get adminmenu's position
-        var p = $("#div_adminMenu").position();
-        var t = p.top;
-        var w = $("#div_adminMenu").width();
-        var dialogW=350 ;
-        // set position from left side of the admin menu's width (w)
-        if (index < 1) {
-        var posX= index *dialogW + (w + 30);   
-        } else {
-        // Pad a little between portlets
-        var posX= index *dialogW + (w + 45);   
-        }
-        // set position = to the top of the admin menu (t)
-        // note: for some reason, this retuens a value lower than the actual top, so I padded it.
-        var posY= t + 75;
-
-        $(this).dialog({
-width: dialogW,
-position: [ posX, posY]
-});
-        $(".ui-dialog-titlebar-close").remove();
-
-        })
-})
-
-$('td').click(function () {
-        // http://josephscott.org/code/javascript/jquery-edit-in-place/
-        var id = $(this).attr("id");
-        switch (id) {
-        case "value":
-        $('#'+id).eip( "includes/ajax/admin.php?action=save&name="+name, { select_text: true } );
-        break;
-        }
-        })
-}); // end doc ready
-</script>
+                        value = data.value;
+                    }, "json");
+                $.get("includes/ajax/admin.php?action=save&name=" +name+"&orig_value="+curValue+"&new_value="+selected,
+                    function(data){
+                        $("#settingsContent").hide();
+                        $("#settingsButton").hide();
+                        $(".tableWrapper").hide('slow');
+                        $("#settingsSaveResultContent").html(clickedItem + data);
+                        $("#settingsSaveResultBox").show('slow');
+                    })
+            })
+    }); // end doc ready
+    </script>
 
 <?php } else { ?>
-<script type="text/javascript">
+    <script type="text/javascript">
     $('#portlet_Server_Settings').remove()
-    </script>
+        </script>
     <?php } ?>
