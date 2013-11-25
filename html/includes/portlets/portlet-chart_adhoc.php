@@ -197,27 +197,35 @@ if ($chart_type == "pie") {
     if($fetch) {
 	
         $i=0;
-		//$JSCode = "var groubyNumbers = [";
+        // Fix #501
+        // If the mnemonic is blank, shift the array so that the slices display properly
+            if (!$fetch[0]['name']) {
+                array_shift($fetch);
+            }
+             // echo "<pre>";
+             // print_r($fetch[0]);
+             // echo "</pre>";
+        // End fix #501
         foreach ($fetch as $r) {
             $name = $propername;
             $pievalues[] = array($r['name'],intval($r['scount']));//new pie_value(intval($counters[$i]),  $name);
             $ids[] = $r[$groupby];
-			//$JSCode .= $r[$groupby].", ";
-			/*
-			 * AS A SOLUTION FOR THE ID OF THE SERVICE
-			 * WE COULD BUILD A JS ARRAY AND PUT THE LIST OF IDS IN IT
-			 * AND USE THE event.point.x AS PARMETER TO THE FUNCITON TO 
-			 * GET THE ID 
-			 *
-			 */
+            //$JSCode .= $r[$groupby].", ";
+            /*
+             * AS A SOLUTION FOR THE ID OF THE SERVICE
+             * WE COULD BUILD A JS ARRAY AND PUT THE LIST OF IDS IN IT
+             * AND USE THE event.point.x AS PARMETER TO THE FUNCITON TO 
+             * GET THE ID 
+             *
+             */
             $i++;
         }
-		//$JSCode .= "0]";
+        //$JSCode .= "0]";
     } else {
         $pievalues[] = array();//intval(0),  " No results found"); 
         $title =  "$topx $limit $propername Report <br/> No results match your search criteria"."\n" ;
     }
-	
+
     /**
      * CREATED BY: WESAM GERGES
      * DATE: 12-03-2011      
@@ -230,21 +238,21 @@ if ($chart_type == "pie") {
 
     $tchart->setTitleMargin(30);
     $tchart->setTooltip("return '<b>'+ this.point.name +'</b><br> '+ addCommas(this.point.y) +' of '+addCommas(this.total)+' <br/>'+ Math.round(100*this.percentage)/100  + '% of '+'".$topx.' '. $limit.' '. $propername."'");
-    
+
   /*  
     $clickevent = <<<LOAD 
-		function(e) {
-			alert("testing");     
-		} 
-	LOAD;
-    
+                function(e) {
+                        alert("testing");     
+                } 
+        LOAD;
+
    */ 
     $tchart->addClick(" pClick_(event.point.name, event.point.total, '".$propername."'); ");
-	//$tchart->addJSCode($JSCode);
-	
-	echo $tchart->renderChart("chart_adhoc","","");
+    //$tchart->addJSCode($JSCode);
 
-// END OF TESTING HIGHCHART AREA            
+    echo $tchart->renderChart("chart_adhoc","","");
+
+    // END OF TESTING HIGHCHART AREA            
 
 } else {
     if($fetch) {
@@ -255,8 +263,8 @@ if ($chart_type == "pie") {
             $name = $r['name'];
             $x_horiz_labels[] = $name;
             $i++;
-          }
- 	  } else {
+        }
+    } else {
         $dotValues[] = 0;
         $x_horiz_labels[] =  "No results found"; 
         $title = "$topx $limit $propername Report\nNo results match your search criteria"."\n" ;
@@ -272,8 +280,8 @@ if ($chart_type == "pie") {
         $chart_type = 'column';
 
     $tchart = new jqNewChart($chart_type,$dotValues,$title,"$topx $limit $propername ",$x_horiz_labels);
-	$tchart->setXAxisData($x_horiz_labels);
-	$tchart->setTooltip("return '<b>'+ this.x +'</b><br> '+ addCommas(this.point.y) +' <br/> ".$topx.' '. $limit.' '. $propername."'");
+    $tchart->setXAxisData($x_horiz_labels);
+    $tchart->setTooltip("return '<b>'+ this.x +'</b><br> '+ addCommas(this.point.y) +' <br/> ".$topx.' '. $limit.' '. $propername."'");
     $tchart->setTitleMargin(30);
     echo $tchart->renderChart("chart_adhoc");
 }
@@ -286,9 +294,9 @@ if ($chart_type == "pie") {
 
 <script type="text/javascript">
 
- var targets  = {"Hosts":"hosts","Programs":"programs","Messages":"msg_mask","Facilities":"facilities","Severities":"severities","Mnemonics":"mnemonics","EventId":"eids"};
- var targets2  = {"Hosts":"sel_hosts","Programs":"programs","Messages":"msg_mask","Facilities":"facilities","Severities":"severities","Mnemonics":"sel_mne","EventId":"sel_eid"};
- 
+var targets  = {"Hosts":"hosts","Programs":"programs","Messages":"msg_mask","Facilities":"facilities","Severities":"severities","Mnemonics":"mnemonics","EventId":"eids"};
+var targets2  = {"Hosts":"sel_hosts","Programs":"programs","Messages":"msg_mask","Facilities":"facilities","Severities":"severities","Mnemonics":"sel_mne","EventId":"sel_eid"};
+
 function pClick_ (value, total, targetKey)
 {
     value = value.replace(/"/g, "");
@@ -336,17 +344,17 @@ function addCommas(nStr)
     // If an error was found anywhere, bail out and tell the user 
     // the reason for the error
     //------------------------------------------------------------
-    ?>
-<script type="text/javascript">
-$(document).ready(function(){
+?>
+    <script type="text/javascript">
+    $(document).ready(function(){
         var err = "<?php echo preg_replace("/\r?\n/", "\\n", addslashes($error)); ?>";
         error(err);
         // alert(err);
-        }); // end doc ready
+    }); // end doc ready
     </script>
-        <?php
+<?php
 }
-}
+    }
 
 } else { 
     //------------------------------------------------------------
@@ -354,8 +362,8 @@ $(document).ready(function(){
     // access. If the user does not have permission, we remove the 
     // portlet
     //------------------------------------------------------------
-    ?>
-        <script type="text/javascript">
-        $('#portlet_Search_Results').remove()
+?>
+    <script type="text/javascript">
+    $('#portlet_Search_Results').remove()
         </script>
         <?php } ?>
