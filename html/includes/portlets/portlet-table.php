@@ -224,7 +224,7 @@ if ((has_portlet_access($_SESSION['username'], 'Search Results') == TRUE) || ($_
                                                 },
                                                     items: {
                                                         "search": {
-                                                            name: "Click here to perform a NEW search for highlighted text<br><span style='font-size: 9px; font-style:italic'>Or use ctrl-c/apple-c if you meant to copy the selected text into your clipboard</span>", icon: "search"},
+                                                            name: "<span>Click here to perform a NEW search for highlighted text</span><BR /><span style='font-size: 9px; font-style:italic'>Or use ctrl-c/apple-c if you meant to copy the selected text into your clipboard</span>", icon: "search"},
 /*
                                                                 // <input type="text">
                                                                 name: {
