@@ -1752,7 +1752,9 @@ function utfconvert($content) {
 } 
 function EscapeSphinxQL ( $string )
 {
-    $from = array ( '\\', '(',')','|','-','!','@','~','"','&', '/', '^', '$', '=', "'", "\x00", "\n", "\r", "\x1a" );
+    // Fix for #503 Function EscapeSphinxQL has broken boolean operators
+    // $from = array ( '\\', '(',')','|','-','!','@','~','"','&', '/', '^', '$', '=', "'", "\x00", "\n", "\r", "\x1a" );
+    $from = array ( '\\', '(',')','@','~','"','/','^','$','=',"'","\x00", "\n", "\r", "\x1a" );
     $to   = array ( '\\\\', '\\\(','\\\)','\\\|','\\\-','\\\!','\\\@','\\\~','\\\"', '\\\&', '\\\/', '\\\^', '\\\$', '\\\=', "\\'", "\\x00", "\\n", "\\r", "\\x1a" );
     return str_replace ( $from, $to, $string );
 }
