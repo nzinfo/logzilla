@@ -98,6 +98,7 @@ my $cmd;
 if ( $options->{prereqs} > 0 ) {
     print "Making sure OS is up to date...\n";
     system("printf '# Replacement for the default syslog-ng included in Ubuntu as that one has a memory leak\ndeb http://packages.madhouse-project.org/ubuntu 12.04 syslog-ng-3.3\n' > /etc/apt/sources.list.d/syslog-ng_logzilla.list");
+    system("curl https://packages.madhouse-project.org/debian/archive-key.txt | sudo apt-key add -");
     system("apt-get update && apt-get -y upgrade");
     print "Installing system prerequisites 1 of 9\n";
     system("apt-get -y install build-essential apache2 mysql-server php5 libmysqlclient-dev syslog-ng php5-cli libapache2-mod-php5 subversion");
