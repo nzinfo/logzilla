@@ -724,8 +724,8 @@ sub ss {
         $log->INFO( "You have %s total system memory", humanBytes($total) );
         $log->INFO( "You have %s free system memory",  humanBytes($free) );
         $log->INFO( "Your server is configured to store %d extra day(s) of events in memory (the rest on disk)", $settings->{SPX_IDX_DIM} );
-        $log->INFO( "At your current event rate, the amount of *estimated* memory that the indexer will need is %s - note that this is only for the indexer and not for system resources or MySQL", humanBytes($needed) );
-        $log->INFO( "LogZilla is currently using %s of that %s total.", humanBytes($spmem), humanBytes($needed) );
+        $log->INFO( "The LogZilla indexer is using %s RAM to store indexed information in memory - note that this is only for the indexer and not for system resources or MySQL", humanBytes($spmem) );
+        #$log->INFO( "LogZilla is currently using %s of that %s total.", humanBytes($spmem), humanBytes($needed) );
         store_metric( "lztool_idx_memused", $spmem );
         store_metric( "lztool_mem_total",   $total );
         store_metric( "lztool_mem_free",    $free );
