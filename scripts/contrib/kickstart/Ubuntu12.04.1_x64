@@ -97,13 +97,14 @@ my $cmd;
 # Install Prereq's
 if ( $options->{prereqs} > 0 ) {
     print "Making sure OS is up to date...\n";
+    system("printf '# Replacement for the default syslog-ng included in Ubuntu as that one has a memory leak\ndeb http://packages.madhouse-project.org/ubuntu 12.04 syslog-ng-3.3\n' > /etc/apt/sources.list.d/syslog-ng_logzilla.list");
     system("apt-get update && apt-get -y upgrade");
     print "Installing system prerequisites 1 of 9\n";
-    system("apt-get -y install build-essential apache2 mysql-server php5 libmysqlclient-dev syslog-ng php5-cli libapache2-mod-php5 subversion ssmtp");
+    system("apt-get -y install build-essential apache2 mysql-server php5 libmysqlclient-dev syslog-ng php5-cli libapache2-mod-php5 subversion");
     print "Installing system prerequisites 2 of 9\n";
     system("apt-get -y install linux-headers-\$(uname -r)");
     print "Installing system prerequisites 3 of 9\n";
-    system("apt-get -y install php5-mysql php5-gd php5-json");
+    system("apt-get -y install php5-mysql php5-gd php5-json php5-xsl php5-gd php-pear libapache2-mod-auth-mysql php5-ldap");
     print "Installing system prerequisites 4 of 9\n";
     system("apt-get -y install libdate-calc-perl libfile-tail-perl libdbd-mysql-perl libmime-lite-perl libdata-random-perl libdate-simple-perl");
     print "Installing system prerequisites 5 of 9\n";
@@ -165,8 +166,8 @@ print FILE <<EOF;
 \$logpath = "/var/log/logzilla"; 
 \$retention = "7"; 
 \$snare = "Y";
-\$syslogng_conf = "/etc/syslog-ng/syslog-ng.conf";
-\$syslogng_source = "s_net";
+\$syslogng_conf = "/etc/syslog-ng/conf.d/logzilla.conf";
+\$syslogng_source = "s_logzilla";
 \$webuser = "www-data";
 \$skipdb = "N";
 \$skipcron = "N";
@@ -191,16 +192,7 @@ if ( $options->{spx_compile} > 0 ) {
 
 # Customization for this script and a fresh syslog-ng install
 if ( $options->{ng} > 0 ) {
-    print "Modifying syslog-ng template";
-    my $file = "/etc/syslog-ng/syslog-ng.conf";
-    if ( -e "$file" ) {
-        open my $config, '+<', "$file" or warn "FAILED: $!\n";
-        my @arr = <$config>;
-        if ( !grep( /lzconfig|udp|s_logzilla/, @arr ) ) {
-            system("perl -i -pe 's|destination df_logzilla {|source s_logzilla { udp(); };\ndestination df_logzilla {|g' $options->{lzroot}/scripts/contrib/system_configs/syslog-ng.conf 2>&1");
-            system("perl -i -pe 's|MYSOURCE|s_logzilla|g' $options->{lzroot}/scripts/contrib/system_configs/syslog-ng.conf 2>&1");
-        }
-    }
+    add_syslog_conf();
 }
 
 # Install LogZilla
@@ -295,7 +287,7 @@ alias mytop='mytop -u\$MY_ADMIN -p\$MY_ADMIN_PWD'
 # LogZilla related
 alias mysqltuner='\$LZ/scripts/tools/mysqltuner.pl --user \$MY_ADMIN --pass \$MY_ADMIN_PWD'
 alias summary='\$LZ/scripts/tools/summary'
-alias lzupdate='(cd \$LZ && sudo svn update --accept theirs-conflict && cd scripts && ./upgrade)'
+alias lzupdate='(cd \$LZ && sudo svn update --accept theirs-conflict && echo "To upgrade, type: cd scripts && ./upgrade")'
 
 # Sphinx shortcuts
 alias myspx='mysql -h0 -P9306'
@@ -448,4 +440,111 @@ sub humanBytes {
         return "$bytes" . ( $bytes == 1 ? "" : "s" );
     }
 }
+sub prompt {
+    my ( $prompt, $default ) = @_;
+    my $defaultValue = $default ? "[$default]" : "";
+    print "$prompt $defaultValue: ";
+    chomp( my $input = <STDIN> );
+    return $input ? $input : $default;
+}
+
+sub add_syslog_conf {
+    my $now = localtime;
+    my $dir = "/etc/syslog-ng/conf.d";
+    my $file = "/etc/syslog-ng/conf.d/logzilla.conf";
+    system("touch $file");
+    unless ( -d "$dir" ) {
+        $file = "/etc/syslog-ng/syslog-ng.conf";
+        unless ( -e "$file" ) {
+            $file = &prompt( "What is the correct path to your syslog-ng.conf file?", "/etc/syslog-ng/syslog-ng.conf" );
+        }
+    }
+    if ( -e $file ) {
+        open my $config, '+<', "$file";
+        my @arr = <$config>;
+        my $sconf = qq{
+#<lzconfig> BEGIN LogZilla settings
+# LogZilla "standard" config - this may or may not work well for your environment
+# It is advisable that you learn what is best for your server.
+# There's a great web gui available at http://mitzkia.github.com/syslog-ng-ose-configurator/#/howtouse
+# Install Date: $now
+};
+my $sconf2 = q{
+# Global Options
+options {
+    chain_hostnames(no);
+    keep_hostname(yes);
+    threaded(yes); # enable if using Syslog-NG 3.3.x
+    #use_fqdn(no); # This should be set to no in high scale environments
+    #use_dns(yes); # This should be set to no in high scale environments
+};
+
+# Capture the program name for SNARE events
+rewrite r_snare { 
+    subst("MSWinEventLog.+(Security|Application|System).+", "MSWin_$1", value("PROGRAM") flags(global)); 
+};
+
+# Snare sends TAB delimited messages, we need pipes...
+rewrite r_snare2pipe { 
+    subst("\t", "|", value("MESSAGE") 
+    flags(global)
+    ); 
+};
+
+# Grab Cisco Mnemonics and write program name
+filter f_rw_cisco { match('^(%[A-Z]+\-\d\-[0-9A-Z]+): ([^\n]+)' value("MSGONLY") type("pcre") flags("store-matches" "nobackref")); };
+filter f_rw_cisco_2 { match('^[\*\.]?(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\s+\d{1,2}\s\d{1,2}:\d{1,2}:\d{1,2}(?:\.\d+)?(?: [A-Z]{3})?: (%[^:]+): ([^\n]+)' value("MSGONLY") type("pcre") flags("store-matches" "nobackref")); };
+filter f_rw_cisco_3 { match('^\d+[ywdh]\d+[ywdh]: (%[^:]+): ([^\n]+)' value("MSGONLY") type("pcre") flags("store-matches" "nobackref")); };
+filter f_rw_cisco_4 { match('^\d{6}: [\*\.]?(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\s+\d{1,2}\s\d{1,2}:\d{1,2}:\d{1,2}(?:\.\d+)?(?: [A-Z]{3})?: (%[^:]+): ([^\n]+)' value("MSGONLY") type("pcre") flags("store-matches" "nobackref")); };
+
+rewrite r_cisco_program {
+    set("Cisco_Syslog", value("PROGRAM") condition(filter(f_rw_cisco) or filter(f_rw_cisco_2) or filter(f_rw_cisco_3) or filter(f_rw_cisco_4)));
+    set("$1: $2", value("MESSAGE") condition(filter(f_rw_cisco) or filter(f_rw_cisco_2) or filter(f_rw_cisco_3) or filter(f_rw_cisco_4)));
+};
+
+source s_logzilla {
+    # Use no-multi-line so that java events get read properly
+    tcp(flags(no-multi-line));
+    udp(flags(no-multi-line));
+};
+
+destination d_logzilla {
+    program(
+        "/var/www/logzilla/scripts/logzilla"
+        log_fifo_size(1000)
+        flush_lines(100)
+        flush_timeout(1)
+        template("$R_YEAR-$R_MONTH-$R_DAY $R_HOUR:$R_MIN:$R_SEC\t$HOST\t$PRI\t$PROGRAM\t$MSGONLY\n")
+    );
+};
+
+destination df_logzilla {
+    file("/var/log/logzilla/DEBUG.log"
+        template("$R_YEAR-$R_MONTH-$R_DAY $R_HOUR:$R_MIN:$R_SEC\t$HOST\t$PRI\t$PROGRAM\t$MSGONLY\n")
+    ); 
+};
+
+log {
+    source(s_logzilla);
+    rewrite(r_snare);
+    rewrite(r_snare2pipe);
+    rewrite(r_cisco_program);
+    destination(d_logzilla);
+    # Uncomment below and restart syslog-ng for debugging
+    # destination(df_logzilla);
+    flags(flow-control);
+};
+#</lzconfig> END LogZilla settings
+};
+if ( !grep( /logzilla|lzconfig/, @arr ) ) {
+    print "Creating LogZilla configuration for syslog-ng at $file\n";
+    open FILE, ">>$file" or die $!;
+    print FILE $sconf . $sconf2;
+} else {
+    print("\n\033[1m\tERROR!\n\033[0m");
+    print "Unable to locate your syslog-ng config\n";
+}
+}
+}
+
 print "All Done\n";
