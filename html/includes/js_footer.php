@@ -440,16 +440,17 @@ $("#btnSearch").click( function() {
         if (hosts) {
         $("#results").append("<input type='hidden' name='hosts' value='"+hosts+"'>");
         }
-        $("#results").append("<input type='hidden' name='mnemonics' value='"+mne+"'>");
         if (prg) {
         $("#results").append("<input type='hidden' name='programs' value='"+prg+"'>");
         }
         if (eid) {
         $("#results").append("<input type='hidden' name='eids' value='"+eid+"'>");
         }
+	// #505 - moved append for mne down here and moved results input outside of if(mne) block
         if (mne) {
-        $("#results").append("<input type='hidden' name='page' value='Results'>");
+        $("#results").append("<input type='hidden' name='mnemonics' value='"+mne+"'>");
         }
+        $("#results").append("<input type='hidden' name='page' value='Results'>");
         }); 
 $("#btnGraph").click( function() { 
         $(this).effect('explode');
