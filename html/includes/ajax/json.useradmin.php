@@ -233,7 +233,7 @@ switch ($action) {
         $group = getgroup($user);
         if ($header !== "Assign Permissions") { // Button name comes through because it's an "input" type
             if ($value == 'true') {
-                logmsg("---\nHeader = $header\nValue = $value");
+                // logmsg("---\nHeader = $header\nValue = $value");
                 $sql = "UPDATE ui_layout SET group_access='$group' WHERE header='$header' and userid=(SELECT id FROM users WHERE username='$user')";
                 $result = perform_query($sql, $dbLink, $_SERVER['PHP_SELF']);
                 // logmsg("MySQL Affected Rows = " .mysql_affected_rows() . "\n");
