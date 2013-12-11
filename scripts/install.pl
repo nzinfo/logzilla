@@ -548,6 +548,14 @@ sub make_logfiles {
     }
     close(LOG);
     chmod 0666, "$logpath/audit.log";
+    $logfile = "$logpath/logmsg.log";
+    open( LOG, ">>$logfile" );
+    if ( !-f $logfile ) {
+        print STDOUT "Unable to open log file \"$logfile\" for writing...$!\n";
+        exit;
+    }
+    close(LOG);
+    chmod 0666, "$logpath/logmsg.log";
 }
 
 sub genconfig {
