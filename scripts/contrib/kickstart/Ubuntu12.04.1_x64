@@ -1,13 +1,14 @@
 #!/usr/bin/perl
 
-# Used to install LogZilla on a new Ubuntu 12.04.1 LTS x64 server
+# Used to install LogZilla on a new Ubuntu 12 and 13 LTS x64 server
 
 use strict;
 use warnings;
 use Getopt::Long;
 
-my $os = `lsb_release -d -s`;
-if ( $os !~ /Ubuntu 12/ ) {
+my $osver = `lsb_release -d -s | awk '{print \$2}'`;
+chomp($osver);
+if ( $osver !~ /12/ ) {
     print("\033[1mThis tool will only run on Ubuntu 12.x!\n\033[0m");
     exit;
 }
@@ -39,25 +40,25 @@ sub usage_and_exit {
     my $myname = $0;
     $myname =~ s{.*/}{};    # leave just program name without path
     print STDERR qq{
-This program is used to install LogZilla v4.x onto a fresh OS installation of Ubuntu 12.04.1 LTS x64 only.
-Using it for anything else may break the install.
-Usage: $myname [-hdvl] 
--h        : this (help) message
--d        : debug level (0-5) (0 = disabled [default])
--v        : Also print results to STDERR
--b        : set the base directory for logzilla (defaults to $options->{lzroot})
--vmb      : Create console boot banner (for VMWare deployments) (default 0)
--alias    : Create bash_aliases for both root and lzadmin user (if exists) (default 1)
--s        : Compile Sphinx (default 1)
--c        : Checkout SVN (default 1)
--i        : Install LogZilla (default 1)
--p        : Install System Prerequisites (default 1)
--a        : Set up Apache (default 1)
--ng       : Set up syslog-ng (default 1)
--cp       : Set CPAN autoconfig (default 1)
--agree    : Agree to the license terms and to this install method (default 0)
-Example: ./$myname -d 1 -v -base "/var/www/logzilla" -s 0 -c 0 -i 0 -p 0 -a 0 -ng 0 -alias 0 -agree 1
-};
+    This program is used to install LogZilla v4.x onto a fresh OS installation of Ubuntu 12 or 13 LTS x64 only.
+    Using it for anything else may break the install.
+    Usage: $myname [-hdvl] 
+    -h        : this (help) message
+    -d        : debug level (0-5) (0 = disabled [default])
+    -v        : Also print results to STDERR
+    -b        : set the base directory for logzilla (defaults to $options->{lzroot})
+    -vmb      : Create console boot banner (for VMWare deployments) (default 0)
+    -alias    : Create bash_aliases for both root and lzadmin user (if exists) (default 1)
+    -s        : Compile Sphinx (default 1)
+    -c        : Checkout SVN (default 1)
+    -i        : Install LogZilla (default 1)
+    -p        : Install System Prerequisites (default 1)
+    -a        : Set up Apache (default 1)
+    -ng       : Set up syslog-ng (default 1)
+    -cp       : Set CPAN autoconfig (default 1)
+    -agree    : Agree to the license terms and to this install method (default 0)
+    Example: ./$myname -d 1 -v -base "/var/www/logzilla" -s 0 -c 0 -i 0 -p 0 -a 0 -ng 0 -alias 0 -agree 1
+    };
     exit($exit_code);
 }
 
@@ -85,7 +86,7 @@ if ( $options->{help} ) {
 if ( $options->{agree} eq 0 ) {
     print "\n\n################################################################################\n";
     print("\033[1mWARNING!\n\033[0m");
-    print("\033[1mThis script was contributed to auto-install on Ubuntu 12.04.1 LTS Server x_64!\n\033[0m");
+    print("\033[1mThis script was contributed to auto-install on Ubuntu 12 or 13 LTS Server x_64!\n\033[0m");
     print("\033[1mYou must agree to the LogZilla license terms by using -agree 1\n\033[0m");
     print("\033[1mBe sure you understand the implications of using this script before running it.\n\033[0m");
     print "################################################################################\n";
@@ -97,7 +98,7 @@ my $cmd;
 # Install Prereq's
 if ( $options->{prereqs} > 0 ) {
     print "Making sure OS is up to date...\n";
-    system("printf '# Replacement for the default syslog-ng included in Ubuntu as that one has a memory leak\ndeb http://packages.madhouse-project.org/ubuntu 12.04 syslog-ng-3.3\n' > /etc/apt/sources.list.d/syslog-ng_logzilla.list");
+    system("printf '# Replacement for the default syslog-ng included in Ubuntu as that one has a memory leak\ndeb http://packages.madhouse-project.org/ubuntu $osver syslog-ng-3.5\n' > /etc/apt/sources.list.d/syslog-ng_logzilla.list");
     system("curl https://packages.madhouse-project.org/debian/archive-key.txt | sudo apt-key add -");
     system("apt-get update && apt-get -y upgrade");
     print "Installing system prerequisites 1 of 9\n";
@@ -105,7 +106,7 @@ if ( $options->{prereqs} > 0 ) {
     print "Installing system prerequisites 2 of 9\n";
     system("apt-get -y install linux-headers-\$(uname -r)");
     print "Installing system prerequisites 3 of 9\n";
-    system("apt-get -y install php5-mysql php5-gd php5-json php5-xsl php5-gd php-pear libapache2-mod-auth-mysql php5-ldap");
+    system("apt-get -y install php5-mysql php5-gd php5-json php5-xsl php5-gd php-pear php5-ldap");
     print "Installing system prerequisites 4 of 9\n";
     system("apt-get -y install libdate-calc-perl libfile-tail-perl libdbd-mysql-perl libmime-lite-perl libdata-random-perl libdate-simple-perl");
     print "Installing system prerequisites 5 of 9\n";
@@ -125,7 +126,7 @@ if ( $options->{prereqs} > 0 ) {
 if ( $options->{cpan} > 0 ) {
     system("(echo o conf prerequisites_policy follow;echo o conf commit)|cpan");
 }
-my @mods = (qw(DBI Date::Calc Term::ReadLine File::Copy Digest::MD5 LWP::Simple File::Spec String::CRC32 MIME::Lite IO::Socket::INET Getopt::Long CHI Net::SNMP Log::Fast Test::mysqld PerlIO::Util));
+my @mods = (qw(DBI Date::Calc Term::ReadLine File::Copy Digest::MD5 LWP::Simple File::Spec String::CRC32 MIME::Lite IO::Socket::INET Getopt::Long CHI Net::SNMP Test::mysqld PerlIO::Util));
 
 foreach my $mod (@mods) {
     ( my $fn = "$mod.pm" ) =~ s|::|/|g;    # Foo::Bar::Baz => Foo/Bar/Baz.pm
@@ -205,16 +206,33 @@ if ( $options->{install} > 0 ) {
 # Set up Apache
 if ( $options->{apache} > 0 ) {
     print "Setting up Apache\n";
-    my $file = "/etc/apache2/apache2.conf";
+    # cdukes: Ubuntu 13 changed the default config. We'll copy our config instead
+    #my $file = "/etc/apache2/apache2.conf";
+    #if ( -e "$file" ) {
+    #open my $config, '+<', "$file" or warn "FAILED: $!\n";
+    #my @arr = <$config>;
+    #if ( !grep( /logzilla/, @arr ) ) {
+    #system("perl -i -pe 's|#ServerRoot \"/etc/apache2\"|#ServerRoot \"/etc/apache2\"\nServerName \"logzilla\"|g' /etc/apache2/apache2.conf 2>&1");
+    #}
+    my $file = $options->{lzroot} . "/scripts/contrib/system_configs/logzilla.apache";
     if ( -e "$file" ) {
-        open my $config, '+<', "$file" or warn "FAILED: $!\n";
-        my @arr = <$config>;
-        if ( !grep( /logzilla/, @arr ) ) {
-            system("perl -i -pe 's|#ServerRoot \"/etc/apache2\"|#ServerRoot \"/etc/apache2\"\nServerName \"logzilla\"|g' /etc/apache2/apache2.conf 2>&1");
+        unless ( -e "/etc/apache2/sites-available/logzilla.conf" ) {
+            print "Copying $file to /etc/apache2/sites-available/logzilla.conf\n";
+            system("cp $file /etc/apache2/sites-available/logzilla.conf 2>&1");
         }
+        print "Disabling default site and enabling LogZilla site as the new default\n";
+        if ( -e "/etc/apache2/sites-available/default") {
+            system("a2dissite default 2>&1");
+        }
+        if ( -e "/etc/apache2/sites-available/000-default.conf") {
+            system("a2dissite 000-default.conf 2>&1");
+        }
+        system("a2ensite logzilla.conf 2>&1");
+        system("service apache2 restart 2>&1");
+    } else {
+        print "Unable to locate $file\n";
+        exit;
     }
-    system("cp $options->{lzroot}/scripts/contrib/system_configs/logzilla.apache /etc/apache2/sites-available/default 2>&1");
-    system("service apache2 restart 2>&1");
 }
 
 # Chown to the web user
@@ -233,7 +251,7 @@ if ( $options->{vmbanner} > 0 ) {
         open my $config, '+<', "$file" or warn "FAILED: $!\n";
         my @arr = <$config>;
         if ( !grep( /banner/, @arr ) ) {
-            system("perl -i -pe 's|cd /var/www/logzilla/sphinx && bin/searchd|cd $options->{lzroot}/scripts/VM && ./bootup.sh|g' /etc/rc.local 2>&1");
+            system("perl -i -pe 's|cd $options->{lzroot}/sphinx && bin/searchd|cd $options->{lzroot}/scripts/VM && ./bootup.sh|g' /etc/rc.local 2>&1");
         }
     }
 }
@@ -263,7 +281,7 @@ sub aliases {
             print "Creating bash aliases at $file\n";
             open FILE, ">>$file" or die $!;
             print FILE <<EOF;
-export LZ='/var/www/logzilla'
+export LZ='$options->{lzroot}'
 export MY_ADMIN='root'
 export MY_ADMIN_PWD='mysql'
 # OS Related
@@ -302,15 +320,15 @@ EOF
 }
 my $checkprocess = `ps -C mysqld -o pid=`;
 if ($checkprocess) {
-  print "Stopping MySQL\n";
-  system("service mysql stop");
+    print "Stopping MySQL\n";
+    system("service mysql stop");
 }
 &chk_ib_logs;
 &setup_mycnf("/etc/mysql/conf.d/logzilla.cnf");
 
 if ($checkprocess) {
-  print "Starting MySQL\n";
-  system("service mysql start");
+    print "Starting MySQL\n";
+    system("service mysql start");
 }
 
 sub chk_ib_logs {
@@ -350,7 +368,7 @@ sub setup_mycnf {
 #<lzconfig> BEGIN LogZilla settings
 # Based on http://www.mysqlperformanceblog.com/2007/11/01/innodb-performance-optimization-basics/
 # Do not depend on these settings to be correct for your server. Please consult your DBA
-# You can also run /var/www/logzilla/scripts/tools/mysqltuner.pl for help.
+# You can also run $options->{lzroot}/scripts/tools/mysqltuner.pl for help.
 event_scheduler=on
 symbolic-links=0
 skip-name-resolve
@@ -473,23 +491,23 @@ sub add_syslog_conf {
 my $sconf2 = q{
 # Global Options
 options {
-    chain_hostnames(no);
-    keep_hostname(yes);
-    threaded(yes); # enable if using Syslog-NG 3.3.x
-    #use_fqdn(no); # This should be set to no in high scale environments
-    #use_dns(yes); # This should be set to no in high scale environments
+chain_hostnames(no);
+keep_hostname(yes);
+threaded(yes); # enable if using Syslog-NG 3.3.x
+#use_fqdn(no); # This should be set to no in high scale environments
+#use_dns(yes); # This should be set to no in high scale environments
 };
 
 # Capture the program name for SNARE events
 rewrite r_snare { 
-    subst("MSWinEventLog.+(Security|Application|System).+", "MSWin_$1", value("PROGRAM") flags(global)); 
+subst("MSWinEventLog.+(Security|Application|System).+", "MSWin_$1", value("PROGRAM") flags(global)); 
 };
 
 # Snare sends TAB delimited messages, we need pipes...
 rewrite r_snare2pipe { 
-    subst("\t", "|", value("MESSAGE") 
-    flags(global)
-    ); 
+subst("\t", "|", value("MESSAGE") 
+flags(global)
+); 
 };
 
 # Grab Cisco Mnemonics and write program name
@@ -499,41 +517,41 @@ filter f_rw_cisco_3 { match('^\d+[ywdh]\d+[ywdh]: (%[^:]+): ([^\n]+)' value("MSG
 filter f_rw_cisco_4 { match('^\d{6}: [\*\.]?(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\s+\d{1,2}\s\d{1,2}:\d{1,2}:\d{1,2}(?:\.\d+)?(?: [A-Z]{3})?: (%[^:]+): ([^\n]+)' value("MSGONLY") type("pcre") flags("store-matches" "nobackref")); };
 
 rewrite r_cisco_program {
-    set("Cisco_Syslog", value("PROGRAM") condition(filter(f_rw_cisco) or filter(f_rw_cisco_2) or filter(f_rw_cisco_3) or filter(f_rw_cisco_4)));
-    set("$1: $2", value("MESSAGE") condition(filter(f_rw_cisco) or filter(f_rw_cisco_2) or filter(f_rw_cisco_3) or filter(f_rw_cisco_4)));
+set("Cisco_Syslog", value("PROGRAM") condition(filter(f_rw_cisco) or filter(f_rw_cisco_2) or filter(f_rw_cisco_3) or filter(f_rw_cisco_4)));
+set("$1: $2", value("MESSAGE") condition(filter(f_rw_cisco) or filter(f_rw_cisco_2) or filter(f_rw_cisco_3) or filter(f_rw_cisco_4)));
 };
 
 source s_logzilla {
-    # Use no-multi-line so that java events get read properly
-    tcp(flags(no-multi-line));
-    udp(flags(no-multi-line));
+# Use no-multi-line so that java events get read properly
+tcp(flags(no-multi-line));
+udp(flags(no-multi-line));
 };
 
 destination d_logzilla {
-    program(
-        "/var/www/logzilla/scripts/logzilla"
-        log_fifo_size(1000)
-        flush_lines(100)
-        flush_timeout(1)
-        template("$R_YEAR-$R_MONTH-$R_DAY $R_HOUR:$R_MIN:$R_SEC\t$HOST\t$PRI\t$PROGRAM\t$MSGONLY\n")
-    );
+program(
+"$options->{lzroot}/scripts/logzilla"
+log_fifo_size(1000)
+flush_lines(100)
+flush_timeout(1)
+template("$R_YEAR-$R_MONTH-$R_DAY $R_HOUR:$R_MIN:$R_SEC\t$HOST\t$PRI\t$PROGRAM\t$MSGONLY\n")
+);
 };
 
 destination df_logzilla {
-    file("/var/log/logzilla/DEBUG.log"
-        template("$R_YEAR-$R_MONTH-$R_DAY $R_HOUR:$R_MIN:$R_SEC\t$HOST\t$PRI\t$PROGRAM\t$MSGONLY\n")
-    ); 
+file("/var/log/logzilla/DEBUG.log"
+template("$R_YEAR-$R_MONTH-$R_DAY $R_HOUR:$R_MIN:$R_SEC\t$HOST\t$PRI\t$PROGRAM\t$MSGONLY\n")
+); 
 };
 
 log {
-    source(s_logzilla);
-    rewrite(r_snare);
-    rewrite(r_snare2pipe);
-    rewrite(r_cisco_program);
-    destination(d_logzilla);
-    # Uncomment below and restart syslog-ng for debugging
-    # destination(df_logzilla);
-    flags(flow-control);
+source(s_logzilla);
+rewrite(r_snare);
+rewrite(r_snare2pipe);
+rewrite(r_cisco_program);
+destination(d_logzilla);
+# Uncomment below and restart syslog-ng for debugging
+# destination(df_logzilla);
+flags(flow-control);
 };
 #</lzconfig> END LogZilla settings
 };
@@ -542,8 +560,7 @@ if ( !grep( /logzilla|lzconfig/, @arr ) ) {
     open FILE, ">>$file" or die $!;
     print FILE $sconf . $sconf2;
 } else {
-    print("\n\033[1m\tERROR!\n\033[0m");
-    print "Unable to locate your syslog-ng config\n";
+    print "Skipping syslog-ng config as $file already exists...\n";
 }
 }
 }
