@@ -1185,7 +1185,6 @@ if ( !grep( /logzilla|lzconfig/, @arr ) ) {
     open FILE, ">>$file" or die $!;
     print FILE $sconf . $sconf2;
 } else {
-    print("\n\033[1m\tERROR!\n\033[0m");
     print "Skipping syslog-ng config as $file already exists...\n";
 }
 }
