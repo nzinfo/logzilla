@@ -6,7 +6,7 @@ use strict;
 use warnings;
 use Getopt::Long;
 
-my $osver = `lsb_release -d -s | awk '{print \$2}'`;
+my $osver = `lsb_release -d -s | awk '{print \$2}' | cut -d '.' -f1-2`;
 chomp($osver);
 if ( $osver !~ /12/ ) {
     print("\033[1mThis tool will only run on Ubuntu 12.x!\n\033[0m");
