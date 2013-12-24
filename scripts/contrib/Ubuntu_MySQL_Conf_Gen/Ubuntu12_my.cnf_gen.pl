@@ -51,6 +51,7 @@ sub chk_ib_logs {
 
 sub setup_mycnf {
     my $file = shift;
+    my ($query_cache_size, $query_cache_limit);
     my $innodb_log_file_size;
     system("touch $file");
     my $numdisks = `fdisk -l 2>/dev/null | grep "Disk \/" | grep -v "\/dev\/md" | awk '{print \$2}' | sed -e 's/://g' | wc -l`;
@@ -76,6 +77,13 @@ sub setup_mycnf {
     } else {
         $innodb_log_file_size = 67108864;
     }
+    if ( $sysmem >= 68719476736 ) {
+        $query_cache_size = 0;
+        $query_cache_limit = 0;
+    } else {
+        $query_cache_size = "64M";
+        $query_cache_limit = "512K";
+    }
 
     my $innodb_log_buffer_size  = ( $innodb_log_file_size / 8 );
     my $Hpoolsize               = humanBytes($poolsize);
@@ -92,7 +100,7 @@ sub setup_mycnf {
 # Based on http://www.mysqlperformanceblog.com/2007/11/01/innodb-performance-optimization-basics/
 # And also from http://themattreid.com/uploads/innodb_flush_method-CNF-loadtest.txt
 # Do not depend on these settings to be correct for your server. Please consult your DBA
-# You can also run /path_to_logzilla/scripts/tools/mysqltuner.pl for help.
+# You can also run /var/www/logzilla/scripts/tools/mysqltuner.pl for help.
 #
 #
 [mysqld]
@@ -143,13 +151,16 @@ binlog_cache_size               = 128K    #default: 32K, size of buffer to hold 
 #--------------------------------------
 ## Query Cache
 #--------------------------------------
-query_cache_size                = 64M   #global buffer
-query_cache_limit               = 512K  #max query result size to put in cache
+# Disabling query cache relieves our hot path from unneeded processing and latency. 
+# That cache would prove useful for regular MySQL workloads, so this should only be necessary on large systems.
+query_cache_size                = $query_cache_size   #global buffer
+query_cache_limit               = $query_cache_limit  #max query result size to put in cache
 
 #--------------------------------------
 ## Connections
 #--------------------------------------
 max_connections                 = 1000  #multiplier for memory usage via per-thread buffers
+thread_cache_size               = 50    #recommend 5% of max_connections
 max_connect_errors              = 100   #default: 10
 concurrent_insert               = 2     #default: 1, 2: enable insert for all instances
 connect_timeout                 = 30    #default -5.1.22: 5, +5.1.22: 10
@@ -175,7 +186,6 @@ table_open_cache                = 512   #5.1.x, 5.5.x <default: 64>
 #--------------------------------------
 # Disabled - deprecated and only works on Solaris 9
 #thread_concurrency              = $cores2x  #recommend 2x CPU cores
-thread_cache_size               = 500 #recommend 5% of max_connections
 
 #--------------------------------------
 ## MyISAM Engine
@@ -234,7 +244,7 @@ innodb_log_buffer_size          = $Hinnodb_log_buffer_size # Global buffer = 1/8
 innodb_lock_wait_timeout        = 60
 innodb_thread_concurrency       = $cores2x    #recommend 2x core quantity
 innodb_commit_concurrency       = $innodb_commit_concurrency    #recommend 4x num disks
-innodb_flush_method             = O_DIRECT # use O_DIRECT if you have raid with bbu. Options: O_DIRECT, O_DSYNC, blank for fdatasync (default)
+#innodb_flush_method             = O_DIRECT # use O_DIRECT if you have raid with bbu. Options: O_DIRECT, O_DSYNC, blank for fdatasync (default)
 innodb_support_xa               = false #recommend 0 on read-only slave, disable xa to negate extra disk flush
 skip-innodb-doublewrite
 skip_innodb_checksums
@@ -254,6 +264,10 @@ skip_innodb_checksums
 EOF
         }
     }
+    print "Installing new memory allocater for MySQL - see https://www.assembla.com/wiki/show/LogZillaWiki/MySQL_Tuning\n";
+    system("apt-get -y install libjemalloc1");
+    print "Adding memory allocator load to /etc/init/mysql.conf - see https://www.assembla.com/wiki/show/LogZillaWiki/MySQL_Tuning\n";
+    system("perl -i -pe 's|env HOME=/etc/mysql|env HOME=/etc/mysql\nenv LD_PRELOAD=/usr/lib/libjemalloc.so.1\n|g' /etc/init/mysql.conf");
 }
 
 sub humanBytes {
