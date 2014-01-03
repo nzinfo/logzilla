@@ -126,7 +126,7 @@ if ( $options->{prereqs} > 0 ) {
 if ( $options->{cpan} > 0 ) {
     system("(echo o conf prerequisites_policy follow;echo o conf commit)|cpan");
 }
-my @mods = (qw(DBI Date::Calc Term::ReadLine File::Copy Digest::MD5 LWP::Simple File::Spec String::CRC32 MIME::Lite IO::Socket::INET Getopt::Long CHI Net::SNMP Test::mysqld PerlIO::Util));
+my @mods = (qw(DBI Date::Calc Term::ReadLine File::Copy Digest::MD5 LWP::Simple File::Spec String::CRC32 MIME::Lite IO::Socket::INET Getopt::Long CHI Net::SNMP Test::mysqld PerlIO::Util Log::Fast));
 
 foreach my $mod (@mods) {
     ( my $fn = "$mod.pm" ) =~ s|::|/|g;    # Foo::Bar::Baz => Foo/Bar/Baz.pm
