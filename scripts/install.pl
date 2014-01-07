@@ -2306,9 +2306,9 @@ if ( -d "$crondir" ) {
           my $oldurl  = "http://licserv.logzilla.pro/files/$hash.txt";
           my $file = "$lzbase/html/license.txt";
 
-          if ( is_success( getstore( $url, $file ) ) ) {
+          if ( is_success( getstore( $oldurl, $file ) ) ) {
               print "License Installed Successfully\n";
-          } elsif ( is_success( getstore( $oldurl, $file ) ) ) {
+          } elsif ( is_success( getstore( $url, $file ) ) ) {
               print "License Installed Successfully\n";
           } else {
               print "\n\033[1m[ERROR] Failed to download: $url\n\033[0m";
