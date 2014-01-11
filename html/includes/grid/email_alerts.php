@@ -68,6 +68,8 @@ $grid->setGridOptions(array(
     "sortname"=>"id",
     "sortorder"=>"asc",
     "altRows"=>true,
+    "shrinkToFit"=>true,
+    "setGridHeight"=>"100%",
     "rowList"=>array(20,40,60,75,100),
     "forceFit" => true
     ));
@@ -91,7 +93,7 @@ $custom = <<<CUSTOM
 
 
         var modalWidth = $("#portlet_Email_Alerts").width();
-        var modalHeight = $("#portlet_Email_Alerts").height() - 52;
+        var modalHeight = $( window ).height() - 350;
         $('#triggergrid').jqGrid('setGridWidth',modalWidth);
         $('#triggergrid').jqGrid('setGridHeight',modalHeight);
         $('#triggergrid').fluidGrid({base:'#portlet_Email_Alerts', offset:-25});
