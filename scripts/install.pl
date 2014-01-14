@@ -2296,19 +2296,18 @@ if ( -d "$crondir" ) {
                   last;    # we only want the first interface
               }
           }
+          my $ip_orig = $ip;
+          my $mac_orig = $mac;
           $ip  =~ s/[^a-zA-Z0-9]//g;
           $mac =~ s/[^a-zA-Z0-9]//g;
           my $hash = md5_hex("$ip$mac");
 
-          print "requesting license file for IP $ip and MAC $mac through hash $hash\n"; #for debugging purposes only
-
           my $url  = "http://lic.logzilla.net/$hash.txt";
-          my $oldurl  = "http://licserv.logzilla.pro/files/$hash.txt";
+          print "Check for license using $ip_orig/$mac_orig\n";
+          print "Requesting license file from $url\n";
           my $file = "$lzbase/html/license.txt";
 
-          if ( is_success( getstore( $oldurl, $file ) ) ) {
-              print "License Installed Successfully\n";
-          } elsif ( is_success( getstore( $url, $file ) ) ) {
+          if ( is_success( getstore( $url, $file ) ) ) {
               print "License Installed Successfully\n";
           } else {
               print "\n\033[1m[ERROR] Failed to download: $url\n\033[0m";
