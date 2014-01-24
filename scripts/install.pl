@@ -82,7 +82,7 @@ my ( $year, $mon, $mday ) = Date::Calc::Add_Delta_Days( $curyear, $curmon, $curm
 my $pAdd = "p" . $year . sprintf( "%02d", $mon ) . sprintf( "%02d", $mday );
 my $dateTomorrow = $year . "-" . sprintf( "%02d", $mon ) . "-" . sprintf( "%02d", $mday );
 my ( $dbroot, $dbrootpass, $dbname, $dbtable, $dbhost, $dbport, $dbadmin, $dbadminpw, $siteadmin, $siteadminpw, $email, $sitename, $url, $logpath, $retention, $snare, $j4, $arch, $skipcron, $skipdb, $skipsysng, $skiplogrot, $skipsudo, $skipfb, $skiplic, $sphinx_compile, $sphinx_index, $skip_ioncube,$skipapparmor, $syslogng_conf, $webuser, $syslogng_source, $upgrade, $test, $autoyes, $spx_cores );
-my ( $installdb, $logrotate, $docron, $do_hup_syslog, $do_hup_cron );
+my ( $installdb, $logrotate, $docron, $do_hup_syslog, $do_hup_cron, $set_sudo );
 
 
 sub getYN {
@@ -1278,8 +1278,10 @@ if ( -d "$crondir" ) {
       print "In order for the Apache user to be able to apply changes to syslog-ng, sudo access needs to be provided in /etc/sudoers\n";
       print "Note that you do not HAVE to do this, but it will make things much easier on your for both licensing and Email Alert editing.\n";
       print "If you choose not to install the sudo commands, then you must manually SIGHUP syslog-ng each time an Email Alert is added, changed or removed.\n";
-      my $ok = &getYN( "Ok to continue?", "y" );
-      if ( $ok =~ /[Yy]/ ) {
+      if ( $set_sudo !~ /[YyNn]/ ) { # i.e. undefined in .lzrc
+	  $set_sudo = &getYN( "Ok to continue?", "y" );
+      }
+      if ( $set_sudo =~ /[Yy]/ ) {
           my $file = "/etc/sudoers";
           unless ( -e $file ) {
               $file = &prompt( "Please provide the location of your sudoers file", "/etc/sudoers" );
