@@ -1524,9 +1524,11 @@ if ( -d "$crondir" ) {
       print "\n\n";
       my $checkprocess = `cat /var/run/crond.pid`;
       if ($checkprocess) {
-          print "\n\nCron.d should be restarted, would you like to send a HUP signal to the process?\n";
-          my $ok = &getYN( "Ok to HUP CRON?", "y" );
-          if ( $ok =~ /[Yy]/ ) {
+          if ( $do_hup_cron !~ /[YyNn]/ ) { # i.e. undefined in .lzrc
+	      print "\n\nCron.d should be restarted, would you like to send a HUP signal to the process?\n";
+	      $do_hup_cron = &getYN( "Ok to HUP CRON?", "y" );
+	  }
+          if ( $do_hup_cron =~ /[Yy]/ ) {
               if ( $checkprocess =~ /(\d+)/ ) {
                   my $pid = $1;
                   print STDOUT "HUPing CRON PID $pid\n";
