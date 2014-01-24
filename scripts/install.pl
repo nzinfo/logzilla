@@ -82,7 +82,7 @@ my ( $year, $mon, $mday ) = Date::Calc::Add_Delta_Days( $curyear, $curmon, $curm
 my $pAdd = "p" . $year . sprintf( "%02d", $mon ) . sprintf( "%02d", $mday );
 my $dateTomorrow = $year . "-" . sprintf( "%02d", $mon ) . "-" . sprintf( "%02d", $mday );
 my ( $dbroot, $dbrootpass, $dbname, $dbtable, $dbhost, $dbport, $dbadmin, $dbadminpw, $siteadmin, $siteadminpw, $email, $sitename, $url, $logpath, $retention, $snare, $j4, $arch, $skipcron, $skipdb, $skipsysng, $skiplogrot, $skipsudo, $skipfb, $skiplic, $sphinx_compile, $sphinx_index, $skip_ioncube,$skipapparmor, $syslogng_conf, $webuser, $syslogng_source, $upgrade, $test, $autoyes, $spx_cores );
-my ( $installdb, $logrotate, $docron, $do_hup_syslog, $do_hup_cron, $set_sudo, $set_apparmor, $apparmor_restart, $do_fback, $do_ioncube );
+my ( $installdb, $logrotate, $docron, $do_hup_syslog, $do_hup_cron, $set_sudo, $set_apparmor, $apparmor_restart, $do_fback, $do_ioncube, $restart_php );
 
 
 sub getYN {
@@ -2274,8 +2274,10 @@ if ( -d "$crondir" ) {
                   close $config;
 
                   if ( -e "/etc/init.d/apache2" ) {
-                      my $ok = &getYN( "Is it ok to restart Apache to apply changes?", "y" );
-                      if ( $ok =~ /[Yy]/ ) {
+		      if ( $restart_php !~ /[YyNn]/ ) { # i.e. undefined in .lzrc
+			  $restart_php = &getYN( "Is it ok to restart Apache to apply changes?", "y" );
+		      }
+                      if ( $restart_php =~ /[Yy]/ ) {
                           my $r = `/etc/init.d/apache2 restart`;
                       } else {
                           print("\033[1m\n\tPlease be sure to restart your Apache server..\n\033[0m");
