@@ -82,7 +82,7 @@ my ( $year, $mon, $mday ) = Date::Calc::Add_Delta_Days( $curyear, $curmon, $curm
 my $pAdd = "p" . $year . sprintf( "%02d", $mon ) . sprintf( "%02d", $mday );
 my $dateTomorrow = $year . "-" . sprintf( "%02d", $mon ) . "-" . sprintf( "%02d", $mday );
 my ( $dbroot, $dbrootpass, $dbname, $dbtable, $dbhost, $dbport, $dbadmin, $dbadminpw, $siteadmin, $siteadminpw, $email, $sitename, $url, $logpath, $retention, $snare, $j4, $arch, $skipcron, $skipdb, $skipsysng, $skiplogrot, $skipsudo, $skipfb, $skiplic, $sphinx_compile, $sphinx_index, $skip_ioncube,$skipapparmor, $syslogng_conf, $webuser, $syslogng_source, $upgrade, $test, $autoyes, $spx_cores );
-my ( $installdb, $logrotate, $docron );
+my ( $installdb, $logrotate, $docron, $do_hup_syslog, $do_hup_cron );
 
 
 sub getYN {
@@ -1502,19 +1502,21 @@ if ( -d "$crondir" ) {
       print "\n\n";
       my $checkprocess = `ps -C syslog-ng -o pid=`;
       if ($checkprocess) {
-          print "\n\nSyslog-ng MUST be restarted, would you like to send a HUP signal to the process?\n";
-          my $ok = &getYN( "Ok to HUP syslog-ng?", "y" );
-          if ( $ok =~ /[Yy]/ ) {
-              if ( $checkprocess =~ /(\d+)/ ) {
-                  my $pid = $1;
-                  print STDOUT "HUPing syslog-ng PID $pid\n";
-                  my $r = `kill -HUP $pid`;
-              } else {
-                  print STDOUT "Unable to find PID for syslog-ng\n";
-              }
-          } else {
-              print("\033[1m\n\tPlease be sure to restart syslog-ng..\n\033[0m");
-          }
+          if ( $do_hup_syslog !~ /[YyNn]/ ) { # i.e. undefined in .lzrc
+	      print "\n\nSyslog-ng MUST be restarted, would you like to send a HUP signal to the process?\n";
+	      $do_hup_syslog = &getYN( "Ok to HUP syslog-ng?", "y" );
+	  }
+	  if ( $do_hup_syslog =~ /[Yy]/ ) {
+	      if ( $checkprocess =~ /(\d+)/ ) {
+		  my $pid = $1;
+		  print STDOUT "HUPing syslog-ng PID $pid\n";
+		  my $r = `kill -HUP $pid`;
+	      } else {
+		  print STDOUT "Unable to find PID for syslog-ng\n";
+	      }
+	  } else {
+	      print("\033[1m\n\tPlease be sure to restart syslog-ng..\n\033[0m");
+	  }
       }
   }
 
