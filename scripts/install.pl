@@ -82,7 +82,7 @@ my ( $year, $mon, $mday ) = Date::Calc::Add_Delta_Days( $curyear, $curmon, $curm
 my $pAdd = "p" . $year . sprintf( "%02d", $mon ) . sprintf( "%02d", $mday );
 my $dateTomorrow = $year . "-" . sprintf( "%02d", $mon ) . "-" . sprintf( "%02d", $mday );
 my ( $dbroot, $dbrootpass, $dbname, $dbtable, $dbhost, $dbport, $dbadmin, $dbadminpw, $siteadmin, $siteadminpw, $email, $sitename, $url, $logpath, $retention, $snare, $j4, $arch, $skipcron, $skipdb, $skipsysng, $skiplogrot, $skipsudo, $skipfb, $skiplic, $sphinx_compile, $sphinx_index, $skip_ioncube,$skipapparmor, $syslogng_conf, $webuser, $syslogng_source, $upgrade, $test, $autoyes, $spx_cores );
-my ( $installdb, $logrotate, $docron, $do_hup_syslog, $do_hup_cron, $set_sudo, $set_apparmor, $apparmor_restart, $do_fback );
+my ( $installdb, $logrotate, $docron, $do_hup_syslog, $do_hup_cron, $set_sudo, $set_apparmor, $apparmor_restart, $do_fback, $do_ioncube );
 
 
 sub getYN {
@@ -2252,9 +2252,11 @@ if ( -d "$crondir" ) {
       }
       my $phpver = `/usr/bin/php -v | head -1`;
       my $ver = $1 if ( $phpver =~ /PHP (\d\.\d)/ );
-      if ( $ver !~ /[45]\.[04]/ ) {
-          my $ok = &getYN( "\nInstall will try to add the license loader to php.ini for you is this ok?", "y" );
-          if ( $ok =~ /[Yy]/ ) {
+      if ( $ver !~ /[45]\.[04]/ ) {	  
+	  if ( $do_ioncube !~ /[YyNn]/ ) { # i.e. undefined in .lzrc
+	      $do_ioncube = &getYN( "\nInstall will try to add the license loader to php.ini for you is this ok?", "y" );
+	  }
+          if ( $do_ioncube =~ /[Yy]/ ) {
               my $file = "/etc/php5/apache2/php.ini";
               if ( !-e "$file" ) {
                   $file = &prompt( "Please enter the location of your php.ini file", "$file" );
