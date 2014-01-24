@@ -82,7 +82,7 @@ my ( $year, $mon, $mday ) = Date::Calc::Add_Delta_Days( $curyear, $curmon, $curm
 my $pAdd = "p" . $year . sprintf( "%02d", $mon ) . sprintf( "%02d", $mday );
 my $dateTomorrow = $year . "-" . sprintf( "%02d", $mon ) . "-" . sprintf( "%02d", $mday );
 my ( $dbroot, $dbrootpass, $dbname, $dbtable, $dbhost, $dbport, $dbadmin, $dbadminpw, $siteadmin, $siteadminpw, $email, $sitename, $url, $logpath, $retention, $snare, $j4, $arch, $skipcron, $skipdb, $skipsysng, $skiplogrot, $skipsudo, $skipfb, $skiplic, $sphinx_compile, $sphinx_index, $skip_ioncube,$skipapparmor, $syslogng_conf, $webuser, $syslogng_source, $upgrade, $test, $autoyes, $spx_cores );
-my ( $installdb, $logrotate, $docron, $do_hup_syslog, $do_hup_cron, $set_sudo, $set_apparmor, $apparmor_restart, $do_fback, $do_ioncube, $restart_php );
+my ( $installdb, $logrotate, $docron, $do_hup_syslog, $do_hup_cron, $set_sudo, $set_apparmor, $apparmor_restart, $do_fback, $do_ioncube, $restart_php, $do_sphinx_compile );
 
 
 sub getYN {
@@ -1404,8 +1404,10 @@ if ( -d "$crondir" ) {
       print "cd $lzbase/sphinx\n";
       print "./indexer.sh full\n";
 
-      my $ok = &getYN( "Ok to continue?", "y" );
-      if ( $ok =~ /[Yy]/ ) {
+      if ( $do_sphinx_compile !~ /[YyNn]/ ) { # i.e. undefined in .lzrc
+	  $do_sphinx_compile = &getYN( "Ok to continue?", "y" );
+      }
+      if ( $do_sphinx_compile =~ /[Yy]/ ) {
           my $checkprocess = `ps -C searchd -o pid=`;
           if ($checkprocess) {
               system("kill -9 $checkprocess");
