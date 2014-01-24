@@ -82,7 +82,7 @@ my ( $year, $mon, $mday ) = Date::Calc::Add_Delta_Days( $curyear, $curmon, $curm
 my $pAdd = "p" . $year . sprintf( "%02d", $mon ) . sprintf( "%02d", $mday );
 my $dateTomorrow = $year . "-" . sprintf( "%02d", $mon ) . "-" . sprintf( "%02d", $mday );
 my ( $dbroot, $dbrootpass, $dbname, $dbtable, $dbhost, $dbport, $dbadmin, $dbadminpw, $siteadmin, $siteadminpw, $email, $sitename, $url, $logpath, $retention, $snare, $j4, $arch, $skipcron, $skipdb, $skipsysng, $skiplogrot, $skipsudo, $skipfb, $skiplic, $sphinx_compile, $sphinx_index, $skip_ioncube,$skipapparmor, $syslogng_conf, $webuser, $syslogng_source, $upgrade, $test, $autoyes, $spx_cores );
-my ( $installdb, $logrotate );
+my ( $installdb, $logrotate, $docron );
 
 
 sub getYN {
@@ -1191,22 +1191,23 @@ if ( !grep( /logzilla|lzconfig/, @arr ) ) {
 }
 
 sub setup_cron {
-
-    # Cronjob  Setup
-    print("\n\033[1m\n\n========================================\033[0m\n");
-    print("\n\033[1m\tCron Setup\n\033[0m");
-    print("\n\033[1m========================================\n\n\033[0m\n");
-    print "\n";
-    print "Cron is used to run backend indexing and data exports.\n";
-    print "Install will attempt to do this automatically for you by adding it to /etc/cron.d\n";
-    print "In the event that something fails or you skip this step, \n";
-    print "You MUST create it manually or create the entries in your root's crontab file.\n";
     my $crondir;
-    my $ok = &getYN( "Ok to continue?", "y" );
-
-    if ( $ok =~ /[Yy]/ ) {
+    
+    if ( $docron !~ /[YyNn]/ ) { # i.e. undefined in .lzrc
+	# Cronjob  Setup
+	print("\n\033[1m\n\n========================================\033[0m\n");
+	print("\n\033[1m\tCron Setup\n\033[0m");
+	print("\n\033[1m========================================\n\n\033[0m\n");
+	print "\n";
+	print "Cron is used to run backend indexing and data exports.\n";
+	print "Install will attempt to do this automatically for you by adding it to /etc/cron.d\n";
+	print "In the event that something fails or you skip this step, \n";
+	print "You MUST create it manually or create the entries in your root's crontab file.\n";
+	$docron = &getYN( "Ok to continue?", "y" );
+    }
+    if ( $docron =~ /[Yy]/ ) {
         my $minute;
-
+	
 # due hourly views cron can always run every minute
 #        my $sml = &getYN( "\n\nWill this copy of LogZilla be used to process more than 1 Million messages per day?\nNote: Your answer here only determines how often to run indexing.", "n" );
 #        if ( $sml =~ /[Yy]/ ) {
