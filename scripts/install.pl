@@ -82,7 +82,7 @@ my ( $year, $mon, $mday ) = Date::Calc::Add_Delta_Days( $curyear, $curmon, $curm
 my $pAdd = "p" . $year . sprintf( "%02d", $mon ) . sprintf( "%02d", $mday );
 my $dateTomorrow = $year . "-" . sprintf( "%02d", $mon ) . "-" . sprintf( "%02d", $mday );
 my ( $dbroot, $dbrootpass, $dbname, $dbtable, $dbhost, $dbport, $dbadmin, $dbadminpw, $siteadmin, $siteadminpw, $email, $sitename, $url, $logpath, $retention, $snare, $j4, $arch, $skipcron, $skipdb, $skipsysng, $skiplogrot, $skipsudo, $skipfb, $skiplic, $sphinx_compile, $sphinx_index, $skip_ioncube,$skipapparmor, $syslogng_conf, $webuser, $syslogng_source, $upgrade, $test, $autoyes, $spx_cores );
-my ( $installdb, $logrotate, $docron, $do_hup_syslog, $do_hup_cron, $set_sudo );
+my ( $installdb, $logrotate, $docron, $do_hup_syslog, $do_hup_cron, $set_sudo, $set_apparmor, $apparmor_restart );
 
 
 sub getYN {
@@ -1434,8 +1434,10 @@ if ( -d "$crondir" ) {
               print("\n\033[1m========================================\n\n\033[0m\n\n");
               print "In order for MySQL to import and export data, you must take measures to allow it access from AppArmor.\n";
               print "Install will attempt do do this for you, but please be sure to check /etc/apparmor.d/usr.sbin.mysqld and also to restart the AppArmor daemon once install completes.\n";
-              my $ok = &getYN( "Ok to continue?", "y" );
-              if ( $ok =~ /[Yy]/ ) {
+	      if ( $set_apparmor !~ /[YyNn]/ ) { # i.e. undefined in .lzrc
+		  $set_apparmor = &getYN( "Ok to continue?", "y" );
+	      }
+              if ( $set_apparmor =~ /[Yy]/ ) {
                   print "Adding the following to lines to $file:\n";
                   print "/tmp/logzilla_import.txt r,\n$lzbase/exports/** rw,\n";
                   open my $config, '+<', "$file" or warn "FAILED: $!\n";
@@ -1445,9 +1447,11 @@ if ( -d "$crondir" ) {
                   print $config @all;
                   close $config;
               }
-              print "\n\nAppArmor must be restarted, would you like to restart it now?\n";
-              $ok = &getYN( "Ok to continue?", "y" );
-              if ( $ok =~ /[Yy]/ ) {
+	      if ( $apparmor_restart !~ /[YyNn]/ ) { # i.e. undefined in .lzrc
+		  print "\n\nAppArmor must be restarted, would you like to restart it now?\n";
+		  $apparmor_restart  = &getYN( "Ok to continue?", "y" );
+	      }
+              if ( $apparmor_restart =~ /[Yy]/ ) {
                   my $r = `/etc/init.d/apparmor restart`;
               } else {
                   print("\033[1m\n\tPlease be sure to restart apparmor..\n\033[0m");
