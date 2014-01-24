@@ -82,7 +82,7 @@ my ( $year, $mon, $mday ) = Date::Calc::Add_Delta_Days( $curyear, $curmon, $curm
 my $pAdd = "p" . $year . sprintf( "%02d", $mon ) . sprintf( "%02d", $mday );
 my $dateTomorrow = $year . "-" . sprintf( "%02d", $mon ) . "-" . sprintf( "%02d", $mday );
 my ( $dbroot, $dbrootpass, $dbname, $dbtable, $dbhost, $dbport, $dbadmin, $dbadminpw, $siteadmin, $siteadminpw, $email, $sitename, $url, $logpath, $retention, $snare, $j4, $arch, $skipcron, $skipdb, $skipsysng, $skiplogrot, $skipsudo, $skipfb, $skiplic, $sphinx_compile, $sphinx_index, $skip_ioncube,$skipapparmor, $syslogng_conf, $webuser, $syslogng_source, $upgrade, $test, $autoyes, $spx_cores );
-my ( $installdb, $logrotate, $docron, $do_hup_syslog, $do_hup_cron, $set_sudo, $set_apparmor, $apparmor_restart );
+my ( $installdb, $logrotate, $docron, $do_hup_syslog, $do_hup_cron, $set_sudo, $set_apparmor, $apparmor_restart, $do_fback );
 
 
 sub getYN {
@@ -1493,8 +1493,11 @@ if ( -d "$crondir" ) {
       print "This non-intrusive button will allow you to instantly open support \n";
       print "requests with us as well as make suggestions on how we can make LogZilla better.\n";
       print "You can always disable it by selecting 'Admin>Settings>FEEDBACK' from the main menu\n";
-      my $ok = &getYN( "Ok to add support and feedback?", "y" );
-      if ( $ok =~ /[Yy]/ ) {
+
+      if ( $do_fback !~ /[YyNn]/ ) { # i.e. undefined in .lzrc
+	  $do_fback = &getYN( "Ok to add support and feedback?", "y" );
+      }
+      if ( $do_fback =~ /[Yy]/ ) {
           my $sth = $dbh->prepare( "
               update settings set value='1' where name='FEEDBACK';
               " ) or die "Could not update settings table: $DBI::errstr";
