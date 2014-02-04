@@ -2309,7 +2309,7 @@ if ( -d "$crondir" ) {
           my ( $ip, $mac );
           for (@lines) {
               if (/\s*HWaddr (\S+)/) {
-                  $mac = $1;
+                  $mac = lc($1);
                   print "Found MAC ($mac)\n";
               }
               if (/\s*inet addr:([\d.]+)/) {
