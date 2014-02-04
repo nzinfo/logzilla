@@ -201,7 +201,7 @@ if ( $options->{ng} > 0 ) {
 # Install LogZilla
 if ( $options->{install} > 0 ) {
     print "Installing LogZilla\n";
-    system("(cd $options->{lzroot}/scripts && echo \"q\"| ./install) 2>&1");
+    system("(cd $options->{lzroot}/scripts && echo \"q\"| sudo ./install) 2>&1");
 }
 
 # Set up Apache
