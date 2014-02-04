@@ -68,7 +68,7 @@ sub prompt {
 }
 
 my $version    = "4.5";
-my $subversion = ".535";
+my $subversion = ".540";
 
 # Grab the base path
 my $lzbase = getcwd;
@@ -2310,9 +2310,11 @@ if ( -d "$crondir" ) {
           for (@lines) {
               if (/\s*HWaddr (\S+)/) {
                   $mac = $1;
+                  print "Found MAC ($mac)\n";
               }
               if (/\s*inet addr:([\d.]+)/) {
                   $ip = $1;
+                  print "Found IP ($ip)\n";
                   last;    # we only want the first interface
               }
           }
@@ -2323,7 +2325,7 @@ if ( -d "$crondir" ) {
           my $hash = md5_hex("$ip$mac");
 
           my $url  = "http://lic.logzilla.net/$hash.txt";
-          print "Check for license using $ip_orig/$mac_orig\n";
+          print "Check for license using $ip_orig/$mac_orig ($ip$mac)\n";
           print "Requesting license file from $url\n";
           my $file = "$lzbase/html/license.txt";
 
