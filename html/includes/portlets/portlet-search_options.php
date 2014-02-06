@@ -26,7 +26,7 @@ if ((has_portlet_access($_SESSION['username'], 'Search Options') == TRUE) || ($_
             $line = fetch_array($result);
             $sumcnt = $line['count_all'];
             $count = $line['count'];
-            if ($count > 0) {
+            if ($count > 0 && $sumcount >0 ) {
                 $r = ( $sumcnt - $count );
                 $percent = ($r/$sumcnt) * 100;
             }
