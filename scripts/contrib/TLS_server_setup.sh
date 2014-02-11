@@ -1,12 +1,12 @@
-#!/bin/expect
-set pass "temp"
+#!/bin/bash
+# set pass "temp"
 
 cd /etc/syslog-ng
 mkdir ssl
 cd ssl
 openssl genrsa -des3 -out logserver.key 2048
-expect "Enter pass phrase for logserver.key: "
-send "$pass"
+# expect "Enter pass phrase for logserver.key: "
+# send "$pass"
 openssl req -new -key logserver.key -out logserver.csr
 cp logserver.key logserver.key.org
 openssl rsa -in logserver.key.org -out logserver.key
