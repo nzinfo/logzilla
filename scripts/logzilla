@@ -474,6 +474,8 @@ sub process_line {
         my $prg      = $4;
         my $msg      = $5;
 
+        $prg =~ s/.*irewall/Firewall/; # Added for Firewalls
+        DEBUG(1, "Found Program Firewall");
         if( $ts =~ /^(....)-(..)-(..) (..):(..):(..)$/ ) {
             $ts = POSIX::mktime( $6, $5, $4, $3, $2 - 1, $1 - 1900 );
         }
@@ -519,7 +521,6 @@ sub process_line {
 		"MessageText=" . $msgtext;
 	}
 
-        # FIXME - this is actually backslash and we remove first, not trailing!
         $msg =~ s/\\//;     # Some messages come in with a trailing slash 
         $msg =~ s/-Traceback/Traceback/; # Remove - so searches are easier and don't have to escape negative boolean
 
@@ -546,7 +547,8 @@ sub process_line {
         } else {
             $mac = "MAC";
         }
-        if ( $msg =~ /\%([^:]*\-\d+\-[A-Z\-\_\d]+?)(?:\:|\s)/ ) {
+        if ( $prg !~ /Firewall/ && $msg =~ /\%([^:]*\-\d+\-[A-Z\-\_\d]+?)(?:\:|\s)/ ) {
+            DEBUG( 1, "Searching for Mnemonic" );
             $mne = $1;
             $prg = "Cisco Syslog";
         } else {
