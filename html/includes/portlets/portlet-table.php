@@ -142,13 +142,12 @@ if ((has_portlet_access($_SESSION['username'], 'Search Results') == TRUE) || ($_
                         $('#results').dataTable( {
 			"bProcessing": true,
                 	"bServerSide": true,
-                	"sScrollX": "100%",
+                	"sScrollX": "87%",
                             "bServerSide": true,
-                            // "sScrollXInner": "150%",
-                            //"bJQueryUI": true,
+                             "sScrollXInner": "100%",
                             "aoColumns":[
-                            { "sWidth": "2%" }, // ID
-                            { "sWidth": "2%" }, // EID
+                            { "sWidth": "0%" }, // ID
+                            { "sWidth": "1%" }, // EID
                             { "sWidth": "2%" }, // Host
                             { "sWidth": "2%" }, // Fac
                             { "sWidth": "2%" }, // Sev
