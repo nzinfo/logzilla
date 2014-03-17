@@ -13,10 +13,10 @@
 
 # Simple script used to verify that your server has enough ram for Sphinx to function properly
 
-summary=`/path_to_logzilla/scripts/tools/summary > /tmp/mem.tmp`
+summary=`/var/www/logzilla/scripts/tools/summary > /tmp/mem.tmp`
 total=`cat /tmp/mem.tmp | grep Total | awk '{print $3}'`
 free=`cat /tmp/mem.tmp | grep Free | awk '{print $3}'`
-spmem=`(cd /path_to_logzilla/sphinx/data && du  -hsc *.spa *.spk *.spi *.sph *.ram | grep total | awk '{print $1}')`
+spmem=`(cd /var/www/logzilla/sphinx/data && du  -hsc *.spa *.spk *.spi *.sph *.ram | grep total | awk '{print $1}')`
 echo "Total Mem = $total"
 echo "Free Mem  = $free"
 echo "Memory used by Sphinx indexes = $spmem"
