@@ -19,7 +19,14 @@
 // is to place all js code just before the closing </body> tag.
 // However, some JS may require head loading...
 //------------------------------------------------------------------------------
-
+$basePath = dirname( __FILE__ );
+require_once ($basePath . "/common_funcs.php");
+if(!isset($_SESSION['SITE_URL'])) {
+        echo 'Session has expired!<br />';
+        $link = "../logout.php";
+        echo "Please <a href='$link'>login</a>";
+                exit;
+}
 ?>
 <!-- BEGIN JQUERY This needs to be first -->
 <script type="text/javascript" src="<?php echo $_SESSION['SITE_URL']?>includes/js/jquery/jquery-1.7.1.min.js"></script>
