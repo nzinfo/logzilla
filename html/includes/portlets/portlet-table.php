@@ -142,7 +142,7 @@ if ((has_portlet_access($_SESSION['username'], 'Search Results') == TRUE) || ($_
                         $('#results').dataTable( {
 			"bProcessing": true,
                 	"bServerSide": true,
-                	"sScrollX": "87%",
+                	"sScrollX": "95%",
                             "bServerSide": true,
 			     // Don't use scrollxinnner - it will autowidth
                              //"sScrollXInner": "100%",
