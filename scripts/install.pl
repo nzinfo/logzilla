@@ -68,7 +68,7 @@ sub prompt {
 }
 
 my $version    = "4.5";
-my $subversion = ".540";
+my $subversion = ".554";
 
 # Grab the base path
 my $lzbase = getcwd;
@@ -121,6 +121,14 @@ foreach my $arg (@ARGV) {
         exit;
     }
     elsif($arg eq "add_syslog_conf") {
+        add_syslog_conf();
+        exit;
+    }
+    elsif($arg eq "setup_syslog") {
+        add_syslog_conf();
+        exit;
+    }
+    elsif($arg eq "install_syslog") {
         add_syslog_conf();
         exit;
     }
@@ -1116,23 +1124,23 @@ sub add_syslog_conf {
 my $sconf2 = q{
 # Global Options
 options {
-    chain_hostnames(no);
-    keep_hostname(yes);
-    #threaded(yes); # enable if using Syslog-NG 3.3.x
-    #use_fqdn(no); # This should be set to no in high scale environments
-    #use_dns(no); # This should be set to no in high scale environments
+chain_hostnames(no);
+keep_hostname(yes);
+#threaded(yes); # enable if using Syslog-NG 3.3.x
+#use_fqdn(no); # This should be set to no in high scale environments
+#use_dns(no); # This should be set to no in high scale environments
 };
 
 # Capture the program name for SNARE events
 rewrite r_snare { 
-    subst("MSWinEventLog.+(Security|Application|System).+", "MSWin_$1", value("PROGRAM") flags(global)); 
+subst("MSWinEventLog.+(Security|Application|System).+", "MSWin_$1", value("PROGRAM") flags(global)); 
 };
 
 # Snare sends TAB delimited messages, we need pipes...
 rewrite r_snare2pipe { 
-    subst("\t", "|", value("MESSAGE") 
-    flags(global)
-    ); 
+subst("\t", "|", value("MESSAGE") 
+flags(global)
+); 
 };
 
 # Grab Cisco Mnemonics and write program name
@@ -1142,41 +1150,41 @@ filter f_rw_cisco_3 { match('^\d+[ywdh]\d+[ywdh]: (%[^:]+): ([^\n]+)' value("MSG
 filter f_rw_cisco_4 { match('^\d{6}: [\*\.]?(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\s+\d{1,2}\s\d{1,2}:\d{1,2}:\d{1,2}(?:\.\d+)?(?: [A-Z]{3})?: (%[^:]+): ([^\n]+)' value("MSGONLY") type("pcre") flags("store-matches" "nobackref")); };
 
 rewrite r_cisco_program {
-    set("Cisco_Syslog", value("PROGRAM") condition(filter(f_rw_cisco) or filter(f_rw_cisco_2) or filter(f_rw_cisco_3) or filter(f_rw_cisco_4)));
-    set("$1: $2", value("MESSAGE") condition(filter(f_rw_cisco) or filter(f_rw_cisco_2) or filter(f_rw_cisco_3) or filter(f_rw_cisco_4)));
+set("Cisco_Syslog", value("PROGRAM") condition(filter(f_rw_cisco) or filter(f_rw_cisco_2) or filter(f_rw_cisco_3) or filter(f_rw_cisco_4)));
+set("$1: $2", value("MESSAGE") condition(filter(f_rw_cisco) or filter(f_rw_cisco_2) or filter(f_rw_cisco_3) or filter(f_rw_cisco_4)));
 };
 
 source s_logzilla {
-    # Use no-multi-line so that java events get read properly
-    tcp(flags(no-multi-line));
-    udp(flags(no-multi-line));
+# Use no-multi-line so that java events get read properly
+tcp(flags(no-multi-line));
+udp(flags(no-multi-line));
 };
 
 destination d_logzilla {
-    program(
-        "/var/www/logzilla/scripts/logzilla"
-        log_fifo_size(1000)
-        flush_lines(100)
-        flush_timeout(1)
-        template("$R_YEAR-$R_MONTH-$R_DAY $R_HOUR:$R_MIN:$R_SEC\t$HOST\t$PRI\t$PROGRAM\t$MSGONLY\n")
-    );
+program(
+"/var/www/logzilla/scripts/logzilla"
+log_fifo_size(1000)
+flush_lines(100)
+flush_timeout(1)
+template("$R_YEAR-$R_MONTH-$R_DAY $R_HOUR:$R_MIN:$R_SEC\t$HOST\t$PRI\t$PROGRAM\t$MSGONLY\n")
+);
 };
 
 destination df_logzilla {
-    file("/var/log/logzilla/DEBUG.log"
-        template("$R_YEAR-$R_MONTH-$R_DAY $R_HOUR:$R_MIN:$R_SEC\t$HOST\t$PRI\t$PROGRAM\t$MSGONLY\n")
-    ); 
+file("/var/log/logzilla/DEBUG.log"
+template("$R_YEAR-$R_MONTH-$R_DAY $R_HOUR:$R_MIN:$R_SEC\t$HOST\t$PRI\t$PROGRAM\t$MSGONLY\n")
+); 
 };
 
 log {
-    source(s_logzilla);
-    rewrite(r_snare);
-    rewrite(r_snare2pipe);
-    rewrite(r_cisco_program);
-    destination(d_logzilla);
-    # Uncomment below and restart syslog-ng for debugging
-    # destination(df_logzilla);
-    flags(flow-control);
+source(s_logzilla);
+rewrite(r_snare);
+rewrite(r_snare2pipe);
+rewrite(r_cisco_program);
+destination(d_logzilla);
+# Uncomment below and restart syslog-ng for debugging
+# destination(df_logzilla);
+flags(flow-control);
 };
 #</lzconfig> END LogZilla settings
 };
