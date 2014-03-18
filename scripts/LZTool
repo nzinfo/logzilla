@@ -29,7 +29,8 @@ my $log = Log::Fast->global();
 
 my (@runfuncs);
 my $dbh_sphinx;
-my @functionlist = ( "countUpdate", "updateHosts", "tblSync", "cleanup_old_views", "cleanup_old_idx", "ss", "idx_rotate", "mtti", "mvdate" );
+my @functionlist = ( "countUpdate", "updateHosts", "tblSync", "cleanup_old_views", "cleanup_old_idx", "ss", "idx_rotate", "mtti", "mvdate", "delhost" );
+my (@hosts, @cleanup);
 
 # Command line options
 my $options = {
@@ -58,7 +59,10 @@ Usage: $myname [-option -option]
     -r        : Run only specified function(s) (used for debugging)
     -f        : list available functions (for debug use)
     -ss       : Analyze Server Stats [option -mysql]
+    -makeview : Creates views in DB for missing dates [usage: ./LZTool -v -r makeview -mvdate '2014-01-01']
     -mvdate   : Used with 'makeview' function to recreate views for old data imports
+    -delhost  : Delete a host and all associated records for that host from LogZilla
+    -host     : Host to delete from LogZilla
     -c        : config file (defaults to $options->{config_file})
 Example: $myname -l /var/log/foo.log -d 5 -c test/config.php -v
 };
@@ -79,6 +83,9 @@ GetOptions(
     'mysql!'          => \$options->{mysql},
     'mvdate|mvd=s'    => \$options->{mvdate},
     'yes|y'           => \$options->{yes},
+    'delhost|dh'      => \$options->{delhost},
+    'host=s'          => \@hosts,
+    'serversizer|ss'  => \$options->{ss},
 ) or usage_and_exit(1);    # got some invalid options
 
 if ( $options->{help} ) {
@@ -134,9 +141,17 @@ if ( defined( $options->{functionlist} ) ) {
     }
     exit;
 }
+$dbh_sphinx = DBI->connect( 'DBI:mysql::127.0.0.1:9306', 'root', ) || die "Could not connect to SphinxQL: $DBI::errstr";
+if ($options->{ss}) {
+    ss();
+    exit;
+}
+if ($options->{delhost}) {
+    delhost();
+    exit;
+}
 if ( $#runfuncs < 0 ) {
     waitfor( "indexer", 5, 300 );
-    $dbh_sphinx = DBI->connect( 'DBI:mysql::127.0.0.1:9306', 'root', ) || die "Could not connect to SphinxQL: $DBI::errstr";
     countUpdate();
     updateHosts();
     tblSync( "mne",       "mne" );
@@ -149,8 +164,9 @@ if ( $#runfuncs < 0 ) {
     mtti();
 } else {
     $log->INFO("Running specific functions only");
-    waitfor( "indexer", 5, 300 );
-    $dbh_sphinx = DBI->connect( 'DBI:mysql::127.0.0.1:9306', 'root', ) || die "Could not connect to SphinxQL: $DBI::errstr";
+    unless ($options->{dryrun}) {
+        waitfor( "indexer", 5, 300 );
+    }
 
     foreach my $func (@runfuncs) {
         DEBUG( 1, "Starting $func" );
@@ -170,9 +186,6 @@ if ( $#runfuncs < 0 ) {
         }
         elsif ( $func eq "cleanup_old_idx" ) {
             cleanup_old_idx();
-        }
-        elsif ( $func eq "ss" ) {
-            ss();
         }
         elsif ( $func eq "idx_rotate" ) {
             idx_rotate();
@@ -283,7 +296,7 @@ sub countUpdate {
         while ( $results = $spx_meta->fetchrow_hashref ) {
             if ( $results->{'Variable_name'} eq "total_found" ) {
                 $log->INFO("There are %s indexed events", commify( $results->{'Value'} ));
-	        $count = $results->{'Value'};
+                $count = $results->{'Value'};
                 $sth_syslog = $dbh->prepare('REPLACE INTO cache (name,value,updatetime) VALUES ("msg_sum",?,NOW());');
                 $sth_syslog->execute($count) unless $options->{dryrun};
                 store_metric( "lztool_msgsum", $count );
@@ -505,34 +518,34 @@ sub setup_log {
 
         # make multiplexer FH sending data both to file and STDERR
         open( my $fh, '>>:tee', $options->{log_file}, \*STDERR )
-          or croak("$options->{log_file}: $!");
-        $fh->autoflush(1);
-        $log_options->{fh} = $fh;
-    }
-    else {
-        open( my $fh, '>>', $options->{log_file} ) or croak("$options->{log_file}: $!");
-        $log_options->{fh} = $fh;
-    }
+        or croak("$options->{log_file}: $!");
+    $fh->autoflush(1);
+    $log_options->{fh} = $fh;
+}
+else {
+    open( my $fh, '>>', $options->{log_file} ) or croak("$options->{log_file}: $!");
+    $log_options->{fh} = $fh;
+}
 
-    # Setup extra information to put in every log line, depending on debug level
-    if ( $options->{debug} > 1 ) {
-        $log_options->{prefix} = "%D %T %S [%L] ";
-    }
-    else {
-        $log_options->{prefix} = "%D %T [%L] ";
-    }
+# Setup extra information to put in every log line, depending on debug level
+if ( $options->{debug} > 1 ) {
+    $log_options->{prefix} = "%D %T %S [%L] ";
+}
+else {
+    $log_options->{prefix} = "%D %T [%L] ";
+}
 
-    $log_options->{level} = $options->{debug} > 0 ? 'DEBUG' : 'INFO';
+$log_options->{level} = $options->{debug} > 0 ? 'DEBUG' : 'INFO';
 
-    $log->config($log_options);
+$log->config($log_options);
 
-    $SIG{__WARN__} = sub {
-        my $msg = shift;
-        $msg =~ s/\n//;
-        $log->WARN($msg);
-    };
+$SIG{__WARN__} = sub {
+    my $msg = shift;
+    $msg =~ s/\n//;
+    $log->WARN($msg);
+};
 
-    $log->INFO("Starting logging to $options->{log_file} with pid $$");
+$log->INFO("Starting logging to $options->{log_file} with pid $$");
 }
 
 sub DEBUG {
@@ -905,5 +918,107 @@ sub makeview {
         }
     } else {
         $log->ERR("Option 'makeview' requires a date in the form YYYY-MM-DD");
+    }
+}
+sub delhost {
+    #$sql = "SELECT table_name from information_schema.views where table_name like '%search_results'";
+    #$sth_syslog = $dbh->prepare($sql);
+    #DEBUG( 1, "Executing SQL Statement: $sql" );
+    #$sth_syslog->execute();
+    my $sel_hosts = $dbh->prepare('SELECT * FROM hosts WHERE host = ?') or die "Couldn't prepare statement: " . $dbh->errstr;
+    my $sel_logs = $dbh->prepare('SELECT * FROM logs WHERE host = ?') or die "Couldn't prepare statement: " . $dbh->errstr;
+    my $sel_prgs = $dbh->prepare('SELECT * FROM programs WHERE crc = ?') or die "Couldn't prepare statement: " . $dbh->errstr;
+    my $sel_mnes = $dbh->prepare('SELECT * FROM mne WHERE crc = ?') or die "Couldn't prepare statement: " . $dbh->errstr;
+    my $del_logs = $dbh->prepare('DELETE FROM logs WHERE host = ?') or die "Couldn't prepare statement: " . $dbh->errstr;
+    foreach my $hostname (@hosts) {
+        $log->INFO("-=Removing $hostname from LogZilla=-");
+        my @logs;
+        my @prgs;
+        my @mnes;
+        chomp $hostname;
+        $sel_logs->execute($hostname) or die "Couldn't execute statement: " . $sel_logs->errstr;
+        $log->INFO("Getting info from logs table, be patient...");
+        my $rows = $sel_logs->rows;
+        $log->INFO("-=Removing %s occurrences of $hostname from LogZilla=-", commify($rows));
+        while ( @logs = $sel_logs->fetchrow_array() ) {
+            my $logs_id       = $logs[0];
+            my $logs_hostname = $logs[1];
+            my $logs_prg_crc  = $logs[4];
+            my $logs_mne_crc  = $logs[6];
+            my $logs_seen     = $logs[9];
+            $sel_prgs->execute($logs_prg_crc) or die "Couldn't execute statement: " . $sel_prgs->errstr;
+            while ( @prgs = $sel_prgs->fetchrow_array() ) {
+                my $prgs_id   = $prgs[0];
+                my $prgs_name = $prgs[1];
+                my $prgs_crc  = $prgs[2];
+                my $prgs_seen = $prgs[3];
+                DEBUG(1, "Checking Programs table for '$prgs_name' entries...");
+                if ( $prgs_seen > 1 ) {
+                    DEBUG(1, "Updating Program count for $prgs_name");
+                    $dbh->do("UPDATE programs SET seen = seen - 1 WHERE id='$prgs_id'") unless $options->{dryrun};
+                } else {
+                    DEBUG(1, "Deleting '$prgs_name' from the Programs table");
+                    $dbh->do("DELETE FROM programs WHERE id='$prgs_id'") unless $options->{dryrun};
+                }
+            }
+
+            # Clean up mne's
+            $sel_mnes->execute($logs_mne_crc) or die "Couldn't execute statement: " . $sel_mnes->errstr;
+            while ( @mnes = $sel_mnes->fetchrow_array() ) {
+                my $mnes_id   = $mnes[0];
+                my $mnes_name = $mnes[1];
+                my $mnes_crc  = $mnes[2];
+                my $mnes_seen = $mnes[3];
+                DEBUG(1, "Checking Mnemonics table for '$mnes_name' entries...");
+                if ( $mnes_seen > 1 ) {
+                    DEBUG(1, "Updating Mnemonic count for $mnes_name");
+                    $dbh->do("UPDATE mne SET seen = seen - 1 WHERE id='$mnes_id'") unless $options->{dryrun};
+                } else {
+                    DEBUG(1, "Deleting '$mnes_name' from the Mnemonics table");
+                    $dbh->do("DELETE FROM mne WHERE id='$mnes_id'") unless $options->{dryrun};
+                }
+            }
+
+            # Clean up hosts
+            $sel_hosts->execute($logs_hostname)
+                or die "Couldn't execute statement: " . $sel_hosts->errstr;
+            while ( @hosts = $sel_hosts->fetchrow_array() ) {
+                my $hosts_id   = $hosts[0];
+                my $hosts_name = $hosts[1];
+                my $hosts_crc  = $hosts[2];
+                my $hosts_seen = $hosts[3];
+                DEBUG(1, "Checking Hosts table for '$hosts_name' entries...");
+                if ( $hosts_seen > 1 ) {
+                    DEBUG(1, "Updating Hosts count for $hosts_name");
+                    $dbh->do("UPDATE hosts SET seen = seen - 1 WHERE id='$hosts_id'") unless $options->{dryrun};
+                } else {
+                    DEBUG(1, "Deleting '$hosts_name' from the Hosts table");
+                    $dbh->do("DELETE FROM hosts WHERE id='$hosts_id'") unless $options->{dryrun};
+                }
+            }
+
+#print "Checking Logs table for '$logs_hostname' entries...\n" if ($options->{verbose});
+            if ( $logs_seen > 1 ) {
+                DEBUG(1, "Updating Log count for $logs_hostname");
+                $dbh->do("UPDATE logs SET counter = counter - 1 WHERE id='$logs_id'") unless $options->{dryrun};
+            } else {
+                DEBUG(1, "Deleting '$logs_hostname' from the Logs table");
+                $dbh->do("DELETE FROM logs WHERE id='$logs_id'") unless $options->{dryrun};
+            }
+        }
+        if ( $sel_logs->rows == 0 ) {
+            DEBUG(1, "`$hostname' was not found in the database.");
+            push( @cleanup, "$hostname" );
+        }
+
+        $sel_logs->finish;
+        $sel_prgs->finish;
+        $sel_mnes->finish;
+    }
+
+# additional cleanup in case the hosts are in hosts table but not in the logs table
+    foreach my $h (@cleanup) {
+        $log->INFO("Deleting '$h' from the Hosts table");
+        $dbh->do("DELETE FROM hosts WHERE host='$h'") unless $options->{dryrun};
     }
 }

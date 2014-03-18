@@ -100,7 +100,7 @@ sub setup_mycnf {
 # Based on http://www.mysqlperformanceblog.com/2007/11/01/innodb-performance-optimization-basics/
 # And also from http://themattreid.com/uploads/innodb_flush_method-CNF-loadtest.txt
 # Do not depend on these settings to be correct for your server. Please consult your DBA
-# You can also run /var/www/logzilla/scripts/tools/mysqltuner.pl for help.
+# You can also run /path_to_logzilla/scripts/tools/mysqltuner.pl for help.
 #
 #
 [mysqld]
@@ -203,7 +203,7 @@ key_buffer_size                 = 128M  # This is the MyISAM equivalent of 'inno
 ## InnoDB IO Capacity - 5.1.x plugin, 5.5.x
 # http://dev.mysql.com/doc/refman/5.5/en/innodb-parameters.html#sysvar_innodb_io_capacity
 #--------------------------------------
-innodb_io_capacity              = 20000 # Based on iostat for the fastest disk in your server
+#innodb_io_capacity              = 20000 # Based on iostat for the fastest disk in your server
 
 #--------------------------------------
 ## InnoDB IO settings -  5.1.x only

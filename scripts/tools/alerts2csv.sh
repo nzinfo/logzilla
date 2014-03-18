@@ -2,7 +2,7 @@
 # -------------------------------------------
 # Set logzilla base path
 # -------------------------------------------
-lzhome="/var/www/logzilla"
+lzhome="/path_to_logzilla"
 [ ! -d "$lzhome" ] && lzhome="/var/www/logzilla"
 # Path to logzilla config file
 # -------------------------------------------
