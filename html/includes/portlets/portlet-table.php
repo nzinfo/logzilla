@@ -144,7 +144,8 @@ if ((has_portlet_access($_SESSION['username'], 'Search Results') == TRUE) || ($_
                 	"bServerSide": true,
                 	"sScrollX": "87%",
                             "bServerSide": true,
-                             "sScrollXInner": "100%",
+			     // Don't use scrollxinnner - it will autowidth
+                             //"sScrollXInner": "100%",
                             "aoColumns":[
                             { "sWidth": "0%" }, // ID
                             { "sWidth": "1%" }, // EID
