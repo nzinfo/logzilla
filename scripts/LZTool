@@ -825,7 +825,7 @@ sub ss {
 
 sub mtti {
     $log->INFO("-=Calculating MTTI Stats=-");
-    $sql = "SELECT FROM_UNIXTIME(ts_start) AS start, FROM_UNIXTIME(ts_end) AS end, value FROM sph_metrics WHERE name='indexer'";
+    $sql = "SELECT FROM_UNIXTIME(ts_start) AS start, FROM_UNIXTIME(ts_end) AS end, value FROM sph_metrics WHERE name='indexer' ORDER BY ts_start DESC limit 5000";
     $sth_syslog = $dbh->prepare($sql);
     DEBUG( 1, "Executing SQL Statement: $sql" );
     $sth_syslog->execute();
@@ -925,100 +925,122 @@ sub delhost {
     #$sth_syslog = $dbh->prepare($sql);
     #DEBUG( 1, "Executing SQL Statement: $sql" );
     #$sth_syslog->execute();
-    my $sel_hosts = $dbh->prepare('SELECT * FROM hosts WHERE host = ?') or die "Couldn't prepare statement: " . $dbh->errstr;
-    my $sel_logs = $dbh->prepare('SELECT * FROM logs WHERE host = ?') or die "Couldn't prepare statement: " . $dbh->errstr;
-    my $sel_prgs = $dbh->prepare('SELECT * FROM programs WHERE crc = ?') or die "Couldn't prepare statement: " . $dbh->errstr;
-    my $sel_mnes = $dbh->prepare('SELECT * FROM mne WHERE crc = ?') or die "Couldn't prepare statement: " . $dbh->errstr;
-    my $del_logs = $dbh->prepare('DELETE FROM logs WHERE host = ?') or die "Couldn't prepare statement: " . $dbh->errstr;
+
+    #1 For each host given on the command line
+    # Get count of all log entries for the specified host from the hosts>seen table
+    #2 Remove $count from seen on each portlet
+    #3 Remove all entries from hosts and logs table for that host
+    #4 If any prg, mne or eid's are left with a seen = 0, then remove them from the DB
+    my %hosts_seen = ();
+    my %prgs = ();
+    my %mnes = ();
+    my %eids = ();
+
+    #1
     foreach my $hostname (@hosts) {
         $log->INFO("-=Removing $hostname from LogZilla=-");
-        my @logs;
-        my @prgs;
-        my @mnes;
         chomp $hostname;
-        $sel_logs->execute($hostname) or die "Couldn't execute statement: " . $sel_logs->errstr;
-        $log->INFO("Getting info from logs table, be patient...");
-        my $rows = $sel_logs->rows;
-        $log->INFO("-=Removing %s occurrences of $hostname from LogZilla=-", commify($rows));
-        while ( @logs = $sel_logs->fetchrow_array() ) {
-            my $logs_id       = $logs[0];
-            my $logs_hostname = $logs[1];
-            my $logs_prg_crc  = $logs[4];
-            my $logs_mne_crc  = $logs[6];
-            my $logs_seen     = $logs[9];
-            $sel_prgs->execute($logs_prg_crc) or die "Couldn't execute statement: " . $sel_prgs->errstr;
-            while ( @prgs = $sel_prgs->fetchrow_array() ) {
-                my $prgs_id   = $prgs[0];
-                my $prgs_name = $prgs[1];
-                my $prgs_crc  = $prgs[2];
-                my $prgs_seen = $prgs[3];
-                DEBUG(1, "Checking Programs table for '$prgs_name' entries...");
-                if ( $prgs_seen > 1 ) {
-                    DEBUG(1, "Updating Program count for $prgs_name");
-                    $dbh->do("UPDATE programs SET seen = seen - 1 WHERE id='$prgs_id'") unless $options->{dryrun};
-                } else {
-                    DEBUG(1, "Deleting '$prgs_name' from the Programs table");
-                    $dbh->do("DELETE FROM programs WHERE id='$prgs_id'") unless $options->{dryrun};
-                }
-            }
-
-            # Clean up mne's
-            $sel_mnes->execute($logs_mne_crc) or die "Couldn't execute statement: " . $sel_mnes->errstr;
-            while ( @mnes = $sel_mnes->fetchrow_array() ) {
-                my $mnes_id   = $mnes[0];
-                my $mnes_name = $mnes[1];
-                my $mnes_crc  = $mnes[2];
-                my $mnes_seen = $mnes[3];
-                DEBUG(1, "Checking Mnemonics table for '$mnes_name' entries...");
-                if ( $mnes_seen > 1 ) {
-                    DEBUG(1, "Updating Mnemonic count for $mnes_name");
-                    $dbh->do("UPDATE mne SET seen = seen - 1 WHERE id='$mnes_id'") unless $options->{dryrun};
-                } else {
-                    DEBUG(1, "Deleting '$mnes_name' from the Mnemonics table");
-                    $dbh->do("DELETE FROM mne WHERE id='$mnes_id'") unless $options->{dryrun};
-                }
-            }
-
-            # Clean up hosts
-            $sel_hosts->execute($logs_hostname)
-                or die "Couldn't execute statement: " . $sel_hosts->errstr;
-            while ( @hosts = $sel_hosts->fetchrow_array() ) {
-                my $hosts_id   = $hosts[0];
-                my $hosts_name = $hosts[1];
-                my $hosts_crc  = $hosts[2];
-                my $hosts_seen = $hosts[3];
-                DEBUG(1, "Checking Hosts table for '$hosts_name' entries...");
-                if ( $hosts_seen > 1 ) {
-                    DEBUG(1, "Updating Hosts count for $hosts_name");
-                    $dbh->do("UPDATE hosts SET seen = seen - 1 WHERE id='$hosts_id'") unless $options->{dryrun};
-                } else {
-                    DEBUG(1, "Deleting '$hosts_name' from the Hosts table");
-                    $dbh->do("DELETE FROM hosts WHERE id='$hosts_id'") unless $options->{dryrun};
-                }
-            }
-
-#print "Checking Logs table for '$logs_hostname' entries...\n" if ($options->{verbose});
-            if ( $logs_seen > 1 ) {
-                DEBUG(1, "Updating Log count for $logs_hostname");
-                $dbh->do("UPDATE logs SET counter = counter - 1 WHERE id='$logs_id'") unless $options->{dryrun};
-            } else {
-                DEBUG(1, "Deleting '$logs_hostname' from the Logs table");
-                $dbh->do("DELETE FROM logs WHERE id='$logs_id'") unless $options->{dryrun};
-            }
+        $sql = "SELECT * FROM hosts WHERE host ='$hostname'";
+        $sth_syslog = $dbh->prepare($sql);
+        DEBUG( 1, "Executing SQL Statement: $sql" );
+        $sth_syslog->execute();
+        while ( $results = $sth_syslog->fetchrow_hashref ) {
+            my $seen = $results->{seen};
+            $log->INFO("-=Found %s entries for $hostname=-", commify($seen));
+            $hosts_seen{ $hostname } = $seen;   
         }
-        if ( $sel_logs->rows == 0 ) {
-            DEBUG(1, "`$hostname' was not found in the database.");
-            push( @cleanup, "$hostname" );
-        }
-
-        $sel_logs->finish;
-        $sel_prgs->finish;
-        $sel_mnes->finish;
     }
-
-# additional cleanup in case the hosts are in hosts table but not in the logs table
-    foreach my $h (@cleanup) {
-        $log->INFO("Deleting '$h' from the Hosts table");
-        $dbh->do("DELETE FROM hosts WHERE host='$h'") unless $options->{dryrun};
+    #2
+    while( my ($k, $v) = each %hosts_seen ) {
+        DEBUG(2, "Hash->Host '%s' contains %s entries", $k, commify($v));
+        $sql = "SELECT * FROM logs WHERE host ='$k'";
+        $sth_syslog = $dbh->prepare($sql);
+        DEBUG( 1, "Executing SQL Statement: $sql" );
+        $sth_syslog->execute();
+        while ( $results = $sth_syslog->fetchrow_hashref ) {
+            my $prg     = $results->{program};
+            my $mne     = $results->{mne};
+            my $eid     = $results->{eid};
+            my $counter = $results->{counter};
+            $prgs{ $prg } += $counter;   
+            $mnes{ $mne } += $counter;   
+            $eids{ $eid } += $counter;   
+        }
+    }
+    #2
+    while( my ($k, $v) = each %prgs ) {
+        DEBUG(2, "Hash->Programs '%s' contains %s entries", $k, commify($v));
+        $sql = "SELECT * FROM programs WHERE crc ='$k'";
+        $sth_syslog = $dbh->prepare($sql);
+        DEBUG( 1, "Executing SQL Statement: $sql" );
+        $sth_syslog->execute();
+        while ( $results = $sth_syslog->fetchrow_hashref ) {
+            my $name     = $results->{name};
+            $log->INFO("Removing %s entries from Programs->$name", commify($v));
+            $sql = "UPDATE programs set seen=seen -$v where crc='$k'";
+            $sth_syslog = $dbh->prepare($sql);
+            DEBUG( 1, "Executing SQL Statement: $sql" );
+            $sth_syslog->execute() unless $options->{dryrun};
+            last;
+        }
+    }
+    #2
+    while( my ($k, $v) = each %mnes ) {
+        DEBUG(2, "Hash->Mnemonic '%s' contains %s entries", $k, commify($v));
+        $sql = "SELECT * FROM mne WHERE crc ='$k'";
+        $sth_syslog = $dbh->prepare($sql);
+        DEBUG( 1, "Executing SQL Statement: $sql" );
+        $sth_syslog->execute();
+        while ( $results = $sth_syslog->fetchrow_hashref ) {
+            my $name     = $results->{name};
+            $log->INFO("Removing %s entries from Mnemonics->$name", commify($v));
+            $sql = "UPDATE mne set seen=seen -$v where crc='$k'";
+            $sth_syslog = $dbh->prepare($sql);
+            DEBUG( 1, "Executing SQL Statement: $sql" );
+            $sth_syslog->execute() unless $options->{dryrun};
+            last;
+        }
+    }
+    #2
+    while( my ($k, $v) = each %eids ) {
+        DEBUG(2, "Hash->Windows EID '%s' contains %s entries", $k, commify($v));
+        $sql = "SELECT * FROM snare_eid WHERE eid ='$k'";
+        $sth_syslog = $dbh->prepare($sql);
+        DEBUG( 1, "Executing SQL Statement: $sql" );
+        $sth_syslog->execute();
+        while ( $results = $sth_syslog->fetchrow_hashref ) {
+            $log->INFO("Removing %s entries from Windows EventIDs->$k", commify($v));
+            $sql = "UPDATE snare_eid set seen=seen -$v where eid='$k'";
+            $sth_syslog = $dbh->prepare($sql);
+            DEBUG( 1, "Executing SQL Statement: $sql" );
+            $sth_syslog->execute() unless $options->{dryrun};
+            last;
+        }
+    }
+    #3
+    foreach my $hostname (@hosts) {
+        $log->INFO("-=Removing all logs associated with $hostname from the DB=-");
+        chomp $hostname;
+        $sql = "DELETE FROM logs WHERE host ='$hostname'";
+        $sth_syslog = $dbh->prepare($sql);
+        DEBUG( 1, "Executing SQL Statement: $sql" );
+        $sth_syslog->execute() unless $options->{dryrun};
+        $sql = "DELETE FROM hosts WHERE host ='$hostname'";
+        $sth_syslog = $dbh->prepare($sql);
+        DEBUG( 1, "Executing SQL Statement: $sql" );
+        $sth_syslog->execute() unless $options->{dryrun};
+        #4
+        $sql = "DELETE FROM programs WHERE seen=0";
+        $sth_syslog = $dbh->prepare($sql);
+        DEBUG( 1, "Executing SQL Statement: $sql" );
+        $sth_syslog->execute() unless $options->{dryrun};
+        $sql = "DELETE FROM mne WHERE seen=0";
+        $sth_syslog = $dbh->prepare($sql);
+        DEBUG( 1, "Executing SQL Statement: $sql" );
+        $sth_syslog->execute() unless $options->{dryrun};
+        $sql = "DELETE FROM snare_eid WHERE seen=0";
+        $sth_syslog = $dbh->prepare($sql);
+        DEBUG( 1, "Executing SQL Statement: $sql" );
+        $sth_syslog->execute() unless $options->{dryrun};
     }
 }
