@@ -43,7 +43,7 @@ You will need to set the timezone to your locale by typing:
 dpkg-reconfigure tzdata
 
 First Bootup:
-Please run "sudo lzupdate" to get the latest version.
+Please run "lzupdate" to get the latest version.
 
 Access:
 The login/password for the shell is lzadmin/lzadmin
