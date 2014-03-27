@@ -13,8 +13,8 @@
 $basePath = dirname( __FILE__ );
 require_once ($basePath . "/includes/common_funcs.php");
 require_once ($basePath . "/../js_header.php");
-require_once ($basePath . "/../css.php");
-require_once ($basePath . "/../html_header.php");
+require_once ($basePath . "/css.php");
+require_once ($basePath . "/html_header.php");
 $err = get_input('err');
 $v = get_input('v');
 // die($err);
