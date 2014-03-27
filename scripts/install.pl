@@ -68,7 +68,7 @@ sub prompt {
 }
 
 my $version    = "4.5";
-my $subversion = ".557";
+my $subversion = ".558";
 
 # Grab the base path
 my $lzbase = getcwd;
@@ -1126,9 +1126,9 @@ my $sconf2 = q{
 options {
     chain_hostnames(no);
     keep_hostname(yes);
-    #threaded(yes); # enable if using Syslog-NG 3.3.x
-    #use_fqdn(yes); # This should be set to no in high scale environments
-    #use_dns(yes); # This should be set to no in high scale environments
+    threaded(yes); # enable if using Syslog-NG 3.3.x
+    use_fqdn(yes); # This should be set to no in high scale environments
+    use_dns(yes); # This should be set to no in high scale environments
 };
 
 # Capture the program name for SNARE events
@@ -1170,6 +1170,15 @@ rewrite r_vmware {
     set("VMWare", value("PROGRAM") condition(filter(f_vmware)));
 };
 
+# Cisco Context Directory Agent doesn't send host or program name properly
+filter f_CiscoCDA {  
+    match('ContextManager: ' value("MSGONLY"))
+};  
+rewrite r_CiscoCDA {
+    set("CiscoCDA", value("PROGRAM") condition(filter(f_CiscoCDA)));
+    set("$SOURCEIP", value("HOST") condition(filter(f_CiscoCDA)));
+};  
+
 source s_logzilla {
     tcp();
     udp();
@@ -1195,12 +1204,14 @@ destination df_logzilla {
 
 log {
     source(s_logzilla);
+    rewrite(r_CiscoCDA);
+    rewrite(r_vmware);
     rewrite(r_snare);
     rewrite(r_snare2pipe);
     rewrite(r_cisco_program);
     destination(d_logzilla);
     # Uncomment below and restart syslog-ng for debugging
-    # destination(df_logzilla);
+    destination(df_logzilla);
     flags(flow-control);
 };
 #</lzconfig> END LogZilla settings
