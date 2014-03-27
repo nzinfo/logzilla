@@ -935,6 +935,11 @@ sub delhost {
     my %prgs = ();
     my %mnes = ();
     my %eids = ();
+    countUpdate();
+    updateHosts();
+    tblSync( "mne",       "mne" );
+    tblSync( "snare_eid", "eid" );
+    tblSync( "programs",  "program" );
 
     #1
     foreach my $hostname (@hosts) {
@@ -948,6 +953,10 @@ sub delhost {
             my $seen = $results->{seen};
             $log->INFO("-=Found %s entries for $hostname=-", commify($seen));
             $hosts_seen{ $hostname } = $seen;   
+            $sql = "UPDATE cache set value=value-$seen where name='msg_sum'";
+            my $sth = $dbh->prepare($sql);
+            DEBUG( 1, "Executing SQL Statement: $sql" );
+            $sth->execute() unless $options->{dryrun};
         }
     }
     #2
@@ -976,6 +985,8 @@ sub delhost {
         $sth_syslog->execute();
         while ( $results = $sth_syslog->fetchrow_hashref ) {
             my $name     = $results->{name};
+            my $seen     = $results->{seen};
+            $v = $seen if ($v>$seen); # Don't allow $v to be < 0
             $log->INFO("Removing %s entries from Programs->$name", commify($v));
             $sql = "UPDATE programs set seen=seen -$v where crc='$k'";
             $sth_syslog = $dbh->prepare($sql);
@@ -993,6 +1004,8 @@ sub delhost {
         $sth_syslog->execute();
         while ( $results = $sth_syslog->fetchrow_hashref ) {
             my $name     = $results->{name};
+            my $seen     = $results->{seen};
+            $v = $seen if ($v>$seen); # Don't allow $v to be < 0
             $log->INFO("Removing %s entries from Mnemonics->$name", commify($v));
             $sql = "UPDATE mne set seen=seen -$v where crc='$k'";
             $sth_syslog = $dbh->prepare($sql);
@@ -1009,6 +1022,8 @@ sub delhost {
         DEBUG( 1, "Executing SQL Statement: $sql" );
         $sth_syslog->execute();
         while ( $results = $sth_syslog->fetchrow_hashref ) {
+            my $seen     = $results->{seen};
+            $v = $seen if ($v>$seen); # Don't allow $v to be < 0
             $log->INFO("Removing %s entries from Windows EventIDs->$k", commify($v));
             $sql = "UPDATE snare_eid set seen=seen -$v where eid='$k'";
             $sth_syslog = $dbh->prepare($sql);
@@ -1043,4 +1058,9 @@ sub delhost {
         DEBUG( 1, "Executing SQL Statement: $sql" );
         $sth_syslog->execute() unless $options->{dryrun};
     }
+    countUpdate();
+    updateHosts();
+    tblSync( "mne",       "mne" );
+    tblSync( "snare_eid", "eid" );
+    tblSync( "programs",  "program" );
 }
