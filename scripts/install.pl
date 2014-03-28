@@ -68,7 +68,7 @@ sub prompt {
 }
 
 my $version    = "4.5";
-my $subversion = ".558";
+my $subversion = ".563";
 
 # Grab the base path
 my $lzbase = getcwd;
@@ -1179,6 +1179,12 @@ rewrite r_CiscoCDA {
     set("$SOURCEIP", value("HOST") condition(filter(f_CiscoCDA)));
 };  
 
+# Capture real program name in case it's missing in the syslog header
+filter f_rw_prg { match('(\w+)\[\d+' value("MSGONLY") type("pcre") flags("store-matches" "nobackref")); };
+rewrite r_rw_prg {
+    set("$1", value("PROGRAM") condition(filter(f_rw_prg)));
+};  
+
 source s_logzilla {
     tcp();
     udp();
@@ -1205,6 +1211,7 @@ destination df_logzilla {
 log {
     source(s_logzilla);
     rewrite(r_CiscoCDA);
+    rewrite(r_rw_prg);
     rewrite(r_vmware);
     rewrite(r_snare);
     rewrite(r_snare2pipe);

@@ -1058,9 +1058,4 @@ sub delhost {
         DEBUG( 1, "Executing SQL Statement: $sql" );
         $sth_syslog->execute() unless $options->{dryrun};
     }
-    countUpdate();
-    updateHosts();
-    tblSync( "mne",       "mne" );
-    tblSync( "snare_eid", "eid" );
-    tblSync( "programs",  "program" );
 }
