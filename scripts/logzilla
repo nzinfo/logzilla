@@ -475,6 +475,7 @@ sub process_line {
         my $msg      = $5;
 
         $prg =~ s/.*irewall/Firewall/; # Added for Firewalls
+        $msg =~ s/\e\[?.*?[\@-~]//g; # Strip ANSI codes
         DEBUG(1, "Found Program Firewall");
         if( $ts =~ /^(....)-(..)-(..) (..):(..):(..)$/ ) {
             $ts = POSIX::mktime( $6, $5, $4, $3, $2 - 1, $1 - 1900 );
