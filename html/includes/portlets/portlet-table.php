@@ -137,233 +137,197 @@ if ((has_portlet_access($_SESSION['username'], 'Search Results') == TRUE) || ($_
             }
 
             ?>
-                <script type="text/javascript" charset="utf-8">
-                $(document).ready(function() {
-                        $('#results').dataTable( {
-			"bProcessing": true,
-                	"bServerSide": true,
-                	"sScrollX": "95%",
-                            "bServerSide": true,
-			     // Don't use scrollxinnner - it will autowidth
-                             //"sScrollXInner": "100%",
-                            "aoColumns":[
-                            { "sWidth": "0%" }, // ID
-                            { "sWidth": "1%" }, // EID
-                            { "sWidth": "2%" }, // Host
-                            { "sWidth": "2%" }, // Fac
-                            { "sWidth": "2%" }, // Sev
-                            { "sWidth": "2%" }, // Program
-                            { "sWidth": "2%" }, // Mne
-                            { "sWidth": "50%" }, // MSG
-<?php if ($_SESSION['DEDUP'] == "1") {?>
-                            { "sWidth": "10%" }, // FO
-                            { "sWidth": "10%" }, // LO
-                            { "sWidth": "5%" }, // Counter
-                            <?php } else { ?>
-                            { "sWidth": "20%" }, // LO
-                            <?php } ?>
-                            // disabled in this version since there is currently no way to enter notes
-                            // { "sWidth": "15%" }, // Notes
-                            ],
-			    "fnDrawCallback": function(oSettings) {
-				    for ( var i=0, iLen=oSettings.aoData.length ; i<iLen ; i++ ) {
-					    var sev = oSettings.aoData[i]._aData[4];
-					    var colorCSS;
-					    if(sev === 'emerg') {
-						    colorCSS = 'TBL_SEV_0_EMERG';
-					    } else if(sev === 'crit') {
-						    colorCSS = 'TBL_SEV_1_CRIT';
-					    } else if(sev === 'alert') {
-						    colorCSS = 'TBL_SEV_2_ALERT';
-					    } else if(sev === 'err') {
-						    colorCSS = 'TBL_SEV_3_ERROR';
-					    } else if(sev === 'warning') {
-						    colorCSS = 'TBL_SEV_4_WARN';
-					    } else if(sev === 'notice') {
-						    colorCSS = 'TBL_SEV_5_NOTICE';
-					    } else if(sev === 'info') {
-						    colorCSS = 'TBL_SEV_6_INFO';
-					    } else if(sev === 'debug') {
-						    colorCSS = 'TBL_SEV_7_DEBUG';
-					    }
-					    oSettings.aoData[i].nTr.className += " "+colorCSS;
-                                            $("tr td:nth-child(7)").addClass('msg');
-				    }
-                                    // #499 - BEGIN: context menu search function
-                                    function getSelectionText() {
-                                        var text = "";
-                                        if (window.getSelection) {
-                                            text = window.getSelection().toString();
-                                        } else if (document.selection && document.selection.type != "Control") {
-                                            text = document.selection.createRange().text;
+            <script type="text/javascript" charset="utf-8">
+            $(document).ready(function() {
+                var tail = '<?php echo $tail?>';
+                $('#results').dataTable( {
+                    "bProcessing": true,
+                        "bServerSide": true,
+                        "sScrollX": "95%",
+                        "bServerSide": true,
+                        // Don't use scrollxinnner - it will autowidth
+                        //"sScrollXInner": "100%",
+                        "aoColumns":[
+                    { "bVisible": false }, // ID
+                    { "sWidth": "1%" }, // EID
+                    { "sWidth": "2%" }, // Host
+                    { "sWidth": "2%" }, // Fac
+                    { "sWidth": "2%" }, // Sev
+                    { "sWidth": "2%" }, // Program
+                    { "sWidth": "2%" }, // Mne
+                    { "sWidth": "50%" }, // MSG
+                    <?php if ($_SESSION['DEDUP'] == "1") {?>
+                    { "sWidth": "10%" }, // FO
+                    { "sWidth": "10%" }, // LO
+                    { "sWidth": "5%" }, // Counter
+                    <?php } else { ?>
+                    { "sWidth": "20%" }, // LO
+                    <?php } ?>
+                    ],
+                    "fnDrawCallback": function(oSettings) {
+                        for ( var i=0, iLen=oSettings.aoData.length ; i<iLen ; i++ ) {
+                            var sev = oSettings.aoData[i]._aData[4];
+                            var colorCSS;
+                            if(sev === 'emerg') {
+                                colorCSS = 'TBL_SEV_0_EMERG';
+                            } else if(sev === 'crit') {
+                                colorCSS = 'TBL_SEV_1_CRIT';
+                            } else if(sev === 'alert') {
+                                colorCSS = 'TBL_SEV_2_ALERT';
+                            } else if(sev === 'err') {
+                                colorCSS = 'TBL_SEV_3_ERROR';
+                            } else if(sev === 'warning') {
+                                colorCSS = 'TBL_SEV_4_WARN';
+                            } else if(sev === 'notice') {
+                                colorCSS = 'TBL_SEV_5_NOTICE';
+                            } else if(sev === 'info') {
+                                colorCSS = 'TBL_SEV_6_INFO';
+                            } else if(sev === 'debug') {
+                                colorCSS = 'TBL_SEV_7_DEBUG';
+                            }
+                            oSettings.aoData[i].nTr.className += " "+colorCSS;
+                            $("tr td:nth-child(7)").addClass('msg');
+                        }
+                        // #499 - BEGIN: context menu search function
+                        function getSelectionText() {
+                            var text = "";
+                            if (window.getSelection) {
+                                text = window.getSelection().toString();
+                            } else if (document.selection && document.selection.type != "Control") {
+                                text = document.selection.createRange().text;
+                            }
+                            return text;
+                        }
+                        $(document).ready(function (){
+                            // http://medialize.github.io/jQuery-contextMenu/
+                            $.contextMenu({
+                                selector: '.msg', 
+                                    className: 'css-title',
+                                    callback: function(key, options) {
+                                        var m = "clicked: " + key;
+                                        // window.console && console.log(m) || alert(m); 
+                                        if (key == "search") {
+                                            var searchText = getSelectionText();
+                                            if(searchText !== "") {
+                                                if (searchText.length > 2) {
+                                                    var qstring = '<?php echo $qstring?>';
+                                                    var url = qstring.replace(/msg_mask=(.*?)&/im, "msg_mask=*" + searchText + "*&");
+                                                    window.location = url;
+                                                } else {
+                                                    error("Searches must be > 2 characters.");
+                                                }
+                                            } else {
+                                                error("No text selected!<br>Please highlight a word in the Message column before clicking Search.");
+                                            }
                                         }
-                                        return text;
-                                    }
-                                    $(document).ready(function (){
-                                        // http://medialize.github.io/jQuery-contextMenu/
-                                        $.contextMenu({
-                                            selector: '.msg', 
-                                                className: 'css-title',
-                                                callback: function(key, options) {
-                                                    var m = "clicked: " + key;
-                                                    // window.console && console.log(m) || alert(m); 
-                                                    if (key == "search") {
-                                                        var searchText = getSelectionText();
-                                                        if(searchText !== "") {
-                                                            if (searchText.length > 2) {
-                                                                var qstring = '<?php echo $qstring?>';
-                                                                var url = qstring.replace(/msg_mask=(.*?)&/im, "msg_mask=*" + searchText + "*&");
-                                                                window.location = url;
-                                                            } else {
-                                                                error("Searches must be > 2 characters.");
+                                    },
+                                        items: {
+                                            "search": {
+                                                name: "<span>Click here to perform a NEW search for highlighted text</span><BR /><span style='font-size: 9px; font-style:italic'>Or use ctrl-c/apple-c if you meant to copy the selected text into your clipboard</span>", icon: "search"},
+                                                    sep1: "---------",
+                                                    "quit": {name: "Quit", icon: "quit"},
+                                        }
+                            });
+                        });
+                        // #499 - END: Added context menu search function
+                    },
+                        "aaSorting": [[ 0, "desc" ]],
+                        "fnServerParams": function ( aoData ) {
+                            if (tail == "off") {
+                                var $slider = $('#slider');
+                                if ($slider[0].hasChildNodes()) {
+                                    var values = $slider.slider('values');
+                                    var startTime = $slider.data('startTime');
+                                    aoData.push( { "name": "startTime", "value": startTime + values[0] } );
+                                    aoData.push( { "name": "endTime", "value": startTime + values[1] } );
+                                }
+                            }
+                        },
+
+                            "fnServerData": function ( sSource, aoData, fnCallback ) {
+                                $.ajax({
+                                    "dataType": 'json',
+                                        "type": 'GET',
+                                        "url": sSource,
+                                        "data": aoData,
+                                        "success": function (data, textStatus, jqXHR) {
+                                            if (tail == "off") {
+                                                if (data.startTime && data.endTime) {
+                                                    // create the slider
+                                                    var $slider = $('#slider');
+                                                    var startTime = parseInt(data.startTime);
+                                                    var endTime = parseInt(data.endTime);
+                                                    $slider.data('startTime', startTime);
+                                                    var min = 0;
+                                                    var max = endTime - startTime;
+                                                    $slider.slider({
+                                                        range: true,
+                                                            min: min,
+                                                            max: max,
+                                                            values: [min, max],
+                                                            change: function (event, ui) {
+                                                                var values = $slider.slider('values');
+
+                                                                // refresh the table
+                                                                var table = $('#results').dataTable();
+                                                                table.fnDraw(true);
+
                                                             }
-                                                        } else {
-                                                            error("No text selected!<br>Please highlight a word in the Message column before clicking Search.");
-                                                        }
-                                                    }
-                                                },
-                                                    items: {
-                                                        "search": {
-                                                            name: "<span>Click here to perform a NEW search for highlighted text</span><BR /><span style='font-size: 9px; font-style:italic'>Or use ctrl-c/apple-c if you meant to copy the selected text into your clipboard</span>", icon: "search"},
-/*
-                                                                // <input type="text">
-                                                                name: {
-                                                                    name: "Or, enter a new search word here:", 
-                                                                        type: 'text', 
-                                                                        value: getSelectionText(), 
-                events: {
-                    keyup: function(e) {
-                        // add some fancy key handling here?
-                        window.console && console.log('key: '+ e.keyCode); 
-                    }
-                }
-                                                                },
-*/
-                                                                    sep1: "---------",
-                                                                    "quit": {name: "Quit", icon: "quit"},
-                                                    }
-                                        });
-                                    });
-                                    // #499 - END: Added context menu search function
-                            },
-                                "aaSorting": [[ 0, "desc" ]],
-                                "fnServerParams": function ( aoData ) {
-                                    var $slider = $('#slider');
-                                    if ($slider[0].hasChildNodes()) {
-                                        var values = $slider.slider('values');
-                                        var startTime = $slider.data('startTime');
-                                        aoData.push( { "name": "startTime", "value": startTime + values[0] } );
-                                        // #466 - extend time window to 1 year, tail doesn't use slider, so just extend it out, 
-                                        // otherwise tail mode stops showing data after 2 hours
-                                        var tail = '<?php echo $tail?>';
-                                        if (tail > 0) {
-                                            var end = values[1];
-                                            end += 31557600; // 1 Year
-                                            aoData.push( { "name": "endTime", "value": startTime + end } );
-                                        } else {
-                                            aoData.push( { "name": "endTime", "value": startTime + values[1] } );
-                                        }
-                                    }
-                                },
-
-                                    "fnServerData": function ( sSource, aoData, fnCallback ) {
-                                        $.ajax({
-                                            "dataType": 'json',
-                                                "type": 'GET',
-                                                "url": sSource,
-                                                "data": aoData,
-                                                "success": function (data, textStatus, jqXHR) {
-                                                    if (data.startTime && data.endTime) {
-                                                        // create the slider
-                                                        var $slider = $('#slider');
-                                                        var startTime = parseInt(data.startTime);
-                                                        var endTime = parseInt(data.endTime);
-                                                        $slider.data('startTime', startTime);
-                                                        var min = 0;
-                                                        var max = endTime - startTime;
-                                                        $slider.slider({
-                                                            range: true,
-                                                                min: min,
-                                                                max: max,
-                                                                values: [min, max],
-                                                                change: function (event, ui) {
-                                                                    var values = $slider.slider('values');
-
-                                                                    // refresh the table
-                                                                    var table = $('#results').dataTable();
-                                                                    table.fnDraw(true);
-
-                                                                }
-                                                        });
-
-                                                        if (data.startTimeFormatted && data.endTimeFormatted) {
-                                                            $('#sliderStart').html(data.startTimeFormatted);
-                                                            $('#sliderEnd').html(data.endTimeFormatted);
-                                                        }
-                                                    } 
+                                                    });
 
                                                     if (data.startTimeFormatted && data.endTimeFormatted) {
-                                                        $('#sliderValues').html('Slide below to filter by time.<br>Current range: ' + data.startTimeFormatted + ' - ' + data.endTimeFormatted);
+                                                        $('#sliderStart').html(data.startTimeFormatted);
+                                                        $('#sliderEnd').html(data.endTimeFormatted);
                                                     }
+                                                } 
+                                            }
+                                            if (tail == "off") {
 
-                                                    fnCallback(data, textStatus, jqXHR);
+                                                if (data.startTimeFormatted && data.endTimeFormatted) {
+                                                    $('#sliderValues').html('Slide below to filter by time.<br>Current range: ' + data.startTimeFormatted + ' - ' + data.endTimeFormatted);
                                                 }
-                                        });
-                                    },
-                                        "sAjaxSource": "includes/ajax/json.results.php"
-                        } );
-                        function fnShowHide( iCol )
-                        {
-                            /* Get the DataTables object again - this is not a recreation, just a get of the object */
-                            var oTable = $('#results').dataTable();
+                                            }
 
-                            var bVis = oTable.fnSettings().aoColumns[iCol].bVisible;
-                            oTable.fnSetColumnVis( iCol, bVis ? false : true );
-                        }
-                        // Hide the Database ID column - we only use it to sort on
-                        fnShowHide(0);
-                        <?php if($_SESSION['SNARE'] == "0") {?>
-                        // hide the EID column
-                        fnShowHide(1);
-                        <?php } ?>
+                                            fnCallback(data, textStatus, jqXHR);
+                                        }
+                                });
+                            },
+                                "sAjaxSource": "includes/ajax/json.results.php"
+                } );
 
-                        //------------------------------------
-                        // BEGIN auto-refresh 
-                        //------------------------------------
-                        var tail = '<?php echo $tail?>';
-                        if (tail > 0) {
-                            $('#results_filter').html('<button id="btnPause">Pause</button>');
-                            $("button").button();
+                //------------------------------------
+                // BEGIN auto-refresh 
+                //------------------------------------
+                if (tail > 0) {
+                    $('#results_filter').html('<button id="btnPause">Pause</button>');
+                    $("button").button();
 
-                            var time = tail;
-                            var timerID;
-                            if (time == tail) {
-                                startIt();
-                                time = 99999;
-                            }
-                            $("#btnPause").click( function() { 
-                                if (time == tail) {
-                                    $('#btnPause').text('Running');
-                                    startIt();
-                                    time = 99999;
-                                } else {
-                                    $('#btnPause').text('Click to Resume');
-                                    stopIt();
-                                    time = tail;
-                                }
-                            });
-                            $("button").button();
-                            $("#sliderValues").hide();
-                            $("#slider").hide();
-                            //$("#results_length").hide();
-                            $("#results_processing").hide();
-                            $("#results_paginate").hide();
+                    var time = tail;
+                    var timerID;
+                    if (time == tail) {
+                        startIt();
+                        time = 99999;
+                    }
+                    $("#btnPause").click( function() { 
+                        if (time == tail) {
+                            $('#btnPause').text('Running');
+                            startIt();
+                            time = 99999;
                         } else {
-                            $("#results_filter").append($('#results_paginate'));
-                            $("#results_processing").hide();
+                            $('#btnPause').text('Click to Resume');
+                            stopIt();
+                            time = tail;
                         }
+                    });
+                    $("button").button();
+                    $("#results_processing").hide();
+                    $("#results_paginate").hide();
+                } else {
+                    $("#results_filter").append($('#results_paginate'));
+                    $("#results_processing").hide();
+                }
 
-                }); // end doc ready
+            }); // end doc ready
 
             var tail = '<?php echo $tail?>';
             function fireIt() {
@@ -421,9 +385,6 @@ if ((has_portlet_access($_SESSION['username'], 'Search Results') == TRUE) || ($_
                         echo "<th>Received</th>";
                     }
 ?>
-<!-- Notes disable for now 
-<th>Notes</th>
--->
 </tr>
 </thead>
 <tbody>
@@ -433,7 +394,7 @@ if ((has_portlet_access($_SESSION['username'], 'Search Results') == TRUE) || ($_
 } else {
     $msg = "Loading results...";
 }
-    echo "<td colspan='9' class='dataTables_empty'>$msg</td>";
+echo "<td colspan='9' class='dataTables_empty'>$msg</td>";
 ?>
 </tr>
 </tbody>
@@ -448,13 +409,13 @@ if ((has_portlet_access($_SESSION['username'], 'Search Results') == TRUE) || ($_
 <th>Mnemonic</th>
 <th>Message</th>
 <?php
-                    if ($_SESSION['DEDUP'] == "1") {
-                        echo "<th>First Seen</th>";
-                        echo "<th>Last Seen</th>";
-                        echo "<th>Count</th>";
-                    } else {
-                        echo "<th>Received</th>";
-                    }
+if ($_SESSION['DEDUP'] == "1") {
+    echo "<th>First Seen</th>";
+    echo "<th>Last Seen</th>";
+    echo "<th>Count</th>";
+} else {
+    echo "<th>Received</th>";
+}
 ?>
 <!-- Notes disable for now 
 <th>Notes</th>
@@ -463,73 +424,75 @@ if ((has_portlet_access($_SESSION['username'], 'Search Results') == TRUE) || ($_
 </tfoot>
 </table>
 
-                    <script type="text/javascript">
-                    $(function(){
-                        $.contextMenu({
-                            selector: '#esults td', 
-                                items: {
-                                    key: {
-                                        name: "Menu Clickable", 
-                                            callback: function (key, opt) {
-                                                alert(opt.$trigger.html());
-                                            }
-                                    }
-                                }, 
-                                    events: {
-                                        show: function(opt) {
-                                            // this is the trigger element
-                                            var $this = this;
-                                            // import states from data store 
-                                            $.contextMenu.setInputValues(opt, $this.data());
-                                            // this basically fills the input commands from an object
-                                            // like {name: "foo", yesno: true, radio: "3", …}
-                                        }, 
-                                            hide: function(opt) {
-                                                // this is the trigger element
-                                                var $this = this;
-                                                // export states to data store
-                                                $.contextMenu.getInputValues(opt, $this.data());
-                                                // this basically dumps the input commands' values to an object
-                                                // like {name: "foo", yesno: true, radio: "3", …}
-                                            }
-                                    }
-                        });
-                    });
-                    </script>
+<script type="text/javascript">
+/* different context menu, not used
+$(function(){
+    $.contextMenu({
+        selector: '#results td', 
+            items: {
+                key: {
+                    name: "Menu Clickable", 
+                        callback: function (key, opt) {
+                            alert(opt.$trigger.html());
+                        }
+                }
+            }, 
+                events: {
+                    show: function(opt) {
+                        // this is the trigger element
+                        var $this = this;
+                        // import states from data store 
+                        $.contextMenu.setInputValues(opt, $this.data());
+                        // this basically fills the input commands from an object
+                        // like {name: "foo", yesno: true, radio: "3", …}
+                    }, 
+                        hide: function(opt) {
+                            // this is the trigger element
+                            var $this = this;
+                            // export states to data store
+                            $.contextMenu.getInputValues(opt, $this.data());
+                            // this basically dumps the input commands' values to an object
+                            // like {name: "foo", yesno: true, radio: "3", …}
+                        }
+                }
+    });
+});
+ */
+</script>
 
 </div>
 </div>
 <div class="spacer"></div>
-                    <script type="text/javascript">
-                    //------------------------------------------------------------
-                    // Display the total matching DB entries along with the X of X entries
-                    //------------------------------------------------------------
+<script type="text/javascript">
+//------------------------------------------------------------
+// Display the total matching DB entries along with the X of X entries
+//------------------------------------------------------------
 <?php
-                    if ($total_found < $limit) {
-                        $limit = $total_found;
-                    }
+if ($total_found < $limit) {
+    $limit = $total_found;
+}
 ?>
-                    var total = '<?php echo $total?>'
-                        // console.log("Total = " + total);
-                        if (total < 1) {
-                            total = 'No results found for date range <?php echo "$start - $end<br>Time to search: $time seconds";?>'
-                        } else {
-                            total = '<?php echo "Displaying Top ".commify($limit)." Matches of ".commify($total_found)." possible<br>Date Range: $start - $end<br>Time to search: $time seconds";?>';
-                        }
+var total = '<?php echo $total?>'
+    // console.log("Total = " + total);
+    if (total < 1) {
+        total = 'No results found for date range <?php echo "$start - $end<br>Time to search: $time seconds";?>'
+    } else {
+        total = '<?php echo "Displaying Top ".commify($limit)." Matches of ".commify($total_found)." possible<br>Date Range: $start - $end<br>Time to search: $time seconds";?>';
+    }
 
-                    $("#portlet-header_Search_Results").html("<div style='text-align: center'>" + total + "</div>");
-                    </script>
+$("#portlet-header_Search_Results").html("<div style='text-align: center'>" + total + "</div>");
+</script>
 
 <!-- BEGIN Add Save URL icon to search results -->
-                    <script type="text/javascript">
-                    $("#portlet-header_Search_Results").prepend('<span id="export" class="ui-icon ui-icon-print"></span>');
-                    $("#portlet-header_Search_Results").prepend('<span id="span_results_save_icon" class="ui-icon ui-icon-disk"></span>');
-                    //---------------------------------------------------------------
-                    // END: Save URL function
-                    //---------------------------------------------------------------
-                    </script>
+<script type="text/javascript">
+$("#portlet-header_Search_Results").prepend('<span id="export" class="ui-icon ui-icon-print"></span>');
+$("#portlet-header_Search_Results").prepend('<span id="span_results_save_icon" class="ui-icon ui-icon-disk"></span>');
+//---------------------------------------------------------------
+// END: Save URL function
+//---------------------------------------------------------------
+</script>
 <?php
-                    require_once ($basePath . "/portlet_footer.php");
+require_once ($basePath . "/portlet_footer.php");
     } 
 
 } else { 
@@ -543,3 +506,4 @@ if ((has_portlet_access($_SESSION['username'], 'Search Results') == TRUE) || ($_
     $('#portlet_Search_Results').remove()
         </script>
         <?php } ?>
+

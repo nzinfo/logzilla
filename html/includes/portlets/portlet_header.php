@@ -144,11 +144,11 @@ if ($lo_checkbox == "on") {
             $filter_lo_end = "$end" ;
     }
 }
-if (($tail > 0) && ($limit > 10)) {
+if (($tail > 0) && ($limit > 25)) {
 ?>
     <script type="text/javascript">
     $(document).ready(function(){
-        $( "<div id='tail_error'><center><br><br>Auto setting tail limit to 10<br>The Maximum result set for the auto refresh page is 10.<br>Any more than that would simply scroll off the page before being seen.<br>Please check your 'limit' setting in the 'Search Options' portlet.</div></center>" ).dialog({
+        $( "<div id='tail_error'><center><br><br>Auto setting tail limit to 25<br>The Maximum result set for the auto refresh page is 25.<br>Any more than that would simply scroll off the page before being seen.<br>Please check your 'limit' setting in the 'Search Options' portlet.</div></center>" ).dialog({
             modal: true,
                 width: "50%", 
                 height: 240, 
@@ -161,7 +161,7 @@ if (($tail > 0) && ($limit > 10)) {
     }); // end doc ready
     </script>
 <?php
-    $limit = 10;
+    $limit = 25;
 };
 
 
@@ -630,10 +630,11 @@ case "Graph":
 // Replace ^& with ^? for URL saving
 $qstring = preg_replace('/^&(.*)/', '?$1', $qstring);
 
-// sessions used below for ajax/tail.php
+// sessions used below for ajax/json.results.php
 $_SESSION['orderby'] = $orderby;
 $_SESSION['order'] = $order;
 $_SESSION['limit'] = $limit;
+$_SESSION['tail'] = $tail;
 $_SESSION['searchArr'] = $searchArr;
 
 ?>
