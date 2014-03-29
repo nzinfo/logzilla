@@ -10,6 +10,7 @@
  * 2011-12-11 - created
  *
  */
+$time_pre = microtime(true);
 $basePath = dirname( __FILE__ );
 require_once ($basePath . "/../common_funcs.php");
 $dbLink = db_connect_syslog(DBADMIN, DBADMINPW);
@@ -127,43 +128,45 @@ for ( $i=0 ; $i<count($aColumns) ; $i++ )
     }
 }
 
-// date filtering
-if (isset($_GET['startTime']) && preg_match('/^[0-9]+$/D', $_GET['startTime'])) {
-    if ( $sWhere == "" )
-    {
-        $sWhere = "WHERE ";
-    }
-    else
-    {
-        $sWhere .= " AND ";
-    }
-    $sWhere .= ' `lo` >= FROM_UNIXTIME(' . $_GET['startTime'] . ')';
+if ($_SESSION['tail'] == "off") {
+    // date filtering
+    if (isset($_GET['startTime']) && preg_match('/^[0-9]+$/D', $_GET['startTime'])) {
+        if ( $sWhere == "" )
+        {
+            $sWhere = "WHERE ";
+        }
+        else
+        {
+            $sWhere .= " AND ";
+        }
+        $sWhere .= ' `lo` >= FROM_UNIXTIME(' . $_GET['startTime'] . ')';
 
-    $sql = 'SELECT FROM_UNIXTIME(' . $_GET['startTime'] . ')';
-    $result = mysql_query($sql, $gaSql['link']) or die(mysql_error());
-    while ($row = mysql_fetch_array($result)) {
-        $start_time_formatted = $row[0];
+        $sql = 'SELECT FROM_UNIXTIME(' . $_GET['startTime'] . ')';
+        $result = mysql_query($sql, $gaSql['link']) or die(mysql_error());
+        while ($row = mysql_fetch_array($result)) {
+            $start_time_formatted = $row[0];
+        }
+        mysql_free_result($result);
     }
-    mysql_free_result($result);
-}
 
-if (isset($_GET['endTime']) && preg_match('/^[0-9]+$/D', $_GET['endTime'])) {
-    if ( $sWhere == "" )
-    {
-        $sWhere = "WHERE ";
-    }
-    else
-    {
-        $sWhere .= " AND ";
-    }
-    $sWhere .= ' `lo` <= FROM_UNIXTIME(' . $_GET['endTime'] . ')';
+    if (isset($_GET['endTime']) && preg_match('/^[0-9]+$/D', $_GET['endTime'])) {
+        if ( $sWhere == "" )
+        {
+            $sWhere = "WHERE ";
+        }
+        else
+        {
+            $sWhere .= " AND ";
+        }
+        $sWhere .= ' `lo` <= FROM_UNIXTIME(' . $_GET['endTime'] . ')';
 
-    $sql = 'SELECT FROM_UNIXTIME(' . $_GET['endTime'] . ')';
-    $result = mysql_query($sql, $gaSql['link']) or die(mysql_error());
-    while ($row = mysql_fetch_array($result)) {
-        $end_time_formatted = $row[0];
+        $sql = 'SELECT FROM_UNIXTIME(' . $_GET['endTime'] . ')';
+        $result = mysql_query($sql, $gaSql['link']) or die(mysql_error());
+        while ($row = mysql_fetch_array($result)) {
+            $end_time_formatted = $row[0];
+        }
+        mysql_free_result($result);
     }
-    mysql_free_result($result);
 }
 
 /*
@@ -178,6 +181,9 @@ $sQuery = "
     $sLimit
     ";
 $rResult = mysql_query( $sQuery, $gaSql['link'] ) or die(mysql_error());
+$time_post = microtime(true);
+$exec_time = $time_post - $time_pre;
+// logmsg("ajax/json.results.php  $sQuery = $exec_time");
 
 /* Data set length after filtering */
 $sQuery = "
@@ -186,8 +192,12 @@ $sQuery = "
 $rResultFilterTotal = mysql_query( $sQuery, $gaSql['link'] ) or die(mysql_error());
 $aResultFilterTotal = mysql_fetch_array($rResultFilterTotal);
 $iFilteredTotal = $aResultFilterTotal[0];
+$time_post = microtime(true);
+$exec_time = $time_post - $time_pre;
+// logmsg("ajax/json.results.php  $sQuery = $exec_time");
 
 /* Total data set length */
+if ($_SESSION['tail'] == "off") {
 $sQuery = "
     SELECT COUNT(".$sIndexColumn.")
     FROM   $sTable
@@ -195,6 +205,15 @@ $sQuery = "
 $rResultTotal = mysql_query( $sQuery, $gaSql['link'] ) or die(mysql_error());
 $aResultTotal = mysql_fetch_array($rResultTotal);
 $iTotal = $aResultTotal[0];
+$time_post = microtime(true);
+$exec_time = $time_post - $time_pre;
+// logmsg("ajax/json.results.php  $sQuery = $exec_time");
+} else {
+$iTotal = $iFilteredTotal;
+$time_post = microtime(true);
+$exec_time = $time_post - $time_pre;
+// logmsg("ajax/json.results.php  $sQuery = $exec_time");
+}
 
 
 /*
@@ -233,47 +252,50 @@ while ( $aRow = mysql_fetch_array( $rResult ) )
     $output['aaData'][] = $row;
 }
 
+// logmsg("tail = " . $_SESSION['tail']);
 // set the start time and end time
-if (! isset($_GET['startTime']) && ! isset($_GET['endTime'])) {
-    $start_time_formatted = NULL;
-    $sql = 'SELECT lo FROM ' . $sTable . ' ORDER BY lo ASC LIMIT 1';
-    $result = mysql_query($sql, $gaSql['link']) or die(mysql_error());
-    while ($row = mysql_fetch_array($result)) {
-        $start_time_formatted = $row[0];
-        if (preg_match('/^([0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:)[0-9]{2}:[0-9]{2}$/D', $start_time_formatted, $matches)) {
-            // round up to nearest hour
-            $start_time_formatted = $matches[1] . '00:00';
-        }
-    }
-    mysql_free_result($result);
-    if ($start_time_formatted !== NULL) {
-        $sql = 'SELECT UNIX_TIMESTAMP(\'' . $start_time_formatted . '\') AS unix';
+if ($_SESSION['tail'] == "off") {
+    if (! isset($_GET['startTime']) && ! isset($_GET['endTime'])) {
+        $start_time_formatted = NULL;
+        $sql = 'SELECT lo FROM ' . $sTable . ' ORDER BY lo ASC LIMIT 1';
         $result = mysql_query($sql, $gaSql['link']) or die(mysql_error());
         while ($row = mysql_fetch_array($result)) {
-            $start_time = $row[0];
+            $start_time_formatted = $row[0];
+            if (preg_match('/^([0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:)[0-9]{2}:[0-9]{2}$/D', $start_time_formatted, $matches)) {
+                // round up to nearest hour
+                $start_time_formatted = $matches[1] . '00:00';
+            }
         }
         mysql_free_result($result);
-        $output['startTime'] = $start_time;
-    }
+        if ($start_time_formatted !== NULL) {
+            $sql = 'SELECT UNIX_TIMESTAMP(\'' . $start_time_formatted . '\') AS unix';
+            $result = mysql_query($sql, $gaSql['link']) or die(mysql_error());
+            while ($row = mysql_fetch_array($result)) {
+                $start_time = $row[0];
+            }
+            mysql_free_result($result);
+            $output['startTime'] = $start_time;
+        }
 
-    $end_time_formatted = NULL;
-    $sql = 'SELECT TIMESTAMPADD(HOUR, 2, lo) FROM ' . $sTable . ' ORDER BY lo DESC LIMIT 1';
-    $result = mysql_query($sql, $gaSql['link']) or die(mysql_error());
-    while ($row = mysql_fetch_array($result)) {
-        $end_time_formatted = $row[0];
-        if (preg_match('/^([0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:)[0-9]{2}:[0-9]{2}$/D', $end_time_formatted, $matches)) {
-            $end_time_formatted = $matches[1] . '00:00';
-        }
-    }
-    mysql_free_result($result);
-    if ($end_time_formatted !== NULL) {
-        $sql = 'SELECT UNIX_TIMESTAMP(\'' . $end_time_formatted . '\') AS unix';
+        $end_time_formatted = NULL;
+        $sql = 'SELECT TIMESTAMPADD(HOUR, 2, lo) FROM ' . $sTable . ' ORDER BY lo DESC LIMIT 1';
         $result = mysql_query($sql, $gaSql['link']) or die(mysql_error());
         while ($row = mysql_fetch_array($result)) {
-            $end_time = $row[0];
+            $end_time_formatted = $row[0];
+            if (preg_match('/^([0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:)[0-9]{2}:[0-9]{2}$/D', $end_time_formatted, $matches)) {
+                $end_time_formatted = $matches[1] . '00:00';
+            }
         }
         mysql_free_result($result);
-        $output['endTime'] = $end_time;
+        if ($end_time_formatted !== NULL) {
+            $sql = 'SELECT UNIX_TIMESTAMP(\'' . $end_time_formatted . '\') AS unix';
+            $result = mysql_query($sql, $gaSql['link']) or die(mysql_error());
+            while ($row = mysql_fetch_array($result)) {
+                $end_time = $row[0];
+            }
+            mysql_free_result($result);
+            $output['endTime'] = $end_time;
+        }
     }
 }
 
@@ -283,6 +305,9 @@ if (isset($start_time_formatted)) {
 if (isset($end_time_formatted)) {
     $output['endTimeFormatted'] = $end_time_formatted;
 }
+$time_post = microtime(true);
+$exec_time = $time_post - $time_pre;
+logmsg("Total Exec Time for ajax/json.results.php = $exec_time");
 
 echo json_encode( $output );
 ?>
