@@ -315,32 +315,31 @@ if (preg_match("/^@notes/i", "$searchText")) {
 if ($searchText) { 
     $searchArr['msg_mask'] = $searchText;
     if ($tail > 0) {
-        $results = array();
-        if (preg_match("/^(\w+)/", $searchText, $matches)) {
-            $where .= " AND msg LIKE '%" . $matches[0] . "%'\n";
-        }
-
-        $word_to_capture = '(\w+)%';
-        $patterns[] = "%(&)" . $word_to_capture;
-        $patterns[] = "%(\|)" . $word_to_capture;
-        $patterns[] = "%(!)" . $word_to_capture;
-        $patterns[] = "%(-)" . $word_to_capture;
-
-        foreach($patterns as $p) {
-            preg_match($p,$searchText,$matches);
-            $results[] = $matches;
-        }
-        // print_r($results);
-
-        for($i=0; $i<count($results); $i++) {
-            if ($results[$i][2]) {
-                if (preg_match("/!|-/", $results[$i][1])) {
-                    $where .= " AND msg NOT LIKE '%" . $results[$i][2] . "%'\n";
-                } else {
-                    $where .= " AND msg LIKE '%" . $results[$i][2] . "%'\n";
-                }
+        // cdukes: #506 Tail mode search filters not working
+        // If the search string contains multiple boolean expressions, let's process them
+        // First add a space in case someone uses something like -searchword instead of - searchword
+        $searchText = preg_replace('/(&|\||-|!)(\S+)/imx', '$1 $2', $searchText);
+        $keywords = explode(' ',mysql_real_escape_string($searchText));
+        // echo "<pre>";
+        // echo "String = $searchText\n";
+        for($i=0; $i<count($keywords); $i++) {
+            if ($i == 0) {
+                $where .= " AND msg LIKE '%" . $keywords[$i] . "%'";
+            }
+            if (preg_match("/!|-|[Nn][Oo][Tt]/", $keywords[$i-1])) {
+                // echo "NOT Match on " . $keywords[$i] . "\n";
+                $where .= " AND msg NOT LIKE '%" . $keywords[$i] . "%'";
+            }
+            if (preg_match("/&|[Aa][Nn][Dd]/", $keywords[$i-1])) {
+                // echo "AND Match on " . $keywords[$i] . "\n";
+                $where .= " AND msg LIKE '%" . $keywords[$i] . "%'";
+            }
+            if (preg_match("/\||[Oo][Rr]/", $keywords[$i-1])) {
+                // echo "OR Match on " . $keywords[$i] . "\n";
+                $where .= " OR msg LIKE '%" . $keywords[$i] . "%'";
             }
         }
+
     }
 }
 // echo "WHERE = $where<br>";

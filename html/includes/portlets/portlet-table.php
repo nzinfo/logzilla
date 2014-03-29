@@ -371,6 +371,7 @@ if ((has_portlet_access($_SESSION['username'], 'Search Results') == TRUE) || ($_
             if ($tail > 0) {
                 $tail_where = preg_replace('/host_crc/','crc32(host)',$tail_where); 
                 $sql = "CREATE OR REPLACE VIEW ".$_SESSION['viewname']." AS SELECT ".$select_columns." FROM ".$_SESSION['TBL_MAIN']." ".$tail_where." ORDER BY lo DESC LIMIT ".$limit;
+                logmsg($sql);
                 $result = perform_query($sql, $dbLink, $_SERVER['PHP_SELF']);
                 if(!$result){
 ?>
@@ -427,7 +428,13 @@ if ((has_portlet_access($_SESSION['username'], 'Search Results') == TRUE) || ($_
 </thead>
 <tbody>
 <tr>
-<td colspan="9" class="dataTables_empty">Loading data from server</td>
+<?php if ($total < 1) {
+    $msg = 'No results found for date range';
+} else {
+    $msg = "Loading results...";
+}
+    echo "<td colspan='9' class='dataTables_empty'>$msg</td>";
+?>
 </tr>
 </tbody>
 <tfoot>
