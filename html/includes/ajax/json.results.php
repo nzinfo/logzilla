@@ -307,7 +307,7 @@ if (isset($end_time_formatted)) {
 }
 $time_post = microtime(true);
 $exec_time = $time_post - $time_pre;
-logmsg("Total Exec Time for ajax/json.results.php = $exec_time");
+// logmsg("Total Exec Time for ajax/json.results.php = $exec_time");
 
 echo json_encode( $output );
 ?>
