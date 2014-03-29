@@ -371,7 +371,7 @@ if ((has_portlet_access($_SESSION['username'], 'Search Results') == TRUE) || ($_
             if ($tail > 0) {
                 $tail_where = preg_replace('/host_crc/','crc32(host)',$tail_where); 
                 $sql = "CREATE OR REPLACE VIEW ".$_SESSION['viewname']." AS SELECT ".$select_columns." FROM ".$_SESSION['TBL_MAIN']." ".$tail_where." ORDER BY lo DESC LIMIT ".$limit;
-                logmsg($sql);
+                // logmsg($sql);
                 $result = perform_query($sql, $dbLink, $_SERVER['PHP_SELF']);
                 if(!$result){
 ?>
