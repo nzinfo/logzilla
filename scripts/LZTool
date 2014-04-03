@@ -678,6 +678,12 @@ sub idx_rotate {
 
 sub ss {
     $log->INFO("-=Analyzing LogZilla Server Stats=-");
+    $sql = "SELECT count(*) as count FROM hosts";
+    $sth_syslog = $dbh->prepare($sql);
+    DEBUG( 1, "Executing SQL Statement: $sql" );
+    $sth_syslog->execute();
+    $results = $sth_syslog->fetchrow_hashref;
+    my $hostcount = $results->{count};
     $sql = "SELECT AVG(ROUND(count)) as avg, count(*) as samples FROM events_per_second";
     $sth_syslog = $dbh->prepare($sql);
     DEBUG( 1, "Executing SQL Statement: $sql" );
@@ -729,7 +735,7 @@ sub ss {
         chomp ($attrs);
         my $needed = ((( 3 + $attrs ) * ($count * 4  / 1000)) * $multiplier);
         DEBUG( 1, "(1 + %s Attributes) * %s Messages in idx_inmem * 4 = $needed", $attrs, $count);
-        $log->INFO( "Expecting %s average EPD", commify($epd) );
+        $log->INFO( "Expecting %s average EPD from %s hosts", commify($epd), commify($hostcount) );
         store_metric( "lztool_epd", $epd );
         my $total = `cat /proc/meminfo | grep MemTotal | awk '{print \$2}'`;
         chomp($total);
