@@ -1,0 +1,350 @@
+BROADHOP-MIB DEFINITIONS ::= BEGIN
+
+IMPORTS
+   MODULE-IDENTITY, 
+   OBJECT-TYPE, 
+   NOTIFICATION-TYPE,
+   enterprises,
+   Integer32                 FROM SNMPv2-SMI
+   DisplayString 
+                             FROM SNMPv2-TC;
+
+
+
+
+broadhop MODULE-IDENTITY
+    LAST-UPDATED "201201270000Z"
+    ORGANIZATION "Broadhop, Inc."
+    CONTACT-INFO "Technical Support
+                  Web: www.broadhop.com
+                  E-mail: support@broadhop.com
+                 "
+    DESCRIPTION "Top Level MIB-II for BroadHop Enterprise and Common Elements"
+    REVISION "201201270000Z"
+    DESCRIPTION
+        "Smilint validation and cleanup.  Preparation for expansion. 
+         Break out BroadHop enterprise.  Redo categories.
+        "
+    REVISION "200906210000Z"
+    DESCRIPTION
+        "Initial version of this MIB module."
+    ::= { enterprises 26878 }
+       
+broadhopCommon OBJECT IDENTIFIER ::= { broadhop  100 }
+
+broadhopProducts OBJECT IDENTIFIER ::= { broadhop  200 }
+
+broadhopCommonNotificationsGroup   OBJECT IDENTIFIER   ::=   { broadhopCommon 1 }
+
+
+broadhopNotificationParameters OBJECT IDENTIFIER ::= { broadhopCommonNotificationsGroup 1 }
+
+broadhopAlarmDeviceName OBJECT-TYPE
+    SYNTAX  DisplayString
+    MAX-ACCESS  read-only
+    STATUS  deprecated
+    DESCRIPTION
+           "The broadhopAlarmDeviceName object is used to provide the
+            name of the device being trapped and may represent the
+            Network Element as a whole or may represent a subsystem
+            contained in the Network Element.
+
+            Please note, this value is used for trapping purposes only.
+            If you try to read this value, the results are undefined
+            and can not be relied upon."
+
+    ::= { broadhopNotificationParameters 1 }
+
+broadhopAlarmErrorNumber OBJECT-TYPE
+    SYNTAX  Integer32 (1..32767)
+    MAX-ACCESS  read-only
+    STATUS  deprecated
+    DESCRIPTION
+           "The broadhopAlarmErrorNumber object is used to provide the
+            error number associated with the problem being trapped.
+
+            Please note, this value is used for trapping purposes only.
+            If you try to read this value, the results are undefined
+            and can not be relied upon."
+
+    ::= { broadhopNotificationParameters 2 }
+
+broadhopAlarmErrorText OBJECT-TYPE
+    SYNTAX  DisplayString
+    MAX-ACCESS  read-only
+    STATUS  deprecated
+    DESCRIPTION
+           "The broadhopAlarmErrorText object is used to provide the
+            error text associated with the problem being trapped.
+
+            Please note, this value is used for trapping purposes only.
+            If you try to read this value, the results are undefined
+            and can not be relied upon."
+
+    ::= { broadhopNotificationParameters 3 }
+
+broadhopAlarmDateAndTime OBJECT-TYPE
+    SYNTAX  DisplayString
+    MAX-ACCESS  read-only
+    STATUS  deprecated
+    DESCRIPTION
+           "The broadhopAlarmDateAndTime object is used to provide the
+            date and time associated with the occurrence of the problem
+            being trapped. Format for this field is:
+            YYYY-MM-DD at HH:MM:SS GMT-Offset
+
+            Please note, this value is used for trapping purposes only.
+            If you try to read this value, the results are undefined
+            and can not be relied upon."
+
+    ::= { broadhopNotificationParameters 4 }
+
+broadhopAlarmProbableCause OBJECT-TYPE
+    SYNTAX  DisplayString
+    MAX-ACCESS  read-only
+    STATUS  deprecated
+    DESCRIPTION
+           "The broadhopAlarmProbableCause object is used to provide a
+            cause for the problem being trapped.
+
+            Please note, this value is used for trapping purposes only.
+            If you try to read this value, the results are undefined
+            and can not be relied upon."
+
+    ::= { broadhopNotificationParameters 5 }
+
+broadhopAlarmAdditionalInfo OBJECT-TYPE
+    SYNTAX  DisplayString
+    MAX-ACCESS  read-only
+    STATUS  deprecated
+    DESCRIPTION
+           "The broadhopAlarmAdditionalInfo object is used to provide
+            any additional information about the problem being trapped
+            that can be determined at run time.
+
+            Please note, this value is used for trapping purposes only.
+            If you try to read this value, the results are undefined
+            and can not be relied upon."
+
+    ::= { broadhopNotificationParameters 6 }
+
+broadhopComponentName OBJECT-TYPE
+    SYNTAX  DisplayString
+    MAX-ACCESS  read-only
+    STATUS  current
+    DESCRIPTION
+           "The broadhopComponentName object is used to provide the
+            name of the individual system device being trapped.
+            Example of value from field mimics HOST-RESOURCE-MIB sysName.
+
+            sessionmgr01
+
+            Please note, this value is used for trapping purposes only.
+            If you try to read this value, the results are undefined
+            and can not be relied upon."
+    ::= { broadhopNotificationParameters 7 }
+
+broadhopComponentTime OBJECT-TYPE
+    SYNTAX  DisplayString
+    MAX-ACCESS  read-only
+    STATUS  current
+    DESCRIPTION
+           "The broadhopComponentTime object is used to provide the
+            date and time associated with the occurrence of the problem
+            being trapped from the system component perspective.
+            Example of value from this field mimics hrSystemDate like:
+
+            2012-2-10,13:9:41.0,-7:0
+
+            Please note, this value is used for trapping purposes only.
+            If you try to read this value, the results are undefined
+            and can not be relied upon."
+
+    ::= { broadhopNotificationParameters 8 }
+
+broadhopComponentNotificationName OBJECT-TYPE
+    SYNTAX  DisplayString
+    MAX-ACCESS  read-only
+    STATUS  current
+    DESCRIPTION
+           "The broadhopComponentNotificatoinName object is used to provide
+            the name of the notification. These names are outlined in the 
+            BroadHop QNS Monitoring and Alert Notification Guide.
+
+            Please note, this value is used for trapping purposes only.
+            If you try to read this value, the results are undefined
+            and can not be relied upon."
+
+    ::= { broadhopNotificationParameters 9 }
+
+broadhopComponentAdditionalInfo OBJECT-TYPE
+    SYNTAX  DisplayString
+    MAX-ACCESS  read-only
+    STATUS  current
+    DESCRIPTION
+           "The broadhopAdditionalInfo object is used to provide
+            any additional information about the problem being trapped
+            that can be determined at run time.
+
+            Please note, this value is used for trapping purposes only.
+            If you try to read this value, the results are undefined
+            and can not be relied upon."
+
+    ::= { broadhopNotificationParameters 10 }
+
+
+
+broadhopNotificationPrefix OBJECT IDENTIFIER ::= { broadhopCommonNotificationsGroup 2 }
+broadhopNotifications OBJECT IDENTIFIER ::= { broadhopNotificationPrefix 0 }
+
+broadhopCriticalAlarm NOTIFICATION-TYPE
+    OBJECTS 
+    {
+       broadhopAlarmDeviceName,
+       broadhopAlarmErrorNumber,
+       broadhopAlarmErrorText,
+       broadhopAlarmDateAndTime,
+       broadhopAlarmProbableCause,
+       broadhopAlarmAdditionalInfo
+    }
+    STATUS deprecated
+    DESCRIPTION
+           "This object is used to report all Critical severity problems
+            that may occur with in the system."
+
+    ::= { broadhopNotifications 1 }
+
+broadhopMajorAlarm NOTIFICATION-TYPE
+    OBJECTS 
+    {
+       broadhopAlarmDeviceName,
+       broadhopAlarmErrorNumber,
+       broadhopAlarmErrorText,
+       broadhopAlarmDateAndTime,
+       broadhopAlarmProbableCause,
+       broadhopAlarmAdditionalInfo
+    }
+    STATUS deprecated
+    DESCRIPTION
+           "This object is used to report all Major severity problems
+            that may occur with in the system."
+
+    ::= { broadhopNotifications 2 }
+
+broadhopMinorAlarm NOTIFICATION-TYPE
+    OBJECTS 
+    {
+       broadhopAlarmDeviceName,
+       broadhopAlarmErrorNumber,
+       broadhopAlarmErrorText,
+       broadhopAlarmDateAndTime,
+       broadhopAlarmProbableCause,
+       broadhopAlarmAdditionalInfo
+    }
+    STATUS deprecated
+    DESCRIPTION
+           "This object is used to report all Minor severity problems
+            that may occur with in the system."
+
+    ::= { broadhopNotifications 3 }
+
+broadhopWarningAlarm NOTIFICATION-TYPE
+    OBJECTS 
+    {
+       broadhopAlarmDeviceName,
+       broadhopAlarmErrorNumber,
+       broadhopAlarmErrorText,
+       broadhopAlarmDateAndTime,
+       broadhopAlarmProbableCause,
+       broadhopAlarmAdditionalInfo
+    }
+    STATUS deprecated
+    DESCRIPTION
+           "This object is used to report all Warning severity problems
+            that may occur with in the system."
+
+    ::= { broadhopNotifications 4 }
+
+broadhopIndeterminateAlarm NOTIFICATION-TYPE
+    OBJECTS 
+    {
+       broadhopAlarmDeviceName,
+       broadhopAlarmErrorNumber,
+       broadhopAlarmErrorText,
+       broadhopAlarmDateAndTime,
+       broadhopAlarmProbableCause,
+       broadhopAlarmAdditionalInfo
+    }
+    STATUS deprecated
+    DESCRIPTION
+           "This object is used to report all Indeterminate severity problems
+            that may occur with in the system."
+
+    ::= { broadhopNotifications 5 }
+
+broadhopNormalAlarm NOTIFICATION-TYPE
+    OBJECTS 
+    {
+       broadhopAlarmDeviceName,
+       broadhopAlarmErrorNumber,
+       broadhopAlarmErrorText,
+       broadhopAlarmDateAndTime,
+       broadhopAlarmProbableCause,
+       broadhopAlarmAdditionalInfo
+    }
+    STATUS deprecated
+    DESCRIPTION
+           "This object is used to report all Normal severity problems
+            that may occur with in the system."
+
+    ::= { broadhopNotifications 6 }
+
+broadhopNotificationFacility OBJECT-TYPE
+       SYNTAX      INTEGER {
+                       hardware(0),
+                       network(1),
+                       virtualization(2),
+                       operatingsystem(3),
+                       application(4),
+                       process(5),
+                       none(6)
+                   }
+       MAX-ACCESS  read-only
+       STATUS      current
+       DESCRIPTION
+           "This object determines the facility or layer which
+            notifications are sourced.  Except for none, all
+            facilities are sourced by size - hardware is a bigger
+            size than process.  This roughly mimics the Unix
+            syslog facility. Used with severity, facility 
+            fully categorizes an alert notification.
+           "
+       DEFVAL { none }
+       ::= { broadhopCommonNotificationsGroup 3 }
+
+broadhopNotificationSeverity OBJECT-TYPE
+       SYNTAX      INTEGER {
+                       emergency(0),
+                       alert(1),
+                       critical(2),
+                       error(3),
+                       warning(4),
+                       notice(5),
+                       info(6),
+                       debug(7),
+                       none(8)
+                   }
+       MAX-ACCESS  read-only
+       STATUS      current
+       DESCRIPTION
+           "This object determines the severity or level of sourced
+            notifications.  All severities are facilities are sourced 
+            by size - emergency is a worse than debug.  This roughly 
+            mimics the Unix syslog facility. Used with facility, 
+            severity categorizes an alert notification.
+           "
+       DEFVAL { none }
+       ::= { broadhopCommonNotificationsGroup 4 }
+
+END
+

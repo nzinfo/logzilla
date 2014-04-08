@@ -1,0 +1,219 @@
+
+
+-- File Name : APPLICATION-MANAGER-MIB
+-- Date      : Tue Jun 15 12:59:59 IST 2010
+-- Author    : AdventNet Agent Toolkit Java Edition - MIB Editor 6
+-- AGENT-SAMPLE-MIB       module definition
+--
+-- The       definitions in this module illustrate the use of different
+-- command       clauses available with the Advent Extensible agent, to
+-- instrument       data collection for the MIB objects.
+--
+-- This       file is tailored to be used on a Windows95/NT platform
+-- because      of the use of some system commands)
+--
+-- Ver       1.0
+
+APPLICATION-MANAGER-MIB	DEFINITIONS ::= BEGIN
+	IMPORTS
+		TEXTUAL-CONVENTION, DisplayString, RowStatus, DateAndTime
+			FROM SNMPv2-TC
+		mgmt, enterprises, DisplayString
+			FROM RFC1213-MIB
+		MODULE-IDENTITY, enterprises, OBJECT-TYPE, NOTIFICATION-TYPE, Integer32
+			FROM SNMPv2-SMI;
+
+	adventnet	MODULE-IDENTITY
+		LAST-UPDATED	"9912180051Z"
+		ORGANIZATION	"AdventNet Inc"
+		CONTACT-INFO	"
+						AdventNet, Inc.
+						5645 Gibraltar Drive 
+						Pleasanton, CA 94588 USA 
+
+						Phone: +1-925-924-9500 
+						Fax: +1-925-924-9600
+
+						AdventNet Development Center (I) Pvt. Ltd.,
+						Office-A II Floor,
+						Kashyap Enclave
+						Velachery,
+						Chennai - 600 042
+						Tamil Nadu
+						INDIA
+
+						Phone: +91 44 243 2414
+
+						Email: cagent-support@adventnet.com"
+		DESCRIPTION		""
+		REVISION		"9912180051Z"
+		DESCRIPTION		""
+		::=  {  enterprises  2162  }
+
+	org	OBJECT IDENTIFIER
+		::=  {  iso  3  }
+
+	dod	OBJECT IDENTIFIER
+		::=  {  org  6  }
+
+	internet	OBJECT IDENTIFIER
+		::=  {  dod  1  }
+
+	mgmt	OBJECT IDENTIFIER
+		::=  {  internet  2  }
+
+	private	OBJECT IDENTIFIER
+		::=  {  internet  4  }
+
+	enterprises	OBJECT IDENTIFIER
+		::=  {  private  1  }
+
+	products	OBJECT IDENTIFIER
+		::=  {  adventnet  1  }
+
+	meApplicationsManager	OBJECT IDENTIFIER
+		::=  {  products  1  }
+
+	monitors	OBJECT IDENTIFIER
+		::=  {  meApplicationsManager  1  }
+
+	trap	OBJECT IDENTIFIER
+		::=  {  meApplicationsManager  2  }
+
+	monitorsCount	OBJECT-TYPE	
+		SYNTAX			Integer32  ( -2147483648 .. 2147483647  ) 
+		MAX-ACCESS		read-only
+		STATUS			current
+		DESCRIPTION		"Description"
+		::=  {  monitors  1  }
+
+	monitorTable	OBJECT-TYPE
+		SYNTAX		SEQUENCE  OF  MonitorEntry
+		MAX-ACCESS	not-accessible
+		STATUS		current
+		DESCRIPTION	"Description"
+		::=  { monitors  2 }
+
+	monitorEntry	OBJECT-TYPE
+		SYNTAX		MonitorEntry
+		MAX-ACCESS	not-accessible
+		STATUS		current
+		DESCRIPTION	"Row Description"
+		INDEX		{  monitorresourceid  }
+		::=  { monitorTable 1 }
+
+	MonitorEntry  ::=  SEQUENCE {
+		monitorresourceid  Integer32,
+		monitorresourcename  DisplayString,
+		monitorresourcetype  DisplayString,
+		monitorAvailability  Integer32,
+		monitorHealth  Integer32,
+		monitorAlertCount  RowStatus
+		}
+
+
+	monitorresourceid	OBJECT-TYPE	
+		SYNTAX			Integer32
+		MAX-ACCESS		not-accessible
+		STATUS			current
+		DESCRIPTION		"Column Description"
+		::=  {  monitorEntry  1  }
+
+
+	monitorresourcename	OBJECT-TYPE	
+		SYNTAX			DisplayString
+		MAX-ACCESS		read-only
+		STATUS			current
+		DESCRIPTION		"Column Description"
+		::=  {  monitorEntry  2  }
+
+
+	monitorresourcetype	OBJECT-TYPE	
+		SYNTAX			DisplayString
+		MAX-ACCESS		read-only
+		STATUS			current
+		DESCRIPTION		"Column Description"
+		::=  {  monitorEntry  3  }
+
+
+	monitorAvailability	OBJECT-TYPE	
+		SYNTAX			Integer32
+		MAX-ACCESS		read-only
+		STATUS			current
+		DESCRIPTION		"Column Description"
+		::=  {  monitorEntry  4  }
+
+
+	monitorHealth	OBJECT-TYPE	
+		SYNTAX			Integer32
+		MAX-ACCESS		read-only
+		STATUS			current
+		DESCRIPTION		"Column Description"
+		::=  {  monitorEntry  5  }
+
+
+	monitorAlertCount	OBJECT-TYPE	
+		SYNTAX			RowStatus
+		MAX-ACCESS		read-create
+		STATUS			current
+		DESCRIPTION		"Column Description"
+		::=  {  monitorEntry  6  }
+
+	trapMessage	OBJECT-TYPE	
+		SYNTAX			DisplayString
+		MAX-ACCESS		read-only
+		STATUS			current
+		DESCRIPTION		"Sending traps"
+		::=  {  trap  1  }
+
+	monitorname	OBJECT-TYPE	
+		SYNTAX			DisplayString  ( SIZE ( 0 .. 255  ) ) 
+		MAX-ACCESS		read-only
+		STATUS			current
+		DESCRIPTION		"Sending traps"
+		::=  {  trap  2  }
+
+	monitortype	OBJECT-TYPE	
+		SYNTAX			DisplayString  ( SIZE ( 0 .. 255  ) ) 
+		MAX-ACCESS		read-only
+		STATUS			current
+		DESCRIPTION		"Sending traps"
+		::=  {  trap  3  }
+
+	hostname	OBJECT-TYPE	
+		SYNTAX			DisplayString
+		MAX-ACCESS		read-only
+		STATUS			current
+		DESCRIPTION		"Sending traps"
+		::=  {  trap  4  }
+
+	attribute	OBJECT-TYPE	
+		SYNTAX			DisplayString
+		MAX-ACCESS		read-only
+		STATUS			current
+		DESCRIPTION		"Sending traps"
+		::=  {  trap  5  }
+
+	severity	OBJECT-TYPE	
+		SYNTAX			DisplayString
+		MAX-ACCESS		read-only
+		STATUS			current
+		DESCRIPTION		"Sending traps"
+		::=  {  trap  6  }
+
+	createdtime	OBJECT-TYPE	
+		SYNTAX			DisplayString
+		MAX-ACCESS		read-only
+		STATUS			current
+		DESCRIPTION		"Sending traps"
+		::=  {  trap  7  }
+
+	rcaMessage	OBJECT-TYPE	
+		SYNTAX			DisplayString
+		MAX-ACCESS		read-only
+		STATUS			current
+		DESCRIPTION		"Sending traps"
+		::=  {  trap  8  }
+
+
+END

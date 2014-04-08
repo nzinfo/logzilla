@@ -1,0 +1,4266 @@
+BROADHOP-QNS-MIB DEFINITIONS ::=BEGIN
+
+IMPORTS
+   MODULE-IDENTITY, 
+   OBJECT-TYPE, 
+   Gauge32,
+   Counter32,
+   Integer32                 FROM SNMPv2-SMI
+   DisplayString 
+                             FROM SNMPv2-TC
+   broadhopProducts          FROM BROADHOP-MIB;
+
+
+
+
+broadhopProductsQNS MODULE-IDENTITY
+    LAST-UPDATED "201203120000Z"
+    ORGANIZATION "Broadhop, Inc."
+    CONTACT-INFO
+        "Technical Support
+         Web: www.broadhop.com
+         E-mail: support@broadhop.com
+        "
+    DESCRIPTION "KPI type chances for v5.2 and v5.3 to support types returned
+                by QNS applications
+                "
+    REVISION "201203120000Z"
+    DESCRIPTION "Top Level MIB-II Definitions for BroadHop QNS Product"
+    REVISION "201202140000Z"
+    DESCRIPTION "Revise v5.2 KPI - change PCRF to QNS and add servers"
+    REVISION "201202100000Z"
+    DESCRIPTION "Add v5.3 Component Stats and KPI"
+    REVISION "201201270000Z"
+    DESCRIPTION "Initial Top Level MIB-II Definitions for BroadHop QNS Product"
+    ::= { broadhopProducts 2 }
+
+
+
+broadhopProductsQNSComponents OBJECT IDENTIFIER ::= { broadhopProductsQNS 2 }
+
+
+broadhopProductsQNSConsolidatedKPIVersion OBJECT IDENTIFIER ::= { broadhopProductsQNS 3 }
+
+
+--
+--v5.2 KPI Consolidation Tree
+--
+broadhopProductsQNSConsolidatedKPI52 OBJECT IDENTIFIER ::= { broadhopProductsQNSConsolidatedKPIVersion 52 }
+
+
+
+--
+--v5.2 KPI for PCRF and PCRF Client
+--
+consolidatedKPI52QNS OBJECT IDENTIFIER ::= { broadhopProductsQNSConsolidatedKPI52 1 }
+
+
+--
+-- v5.2 QNS01
+--
+consolidatedKPI52QNS01 OBJECT IDENTIFIER ::= { consolidatedKPI52QNS 1 }
+
+kpi52QNS01RealServerStatus OBJECT-TYPE
+    SYNTAX Gauge32
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Key Performance Indicator
+        "
+     ::= { consolidatedKPI52QNS01 1 }
+
+kpi52QNS01CreateEntryAvgTime OBJECT-TYPE
+    SYNTAX DisplayString
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Key Performance Indicator
+        "
+ ::= { consolidatedKPI52QNS01 2 }
+
+kpi52QNS01CreateEntrySuccess OBJECT-TYPE
+    SYNTAX DisplayString
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Key Performance Indicator
+        "
+ ::= { consolidatedKPI52QNS01 3 }
+
+kpi52QNS01DeleteEntryAvgTime OBJECT-TYPE
+    SYNTAX DisplayString
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Key Performance Indicator
+        "
+ ::= { consolidatedKPI52QNS01 4 }
+
+kpi52QNS01DeleteEntrySuccess OBJECT-TYPE
+    SYNTAX DisplayString
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Key Performance Indicator
+        "
+ ::= { consolidatedKPI52QNS01 5 }
+
+kpi52QNS01GetSessionActionAvgTime OBJECT-TYPE
+    SYNTAX DisplayString
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Key Performance Indicator
+        "
+ ::= { consolidatedKPI52QNS01 6 }
+
+kpi52QNS01GetSessionActionSuccess OBJECT-TYPE
+    SYNTAX DisplayString
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Key Performance Indicator
+        "
+ ::= { consolidatedKPI52QNS01 7 }
+
+kpi52QNS01LockSessionActionAvgTime OBJECT-TYPE
+    SYNTAX DisplayString
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Key Performance Indicator
+        "
+ ::= { consolidatedKPI52QNS01 8 }
+
+kpi52QNS01LockSessionActionSuccess OBJECT-TYPE
+    SYNTAX DisplayString
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Key Performance Indicator
+        "
+ ::= { consolidatedKPI52QNS01 9 }
+
+kpi52QNS01PushQuotaAvgTime OBJECT-TYPE
+    SYNTAX DisplayString
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Key Performance Indicator
+        "
+ ::= { consolidatedKPI52QNS01 10 }
+
+kpi52QNS01PushQuotaSuccess OBJECT-TYPE
+    SYNTAX DisplayString
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Key Performance Indicator
+        "
+ ::= { consolidatedKPI52QNS01 11 }
+
+kpi52QNS01QuotaCalculationAvgTime OBJECT-TYPE
+    SYNTAX DisplayString
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Key Performance Indicator
+        "
+ ::= { consolidatedKPI52QNS01 12 }
+
+kpi52QNS01QuotaCalculationSuccess OBJECT-TYPE
+    SYNTAX DisplayString
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Key Performance Indicator
+        "
+ ::= { consolidatedKPI52QNS01 13 }
+
+kpi52QNS01QuotaDepletedRequestAvgTime OBJECT-TYPE
+    SYNTAX DisplayString
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Key Performance Indicator
+        "
+ ::= { consolidatedKPI52QNS01 14 }
+
+kpi52QNS01QuotaDepletedRequestSucccess OBJECT-TYPE
+    SYNTAX DisplayString
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Key Performance Indicator
+        "
+ ::= { consolidatedKPI52QNS01 15 }
+
+kpi52QNS01RadiusAccountingMessageAvgTime OBJECT-TYPE
+    SYNTAX DisplayString
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Key Performance Indicator
+        "
+ ::= { consolidatedKPI52QNS01 16 }
+
+kpi52QNS01RadiusAccountingMessageSuccess OBJECT-TYPE
+    SYNTAX DisplayString
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Key Performance Indicator
+        "
+ ::= { consolidatedKPI52QNS01 17 }
+
+kpi52QNS01RetrieveSumAvPairAvgTime OBJECT-TYPE
+    SYNTAX DisplayString
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Key Performance Indicator
+        "
+ ::= { consolidatedKPI52QNS01 18 }
+
+kpi52QNS01RetrieveSumAvPairSuccess OBJECT-TYPE
+    SYNTAX DisplayString
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Key Performance Indicator
+        "
+ ::= { consolidatedKPI52QNS01 19 }
+
+kpi52QNS01PolicyCount OBJECT-TYPE
+    SYNTAX DisplayString
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Key Performance Indicator
+        "
+ ::= { consolidatedKPI52QNS01 20 }
+
+kpi52QNS01QueueSize OBJECT-TYPE
+    SYNTAX DisplayString
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Key Performance Indicator
+        "
+ ::= { consolidatedKPI52QNS01 21 }
+
+kpi52QNS01FailedEnqueueCount OBJECT-TYPE
+    SYNTAX DisplayString
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Key Performance Indicator
+        "
+ ::= { consolidatedKPI52QNS01 22 }
+
+kpi52QNS01ErrorCount OBJECT-TYPE
+    SYNTAX DisplayString
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Key Performance Indicator
+        "
+ ::= { consolidatedKPI52QNS01 23 }
+
+kpi52QNS01SessionCount OBJECT-TYPE
+    SYNTAX DisplayString
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Key Performance Indicator
+        "
+ ::= { consolidatedKPI52QNS01 24 }
+
+kpi52QNS01FreeMemory OBJECT-TYPE
+    SYNTAX DisplayString
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Key Performance Indicator
+        "
+ ::= { consolidatedKPI52QNS01 25 }
+
+
+--
+-- v5.2 QNS02
+--
+consolidatedKPI52QNS02 OBJECT IDENTIFIER ::= { consolidatedKPI52QNS 2 }
+
+kpi52QNS02RealServerStatus OBJECT-TYPE
+    SYNTAX Gauge32
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Key Performance Indicator 
+        "
+     ::= { consolidatedKPI52QNS02 1 }
+
+kpi52QNS02CreateEntryAvgTime OBJECT-TYPE
+    SYNTAX DisplayString
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Key Performance Indicator
+        "
+ ::= { consolidatedKPI52QNS02 2 }
+
+kpi52QNS02CreateEntrySuccess OBJECT-TYPE
+    SYNTAX DisplayString
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Key Performance Indicator
+        "
+ ::= { consolidatedKPI52QNS02 3 }
+
+kpi52QNS02DeleteEntryAvgTime OBJECT-TYPE
+    SYNTAX DisplayString
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Key Performance Indicator
+        "
+ ::= { consolidatedKPI52QNS02 4 }
+
+kpi52QNS02DeleteEntrySuccess OBJECT-TYPE
+    SYNTAX DisplayString
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Key Performance Indicator
+        "
+ ::= { consolidatedKPI52QNS02 5 }
+
+kpi52QNS02GetSessionActionAvgTime OBJECT-TYPE
+    SYNTAX DisplayString
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Key Performance Indicator
+        "
+ ::= { consolidatedKPI52QNS02 6 }
+
+kpi52QNS02GetSessionActionSuccess OBJECT-TYPE
+    SYNTAX DisplayString
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Key Performance Indicator
+        "
+ ::= { consolidatedKPI52QNS02 7 }
+
+kpi52QNS02LockSessionActionAvgTime OBJECT-TYPE
+    SYNTAX DisplayString
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Key Performance Indicator
+        "
+ ::= { consolidatedKPI52QNS02 8 }
+
+kpi52QNS02LockSessionActionSuccess OBJECT-TYPE
+    SYNTAX DisplayString
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Key Performance Indicator
+        "
+ ::= { consolidatedKPI52QNS02 9 }
+
+kpi52QNS02PushQuotaAvgTime OBJECT-TYPE
+    SYNTAX DisplayString
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Key Performance Indicator
+        "
+ ::= { consolidatedKPI52QNS02 10 }
+
+kpi52QNS02PushQuotaSuccess OBJECT-TYPE
+    SYNTAX DisplayString
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Key Performance Indicator
+        "
+ ::= { consolidatedKPI52QNS02 11 }
+
+kpi52QNS02QuotaCalculationAvgTime OBJECT-TYPE
+    SYNTAX DisplayString
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Key Performance Indicator
+        "
+ ::= { consolidatedKPI52QNS02 12 }
+
+kpi52QNS02QuotaCalculationSuccess OBJECT-TYPE
+    SYNTAX DisplayString
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Key Performance Indicator
+        "
+ ::= { consolidatedKPI52QNS02 13 }
+
+kpi52QNS02QuotaDepletedRequestAvgTime OBJECT-TYPE
+    SYNTAX DisplayString
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Key Performance Indicator
+        "
+ ::= { consolidatedKPI52QNS02 14 }
+
+kpi52QNS02QuotaDepletedRequestSucccess OBJECT-TYPE
+    SYNTAX DisplayString
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Key Performance Indicator
+        "
+ ::= { consolidatedKPI52QNS02 15 }
+
+kpi52QNS02RadiusAccountingMessageAvgTime OBJECT-TYPE
+    SYNTAX DisplayString
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Key Performance Indicator
+        "
+ ::= { consolidatedKPI52QNS02 16 }
+
+kpi52QNS02RadiusAccountingMessageSuccess OBJECT-TYPE
+    SYNTAX DisplayString
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Key Performance Indicator
+        "
+ ::= { consolidatedKPI52QNS02 17 }
+
+kpi52QNS02RetrieveSumAvPairAvgTime OBJECT-TYPE
+    SYNTAX DisplayString
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Key Performance Indicator
+        "
+ ::= { consolidatedKPI52QNS02 18 }
+
+kpi52QNS02RetrieveSumAvPairSuccess OBJECT-TYPE
+    SYNTAX DisplayString
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Key Performance Indicator
+        "
+ ::= { consolidatedKPI52QNS02 19 }
+
+kpi52QNS02PolicyCount OBJECT-TYPE
+    SYNTAX DisplayString
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Key Performance Indicator
+        "
+ ::= { consolidatedKPI52QNS02 20 }
+
+kpi52QNS02QueueSize OBJECT-TYPE
+    SYNTAX DisplayString
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Key Performance Indicator
+        "
+ ::= { consolidatedKPI52QNS02 21 }
+
+kpi52QNS02FailedEnqueueCount OBJECT-TYPE
+    SYNTAX DisplayString
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Key Performance Indicator
+        "
+ ::= { consolidatedKPI52QNS02 22 }
+
+kpi52QNS02ErrorCount OBJECT-TYPE
+    SYNTAX DisplayString
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Key Performance Indicator
+        "
+ ::= { consolidatedKPI52QNS02 23 }
+
+kpi52QNS02SessionCount OBJECT-TYPE
+    SYNTAX DisplayString
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Key Performance Indicator
+        "
+ ::= { consolidatedKPI52QNS02 24 }
+
+kpi52QNS02FreeMemory OBJECT-TYPE
+    SYNTAX DisplayString
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Key Performance Indicator
+        "
+ ::= { consolidatedKPI52QNS02 25 }
+
+
+--
+-- v5.2 QNS03
+--
+consolidatedKPI52QNS03 OBJECT IDENTIFIER ::= { consolidatedKPI52QNS 3 }
+
+kpi52QNS03RealServerStatus OBJECT-TYPE
+    SYNTAX Gauge32
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Key Performance Indicator 
+        "
+     ::= { consolidatedKPI52QNS03 1 }
+
+kpi52QNS03CreateEntryAvgTime OBJECT-TYPE
+    SYNTAX DisplayString
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Key Performance Indicator
+        "
+ ::= { consolidatedKPI52QNS03 2 }
+
+kpi52QNS03CreateEntrySuccess OBJECT-TYPE
+    SYNTAX DisplayString
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Key Performance Indicator
+        "
+ ::= { consolidatedKPI52QNS03 3 }
+
+kpi52QNS03DeleteEntryAvgTime OBJECT-TYPE
+    SYNTAX DisplayString
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Key Performance Indicator
+        "
+ ::= { consolidatedKPI52QNS03 4 }
+
+kpi52QNS03DeleteEntrySuccess OBJECT-TYPE
+    SYNTAX DisplayString
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Key Performance Indicator
+        "
+ ::= { consolidatedKPI52QNS03 5 }
+
+kpi52QNS03GetSessionActionAvgTime OBJECT-TYPE
+    SYNTAX DisplayString
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Key Performance Indicator
+        "
+ ::= { consolidatedKPI52QNS03 6 }
+
+kpi52QNS03GetSessionActionSuccess OBJECT-TYPE
+    SYNTAX DisplayString
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Key Performance Indicator
+        "
+ ::= { consolidatedKPI52QNS03 7 }
+
+kpi52QNS03LockSessionActionAvgTime OBJECT-TYPE
+    SYNTAX DisplayString
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Key Performance Indicator
+        "
+ ::= { consolidatedKPI52QNS03 8 }
+
+kpi52QNS03LockSessionActionSuccess OBJECT-TYPE
+    SYNTAX DisplayString
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Key Performance Indicator
+        "
+ ::= { consolidatedKPI52QNS03 9 }
+
+kpi52QNS03PushQuotaAvgTime OBJECT-TYPE
+    SYNTAX DisplayString
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Key Performance Indicator
+        "
+ ::= { consolidatedKPI52QNS03 10 }
+
+kpi52QNS03PushQuotaSuccess OBJECT-TYPE
+    SYNTAX DisplayString
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Key Performance Indicator
+        "
+ ::= { consolidatedKPI52QNS03 11 }
+
+kpi52QNS03QuotaCalculationAvgTime OBJECT-TYPE
+    SYNTAX DisplayString
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Key Performance Indicator
+        "
+ ::= { consolidatedKPI52QNS03 12 }
+
+kpi52QNS03QuotaCalculationSuccess OBJECT-TYPE
+    SYNTAX DisplayString
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Key Performance Indicator
+        "
+ ::= { consolidatedKPI52QNS03 13 }
+
+kpi52QNS03QuotaDepletedRequestAvgTime OBJECT-TYPE
+    SYNTAX DisplayString
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Key Performance Indicator
+        "
+ ::= { consolidatedKPI52QNS03 14 }
+
+kpi52QNS03QuotaDepletedRequestSucccess OBJECT-TYPE
+    SYNTAX DisplayString
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Key Performance Indicator
+        "
+ ::= { consolidatedKPI52QNS03 15 }
+
+kpi52QNS03RadiusAccountingMessageAvgTime OBJECT-TYPE
+    SYNTAX DisplayString
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Key Performance Indicator
+        "
+ ::= { consolidatedKPI52QNS03 16 }
+
+kpi52QNS03RadiusAccountingMessageSuccess OBJECT-TYPE
+    SYNTAX DisplayString
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Key Performance Indicator
+        "
+ ::= { consolidatedKPI52QNS03 17 }
+
+kpi52QNS03RetrieveSumAvPairAvgTime OBJECT-TYPE
+    SYNTAX DisplayString
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Key Performance Indicator
+        "
+ ::= { consolidatedKPI52QNS03 18 }
+
+kpi52QNS03RetrieveSumAvPairSuccess OBJECT-TYPE
+    SYNTAX DisplayString
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Key Performance Indicator
+        "
+ ::= { consolidatedKPI52QNS03 19 }
+
+kpi52QNS03PolicyCount OBJECT-TYPE
+    SYNTAX DisplayString
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Key Performance Indicator
+        "
+ ::= { consolidatedKPI52QNS03 20 }
+
+kpi52QNS03QueueSize OBJECT-TYPE
+    SYNTAX DisplayString
+
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Key Performance Indicator
+        "
+ ::= { consolidatedKPI52QNS03 21 }
+
+kpi52QNS03FailedEnqueueCount OBJECT-TYPE
+    SYNTAX DisplayString
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Key Performance Indicator
+        "
+ ::= { consolidatedKPI52QNS03 22 }
+
+kpi52QNS03ErrorCount OBJECT-TYPE
+    SYNTAX DisplayString
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Key Performance Indicator
+        "
+ ::= { consolidatedKPI52QNS03 23 }
+
+kpi52QNS03SessionCount OBJECT-TYPE
+    SYNTAX DisplayString
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Key Performance Indicator
+        "
+ ::= { consolidatedKPI52QNS03 24 }
+
+kpi52QNS03FreeMemory OBJECT-TYPE
+    SYNTAX DisplayString
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Key Performance Indicator
+        "
+ ::= { consolidatedKPI52QNS03 25 }
+
+
+--
+-- v5.2 QNS04
+--
+consolidatedKPI52QNS04 OBJECT IDENTIFIER ::= { consolidatedKPI52QNS 4 }
+
+kpi52QNS04RealServerStatus OBJECT-TYPE
+    SYNTAX Gauge32
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Key Performance Indicator 
+        "
+     ::= { consolidatedKPI52QNS04 1 }
+
+kpi52QNS04CreateEntryAvgTime OBJECT-TYPE
+    SYNTAX DisplayString
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Key Performance Indicator
+        "
+ ::= { consolidatedKPI52QNS04 2 }
+
+kpi52QNS04CreateEntrySuccess OBJECT-TYPE
+    SYNTAX DisplayString
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Key Performance Indicator
+        "
+ ::= { consolidatedKPI52QNS04 3 }
+
+kpi52QNS04DeleteEntryAvgTime OBJECT-TYPE
+    SYNTAX DisplayString
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Key Performance Indicator
+        "
+ ::= { consolidatedKPI52QNS04 4 }
+
+kpi52QNS04DeleteEntrySuccess OBJECT-TYPE
+    SYNTAX DisplayString
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Key Performance Indicator
+        "
+ ::= { consolidatedKPI52QNS04 5 }
+
+kpi52QNS04GetSessionActionAvgTime OBJECT-TYPE
+    SYNTAX DisplayString
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Key Performance Indicator
+        "
+ ::= { consolidatedKPI52QNS04 6 }
+
+kpi52QNS04GetSessionActionSuccess OBJECT-TYPE
+    SYNTAX DisplayString
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Key Performance Indicator
+        "
+ ::= { consolidatedKPI52QNS04 7 }
+
+kpi52QNS04LockSessionActionAvgTime OBJECT-TYPE
+    SYNTAX DisplayString
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Key Performance Indicator
+        "
+ ::= { consolidatedKPI52QNS04 8 }
+
+kpi52QNS04LockSessionActionSuccess OBJECT-TYPE
+    SYNTAX DisplayString
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Key Performance Indicator
+        "
+ ::= { consolidatedKPI52QNS04 9 }
+
+kpi52QNS04PushQuotaAvgTime OBJECT-TYPE
+    SYNTAX DisplayString
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Key Performance Indicator
+        "
+ ::= { consolidatedKPI52QNS04 10 }
+
+kpi52QNS04PushQuotaSuccess OBJECT-TYPE
+    SYNTAX DisplayString
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Key Performance Indicator
+        "
+ ::= { consolidatedKPI52QNS04 11 }
+
+kpi52QNS04QuotaCalculationAvgTime OBJECT-TYPE
+    SYNTAX DisplayString
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Key Performance Indicator
+        "
+ ::= { consolidatedKPI52QNS04 12 }
+
+kpi52QNS04QuotaCalculationSuccess OBJECT-TYPE
+    SYNTAX DisplayString
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Key Performance Indicator
+        "
+ ::= { consolidatedKPI52QNS04 13 }
+
+kpi52QNS04QuotaDepletedRequestAvgTime OBJECT-TYPE
+    SYNTAX DisplayString
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Key Performance Indicator
+        "
+ ::= { consolidatedKPI52QNS04 14 }
+
+kpi52QNS04QuotaDepletedRequestSucccess OBJECT-TYPE
+    SYNTAX DisplayString
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Key Performance Indicator
+        "
+ ::= { consolidatedKPI52QNS04 15 }
+
+kpi52QNS04RadiusAccountingMessageAvgTime OBJECT-TYPE
+    SYNTAX DisplayString
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Key Performance Indicator
+        "
+ ::= { consolidatedKPI52QNS04 16 }
+
+kpi52QNS04RadiusAccountingMessageSuccess OBJECT-TYPE
+    SYNTAX DisplayString
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Key Performance Indicator
+        "
+ ::= { consolidatedKPI52QNS04 17 }
+
+kpi52QNS04RetrieveSumAvPairAvgTime OBJECT-TYPE
+    SYNTAX DisplayString
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Key Performance Indicator
+        "
+ ::= { consolidatedKPI52QNS04 18 }
+
+kpi52QNS04RetrieveSumAvPairSuccess OBJECT-TYPE
+    SYNTAX DisplayString
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Key Performance Indicator
+        "
+ ::= { consolidatedKPI52QNS04 19 }
+
+kpi52QNS04PolicyCount OBJECT-TYPE
+    SYNTAX DisplayString
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Key Performance Indicator
+        "
+ ::= { consolidatedKPI52QNS04 20 }
+
+kpi52QNS04QueueSize OBJECT-TYPE
+    SYNTAX DisplayString
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Key Performance Indicator
+        "
+ ::= { consolidatedKPI52QNS04 21 }
+
+kpi52QNS04FailedEnqueueCount OBJECT-TYPE
+    SYNTAX DisplayString
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Key Performance Indicator
+        "
+ ::= { consolidatedKPI52QNS04 22 }
+
+kpi52QNS04ErrorCount OBJECT-TYPE
+    SYNTAX DisplayString
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Key Performance Indicator
+        "
+ ::= { consolidatedKPI52QNS04 23 }
+
+kpi52QNS04SessionCount OBJECT-TYPE
+    SYNTAX DisplayString
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Key Performance Indicator
+        "
+ ::= { consolidatedKPI52QNS04 24 }
+
+kpi52QNS04FreeMemory OBJECT-TYPE
+    SYNTAX DisplayString
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Key Performance Indicator
+        "
+ ::= { consolidatedKPI52QNS04 25 }
+
+
+
+
+--
+--v5.2 KPI for SUM
+--
+consolidatedKPI52SUM OBJECT IDENTIFIER ::= { broadhopProductsQNSConsolidatedKPI52 2 }
+
+
+--
+-- v5.2 SUM01
+--
+consolidatedKPI52SUM01 OBJECT IDENTIFIER ::= { consolidatedKPI52SUM 1 }
+
+kpi52Sum01RealServerStatus OBJECT-TYPE
+    SYNTAX Integer32
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Key Performance Indicator
+        "
+::= { consolidatedKPI52SUM01 1 }
+
+
+--
+-- v5.2 SUM01
+--
+consolidatedKPI52SUM02 OBJECT IDENTIFIER ::= { consolidatedKPI52SUM 2 }
+
+kpi52Sum02RealServerStatus OBJECT-TYPE
+    SYNTAX Integer32
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Key Performance Indicator
+        "
+::= { consolidatedKPI52SUM02 1 }
+
+
+--
+--v5.2 KPI for MySQL
+--
+consolidatedKPI52MYSQL OBJECT IDENTIFIER ::= { broadhopProductsQNSConsolidatedKPI52 3 }
+
+
+--
+--v5.2 KPI for MySQL01
+--
+consolidatedKPI52MYSQL01 OBJECT IDENTIFIER ::= { consolidatedKPI52MYSQL 1 }
+
+kpi52Mysql01RealServerStatus OBJECT-TYPE
+    SYNTAX Integer32
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Key Performance Indicator
+        "
+ ::= { consolidatedKPI52MYSQL01 1 }
+
+kpi52Mysql01RealServerUptime OBJECT-TYPE
+    SYNTAX Integer32
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Key Performance Indicator
+        "
+ ::= { consolidatedKPI52MYSQL01 2 }
+
+kpi52Mysql01SlowQueries OBJECT-TYPE
+    SYNTAX Integer32
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Key Performance Indicator
+        "
+ ::= { consolidatedKPI52MYSQL01 3 }
+
+kpi52Mysql01ThreadCount OBJECT-TYPE
+    SYNTAX Integer32
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Key Performance Indicator
+        "
+ ::= { consolidatedKPI52MYSQL01 4 }
+
+kpi52Mysql01QueriesPerSecond OBJECT-TYPE
+    SYNTAX Integer32
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Key Performance Indicator
+        "
+ ::= { consolidatedKPI52MYSQL01 5 }
+
+
+--
+--v5.2 KPI for MySQL01
+--
+consolidatedKPI52MYSQL02 OBJECT IDENTIFIER ::= { consolidatedKPI52MYSQL 2 }
+
+kpi52Mysql02RealServerStatus OBJECT-TYPE
+    SYNTAX Integer32
+    MAX-ACCESS read-only STATUS current
+    DESCRIPTION
+        "Key Performance Indicator
+        "
+ ::= { consolidatedKPI52MYSQL02 1 }
+
+kpi52Mysql02RealServerUptime OBJECT-TYPE
+    SYNTAX Integer32
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Key Performance Indicator
+        "
+ ::= { consolidatedKPI52MYSQL02 2 }
+
+kpi52Mysql02SlowQueries OBJECT-TYPE
+    SYNTAX Integer32
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Key Performance Indicator
+        "
+ ::= { consolidatedKPI52MYSQL02 3 }
+
+kpi52Mysql02ThreadCount OBJECT-TYPE
+    SYNTAX Integer32
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Key Performance Indicator
+        "
+ ::= { consolidatedKPI52MYSQL02 4 }
+
+kpi52Mysql02QueriesPerSecond OBJECT-TYPE
+    SYNTAX Integer32
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Key Performance Indicator
+        "
+ ::= { consolidatedKPI52MYSQL02 5 }
+
+
+
+--
+--v5.3 Components Tree
+--
+-- Mapping:
+--    1x - load balancers
+--    2x - PCRF Clients
+--    3x - Session Managers
+--    4x - QNS Servers
+--    5x - Portals
+--    9x - Miscellaneous/Add-On
+--
+--  Basic Information:
+--    Host Name
+--    System Date/Time
+--
+--  Metrics per component:
+--    CPU User
+--    CPU System
+--    CPU Idle
+--    Load Average 1 min
+--    Load Average 5 min
+--    Load Average 15 min
+--    Memory Total
+--    Memory Available
+--    Swap Total
+--    Swap Available
+--    Network Interface eth0 Input Octets (INTERNAL NETWORK)
+--    Network Interface eth0 Output Octets (INTERNAL NETWORK)
+--    Network Interface eth1 Input Octets (MANAGEMENT/API or PORTAL NETWORK)
+--    Network Interface eth1 Output Octets (MANAGEMENT/API or PORTAL NETWORK)
+--
+broadhopProductsQNSComponents53 OBJECT IDENTIFIER ::= { broadhopProductsQNSComponents 53 }
+
+
+--
+-- LB01 System Stats
+--
+broadhopProductsQNSComponents53LB01 OBJECT IDENTIFIER ::= { broadhopProductsQNSComponents53 11 }
+
+component53LB01CpuUser OBJECT-TYPE
+    SYNTAX Integer32
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "User Space CPU usage in whole percent
+        "
+ ::= { broadhopProductsQNSComponents53LB01 1 }
+
+component53LB01CpuSystem OBJECT-TYPE
+    SYNTAX Integer32
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Kernel Space CPU usage in whole percent
+        "
+ ::= { broadhopProductsQNSComponents53LB01 2 }
+
+component53LB01CpuIdle OBJECT-TYPE
+    SYNTAX Integer32
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Idle CPU in whole percent
+        "
+ ::= { broadhopProductsQNSComponents53LB01 3 }
+
+component53LB01LoadAverage1 OBJECT-TYPE
+    SYNTAX Integer32
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "One minute system load average.
+         This is an integer value with float decimal two places in.
+         Display value on an NMS would be this return value divided by 100
+        "
+ ::= { broadhopProductsQNSComponents53LB01 4 }
+
+component53LB01LoadAverage5 OBJECT-TYPE
+    SYNTAX Integer32
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Five minute system load average.
+         This is an integer value with float decimal two places in.
+         Display value on an NMS would be this return value divided by 100
+        "
+ ::= { broadhopProductsQNSComponents53LB01 5 }
+
+component53LB01LoadAverage15 OBJECT-TYPE
+    SYNTAX Integer32
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Fifteen minute system load average.
+         This is an integer value with float decimal two places in.
+         Display value on an NMS would be this return value divided by 100
+        "
+ ::= { broadhopProductsQNSComponents53LB01 6 }
+
+component53LB01MemoryTotal OBJECT-TYPE
+    SYNTAX Integer32
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Total Real Memory on the system in kB.
+         Could be used with Available memory to calculate memory used.
+        "
+ ::= { broadhopProductsQNSComponents53LB01 7 }
+
+component53LB01MemoryAvailable OBJECT-TYPE
+    SYNTAX Integer32
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Available Real Memory on the system in kB.
+         Could be used with total memory to calculate memory used.
+        "
+ ::= { broadhopProductsQNSComponents53LB01 8 }
+
+component53LB01SwapTotal OBJECT-TYPE
+    SYNTAX Integer32
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Total Swap Memory on the system in kB.
+         Could be used with Available Swap memory to calculate memory used.
+        "
+ ::= { broadhopProductsQNSComponents53LB01 9 }
+
+component53LB01SwapAvailable OBJECT-TYPE
+    SYNTAX Integer32
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Available Swap Memory on the system in kB.
+         Could be used with total swap memory to calculate memory used.
+        "
+ ::= { broadhopProductsQNSComponents53LB01 10 }
+
+component53LB01Eth0InOctets OBJECT-TYPE
+    SYNTAX Counter32
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "INTERNAL NETWORK eth0 interface bytes in 
+         counted from from system start or last counter reset.
+         Best used as a delta.
+        "
+ ::= { broadhopProductsQNSComponents53LB01 11 }
+
+component53LB01Eth0OutOctets OBJECT-TYPE
+    SYNTAX Counter32
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "INTERNAL NETWORK eth0 interface bytes out 
+         counted from system start or last counter reset.
+         Best used as a delta.
+        "
+ ::= { broadhopProductsQNSComponents53LB01 12 }
+
+component53LB01Eth1InOctets OBJECT-TYPE
+    SYNTAX Counter32
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "MANAGEMENT-API or PORTAL NETWORK eth1 interface bytes in 
+         counted from from system start or last counter reset.
+         Best used as a delta.
+        "
+ ::= { broadhopProductsQNSComponents53LB01 13 }
+
+component53LB01Eth1OutOctets OBJECT-TYPE
+    SYNTAX Counter32
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "MANAGEMENT-API or PORTAL NETWORK eth1 interface bytes out 
+         counted from system start or last counter reset.
+         Best used as a delta.
+        "
+ ::= { broadhopProductsQNSComponents53LB01 14 }
+
+
+--
+-- LB02 System Stats
+--
+broadhopProductsQNSComponents53LB02 OBJECT IDENTIFIER ::= { broadhopProductsQNSComponents53 12 }
+
+component53LB02CpuUser OBJECT-TYPE
+    SYNTAX Integer32
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "User Space CPU usage in whole percent
+        "
+ ::= { broadhopProductsQNSComponents53LB02 1 }
+
+component53LB02CpuSystem OBJECT-TYPE
+    SYNTAX Integer32
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Kernel Space CPU usage in whole percent
+        "
+ ::= { broadhopProductsQNSComponents53LB02 2 }
+
+component53LB02CpuIdle OBJECT-TYPE
+    SYNTAX Integer32
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Idle CPU in whole percent
+        "
+ ::= { broadhopProductsQNSComponents53LB02 3 }
+
+component53LB02LoadAverage1 OBJECT-TYPE
+    SYNTAX Integer32
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "One minute system load average.
+         This is an integer value with float decimal two places in.
+         Display value on an NMS would be this return value divided by 100
+        "
+ ::= { broadhopProductsQNSComponents53LB02 4 }
+
+component53LB02LoadAverage5 OBJECT-TYPE
+    SYNTAX Integer32
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Five minute system load average.
+         This is an integer value with float decimal two places in.
+         Display value on an NMS would be this return value divided by 100
+        "
+ ::= { broadhopProductsQNSComponents53LB02 5 }
+
+component53LB02LoadAverage15 OBJECT-TYPE
+    SYNTAX Integer32
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Fifteen minute system load average.
+         This is an integer value with float decimal two places in.
+         Display value on an NMS would be this return value divided by 100
+        "
+ ::= { broadhopProductsQNSComponents53LB02 6 }
+
+component53LB02MemoryTotal OBJECT-TYPE
+    SYNTAX Integer32
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Total Real Memory on the system in kB.
+         Could be used with Available memory to calculate memory used.
+        "
+ ::= { broadhopProductsQNSComponents53LB02 7 }
+
+component53LB02MemoryAvailable OBJECT-TYPE
+    SYNTAX Integer32
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Available Real Memory on the system in kB.
+         Could be used with total memory to calculate memory used.
+        "
+ ::= { broadhopProductsQNSComponents53LB02 8 }
+
+component53LB02SwapTotal OBJECT-TYPE
+    SYNTAX Integer32
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Total Swap Memory on the system in kB.
+         Could be used with Available Swap memory to calculate memory used.
+        "
+ ::= { broadhopProductsQNSComponents53LB02 9 }
+
+component53LB02SwapAvailable OBJECT-TYPE
+    SYNTAX Integer32
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Available Swap Memory on the system in kB.
+         Could be used with total swap memory to calculate memory used.
+        "
+ ::= { broadhopProductsQNSComponents53LB02 10 }
+
+component53LB02Eth0InOctets OBJECT-TYPE
+    SYNTAX Counter32
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "INTERNAL NETWORK eth0 interface bytes in 
+         counted from from system start or last counter reset.
+         Best used as a delta.
+        "
+ ::= { broadhopProductsQNSComponents53LB02 11 }
+
+component53LB02Eth0OutOctets OBJECT-TYPE
+    SYNTAX Counter32
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "INTERNAL NETWORK eth0 interface bytes out 
+         counted from system start or last counter reset.
+         Best used as a delta.
+        "
+ ::= { broadhopProductsQNSComponents53LB02 12 }
+
+component53LB02Eth1InOctets OBJECT-TYPE
+    SYNTAX Counter32
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "MANAGEMENT-API or PORTAL NETWORK eth1 interface bytes in 
+         counted from from system start or last counter reset.
+         Best used as a delta.
+        "
+ ::= { broadhopProductsQNSComponents53LB02 13 }
+
+component53LB02Eth1OutOctets OBJECT-TYPE
+    SYNTAX Counter32
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "MANAGEMENT-API or PORTAL NETWORK eth1 interface bytes out 
+         counted from system start or last counter reset.
+         Best used as a delta.
+        "
+ ::= { broadhopProductsQNSComponents53LB02 14 }
+
+
+--
+-- PortalLB01 System Stats
+--
+broadhopProductsQNSComponents53PortalLB01 OBJECT IDENTIFIER ::= { broadhopProductsQNSComponents53 13 }
+
+component53PortalLB01CpuUser OBJECT-TYPE
+    SYNTAX Integer32
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "User Space CPU usage in whole percent
+        "
+ ::= { broadhopProductsQNSComponents53PortalLB01 1 }
+
+component53PortalLB01CpuSystem OBJECT-TYPE
+    SYNTAX Integer32
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Kernel Space CPU usage in whole percent
+        "
+ ::= { broadhopProductsQNSComponents53PortalLB01 2 }
+
+component53PortalLB01CpuIdle OBJECT-TYPE
+    SYNTAX Integer32
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Idle CPU in whole percent
+        "
+ ::= { broadhopProductsQNSComponents53PortalLB01 3 }
+
+component53PortalLB01LoadAverage1 OBJECT-TYPE
+    SYNTAX Integer32
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "One minute system load average.
+         This is an integer value with float decimal two places in.
+         Display value on an NMS would be this return value divided by 100
+        "
+ ::= { broadhopProductsQNSComponents53PortalLB01 4 }
+
+component53PortalLB01LoadAverage5 OBJECT-TYPE
+    SYNTAX Integer32
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Five minute system load average.
+         This is an integer value with float decimal two places in.
+         Display value on an NMS would be this return value divided by 100
+        "
+ ::= { broadhopProductsQNSComponents53PortalLB01 5 }
+
+component53PortalLB01LoadAverage15 OBJECT-TYPE
+    SYNTAX Integer32
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Fifteen minute system load average.
+         This is an integer value with float decimal two places in.
+         Display value on an NMS would be this return value divided by 100
+        "
+ ::= { broadhopProductsQNSComponents53PortalLB01 6 }
+
+component53PortalLB01MemoryTotal OBJECT-TYPE
+    SYNTAX Integer32
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Total Real Memory on the system in kB.
+         Could be used with Available memory to calculate memory used.
+        "
+ ::= { broadhopProductsQNSComponents53PortalLB01 7 }
+
+component53PortalLB01MemoryAvailable OBJECT-TYPE
+    SYNTAX Integer32
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Available Real Memory on the system in kB.
+         Could be used with total memory to calculate memory used.
+        "
+ ::= { broadhopProductsQNSComponents53PortalLB01 8 }
+
+component53PortalLB01SwapTotal OBJECT-TYPE
+    SYNTAX Integer32
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Total Swap Memory on the system in kB.
+         Could be used with Available Swap memory to calculate memory used.
+        "
+ ::= { broadhopProductsQNSComponents53PortalLB01 9 }
+
+component53PortalLB01SwapAvailable OBJECT-TYPE
+    SYNTAX Integer32
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Available Swap Memory on the system in kB.
+         Could be used with total swap memory to calculate memory used.
+        "
+ ::= { broadhopProductsQNSComponents53PortalLB01 10 }
+
+component53PortalLB01Eth0InOctets OBJECT-TYPE
+    SYNTAX Counter32
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "INTERNAL NETWORK eth0 interface bytes in 
+         counted from from system start or last counter reset.
+         Best used as a delta.
+        "
+ ::= { broadhopProductsQNSComponents53PortalLB01 11 }
+
+component53PortalLB01Eth0OutOctets OBJECT-TYPE
+    SYNTAX Counter32
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "INTERNAL NETWORK eth0 interface bytes out 
+         counted from system start or last counter reset.
+         Best used as a delta.
+        "
+ ::= { broadhopProductsQNSComponents53PortalLB01 12 }
+
+component53PortalLB01Eth1InOctets OBJECT-TYPE
+    SYNTAX Counter32
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "MANAGEMENT-API or PORTAL NETWORK eth1 interface bytes in 
+         counted from from system start or last counter reset.
+         Best used as a delta.
+        "
+ ::= { broadhopProductsQNSComponents53PortalLB01 13 }
+
+component53PortalLB01Eth1OutOctets OBJECT-TYPE
+    SYNTAX Counter32
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "MANAGEMENT-API or PORTAL NETWORK eth1 interface bytes out 
+         counted from system start or last counter reset.
+         Best used as a delta.
+        "
+ ::= { broadhopProductsQNSComponents53PortalLB01 14 }
+
+
+
+--
+-- PortalLB02 System Stats
+--
+broadhopProductsQNSComponents53PortalLB02 OBJECT IDENTIFIER ::= { broadhopProductsQNSComponents53 14 }
+
+component53PortalLB02CpuUser OBJECT-TYPE
+    SYNTAX Integer32
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "User Space CPU usage in whole percent
+        "
+ ::= { broadhopProductsQNSComponents53PortalLB02 1 }
+
+component53PortalLB02CpuSystem OBJECT-TYPE
+    SYNTAX Integer32
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Kernel Space CPU usage in whole percent
+        "
+ ::= { broadhopProductsQNSComponents53PortalLB02 2 }
+
+component53PortalLB02CpuIdle OBJECT-TYPE
+    SYNTAX Integer32
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Idle CPU in whole percent
+        "
+ ::= { broadhopProductsQNSComponents53PortalLB02 3 }
+
+component53PortalLB02LoadAverage1 OBJECT-TYPE
+    SYNTAX Integer32
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "One minute system load average.
+         This is an integer value with float decimal two places in.
+         Display value on an NMS would be this return value divided by 100
+        "
+ ::= { broadhopProductsQNSComponents53PortalLB02 4 }
+
+component53PortalLB02LoadAverage5 OBJECT-TYPE
+    SYNTAX Integer32
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Five minute system load average.
+         This is an integer value with float decimal two places in.
+         Display value on an NMS would be this return value divided by 100
+        "
+ ::= { broadhopProductsQNSComponents53PortalLB02 5 }
+
+component53PortalLB02LoadAverage15 OBJECT-TYPE
+    SYNTAX Integer32
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Fifteen minute system load average.
+         This is an integer value with float decimal two places in.
+         Display value on an NMS would be this return value divided by 100
+        "
+ ::= { broadhopProductsQNSComponents53PortalLB02 6 }
+
+component53PortalLB02MemoryTotal OBJECT-TYPE
+    SYNTAX Integer32
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Total Real Memory on the system in kB.
+         Could be used with Available memory to calculate memory used.
+        "
+ ::= { broadhopProductsQNSComponents53PortalLB02 7 }
+
+component53PortalLB02MemoryAvailable OBJECT-TYPE
+    SYNTAX Integer32
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Available Real Memory on the system in kB.
+         Could be used with total memory to calculate memory used.
+        "
+ ::= { broadhopProductsQNSComponents53PortalLB02 8 }
+
+component53PortalLB02SwapTotal OBJECT-TYPE
+    SYNTAX Integer32
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Total Swap Memory on the system in kB.
+         Could be used with Available Swap memory to calculate memory used.
+        "
+ ::= { broadhopProductsQNSComponents53PortalLB02 9 }
+
+component53PortalLB02SwapAvailable OBJECT-TYPE
+    SYNTAX Integer32
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Available Swap Memory on the system in kB.
+         Could be used with total swap memory to calculate memory used.
+        "
+ ::= { broadhopProductsQNSComponents53PortalLB02 10 }
+
+component53PortalLB02Eth0InOctets OBJECT-TYPE
+    SYNTAX Counter32
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "INTERNAL NETWORK eth0 interface bytes in 
+         counted from from system start or last counter reset.
+         Best used as a delta.
+        "
+ ::= { broadhopProductsQNSComponents53PortalLB02 11 }
+
+component53PortalLB02Eth0OutOctets OBJECT-TYPE
+    SYNTAX Counter32
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "INTERNAL NETWORK eth0 interface bytes out 
+         counted from system start or last counter reset.
+         Best used as a delta.
+        "
+ ::= { broadhopProductsQNSComponents53PortalLB02 12 }
+
+component53PortalLB02Eth1InOctets OBJECT-TYPE
+    SYNTAX Counter32
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "MANAGEMENT-API or PORTAL NETWORK eth1 interface bytes in 
+         counted from from system start or last counter reset.
+         Best used as a delta.
+        "
+ ::= { broadhopProductsQNSComponents53PortalLB02 13 }
+
+component53PortalLB02Eth1OutOctets OBJECT-TYPE
+    SYNTAX Counter32
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "MANAGEMENT-API or PORTAL NETWORK eth1 interface bytes out 
+         counted from system start or last counter reset.
+         Best used as a delta.
+        "
+ ::= { broadhopProductsQNSComponents53PortalLB02 14 }
+
+
+--
+-- PCRFClient01 System Stats
+--
+broadhopProductsQNSComponents53PCRFClient01 OBJECT IDENTIFIER ::= { broadhopProductsQNSComponents53 21 }
+
+component53PCRFClient01CpuUser OBJECT-TYPE
+    SYNTAX Integer32
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "User Space CPU usage in whole percent
+        "
+ ::= { broadhopProductsQNSComponents53PCRFClient01 1 }
+
+component53PCRFClient01CpuSystem OBJECT-TYPE
+    SYNTAX Integer32
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Kernel Space CPU usage in whole percent
+        "
+ ::= { broadhopProductsQNSComponents53PCRFClient01 2 }
+
+component53PCRFClient01CpuIdle OBJECT-TYPE
+    SYNTAX Integer32
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Idle CPU in whole percent
+        "
+ ::= { broadhopProductsQNSComponents53PCRFClient01 3 }
+
+component53PCRFClient01LoadAverage1 OBJECT-TYPE
+    SYNTAX Integer32
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "One minute system load average.
+         This is an integer value with float decimal two places in.
+         Display value on an NMS would be this return value divided by 100
+        "
+ ::= { broadhopProductsQNSComponents53PCRFClient01 4 }
+
+component53PCRFClient01LoadAverage5 OBJECT-TYPE
+    SYNTAX Integer32
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Five minute system load average.
+         This is an integer value with float decimal two places in.
+         Display value on an NMS would be this return value divided by 100
+        "
+ ::= { broadhopProductsQNSComponents53PCRFClient01 5 }
+
+component53PCRFClient01LoadAverage15 OBJECT-TYPE
+    SYNTAX Integer32
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Fifteen minute system load average.
+         This is an integer value with float decimal two places in.
+         Display value on an NMS would be this return value divided by 100
+        "
+ ::= { broadhopProductsQNSComponents53PCRFClient01 6 }
+
+component53PCRFClient01MemoryTotal OBJECT-TYPE
+    SYNTAX Integer32
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Total Real Memory on the system in kB.
+         Could be used with Available memory to calculate memory used.
+        "
+ ::= { broadhopProductsQNSComponents53PCRFClient01 7 }
+
+component53PCRFClient01MemoryAvailable OBJECT-TYPE
+    SYNTAX Integer32
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Available Real Memory on the system in kB.
+         Could be used with total memory to calculate memory used.
+        "
+ ::= { broadhopProductsQNSComponents53PCRFClient01 8 }
+
+component53PCRFClient01SwapTotal OBJECT-TYPE
+    SYNTAX Integer32
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Total Swap Memory on the system in kB.
+         Could be used with Available Swap memory to calculate memory used.
+        "
+ ::= { broadhopProductsQNSComponents53PCRFClient01 9 }
+
+component53PCRFClient01SwapAvailable OBJECT-TYPE
+    SYNTAX Integer32
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Available Swap Memory on the system in kB.
+         Could be used with total swap memory to calculate memory used.
+        "
+ ::= { broadhopProductsQNSComponents53PCRFClient01 10 }
+
+component53PCRFClient01Eth0InOctets OBJECT-TYPE
+    SYNTAX Counter32
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "INTERNAL NETWORK eth0 interface bytes in 
+         counted from from system start or last counter reset.
+         Best used as a delta.
+        "
+ ::= { broadhopProductsQNSComponents53PCRFClient01 11 }
+
+component53PCRFClient01Eth0OutOctets OBJECT-TYPE
+    SYNTAX Counter32
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "INTERNAL NETWORK eth0 interface bytes out 
+         counted from system start or last counter reset.
+         Best used as a delta.
+        "
+ ::= { broadhopProductsQNSComponents53PCRFClient01 12 }
+
+component53PCRFClient01Eth1InOctets OBJECT-TYPE
+    SYNTAX Counter32
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "MANAGEMENT-API or PORTAL NETWORK eth1 interface bytes in 
+         counted from from system start or last counter reset.
+         Best used as a delta.
+        "
+ ::= { broadhopProductsQNSComponents53PCRFClient01 13 }
+
+component53PCRFClient01Eth1OutOctets OBJECT-TYPE
+    SYNTAX Counter32
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "MANAGEMENT-API or PORTAL NETWORK eth1 interface bytes out 
+         counted from system start or last counter reset.
+         Best used as a delta.
+        "
+ ::= { broadhopProductsQNSComponents53PCRFClient01 14 }
+
+
+--
+-- PCRFClient02 System Stats
+--
+broadhopProductsQNSComponents53PCRFClient02 OBJECT IDENTIFIER ::= { broadhopProductsQNSComponents53 22 }
+
+component53PCRFClient02CpuUser OBJECT-TYPE
+    SYNTAX Integer32
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "User Space CPU usage in whole percent
+        "
+ ::= { broadhopProductsQNSComponents53PCRFClient02 1 }
+
+component53PCRFClient02CpuSystem OBJECT-TYPE
+    SYNTAX Integer32
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Kernel Space CPU usage in whole percent
+        "
+ ::= { broadhopProductsQNSComponents53PCRFClient02 2 }
+
+component53PCRFClient02CpuIdle OBJECT-TYPE
+    SYNTAX Integer32
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Idle CPU in whole percent
+        "
+ ::= { broadhopProductsQNSComponents53PCRFClient02 3 }
+
+component53PCRFClient02LoadAverage1 OBJECT-TYPE
+    SYNTAX Integer32
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "One minute system load average.
+         This is an integer value with float decimal two places in.
+         Display value on an NMS would be this return value divided by 100
+        "
+ ::= { broadhopProductsQNSComponents53PCRFClient02 4 }
+
+component53PCRFClient02LoadAverage5 OBJECT-TYPE
+    SYNTAX Integer32
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Five minute system load average.
+         This is an integer value with float decimal two places in.
+         Display value on an NMS would be this return value divided by 100
+        "
+ ::= { broadhopProductsQNSComponents53PCRFClient02 5 }
+
+component53PCRFClient02LoadAverage15 OBJECT-TYPE
+    SYNTAX Integer32
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Fifteen minute system load average.
+         This is an integer value with float decimal two places in.
+         Display value on an NMS would be this return value divided by 100
+        "
+ ::= { broadhopProductsQNSComponents53PCRFClient02 6 }
+
+component53PCRFClient02MemoryTotal OBJECT-TYPE
+    SYNTAX Integer32
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Total Real Memory on the system in kB.
+         Could be used with Available memory to calculate memory used.
+        "
+ ::= { broadhopProductsQNSComponents53PCRFClient02 7 }
+
+component53PCRFClient02MemoryAvailable OBJECT-TYPE
+    SYNTAX Integer32
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Available Real Memory on the system in kB.
+         Could be used with total memory to calculate memory used.
+        "
+ ::= { broadhopProductsQNSComponents53PCRFClient02 8 }
+
+component53PCRFClient02SwapTotal OBJECT-TYPE
+    SYNTAX Integer32
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Total Swap Memory on the system in kB.
+         Could be used with Available Swap memory to calculate memory used.
+        "
+ ::= { broadhopProductsQNSComponents53PCRFClient02 9 }
+
+component53PCRFClient02SwapAvailable OBJECT-TYPE
+    SYNTAX Integer32
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Available Swap Memory on the system in kB.
+         Could be used with total swap memory to calculate memory used.
+        "
+ ::= { broadhopProductsQNSComponents53PCRFClient02 10 }
+
+component53PCRFClient02Eth0InOctets OBJECT-TYPE
+    SYNTAX Counter32
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "INTERNAL NETWORK eth0 interface bytes in 
+         counted from from system start or last counter reset.
+         Best used as a delta.
+        "
+ ::= { broadhopProductsQNSComponents53PCRFClient02 11 }
+
+component53PCRFClient02Eth0OutOctets OBJECT-TYPE
+    SYNTAX Counter32
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "INTERNAL NETWORK eth0 interface bytes out 
+         counted from system start or last counter reset.
+         Best used as a delta.
+        "
+ ::= { broadhopProductsQNSComponents53PCRFClient02 12 }
+
+component53PCRFClient02Eth1InOctets OBJECT-TYPE
+    SYNTAX Counter32
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "MANAGEMENT-API or PORTAL NETWORK eth1 interface bytes in 
+         counted from from system start or last counter reset.
+         Best used as a delta.
+        "
+ ::= { broadhopProductsQNSComponents53PCRFClient02 13 }
+
+component53PCRFClient02Eth1OutOctets OBJECT-TYPE
+    SYNTAX Counter32
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "MANAGEMENT-API or PORTAL NETWORK eth1 interface bytes out 
+         counted from system start or last counter reset.
+         Best used as a delta.
+        "
+ ::= { broadhopProductsQNSComponents53PCRFClient02 14 }
+
+
+
+--
+-- Sessionmgr01 System Stats
+--
+
+broadhopProductsQNSComponents53SessionMgr01 OBJECT IDENTIFIER ::= { broadhopProductsQNSComponents53 31 }
+
+component53SessionMgr01CpuUser OBJECT-TYPE
+    SYNTAX Integer32
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "User Space CPU usage in whole percent
+        "
+ ::= { broadhopProductsQNSComponents53SessionMgr01 1 }
+
+component53SessionMgr01CpuSystem OBJECT-TYPE
+    SYNTAX Integer32
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Kernel Space CPU usage in whole percent
+        "
+ ::= { broadhopProductsQNSComponents53SessionMgr01 2 }
+
+component53SessionMgr01CpuIdle OBJECT-TYPE
+    SYNTAX Integer32
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Idle CPU in whole percent
+        "
+ ::= { broadhopProductsQNSComponents53SessionMgr01 3 }
+
+component53SessionMgr01LoadAverage1 OBJECT-TYPE
+    SYNTAX Integer32
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "One minute system load average.
+         This is an integer value with float decimal two places in.
+         Display value on an NMS would be this return value divided by 100
+        "
+ ::= { broadhopProductsQNSComponents53SessionMgr01 4 }
+
+component53SessionMgr01LoadAverage5 OBJECT-TYPE
+    SYNTAX Integer32
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Five minute system load average.
+         This is an integer value with float decimal two places in.
+         Display value on an NMS would be this return value divided by 100
+        "
+ ::= { broadhopProductsQNSComponents53SessionMgr01 5 }
+
+component53SessionMgr01LoadAverage15 OBJECT-TYPE
+    SYNTAX Integer32
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Fifteen minute system load average.
+         This is an integer value with float decimal two places in.
+         Display value on an NMS would be this return value divided by 100
+        "
+ ::= { broadhopProductsQNSComponents53SessionMgr01 6 }
+
+component53SessionMgr01MemoryTotal OBJECT-TYPE
+    SYNTAX Integer32
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Total Real Memory on the system in kB.
+         Could be used with Available memory to calculate memory used.
+        "
+ ::= { broadhopProductsQNSComponents53SessionMgr01 7 }
+
+component53SessionMgr01MemoryAvailable OBJECT-TYPE
+    SYNTAX Integer32
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Available Real Memory on the system in kB.
+         Could be used with total memory to calculate memory used.
+        "
+ ::= { broadhopProductsQNSComponents53SessionMgr01 8 }
+
+component53SessionMgr01SwapTotal OBJECT-TYPE
+    SYNTAX Integer32
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Total Swap Memory on the system in kB.
+         Could be used with Available Swap memory to calculate memory used.
+        "
+ ::= { broadhopProductsQNSComponents53SessionMgr01 9 }
+
+component53SessionMgr01SwapAvailable OBJECT-TYPE
+    SYNTAX Integer32
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Available Swap Memory on the system in kB.
+         Could be used with total swap memory to calculate memory used.
+        "
+ ::= { broadhopProductsQNSComponents53SessionMgr01 10 }
+
+component53SessionMgr01Eth0InOctets OBJECT-TYPE
+    SYNTAX Counter32
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "INTERNAL NETWORK eth0 interface bytes in 
+         counted from from system start or last counter reset.
+         Best used as a delta.
+        "
+ ::= { broadhopProductsQNSComponents53SessionMgr01 11 }
+
+component53SessionMgr01Eth0OutOctets OBJECT-TYPE
+    SYNTAX Counter32
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "INTERNAL NETWORK eth0 interface bytes out 
+         counted from system start or last counter reset.
+         Best used as a delta.
+        "
+ ::= { broadhopProductsQNSComponents53SessionMgr01 12 }
+
+component53SessionMgr01Eth1InOctets OBJECT-TYPE
+    SYNTAX Counter32
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "MANAGEMENT-API or PORTAL NETWORK eth1 interface bytes in 
+         counted from from system start or last counter reset.
+         Best used as a delta.
+        "
+ ::= { broadhopProductsQNSComponents53SessionMgr01 13 }
+
+component53SessionMgr01Eth1OutOctets OBJECT-TYPE
+    SYNTAX Counter32
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "MANAGEMENT-API or PORTAL NETWORK eth1 interface bytes out 
+         counted from system start or last counter reset.
+         Best used as a delta.
+        "
+ ::= { broadhopProductsQNSComponents53SessionMgr01 14 }
+
+
+
+--
+-- Sessionmgr02 System Stats
+--
+broadhopProductsQNSComponents53SessionMgr02 OBJECT IDENTIFIER ::= { broadhopProductsQNSComponents53 32 }
+
+component53SessionMgr02CpuUser OBJECT-TYPE
+    SYNTAX Integer32
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "User Space CPU usage in whole percent
+        "
+ ::= { broadhopProductsQNSComponents53SessionMgr02 1 }
+
+component53SessionMgr02CpuSystem OBJECT-TYPE
+    SYNTAX Integer32
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Kernel Space CPU usage in whole percent
+        "
+ ::= { broadhopProductsQNSComponents53SessionMgr02 2 }
+
+component53SessionMgr02CpuIdle OBJECT-TYPE
+    SYNTAX Integer32
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Idle CPU in whole percent
+        "
+ ::= { broadhopProductsQNSComponents53SessionMgr02 3 }
+
+component53SessionMgr02LoadAverage1 OBJECT-TYPE
+    SYNTAX Integer32
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "One minute system load average.
+         This is an integer value with float decimal two places in.
+         Display value on an NMS would be this return value divided by 100
+        "
+ ::= { broadhopProductsQNSComponents53SessionMgr02 4 }
+
+component53SessionMgr02LoadAverage5 OBJECT-TYPE
+    SYNTAX Integer32
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Five minute system load average.
+         This is an integer value with float decimal two places in.
+         Display value on an NMS would be this return value divided by 100
+        "
+ ::= { broadhopProductsQNSComponents53SessionMgr02 5 }
+
+component53SessionMgr02LoadAverage15 OBJECT-TYPE
+    SYNTAX Integer32
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Fifteen minute system load average.
+         This is an integer value with float decimal two places in.
+         Display value on an NMS would be this return value divided by 100
+        "
+ ::= { broadhopProductsQNSComponents53SessionMgr02 6 }
+
+component53SessionMgr02MemoryTotal OBJECT-TYPE
+    SYNTAX Integer32
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Total Real Memory on the system in kB.
+         Could be used with Available memory to calculate memory used.
+        "
+ ::= { broadhopProductsQNSComponents53SessionMgr02 7 }
+
+component53SessionMgr02MemoryAvailable OBJECT-TYPE
+    SYNTAX Integer32
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Available Real Memory on the system in kB.
+         Could be used with total memory to calculate memory used.
+        "
+ ::= { broadhopProductsQNSComponents53SessionMgr02 8 }
+
+component53SessionMgr02SwapTotal OBJECT-TYPE
+    SYNTAX Integer32
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Total Swap Memory on the system in kB.
+         Could be used with Available Swap memory to calculate memory used.
+        "
+ ::= { broadhopProductsQNSComponents53SessionMgr02 9 }
+
+component53SessionMgr02SwapAvailable OBJECT-TYPE
+    SYNTAX Integer32
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Available Swap Memory on the system in kB.
+         Could be used with total swap memory to calculate memory used.
+        "
+ ::= { broadhopProductsQNSComponents53SessionMgr02 10 }
+
+component53SessionMgr02Eth0InOctets OBJECT-TYPE
+    SYNTAX Counter32
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "INTERNAL NETWORK eth0 interface bytes in 
+         counted from from system start or last counter reset.
+         Best used as a delta.
+        "
+ ::= { broadhopProductsQNSComponents53SessionMgr02 11 }
+
+component53SessionMgr02Eth0OutOctets OBJECT-TYPE
+    SYNTAX Counter32
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "INTERNAL NETWORK eth0 interface bytes out 
+         counted from system start or last counter reset.
+         Best used as a delta.
+        "
+ ::= { broadhopProductsQNSComponents53SessionMgr02 12 }
+
+component53SessionMgr02Eth1InOctets OBJECT-TYPE
+    SYNTAX Counter32
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "MANAGEMENT-API or PORTAL NETWORK eth1 interface bytes in 
+         counted from from system start or last counter reset.
+         Best used as a delta.
+        "
+ ::= { broadhopProductsQNSComponents53SessionMgr02 13 }
+
+component53SessionMgr02Eth1OutOctets OBJECT-TYPE
+    SYNTAX Counter32
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "MANAGEMENT-API or PORTAL NETWORK eth1 interface bytes out 
+         counted from system start or last counter reset.
+         Best used as a delta.
+        "
+ ::= { broadhopProductsQNSComponents53SessionMgr02 14 }
+
+
+--
+-- QNS01 System Stats
+--
+broadhopProductsQNSComponents53QNS01 OBJECT IDENTIFIER ::= { broadhopProductsQNSComponents53 41 }
+
+component53QNS01CpuUser OBJECT-TYPE
+    SYNTAX Integer32
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "User Space CPU usage in whole percent
+        "
+ ::= { broadhopProductsQNSComponents53QNS01 1 }
+
+component53QNS01CpuSystem OBJECT-TYPE
+    SYNTAX Integer32
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Kernel Space CPU usage in whole percent
+        "
+ ::= { broadhopProductsQNSComponents53QNS01 2 }
+
+component53QNS01CpuIdle OBJECT-TYPE
+    SYNTAX Integer32
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Idle CPU in whole percent
+        "
+ ::= { broadhopProductsQNSComponents53QNS01 3 }
+
+component53QNS01LoadAverage1 OBJECT-TYPE
+    SYNTAX Integer32
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "One minute system load average.
+         This is an integer value with float decimal two places in.
+         Display value on an NMS would be this return value divided by 100
+        "
+ ::= { broadhopProductsQNSComponents53QNS01 4 }
+
+component53QNS01LoadAverage5 OBJECT-TYPE
+    SYNTAX Integer32
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Five minute system load average.
+         This is an integer value with float decimal two places in.
+         Display value on an NMS would be this return value divided by 100
+        "
+ ::= { broadhopProductsQNSComponents53QNS01 5 }
+
+component53QNS01LoadAverage15 OBJECT-TYPE
+    SYNTAX Integer32
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Fifteen minute system load average.
+         This is an integer value with float decimal two places in.
+         Display value on an NMS would be this return value divided by 100
+        "
+ ::= { broadhopProductsQNSComponents53QNS01 6 }
+
+component53QNS01MemoryTotal OBJECT-TYPE
+    SYNTAX Integer32
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Total Real Memory on the system in kB.
+         Could be used with Available memory to calculate memory used.
+        "
+ ::= { broadhopProductsQNSComponents53QNS01 7 }
+
+component53QNS01MemoryAvailable OBJECT-TYPE
+    SYNTAX Integer32
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Available Real Memory on the system in kB.
+         Could be used with total memory to calculate memory used.
+        "
+ ::= { broadhopProductsQNSComponents53QNS01 8 }
+
+component53QNS01SwapTotal OBJECT-TYPE
+    SYNTAX Integer32
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Total Swap Memory on the system in kB.
+         Could be used with Available Swap memory to calculate memory used.
+        "
+ ::= { broadhopProductsQNSComponents53QNS01 9 }
+
+component53QNS01SwapAvailable OBJECT-TYPE
+    SYNTAX Integer32
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Available Swap Memory on the system in kB.
+         Could be used with total swap memory to calculate memory used.
+        "
+ ::= { broadhopProductsQNSComponents53QNS01 10 }
+
+component53QNS01Eth0InOctets OBJECT-TYPE
+    SYNTAX Counter32
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "INTERNAL NETWORK eth0 interface bytes in 
+         counted from from system start or last counter reset.
+         Best used as a delta.
+        "
+ ::= { broadhopProductsQNSComponents53QNS01 11 }
+
+component53QNS01Eth0OutOctets OBJECT-TYPE
+    SYNTAX Counter32
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "INTERNAL NETWORK eth0 interface bytes out 
+         counted from system start or last counter reset.
+         Best used as a delta.
+        "
+ ::= { broadhopProductsQNSComponents53QNS01 12 }
+
+component53QNS01Eth1InOctets OBJECT-TYPE
+    SYNTAX Counter32
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "MANAGEMENT-API or PORTAL NETWORK eth1 interface bytes in 
+         counted from from system start or last counter reset.
+         Best used as a delta.
+        "
+ ::= { broadhopProductsQNSComponents53QNS01 13 }
+
+component53QNS01Eth1OutOctets OBJECT-TYPE
+    SYNTAX Counter32
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "MANAGEMENT-API or PORTAL NETWORK eth1 interface bytes out 
+         counted from system start or last counter reset.
+         Best used as a delta.
+        "
+ ::= { broadhopProductsQNSComponents53QNS01 14 }
+
+
+
+--
+-- QNS02 System Stats
+--
+broadhopProductsQNSComponents53QNS02 OBJECT IDENTIFIER ::= { broadhopProductsQNSComponents53 42 }
+
+component53QNS02CpuUser OBJECT-TYPE
+    SYNTAX Integer32
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "User Space CPU usage in whole percent
+        "
+ ::= { broadhopProductsQNSComponents53QNS02 1 }
+
+component53QNS02CpuSystem OBJECT-TYPE
+    SYNTAX Integer32
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Kernel Space CPU usage in whole percent
+        "
+ ::= { broadhopProductsQNSComponents53QNS02 2 }
+
+component53QNS02CpuIdle OBJECT-TYPE
+    SYNTAX Integer32
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Idle CPU in whole percent
+        "
+ ::= { broadhopProductsQNSComponents53QNS02 3 }
+
+component53QNS02LoadAverage1 OBJECT-TYPE
+    SYNTAX Integer32
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "One minute system load average.
+         This is an integer value with float decimal two places in.
+         Display value on an NMS would be this return value divided by 100
+        "
+ ::= { broadhopProductsQNSComponents53QNS02 4 }
+
+component53QNS02LoadAverage5 OBJECT-TYPE
+    SYNTAX Integer32
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Five minute system load average.
+         This is an integer value with float decimal two places in.
+         Display value on an NMS would be this return value divided by 100
+        "
+ ::= { broadhopProductsQNSComponents53QNS02 5 }
+
+component53QNS02LoadAverage15 OBJECT-TYPE
+    SYNTAX Integer32
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Fifteen minute system load average.
+         This is an integer value with float decimal two places in.
+         Display value on an NMS would be this return value divided by 100
+        "
+ ::= { broadhopProductsQNSComponents53QNS02 6 }
+
+component53QNS02MemoryTotal OBJECT-TYPE
+    SYNTAX Integer32
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Total Real Memory on the system in kB.
+         Could be used with Available memory to calculate memory used.
+        "
+ ::= { broadhopProductsQNSComponents53QNS02 7 }
+
+component53QNS02MemoryAvailable OBJECT-TYPE
+    SYNTAX Integer32
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Available Real Memory on the system in kB.
+         Could be used with total memory to calculate memory used.
+        "
+ ::= { broadhopProductsQNSComponents53QNS02 8 }
+
+component53QNS02SwapTotal OBJECT-TYPE
+    SYNTAX Integer32
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Total Swap Memory on the system in kB.
+         Could be used with Available Swap memory to calculate memory used.
+        "
+ ::= { broadhopProductsQNSComponents53QNS02 9 }
+
+component53QNS02SwapAvailable OBJECT-TYPE
+    SYNTAX Integer32
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Available Swap Memory on the system in kB.
+         Could be used with total swap memory to calculate memory used.
+        "
+ ::= { broadhopProductsQNSComponents53QNS02 10 }
+
+component53QNS02Eth0InOctets OBJECT-TYPE
+    SYNTAX Counter32
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "INTERNAL NETWORK eth0 interface bytes in 
+         counted from from system start or last counter reset.
+         Best used as a delta.
+        "
+ ::= { broadhopProductsQNSComponents53QNS02 11 }
+
+component53QNS02Eth0OutOctets OBJECT-TYPE
+    SYNTAX Counter32
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "INTERNAL NETWORK eth0 interface bytes out 
+         counted from system start or last counter reset.
+         Best used as a delta.
+        "
+ ::= { broadhopProductsQNSComponents53QNS02 12 }
+
+component53QNS02Eth1InOctets OBJECT-TYPE
+    SYNTAX Counter32
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "MANAGEMENT-API or PORTAL NETWORK eth1 interface bytes in 
+         counted from from system start or last counter reset.
+         Best used as a delta.
+        "
+ ::= { broadhopProductsQNSComponents53QNS02 13 }
+
+component53QNS02Eth1OutOctets OBJECT-TYPE
+    SYNTAX Counter32
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "MANAGEMENT-API or PORTAL NETWORK eth1 interface bytes out 
+         counted from system start or last counter reset.
+         Best used as a delta.
+        "
+ ::= { broadhopProductsQNSComponents53QNS02 14 }
+
+
+
+--
+-- QNS03 System Stats
+--
+broadhopProductsQNSComponents53QNS03 OBJECT IDENTIFIER ::= { broadhopProductsQNSComponents53 43 }
+
+component53QNS03CpuUser OBJECT-TYPE
+    SYNTAX Integer32
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "User Space CPU usage in whole percent
+        "
+ ::= { broadhopProductsQNSComponents53QNS03 1 }
+
+component53QNS03CpuSystem OBJECT-TYPE
+    SYNTAX Integer32
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Kernel Space CPU usage in whole percent
+        "
+ ::= { broadhopProductsQNSComponents53QNS03 2 }
+
+component53QNS03CpuIdle OBJECT-TYPE
+    SYNTAX Integer32
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Idle CPU in whole percent
+        "
+ ::= { broadhopProductsQNSComponents53QNS03 3 }
+
+component53QNS03LoadAverage1 OBJECT-TYPE
+    SYNTAX Integer32
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "One minute system load average.
+         This is an integer value with float decimal two places in.
+         Display value on an NMS would be this return value divided by 100
+        "
+ ::= { broadhopProductsQNSComponents53QNS03 4 }
+
+component53QNS03LoadAverage5 OBJECT-TYPE
+    SYNTAX Integer32
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Five minute system load average.
+         This is an integer value with float decimal two places in.
+         Display value on an NMS would be this return value divided by 100
+        "
+ ::= { broadhopProductsQNSComponents53QNS03 5 }
+
+component53QNS03LoadAverage15 OBJECT-TYPE
+    SYNTAX Integer32
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Fifteen minute system load average.
+         This is an integer value with float decimal two places in.
+         Display value on an NMS would be this return value divided by 100
+        "
+ ::= { broadhopProductsQNSComponents53QNS03 6 }
+
+component53QNS03MemoryTotal OBJECT-TYPE
+    SYNTAX Integer32
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Total Real Memory on the system in kB.
+         Could be used with Available memory to calculate memory used.
+        "
+ ::= { broadhopProductsQNSComponents53QNS03 7 }
+
+component53QNS03MemoryAvailable OBJECT-TYPE
+    SYNTAX Integer32
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Available Real Memory on the system in kB.
+         Could be used with total memory to calculate memory used.
+        "
+ ::= { broadhopProductsQNSComponents53QNS03 8 }
+
+component53QNS03SwapTotal OBJECT-TYPE
+    SYNTAX Integer32
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Total Swap Memory on the system in kB.
+         Could be used with Available Swap memory to calculate memory used.
+        "
+ ::= { broadhopProductsQNSComponents53QNS03 9 }
+
+component53QNS03SwapAvailable OBJECT-TYPE
+    SYNTAX Integer32
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Available Swap Memory on the system in kB.
+         Could be used with total swap memory to calculate memory used.
+        "
+ ::= { broadhopProductsQNSComponents53QNS03 10 }
+
+component53QNS03Eth0InOctets OBJECT-TYPE
+    SYNTAX Counter32
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "INTERNAL NETWORK eth0 interface bytes in 
+         counted from from system start or last counter reset.
+         Best used as a delta.
+        "
+ ::= { broadhopProductsQNSComponents53QNS03 11 }
+
+component53QNS03Eth0OutOctets OBJECT-TYPE
+    SYNTAX Counter32
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "INTERNAL NETWORK eth0 interface bytes out 
+         counted from system start or last counter reset.
+         Best used as a delta.
+        "
+ ::= { broadhopProductsQNSComponents53QNS03 12 }
+
+component53QNS03Eth1InOctets OBJECT-TYPE
+    SYNTAX Counter32
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "MANAGEMENT-API or PORTAL NETWORK eth1 interface bytes in 
+         counted from from system start or last counter reset.
+         Best used as a delta.
+        "
+ ::= { broadhopProductsQNSComponents53QNS03 13 }
+
+component53QNS03Eth1OutOctets OBJECT-TYPE
+    SYNTAX Counter32
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "MANAGEMENT-API or PORTAL NETWORK eth1 interface bytes out 
+         counted from system start or last counter reset.
+         Best used as a delta.
+        "
+ ::= { broadhopProductsQNSComponents53QNS03 14 }
+
+
+
+--
+-- QNS04 System Stats
+--
+broadhopProductsQNSComponents53QNS04 OBJECT IDENTIFIER ::= { broadhopProductsQNSComponents53 44 }
+
+component53QNS04CpuUser OBJECT-TYPE
+    SYNTAX Integer32
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "User Space CPU usage in whole percent
+        "
+ ::= { broadhopProductsQNSComponents53QNS04 1 }
+
+component53QNS04CpuSystem OBJECT-TYPE
+    SYNTAX Integer32
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Kernel Space CPU usage in whole percent
+        "
+ ::= { broadhopProductsQNSComponents53QNS04 2 }
+
+component53QNS04CpuIdle OBJECT-TYPE
+    SYNTAX Integer32
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Idle CPU in whole percent
+        "
+ ::= { broadhopProductsQNSComponents53QNS04 3 }
+
+component53QNS04LoadAverage1 OBJECT-TYPE
+    SYNTAX Integer32
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "One minute system load average.
+         This is an integer value with float decimal two places in.
+         Display value on an NMS would be this return value divided by 100
+        "
+ ::= { broadhopProductsQNSComponents53QNS04 4 }
+
+component53QNS04LoadAverage5 OBJECT-TYPE
+    SYNTAX Integer32
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Five minute system load average.
+         This is an integer value with float decimal two places in.
+         Display value on an NMS would be this return value divided by 100
+        "
+ ::= { broadhopProductsQNSComponents53QNS04 5 }
+
+component53QNS04LoadAverage15 OBJECT-TYPE
+    SYNTAX Integer32
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Fifteen minute system load average.
+         This is an integer value with float decimal two places in.
+         Display value on an NMS would be this return value divided by 100
+        "
+ ::= { broadhopProductsQNSComponents53QNS04 6 }
+
+component53QNS04MemoryTotal OBJECT-TYPE
+    SYNTAX Integer32
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Total Real Memory on the system in kB.
+         Could be used with Available memory to calculate memory used.
+        "
+ ::= { broadhopProductsQNSComponents53QNS04 7 }
+
+component53QNS04MemoryAvailable OBJECT-TYPE
+    SYNTAX Integer32
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Available Real Memory on the system in kB.
+         Could be used with total memory to calculate memory used.
+        "
+ ::= { broadhopProductsQNSComponents53QNS04 8 }
+
+component53QNS04SwapTotal OBJECT-TYPE
+    SYNTAX Integer32
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Total Swap Memory on the system in kB.
+         Could be used with Available Swap memory to calculate memory used.
+        "
+ ::= { broadhopProductsQNSComponents53QNS04 9 }
+
+component53QNS04SwapAvailable OBJECT-TYPE
+    SYNTAX Integer32
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Available Swap Memory on the system in kB.
+         Could be used with total swap memory to calculate memory used.
+        "
+ ::= { broadhopProductsQNSComponents53QNS04 10 }
+
+component53QNS04Eth0InOctets OBJECT-TYPE
+    SYNTAX Counter32
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "INTERNAL NETWORK eth0 interface bytes in 
+         counted from from system start or last counter reset.
+         Best used as a delta.
+        "
+ ::= { broadhopProductsQNSComponents53QNS04 11 }
+
+component53QNS04Eth0OutOctets OBJECT-TYPE
+    SYNTAX Counter32
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "INTERNAL NETWORK eth0 interface bytes out 
+         counted from system start or last counter reset.
+         Best used as a delta.
+        "
+ ::= { broadhopProductsQNSComponents53QNS04 12 }
+
+component53QNS04Eth1InOctets OBJECT-TYPE
+    SYNTAX Counter32
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "MANAGEMENT-API or PORTAL NETWORK eth1 interface bytes in 
+         counted from from system start or last counter reset.
+         Best used as a delta.
+        "
+ ::= { broadhopProductsQNSComponents53QNS04 13 }
+
+component53QNS04Eth1OutOctets OBJECT-TYPE
+    SYNTAX Counter32
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "MANAGEMENT-API or PORTAL NETWORK eth1 interface bytes out 
+         counted from system start or last counter reset.
+         Best used as a delta.
+        "
+ ::= { broadhopProductsQNSComponents53QNS04 14 }
+
+
+
+--
+-- Portal01 System Stats
+--
+broadhopProductsQNSComponents53Portal01 OBJECT IDENTIFIER ::= { broadhopProductsQNSComponents53 51 }
+
+component53Portal01CpuUser OBJECT-TYPE
+    SYNTAX Integer32
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "User Space CPU usage in whole percent
+        "
+ ::= { broadhopProductsQNSComponents53Portal01 1 }
+
+component53Portal01CpuSystem OBJECT-TYPE
+    SYNTAX Integer32
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Kernel Space CPU usage in whole percent
+        "
+ ::= { broadhopProductsQNSComponents53Portal01 2 }
+
+component53Portal01CpuIdle OBJECT-TYPE
+    SYNTAX Integer32
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Idle CPU in whole percent
+        "
+ ::= { broadhopProductsQNSComponents53Portal01 3 }
+
+component53Portal01LoadAverage1 OBJECT-TYPE
+    SYNTAX Integer32
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "One minute system load average.
+         This is an integer value with float decimal two places in.
+         Display value on an NMS would be this return value divided by 100
+        "
+ ::= { broadhopProductsQNSComponents53Portal01 4 }
+
+component53Portal01LoadAverage5 OBJECT-TYPE
+    SYNTAX Integer32
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Five minute system load average.
+         This is an integer value with float decimal two places in.
+         Display value on an NMS would be this return value divided by 100
+        "
+ ::= { broadhopProductsQNSComponents53Portal01 5 }
+
+component53Portal01LoadAverage15 OBJECT-TYPE
+    SYNTAX Integer32
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Fifteen minute system load average.
+         This is an integer value with float decimal two places in.
+         Display value on an NMS would be this return value divided by 100
+        "
+ ::= { broadhopProductsQNSComponents53Portal01 6 }
+
+component53Portal01MemoryTotal OBJECT-TYPE
+    SYNTAX Integer32
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Total Real Memory on the system in kB.
+         Could be used with Available memory to calculate memory used.
+        "
+ ::= { broadhopProductsQNSComponents53Portal01 7 }
+
+component53Portal01MemoryAvailable OBJECT-TYPE
+    SYNTAX Integer32
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Available Real Memory on the system in kB.
+         Could be used with total memory to calculate memory used.
+        "
+ ::= { broadhopProductsQNSComponents53Portal01 8 }
+
+component53Portal01SwapTotal OBJECT-TYPE
+    SYNTAX Integer32
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Total Swap Memory on the system in kB.
+         Could be used with Available Swap memory to calculate memory used.
+        "
+ ::= { broadhopProductsQNSComponents53Portal01 9 }
+
+component53Portal01SwapAvailable OBJECT-TYPE
+    SYNTAX Integer32
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Available Swap Memory on the system in kB.
+         Could be used with total swap memory to calculate memory used.
+        "
+ ::= { broadhopProductsQNSComponents53Portal01 10 }
+
+component53Portal01Eth0InOctets OBJECT-TYPE
+    SYNTAX Counter32
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "INTERNAL NETWORK eth0 interface bytes in 
+         counted from from system start or last counter reset.
+         Best used as a delta.
+        "
+ ::= { broadhopProductsQNSComponents53Portal01 11 }
+
+component53Portal01Eth0OutOctets OBJECT-TYPE
+    SYNTAX Counter32
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "INTERNAL NETWORK eth0 interface bytes out 
+         counted from system start or last counter reset.
+         Best used as a delta.
+        "
+ ::= { broadhopProductsQNSComponents53Portal01 12 }
+
+component53Portal01Eth1InOctets OBJECT-TYPE
+    SYNTAX Counter32
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "MANAGEMENT-API or PORTAL NETWORK eth1 interface bytes in 
+         counted from from system start or last counter reset.
+         Best used as a delta.
+        "
+ ::= { broadhopProductsQNSComponents53Portal01 13 }
+
+component53Portal01Eth1OutOctets OBJECT-TYPE
+    SYNTAX Counter32
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "MANAGEMENT-API or PORTAL NETWORK eth1 interface bytes out 
+         counted from system start or last counter reset.
+         Best used as a delta.
+        "
+ ::= { broadhopProductsQNSComponents53Portal01 14 }
+
+
+
+--
+-- Portal02 System Stats
+--
+broadhopProductsQNSComponents53Portal02 OBJECT IDENTIFIER ::= { broadhopProductsQNSComponents53 52 }
+
+component53Portal02CpuUser OBJECT-TYPE
+    SYNTAX Integer32
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "User Space CPU usage in whole percent
+        "
+ ::= { broadhopProductsQNSComponents53Portal02 1 }
+
+component53Portal02CpuSystem OBJECT-TYPE
+    SYNTAX Integer32
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Kernel Space CPU usage in whole percent
+        "
+ ::= { broadhopProductsQNSComponents53Portal02 2 }
+
+component53Portal02CpuIdle OBJECT-TYPE
+    SYNTAX Integer32
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Idle CPU in whole percent
+        "
+ ::= { broadhopProductsQNSComponents53Portal02 3 }
+
+component53Portal02LoadAverage1 OBJECT-TYPE
+    SYNTAX Integer32
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "One minute system load average.
+         This is an integer value with float decimal two places in.
+         Display value on an NMS would be this return value divided by 100
+        "
+ ::= { broadhopProductsQNSComponents53Portal02 4 }
+
+component53Portal02LoadAverage5 OBJECT-TYPE
+    SYNTAX Integer32
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Five minute system load average.
+         This is an integer value with float decimal two places in.
+         Display value on an NMS would be this return value divided by 100
+        "
+ ::= { broadhopProductsQNSComponents53Portal02 5 }
+
+component53Portal02LoadAverage15 OBJECT-TYPE
+    SYNTAX Integer32
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Fifteen minute system load average.
+         This is an integer value with float decimal two places in.
+         Display value on an NMS would be this return value divided by 100
+        "
+ ::= { broadhopProductsQNSComponents53Portal02 6 }
+
+component53Portal02MemoryTotal OBJECT-TYPE
+    SYNTAX Integer32
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Total Real Memory on the system in kB.
+         Could be used with Available memory to calculate memory used.
+        "
+ ::= { broadhopProductsQNSComponents53Portal02 7 }
+
+component53Portal02MemoryAvailable OBJECT-TYPE
+    SYNTAX Integer32
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Available Real Memory on the system in kB.
+         Could be used with total memory to calculate memory used.
+        "
+ ::= { broadhopProductsQNSComponents53Portal02 8 }
+
+component53Portal02SwapTotal OBJECT-TYPE
+    SYNTAX Integer32
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Total Swap Memory on the system in kB.
+         Could be used with Available Swap memory to calculate memory used.
+        "
+ ::= { broadhopProductsQNSComponents53Portal02 9 }
+
+component53Portal02SwapAvailable OBJECT-TYPE
+    SYNTAX Integer32
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Available Swap Memory on the system in kB.
+         Could be used with total swap memory to calculate memory used.
+        "
+ ::= { broadhopProductsQNSComponents53Portal02 10 }
+
+component53Portal02Eth0InOctets OBJECT-TYPE
+    SYNTAX Counter32
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "INTERNAL NETWORK eth0 interface bytes in 
+         counted from from system start or last counter reset.
+         Best used as a delta.
+        "
+ ::= { broadhopProductsQNSComponents53Portal02 11 }
+
+component53Portal02Eth0OutOctets OBJECT-TYPE
+    SYNTAX Counter32
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "INTERNAL NETWORK eth0 interface bytes out 
+         counted from system start or last counter reset.
+         Best used as a delta.
+        "
+ ::= { broadhopProductsQNSComponents53Portal02 12 }
+
+component53Portal02Eth1InOctets OBJECT-TYPE
+    SYNTAX Counter32
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "MANAGEMENT-API or PORTAL NETWORK eth1 interface bytes in 
+         counted from from system start or last counter reset.
+         Best used as a delta.
+        "
+ ::= { broadhopProductsQNSComponents53Portal02 13 }
+
+component53Portal02Eth1OutOctets OBJECT-TYPE
+    SYNTAX Counter32
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "MANAGEMENT-API or PORTAL NETWORK eth1 interface bytes out 
+         counted from system start or last counter reset.
+         Best used as a delta.
+        "
+ ::= { broadhopProductsQNSComponents53Portal02 14 }
+
+
+
+
+--
+--v5.3 KPI Consolidation Tree
+--
+--
+-- Mapping:
+--    1x - load balancers
+--    2x - PCRF Clients
+--    3x - Session Managers
+--    4x - QNS Servers
+--    5x - Portals
+--    9x - Miscellaneous/Add-On
+--    
+--  Key Performance Indicator (KPI) Metrics per component:
+--    CPU User
+broadhopProductsQNSKPI53 OBJECT IDENTIFIER ::= { broadhopProductsQNSConsolidatedKPIVersion 53 }
+
+--
+-- LB01 KPI
+--
+broadhopProductsQNSKPI53LB01 OBJECT IDENTIFIER ::= { broadhopProductsQNSKPI53 11  }
+
+kpi53LB01PCRFProxyExternalCurrentSessions OBJECT-TYPE
+    SYNTAX DisplayString
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Current active sessions in proxy
+         Externally sourced API calls going to QNS servers
+        "
+     ::= { broadhopProductsQNSKPI53LB01 1 }
+
+kpi53LB01PCRFProxyInternalCurrentSessions OBJECT-TYPE
+    SYNTAX DisplayString
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Current active sessions in proxy
+         Internally sourced API calls going to QNS servers
+        "
+     ::= { broadhopProductsQNSKPI53LB01 2 }
+
+
+--
+-- LB02 KPI
+--
+broadhopProductsQNSKPI53LB02 OBJECT IDENTIFIER ::= { broadhopProductsQNSKPI53 12  }
+
+kpi53LB02PCRFProxyExternalCurrentSessions OBJECT-TYPE
+    SYNTAX DisplayString
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Current active sessions in proxy
+         Externally sourced API calls going to QNS servers
+        "
+     ::= { broadhopProductsQNSKPI53LB02 1 }
+
+kpi53LB02PCRFProxyInternalCurrentSessions OBJECT-TYPE
+    SYNTAX DisplayString
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Current active sessions in proxy
+         Internally sourced API calls going to QNS servers
+        "
+     ::= { broadhopProductsQNSKPI53LB02 2 }
+
+--
+-- PortalLB01 KPI
+--
+broadhopProductsQNSKPI53PortalLB01 OBJECT IDENTIFIER ::= { broadhopProductsQNSKPI53 13  }
+
+kpi53PortalLB01PortalProxyExternalCurrentSessions OBJECT-TYPE
+    SYNTAX DisplayString
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Current active sessions in proxy
+         Externally sourced API calls going to QNS servers
+        "
+     ::= { broadhopProductsQNSKPI53PortalLB01 1 }
+
+--
+-- PortalLB02 KPI
+--
+broadhopProductsQNSKPI53PortalLB02 OBJECT IDENTIFIER ::= { broadhopProductsQNSKPI53 14  }
+
+kpi53PortalLB02PortalProxyExternalCurrentSessions OBJECT-TYPE
+    SYNTAX DisplayString
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Current active sessions in proxy
+         Externally sourced API calls going to QNS servers
+        "
+     ::= { broadhopProductsQNSKPI53PortalLB02 1 }
+
+--
+-- SessionMgr01 KPI
+--
+broadhopProductsQNSKPI53SessionMgr01 OBJECT IDENTIFIER ::= { broadhopProductsQNSKPI53 31  }
+--
+-- SessionMgr02 KPI
+--
+broadhopProductsQNSKPI53SessionMgr02 OBJECT IDENTIFIER ::= { broadhopProductsQNSKPI53 32  }
+
+--
+-- QNS01 KPI
+--
+broadhopProductsQNSKPI53QNS01 OBJECT IDENTIFIER ::= { broadhopProductsQNSKPI53 41  }
+
+kpi53QNS01CreateEntryAvgTime OBJECT-TYPE
+    SYNTAX DisplayString
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Key Performance Indicator
+        "
+ ::= { broadhopProductsQNSKPI53QNS01 2 }
+
+kpi53QNS01CreateEntrySuccess OBJECT-TYPE
+    SYNTAX DisplayString
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Key Performance Indicator
+        "
+ ::= { broadhopProductsQNSKPI53QNS01 3 }
+
+kpi53QNS01DeleteEntryAvgTime OBJECT-TYPE
+    SYNTAX DisplayString
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Key Performance Indicator
+        "
+ ::= { broadhopProductsQNSKPI53QNS01 4 }
+
+kpi53QNS01DeleteEntrySuccess OBJECT-TYPE
+    SYNTAX DisplayString
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Key Performance Indicator
+        "
+ ::= { broadhopProductsQNSKPI53QNS01 5 }
+
+kpi53QNS01GetSessionActionAvgTime OBJECT-TYPE
+    SYNTAX DisplayString
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Key Performance Indicator
+        "
+ ::= { broadhopProductsQNSKPI53QNS01 6 }
+
+kpi53QNS01GetSessionActionSuccess OBJECT-TYPE
+    SYNTAX DisplayString
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Key Performance Indicator
+        "
+ ::= { broadhopProductsQNSKPI53QNS01 7 }
+
+kpi53QNS01LockSessionActionAvgTime OBJECT-TYPE
+    SYNTAX DisplayString
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Key Performance Indicator
+        "
+ ::= { broadhopProductsQNSKPI53QNS01 8 }
+
+kpi53QNS01LockSessionActionSuccess OBJECT-TYPE
+    SYNTAX DisplayString
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Key Performance Indicator
+        "
+ ::= { broadhopProductsQNSKPI53QNS01 9 }
+
+kpi53QNS01PushQuotaAvgTime OBJECT-TYPE
+    SYNTAX DisplayString
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Key Performance Indicator
+        "
+ ::= { broadhopProductsQNSKPI53QNS01 10 }
+
+kpi53QNS01PushQuotaSuccess OBJECT-TYPE
+    SYNTAX DisplayString
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Key Performance Indicator
+        "
+ ::= { broadhopProductsQNSKPI53QNS01 11 }
+
+kpi53QNS01QuotaCalculationAvgTime OBJECT-TYPE
+    SYNTAX DisplayString
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Key Performance Indicator
+        "
+ ::= { broadhopProductsQNSKPI53QNS01 12 }
+
+kpi53QNS01QuotaCalculationSuccess OBJECT-TYPE
+    SYNTAX DisplayString
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Key Performance Indicator
+        "
+ ::= { broadhopProductsQNSKPI53QNS01 13 }
+
+kpi53QNS01QuotaDepletedRequestAvgTime OBJECT-TYPE
+    SYNTAX DisplayString
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Key Performance Indicator
+        "
+ ::= { broadhopProductsQNSKPI53QNS01 14 }
+
+kpi53QNS01QuotaDepletedRequestSucccess OBJECT-TYPE
+    SYNTAX DisplayString
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Key Performance Indicator
+        "
+ ::= { broadhopProductsQNSKPI53QNS01 15 }
+
+kpi53QNS01RadiusAccountingMessageAvgTime OBJECT-TYPE
+    SYNTAX DisplayString
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Key Performance Indicator
+        "
+ ::= { broadhopProductsQNSKPI53QNS01 16 }
+
+kpi53QNS01RadiusAccountingMessageSuccess OBJECT-TYPE
+    SYNTAX DisplayString
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Key Performance Indicator
+        "
+ ::= { broadhopProductsQNSKPI53QNS01 17 }
+
+kpi53QNS01RetrieveSumAvPairAvgTime OBJECT-TYPE
+    SYNTAX DisplayString
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Key Performance Indicator
+        "
+ ::= { broadhopProductsQNSKPI53QNS01 18 }
+
+kpi53QNS01RetrieveSumAvPairSuccess OBJECT-TYPE
+    SYNTAX DisplayString
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Key Performance Indicator
+        "
+ ::= { broadhopProductsQNSKPI53QNS01 19 }
+
+kpi53QNS01PolicyCount OBJECT-TYPE
+    SYNTAX DisplayString
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Key Performance Indicator
+        "
+ ::= { broadhopProductsQNSKPI53QNS01 20 }
+
+kpi53QNS01QueueSize OBJECT-TYPE
+    SYNTAX DisplayString
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Key Performance Indicator
+        "
+ ::= { broadhopProductsQNSKPI53QNS01 21 }
+
+kpi53QNS01FailedEnqueueCount OBJECT-TYPE
+    SYNTAX DisplayString
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Key Performance Indicator
+        "
+ ::= { broadhopProductsQNSKPI53QNS01 22 }
+
+kpi53QNS01ErrorCount OBJECT-TYPE
+    SYNTAX DisplayString
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Key Performance Indicator
+        "
+ ::= { broadhopProductsQNSKPI53QNS01 23 }
+
+kpi53QNS01SessionCount OBJECT-TYPE
+    SYNTAX DisplayString
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Key Performance Indicator
+        "
+ ::= { broadhopProductsQNSKPI53QNS01 24 }
+
+kpi53QNS01FreeMemory OBJECT-TYPE
+    SYNTAX DisplayString
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Key Performance Indicator
+        "
+ ::= { broadhopProductsQNSKPI53QNS01 25 }
+
+--
+-- QNS02 KPI
+--
+broadhopProductsQNSKPI53QNS02 OBJECT IDENTIFIER ::= { broadhopProductsQNSKPI53 42  }
+
+kpi53QNS02CreateEntryAvgTime OBJECT-TYPE
+    SYNTAX DisplayString
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Key Performance Indicator
+        "
+ ::= { broadhopProductsQNSKPI53QNS02 2 }
+
+kpi53QNS02CreateEntrySuccess OBJECT-TYPE
+    SYNTAX DisplayString
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Key Performance Indicator
+        "
+ ::= { broadhopProductsQNSKPI53QNS02 3 }
+
+kpi53QNS02DeleteEntryAvgTime OBJECT-TYPE
+    SYNTAX DisplayString
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Key Performance Indicator
+        "
+ ::= { broadhopProductsQNSKPI53QNS02 4 }
+
+kpi53QNS02DeleteEntrySuccess OBJECT-TYPE
+    SYNTAX DisplayString
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Key Performance Indicator
+        "
+ ::= { broadhopProductsQNSKPI53QNS02 5 }
+
+kpi53QNS02GetSessionActionAvgTime OBJECT-TYPE
+    SYNTAX DisplayString
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Key Performance Indicator
+        "
+ ::= { broadhopProductsQNSKPI53QNS02 6 }
+
+kpi53QNS02GetSessionActionSuccess OBJECT-TYPE
+    SYNTAX DisplayString
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Key Performance Indicator
+        "
+ ::= { broadhopProductsQNSKPI53QNS02 7 }
+
+kpi53QNS02LockSessionActionAvgTime OBJECT-TYPE
+    SYNTAX DisplayString
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Key Performance Indicator
+        "
+ ::= { broadhopProductsQNSKPI53QNS02 8 }
+
+kpi53QNS02LockSessionActionSuccess OBJECT-TYPE
+    SYNTAX DisplayString
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Key Performance Indicator
+        "
+ ::= { broadhopProductsQNSKPI53QNS02 9 }
+
+kpi53QNS02PushQuotaAvgTime OBJECT-TYPE
+    SYNTAX DisplayString
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Key Performance Indicator
+        "
+ ::= { broadhopProductsQNSKPI53QNS02 10 }
+
+kpi53QNS02PushQuotaSuccess OBJECT-TYPE
+    SYNTAX DisplayString
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Key Performance Indicator
+        "
+ ::= { broadhopProductsQNSKPI53QNS02 11 }
+
+kpi53QNS02QuotaCalculationAvgTime OBJECT-TYPE
+    SYNTAX DisplayString
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Key Performance Indicator
+        "
+ ::= { broadhopProductsQNSKPI53QNS02 12 }
+
+kpi53QNS02QuotaCalculationSuccess OBJECT-TYPE
+    SYNTAX DisplayString
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Key Performance Indicator
+        "
+ ::= { broadhopProductsQNSKPI53QNS02 13 }
+
+kpi53QNS02QuotaDepletedRequestAvgTime OBJECT-TYPE
+    SYNTAX DisplayString
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Key Performance Indicator
+        "
+ ::= { broadhopProductsQNSKPI53QNS02 14 }
+
+kpi53QNS02QuotaDepletedRequestSucccess OBJECT-TYPE
+    SYNTAX DisplayString
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Key Performance Indicator
+        "
+ ::= { broadhopProductsQNSKPI53QNS02 15 }
+
+kpi53QNS02RadiusAccountingMessageAvgTime OBJECT-TYPE
+    SYNTAX DisplayString
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Key Performance Indicator
+        "
+ ::= { broadhopProductsQNSKPI53QNS02 16 }
+
+kpi53QNS02RadiusAccountingMessageSuccess OBJECT-TYPE
+    SYNTAX DisplayString
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Key Performance Indicator
+        "
+ ::= { broadhopProductsQNSKPI53QNS02 17 }
+
+kpi53QNS02RetrieveSumAvPairAvgTime OBJECT-TYPE
+    SYNTAX DisplayString
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Key Performance Indicator
+        "
+ ::= { broadhopProductsQNSKPI53QNS02 18 }
+
+kpi53QNS02RetrieveSumAvPairSuccess OBJECT-TYPE
+    SYNTAX DisplayString
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Key Performance Indicator
+        "
+ ::= { broadhopProductsQNSKPI53QNS02 19 }
+
+kpi53QNS02PolicyCount OBJECT-TYPE
+    SYNTAX DisplayString
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Key Performance Indicator
+        "
+ ::= { broadhopProductsQNSKPI53QNS02 20 }
+
+kpi53QNS02QueueSize OBJECT-TYPE
+    SYNTAX DisplayString
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Key Performance Indicator
+        "
+ ::= { broadhopProductsQNSKPI53QNS02 21 }
+
+kpi53QNS02FailedEnqueueCount OBJECT-TYPE
+    SYNTAX DisplayString
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Key Performance Indicator
+        "
+ ::= { broadhopProductsQNSKPI53QNS02 22 }
+
+kpi53QNS02ErrorCount OBJECT-TYPE
+    SYNTAX DisplayString
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Key Performance Indicator
+        "
+ ::= { broadhopProductsQNSKPI53QNS02 23 }
+
+kpi53QNS02SessionCount OBJECT-TYPE
+    SYNTAX DisplayString
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Key Performance Indicator
+        "
+ ::= { broadhopProductsQNSKPI53QNS02 24 }
+
+kpi53QNS02FreeMemory OBJECT-TYPE
+    SYNTAX DisplayString
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Key Performance Indicator
+        "
+ ::= { broadhopProductsQNSKPI53QNS02 25 }
+
+--
+-- QNS03 KPI
+--
+broadhopProductsQNSKPI53QNS03 OBJECT IDENTIFIER ::= { broadhopProductsQNSKPI53 43  }
+
+kpi53QNS03CreateEntryAvgTime OBJECT-TYPE
+    SYNTAX DisplayString
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Key Performance Indicator
+        "
+ ::= { broadhopProductsQNSKPI53QNS03 2 }
+
+kpi53QNS03CreateEntrySuccess OBJECT-TYPE
+    SYNTAX DisplayString
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Key Performance Indicator
+        "
+ ::= { broadhopProductsQNSKPI53QNS03 3 }
+
+kpi53QNS03DeleteEntryAvgTime OBJECT-TYPE
+    SYNTAX DisplayString
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Key Performance Indicator
+        "
+ ::= { broadhopProductsQNSKPI53QNS03 4 }
+
+kpi53QNS03DeleteEntrySuccess OBJECT-TYPE
+    SYNTAX DisplayString
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Key Performance Indicator
+        "
+ ::= { broadhopProductsQNSKPI53QNS03 5 }
+
+kpi53QNS03GetSessionActionAvgTime OBJECT-TYPE
+    SYNTAX DisplayString
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Key Performance Indicator
+        "
+ ::= { broadhopProductsQNSKPI53QNS03 6 }
+
+kpi53QNS03GetSessionActionSuccess OBJECT-TYPE
+    SYNTAX DisplayString
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Key Performance Indicator
+        "
+ ::= { broadhopProductsQNSKPI53QNS03 7 }
+
+kpi53QNS03LockSessionActionAvgTime OBJECT-TYPE
+    SYNTAX DisplayString
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Key Performance Indicator
+        "
+ ::= { broadhopProductsQNSKPI53QNS03 8 }
+
+kpi53QNS03LockSessionActionSuccess OBJECT-TYPE
+    SYNTAX DisplayString
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Key Performance Indicator
+        "
+ ::= { broadhopProductsQNSKPI53QNS03 9 }
+
+kpi53QNS03PushQuotaAvgTime OBJECT-TYPE
+    SYNTAX DisplayString
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Key Performance Indicator
+        "
+ ::= { broadhopProductsQNSKPI53QNS03 10 }
+
+kpi53QNS03PushQuotaSuccess OBJECT-TYPE
+    SYNTAX DisplayString
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Key Performance Indicator
+        "
+ ::= { broadhopProductsQNSKPI53QNS03 11 }
+
+kpi53QNS03QuotaCalculationAvgTime OBJECT-TYPE
+    SYNTAX DisplayString
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Key Performance Indicator
+        "
+ ::= { broadhopProductsQNSKPI53QNS03 12 }
+
+kpi53QNS03QuotaCalculationSuccess OBJECT-TYPE
+    SYNTAX DisplayString
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Key Performance Indicator
+        "
+ ::= { broadhopProductsQNSKPI53QNS03 13 }
+
+kpi53QNS03QuotaDepletedRequestAvgTime OBJECT-TYPE
+    SYNTAX DisplayString
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Key Performance Indicator
+        "
+ ::= { broadhopProductsQNSKPI53QNS03 14 }
+
+kpi53QNS03QuotaDepletedRequestSucccess OBJECT-TYPE
+    SYNTAX DisplayString
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Key Performance Indicator
+        "
+ ::= { broadhopProductsQNSKPI53QNS03 15 }
+
+kpi53QNS03RadiusAccountingMessageAvgTime OBJECT-TYPE
+    SYNTAX DisplayString
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Key Performance Indicator
+        "
+ ::= { broadhopProductsQNSKPI53QNS03 16 }
+
+kpi53QNS03RadiusAccountingMessageSuccess OBJECT-TYPE
+    SYNTAX DisplayString
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Key Performance Indicator
+        "
+ ::= { broadhopProductsQNSKPI53QNS03 17 }
+
+kpi53QNS03RetrieveSumAvPairAvgTime OBJECT-TYPE
+    SYNTAX DisplayString
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Key Performance Indicator
+        "
+ ::= { broadhopProductsQNSKPI53QNS03 18 }
+
+kpi53QNS03RetrieveSumAvPairSuccess OBJECT-TYPE
+    SYNTAX DisplayString
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Key Performance Indicator
+        "
+ ::= { broadhopProductsQNSKPI53QNS03 19 }
+
+kpi53QNS03PolicyCount OBJECT-TYPE
+    SYNTAX DisplayString
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Key Performance Indicator
+        "
+ ::= { broadhopProductsQNSKPI53QNS03 20 }
+
+kpi53QNS03QueueSize OBJECT-TYPE
+    SYNTAX DisplayString
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Key Performance Indicator
+        "
+ ::= { broadhopProductsQNSKPI53QNS03 21 }
+
+kpi53QNS03FailedEnqueueCount OBJECT-TYPE
+    SYNTAX DisplayString
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Key Performance Indicator
+        "
+ ::= { broadhopProductsQNSKPI53QNS03 22 }
+
+kpi53QNS03ErrorCount OBJECT-TYPE
+    SYNTAX DisplayString
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Key Performance Indicator
+        "
+ ::= { broadhopProductsQNSKPI53QNS03 23 }
+
+kpi53QNS03SessionCount OBJECT-TYPE
+    SYNTAX DisplayString
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Key Performance Indicator
+        "
+ ::= { broadhopProductsQNSKPI53QNS03 24 }
+
+kpi53QNS03FreeMemory OBJECT-TYPE
+    SYNTAX DisplayString
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Key Performance Indicator
+        "
+ ::= { broadhopProductsQNSKPI53QNS03 25 }
+
+--
+-- QNS04 KPI
+--
+broadhopProductsQNSKPI53QNS04 OBJECT IDENTIFIER ::= { broadhopProductsQNSKPI53 44  }
+
+kpi53QNS04CreateEntryAvgTime OBJECT-TYPE
+    SYNTAX DisplayString
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Key Performance Indicator
+        "
+ ::= { broadhopProductsQNSKPI53QNS04 2 }
+
+kpi53QNS04CreateEntrySuccess OBJECT-TYPE
+    SYNTAX DisplayString
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Key Performance Indicator
+        "
+ ::= { broadhopProductsQNSKPI53QNS04 3 }
+
+kpi53QNS04DeleteEntryAvgTime OBJECT-TYPE
+    SYNTAX DisplayString
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Key Performance Indicator
+        "
+ ::= { broadhopProductsQNSKPI53QNS04 4 }
+
+kpi53QNS04DeleteEntrySuccess OBJECT-TYPE
+    SYNTAX DisplayString
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Key Performance Indicator
+        "
+ ::= { broadhopProductsQNSKPI53QNS04 5 }
+
+kpi53QNS04GetSessionActionAvgTime OBJECT-TYPE
+    SYNTAX DisplayString
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Key Performance Indicator
+        "
+ ::= { broadhopProductsQNSKPI53QNS04 6 }
+
+kpi53QNS04GetSessionActionSuccess OBJECT-TYPE
+    SYNTAX DisplayString
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Key Performance Indicator
+        "
+ ::= { broadhopProductsQNSKPI53QNS04 7 }
+
+kpi53QNS04LockSessionActionAvgTime OBJECT-TYPE
+    SYNTAX DisplayString
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Key Performance Indicator
+        "
+ ::= { broadhopProductsQNSKPI53QNS04 8 }
+
+kpi53QNS04LockSessionActionSuccess OBJECT-TYPE
+    SYNTAX DisplayString
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Key Performance Indicator
+        "
+ ::= { broadhopProductsQNSKPI53QNS04 9 }
+
+kpi53QNS04PushQuotaAvgTime OBJECT-TYPE
+    SYNTAX DisplayString
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Key Performance Indicator
+        "
+ ::= { broadhopProductsQNSKPI53QNS04 10 }
+
+kpi53QNS04PushQuotaSuccess OBJECT-TYPE
+    SYNTAX DisplayString
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Key Performance Indicator
+        "
+ ::= { broadhopProductsQNSKPI53QNS04 11 }
+
+kpi53QNS04QuotaCalculationAvgTime OBJECT-TYPE
+    SYNTAX DisplayString
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Key Performance Indicator
+        "
+ ::= { broadhopProductsQNSKPI53QNS04 12 }
+
+kpi53QNS04QuotaCalculationSuccess OBJECT-TYPE
+    SYNTAX DisplayString
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Key Performance Indicator
+        "
+ ::= { broadhopProductsQNSKPI53QNS04 13 }
+
+kpi53QNS04QuotaDepletedRequestAvgTime OBJECT-TYPE
+    SYNTAX DisplayString
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Key Performance Indicator
+        "
+ ::= { broadhopProductsQNSKPI53QNS04 14 }
+
+kpi53QNS04QuotaDepletedRequestSucccess OBJECT-TYPE
+    SYNTAX DisplayString
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Key Performance Indicator
+        "
+ ::= { broadhopProductsQNSKPI53QNS04 15 }
+
+kpi53QNS04RadiusAccountingMessageAvgTime OBJECT-TYPE
+    SYNTAX DisplayString
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Key Performance Indicator
+        "
+ ::= { broadhopProductsQNSKPI53QNS04 16 }
+
+kpi53QNS04RadiusAccountingMessageSuccess OBJECT-TYPE
+    SYNTAX DisplayString
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Key Performance Indicator
+        "
+ ::= { broadhopProductsQNSKPI53QNS04 17 }
+
+kpi53QNS04RetrieveSumAvPairAvgTime OBJECT-TYPE
+    SYNTAX DisplayString
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Key Performance Indicator
+        "
+ ::= { broadhopProductsQNSKPI53QNS04 18 }
+
+kpi53QNS04RetrieveSumAvPairSuccess OBJECT-TYPE
+    SYNTAX DisplayString
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Key Performance Indicator
+        "
+ ::= { broadhopProductsQNSKPI53QNS04 19 }
+
+kpi53QNS04PolicyCount OBJECT-TYPE
+    SYNTAX DisplayString
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Key Performance Indicator
+        "
+ ::= { broadhopProductsQNSKPI53QNS04 20 }
+
+kpi53QNS04QueueSize OBJECT-TYPE
+    SYNTAX DisplayString
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Key Performance Indicator
+        "
+ ::= { broadhopProductsQNSKPI53QNS04 21 }
+
+kpi53QNS04FailedEnqueueCount OBJECT-TYPE
+    SYNTAX DisplayString
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Key Performance Indicator
+        "
+ ::= { broadhopProductsQNSKPI53QNS04 22 }
+
+kpi53QNS04ErrorCount OBJECT-TYPE
+    SYNTAX DisplayString
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Key Performance Indicator
+        "
+ ::= { broadhopProductsQNSKPI53QNS04 23 }
+
+kpi53QNS04SessionCount OBJECT-TYPE
+    SYNTAX DisplayString
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Key Performance Indicator
+        "
+ ::= { broadhopProductsQNSKPI53QNS04 24 }
+
+kpi53QNS04FreeMemory OBJECT-TYPE
+    SYNTAX DisplayString
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Key Performance Indicator
+        "
+ ::= { broadhopProductsQNSKPI53QNS04 25 }
+
+
+
+END

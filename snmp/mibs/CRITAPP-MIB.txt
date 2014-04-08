@@ -1,0 +1,346 @@
+-- 
+--  Copyright (C) 1996-2003 by SNMP Research, Incorporated.
+-- 
+--  This software is furnished under a license and may be used and copied
+--  only in accordance with the terms of such license and with the
+--  inclusion of the above copyright notice. This software or any other
+--  copies thereof may not be provided or otherwise made available to any
+--  other person. No title to and ownership of the software is hereby
+--  transferred.
+-- 
+--  The information in this software is subject to change without notice
+--  and should not be construed as a commitment by SNMP Research, Incorporated.
+-- 
+--  Restricted Rights Legend:
+--   Use, duplication, or disclosure by the Government is subject to
+--   restrictions as set forth in subparagraph (c)(1)(ii) of the Rights
+--   in Technical Data and Computer Software clause at DFARS 252.227-7013;
+--   subparagraphs (c)(4) and (d) of the Commercial Computer
+--   Software-Restricted Rights Clause, FAR 52.227-19; and in similar
+--   clauses in the NASA FAR Supplement and other corresponding
+--   governmental regulations.
+-- 
+-- 
+-- 
+-- 
+--                 PROPRIETARY NOTICE
+-- 
+--  This software is an unpublished work subject to a confidentiality agreement
+--  and is protected by copyright and trade secret law.  Unauthorized copying,
+--  redistribution or other use of this work is prohibited.
+-- 
+--  The above notice of copyright on this source code product does not indicate
+--  any actual or intended publication of such source code.
+-- 
+-- 
+-- 
+
+CRITAPP-MIB DEFINITIONS ::= BEGIN
+
+IMPORTS
+    snmpResearchMIBs
+        FROM SNMP-RESEARCH-MIB
+    MODULE-IDENTITY, OBJECT-TYPE, NOTIFICATION-TYPE, Integer32, 
+    Counter32
+        FROM SNMPv2-SMI
+    TEXTUAL-CONVENTION, TimeInterval, TruthValue, DisplayString, 
+    RowStatus, TimeStamp  
+        FROM SNMPv2-TC
+    OBJECT-GROUP
+        FROM SNMPv2-CONF;
+
+critApp MODULE-IDENTITY
+    LAST-UPDATED "9804061200Z"
+    ORGANIZATION "SNMP Research"
+    CONTACT-INFO "Postal: SNMP Research
+                          3001 Kimberlin Heights Road
+                          Knoxville, TN  37920
+                          US
+
+                  Tel:    +1 865 579 3311
+                  E-mail: info@int.snmp.com
+                  WWW:    http://www.int.snmp.com"
+    DESCRIPTION  "A set of object for managing critical application processes."
+::= { snmpResearchMIBs 29 }
+
+-- definition of textual conventions within critApp
+
+CritAppCommandLine ::= TEXTUAL-CONVENTION
+    DISPLAY-HINT "255a"
+    STATUS       current
+    DESCRIPTION  "Represents a command line used to invoke an external 
+                  command.  It is a string containing the full path to
+                  the binary as well as command line parameters.  It
+                  will be passed to the standard command line shell of
+                  the OS (e.g. using system(3) on Unix.)"
+    SYNTAX       OCTET STRING (SIZE (0..255))
+
+-- The critical application table:  This table contains all of the
+-- application-specific information.
+
+critAppTable OBJECT IDENTIFIER ::= { critApp 1 }
+
+critAppProcTable OBJECT-TYPE
+    SYNTAX     SEQUENCE OF CritAppProcEntry
+    MAX-ACCESS not-accessible
+    STATUS     current
+    DESCRIPTION "A table describing critical processes."
+::= { critAppTable 1 }
+
+critAppProcEntry OBJECT-TYPE
+    SYNTAX     CritAppProcEntry
+    MAX-ACCESS not-accessible
+    STATUS     current
+    DESCRIPTION "An entry in the critical process table."
+    INDEX { critAppIndex }
+::= { critAppProcTable 1 }
+
+CritAppProcEntry ::= SEQUENCE {
+    critAppIndex             Integer32,
+    critAppName              DisplayString,
+    critAppProcID            Integer32,
+    critAppStartCommand      CritAppCommandLine,
+    critAppTerminateCommand  CritAppCommandLine,
+    critAppAdminStatus       INTEGER,
+    critAppOperStatus        INTEGER,
+    critAppRestartOnExit     TruthValue,
+    critAppRestartInterval   TimeInterval,
+    critAppLastRestart       TimeStamp,
+    critAppRestarts          Counter32,
+    critAppLastExitStatus    Integer32,
+    critAppTrapOnDown        TruthValue,
+    critAppTrapOnUp          TruthValue,
+    critAppFindProc          TruthValue,
+    critAppRowStatus         RowStatus
+}
+
+critAppIndex OBJECT-TYPE
+    SYNTAX     Integer32 (1..2147483647)
+    MAX-ACCESS not-accessible
+    STATUS     current
+    DESCRIPTION "A numeric index for the critical application table."
+::= { critAppProcEntry 1 }
+
+critAppName OBJECT-TYPE
+    SYNTAX     DisplayString
+    MAX-ACCESS read-create
+    STATUS     current
+    DESCRIPTION "The name of the application.  If critAppFindProc is true then
+		 this must be the last component of the execed pathname.
+		 Otherwise, it is arbitrary."
+::= { critAppProcEntry 2 }
+
+critAppProcID OBJECT-TYPE
+    SYNTAX     Integer32 
+    MAX-ACCESS read-only
+    STATUS     current
+    DESCRIPTION "The process ID of the critical application, if running.
+                 0 indicates that the process is not currently running."
+    DEFVAL { 0 }
+::= { critAppProcEntry 3 }
+
+critAppStartCommand OBJECT-TYPE
+    SYNTAX     CritAppCommandLine
+    MAX-ACCESS read-create
+    STATUS     current
+    DESCRIPTION "The command used in order to start the application."
+::= { critAppProcEntry 4 }
+
+critAppTerminateCommand OBJECT-TYPE
+    SYNTAX     CritAppCommandLine
+    MAX-ACCESS read-create
+    STATUS     current
+    DESCRIPTION "The command used in order to terminate the application.
+                 At invocation time, the environment variable
+                 CRITAPP_PID will contain the process ID of the
+                 application to be terminated.  If the empty string is
+                 given, a reasonable default method is used for
+                 terminating the application."
+    DEFVAL { "" }
+::= { critAppProcEntry 5 }
+
+critAppAdminStatus OBJECT-TYPE
+    SYNTAX     INTEGER{up(1),down(2)}
+    MAX-ACCESS read-create
+    STATUS     current
+    DESCRIPTION "This variable reflects whether the application is 
+                 supposed to be running (up) or not (down). By setting
+                 this variable, an attempt to start and/or terminate 
+                 the application according to this table:
+
+                   critApp       critApp   
+                 OperStatus    AdminStatus   attempted action
+                 ----------    -----------   ----------------
+                 down          up            start
+                 up            down          termination
+
+                 Otherwise, the set will have no effect.  Note that the
+                 critAppAdminStatus only reflects intended status and
+                 not actual status."
+::= { critAppProcEntry 8 }
+
+critAppOperStatus OBJECT-TYPE
+    SYNTAX     INTEGER{up(1),down(2)}
+    MAX-ACCESS read-only
+    STATUS     current
+    DESCRIPTION "This variable indicates whether or not the application is
+                 actually running (up)or not running (down).  This variable 
+                 is read-only and is controlled by the implementing agent 
+                 based on the actual status of the application."
+::= { critAppProcEntry 9 }
+
+critAppRestartOnExit OBJECT-TYPE
+    SYNTAX     TruthValue
+    MAX-ACCESS read-create
+    STATUS     current
+    DESCRIPTION "This variable determines whether or not the application
+                 should be restarted when it exits."
+::= { critAppProcEntry 10 }
+
+critAppRestartInterval OBJECT-TYPE
+    SYNTAX     TimeInterval
+    MAX-ACCESS read-create
+    STATUS     current
+    DESCRIPTION "Automatic restarts of the application will be limited
+                 to one attempt within the time interval specified 
+                 by this variable."
+    DEFVAL { 500 }
+::= { critAppProcEntry 12 }
+
+critAppLastRestart OBJECT-TYPE
+    SYNTAX     TimeStamp
+    MAX-ACCESS read-only
+    STATUS     current
+    DESCRIPTION "The value of sysUpTime.0 at the last time the application
+                 was started."
+    DEFVAL { 0 }
+::= { critAppProcEntry 13 }
+
+critAppRestarts OBJECT-TYPE
+    SYNTAX     Counter32
+    MAX-ACCESS read-only
+    STATUS     current
+    DESCRIPTION "The total number of times the application has been started."
+::= { critAppProcEntry 14 }
+
+critAppLastExitStatus OBJECT-TYPE
+    SYNTAX     Integer32
+    MAX-ACCESS read-only
+    STATUS     current
+    DESCRIPTION "The exit status of the application the last time it exited."
+    DEFVAL { 0 }
+::= { critAppProcEntry 15 }
+
+critAppTrapOnDown OBJECT-TYPE
+    SYNTAX     TruthValue
+    MAX-ACCESS read-create
+    STATUS     current
+    DESCRIPTION "This value determines if a critAppDown trap should be sent
+                 whenever an application has gone down (exited.)"
+    DEFVAL { true }
+::= { critAppProcEntry 16 }
+
+critAppTrapOnUp OBJECT-TYPE
+    SYNTAX     TruthValue
+    MAX-ACCESS read-create
+    STATUS     current
+    DESCRIPTION "This value determines if a critAppUp trap should be sent
+                 when an application has come up."
+    DEFVAL { false }
+::= { critAppProcEntry 17 }
+
+critAppFindProc OBJECT-TYPE
+    SYNTAX     TruthValue
+    MAX-ACCESS read-create
+    STATUS     current
+    DESCRIPTION "This value determines if the critApp subagent attempts to
+		 locate a running copy of the program on startup rather than
+                 starting a new one."
+
+    DEFVAL { false }
+::= { critAppProcEntry 19 }
+
+critAppRowStatus OBJECT-TYPE
+    SYNTAX     RowStatus
+    MAX-ACCESS read-create
+    STATUS     current
+    DESCRIPTION "A row status object for the critical application table."
+::= { critAppProcEntry 25 }
+
+critAppGlobals OBJECT IDENTIFIER ::= { critApp 2 }
+ 
+critAppTrapWhenAllRunning OBJECT-TYPE
+    SYNTAX     TruthValue
+    MAX-ACCESS read-write
+    STATUS     current
+    DESCRIPTION "This variable determines if a critAppAllRunningTrap
+                 should be send when all critical applications are
+                 up."
+::= { critAppGlobals 1 }
+
+critAppTrapWhenNotAllRunning OBJECT-TYPE
+    SYNTAX     TruthValue
+    MAX-ACCESS read-write
+    STATUS     current
+    DESCRIPTION "This variable determines if a critAppNotAllRunningTrap
+                 should be send when at least one application is down."
+::= { critAppGlobals 2 }
+
+critAppTraps OBJECT IDENTIFIER ::= { critApp 3 }
+
+critAppDown NOTIFICATION-TYPE
+    OBJECTS { critAppName, critAppProcID, critAppLastExitStatus }
+    STATUS  current
+    DESCRIPTION "This trap means that the application corresponding to
+                 critAppIndex changed status to down (exited.)"
+    ::= { critAppTraps 1 }
+
+critAppUp NOTIFICATION-TYPE
+    OBJECTS { critAppName, critAppProcID }
+    STATUS  current
+    DESCRIPTION "This trap means that the application corresponding to
+                 critAppIndex changed status to up."
+    ::= { critAppTraps 2 }
+
+critAppAllRunning NOTIFICATION-TYPE
+    STATUS     current
+    DESCRIPTION "This trap means that all applications are up."
+::= { critAppTraps 4 }
+
+critAppNotAllRunning NOTIFICATION-TYPE
+    STATUS     current
+    DESCRIPTION "This trap means that at least one applications is
+                 down."  
+::= { critAppTraps 5 }
+
+-- units of conformance
+
+critAppMIBGroups 
+    OBJECT IDENTIFIER ::= { critApp 4 }
+
+critAppLeafObjects OBJECT-GROUP
+    OBJECTS {
+        critAppName,
+        critAppProcID,
+        critAppStartCommand,
+        critAppTerminateCommand,
+        critAppAdminStatus,
+        critAppOperStatus,
+        critAppRestartOnExit,
+        critAppRestartInterval,
+        critAppLastRestart,
+        critAppRestarts,
+        critAppLastExitStatus,
+        critAppTrapOnDown,
+        critAppTrapOnUp,
+        critAppFindProc,
+        critAppRowStatus,
+        critAppTrapWhenAllRunning,
+        critAppTrapWhenNotAllRunning
+    }
+    STATUS    current
+    DESCRIPTION
+      "Leaf objects of the critApp MIB"
+    ::= { critAppMIBGroups 1 }
+
+END

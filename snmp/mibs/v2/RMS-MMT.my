@@ -1,0 +1,990 @@
+-- *****************************************************************
+-- RMS-MMT.my:  Multicast Management/Route Management MIB
+--
+-- Router Management Solutions Multicast Management Tool
+-- was acquired by Cisco Systems on Feb. 4, 2005.
+--
+-- July 2004, Michael F. Hutt 
+--
+-- Copyright (c) 2004-2006 by Cisco Systems, Inc.
+-- All rights reserved.
+-- 
+-- *****************************************************************
+
+RMS-MMT DEFINITIONS ::= BEGIN
+        IMPORTS
+                MODULE-IDENTITY, 
+                OBJECT-TYPE, 
+                NOTIFICATION-TYPE, 
+                enterprises, 
+                Integer32,
+                Gauge32
+                        FROM SNMPv2-SMI
+                MODULE-COMPLIANCE, 
+                OBJECT-GROUP,
+                NOTIFICATION-GROUP
+                        FROM SNMPv2-CONF;
+
+rms MODULE-IDENTITY
+        LAST-UPDATED        "200609080000Z"
+        ORGANIZATION        "Cisco Systems, Inc."
+        CONTACT-INFO
+                "        Cisco Systems
+                         Customer Service
+
+                Postal:  170 W Tasman Drive
+                         San Jose, CA 95134
+                         USA
+
+                    Tel: +1 800 553-NETS
+
+                E-mail:  cs-crm-cmm@cisco.com"
+
+        DESCRIPTION
+                "This is a MIB to be implemented by an application
+                that polls a collection of other devices to
+                periodically retrieve those other devices' values of
+                specific MIB objects relevant to the routing and
+                forwarding of unicast and multicast IP packets. When
+                such an application detects specific kinds of
+                occurrences, then that application will generate one
+                or more of the notifications defined in this MIB."
+
+        REVISION "200701220000Z"
+        DESCRIPTION 
+                "Added the following notifications:
+                        hiBpsThresholdExceeded
+                        loBpsThresholdExceeded
+                        sgBpsThresholdNormalized
+                        videoMlrThresholdExceeded
+                        videoDfThresholdExceeded"
+                        
+        REVISION "200609080000Z"
+        DESCRIPTION 
+                "Added the following MIB objects:
+                        interfaceName
+                        interfaceDirection
+                Added the following notifications:
+                        multicastBandwidthPercentHiThresholdExceeded
+                        multicastBandwidthPercentLoThresholdExceeded
+                        multicastBandwidthPercentThresholdNormalized"
+
+        REVISION "200602260000Z"
+        DESCRIPTION 
+                "Added the following MIB objects:
+                        delta
+                        rate
+                        gaugeValue
+                        threshold
+                        oidName
+                        domain
+                        topologyType
+                Added the following notifications:
+                        rpfFailureThresholdExceeded"
+
+        REVISION "200504200000Z"
+        DESCRIPTION
+                "Initial version of the MIB module."
+        ::= { enterprises 18289 }
+
+rmsNotificationsPrefix  OBJECT IDENTIFIER ::=  { rms 0 }
+rmsVarPrefix            OBJECT IDENTIFIER ::=  { rms 1 }
+rmsConformance          OBJECT IDENTIFIER ::=  { rms 2 }
+
+routerID OBJECT-TYPE
+        SYNTAX        OCTET STRING (SIZE (1..255))
+        MAX-ACCESS    accessible-for-notify
+        STATUS        current
+        DESCRIPTION   "The IP Address of the local router that 
+                      the application is using to poll the device.
+                      routerID and routerName will correspond to 
+                      the same device.
+
+                      Note that this object is defined as an OCTET 
+                      STRING for historical reasons."
+        ::= { rmsVarPrefix 1 }
+
+group OBJECT-TYPE
+        SYNTAX        OCTET STRING (SIZE (1..255))
+        MAX-ACCESS    accessible-for-notify
+        STATUS        current
+        DESCRIPTION   "This object represents the IP Address of a  
+                      multicast group.
+
+                      Note that this object is defined as an OCTET 
+                      STRING for historical reasons."
+        ::= { rmsVarPrefix 2 }
+
+source OBJECT-TYPE
+        SYNTAX        OCTET STRING (SIZE (1..255))
+        MAX-ACCESS    accessible-for-notify
+        STATUS        current
+        DESCRIPTION   "This object represents the IP Address of a 
+                      multicast source.
+
+                      Note that this object is defined as an OCTET 
+                      STRING for historical reasons."
+        ::= { rmsVarPrefix 3 }
+
+pps OBJECT-TYPE
+        SYNTAX        Integer32 (0..2147483647)
+        MAX-ACCESS    accessible-for-notify
+        STATUS        current
+        DESCRIPTION   "The Layer 3 multicast packets per second rate
+                      measured for a (source,group).
+
+                      This value is determined by polling the 
+                      ipMRoutePkts object at a user specified 
+                      interval."
+        ::= { rmsVarPrefix 4 }
+
+ppsThreshold OBJECT-TYPE
+        SYNTAX        Integer32 (0..2147483647)
+        MAX-ACCESS    accessible-for-notify
+        STATUS        current
+        DESCRIPTION   "The Layer 3 multicast packets per second rate 
+                      threshold. This value is sent in the following
+                      notifications indicating the threshold that was
+                      exceeded:
+
+                      hiThresholdExceeded
+                      loThresholdExceeded
+                      hiL2PortThresholdExceeded
+                      loL2PortThresholdExceeded
+                      sgThresholdNormalized
+                      l2ThresholdNormalized."
+        ::= { rmsVarPrefix 5 }
+
+sourceCount OBJECT-TYPE
+        SYNTAX        Integer32 (0..2147483647)
+        MAX-ACCESS    accessible-for-notify
+        STATUS        current
+        DESCRIPTION   "The number of sources that are sending to a 
+                      multicast group.
+
+                      This value is determined by polling the 
+                      ipMRouteUpstreamNeighbor of the rendezvous
+                      points."
+        ::= { rmsVarPrefix 6 }
+
+baseline OBJECT-TYPE
+        SYNTAX        OCTET STRING (SIZE (1..255))
+        MAX-ACCESS    accessible-for-notify
+        STATUS        current
+        DESCRIPTION   "This object represents the name of a baseline
+                      that can be used for comparison purposes. For
+                      example: a multicast forwarding tree baseline 
+                      representing the multicast forwarding tree
+                      for a particular (source,group). When changes
+                      in this forwarding tree are detected a trChanged
+                      or trReverted notification is sent.
+
+                      It can also represent the name of a unicast or
+                      multicast routing table baseline. Changes in a
+                      routing table would trigger a routeTableChanged
+                      notification."
+        ::= { rmsVarPrefix 7 }
+
+portIndex OBJECT-TYPE
+        SYNTAX        Integer32 (1..2147483647)
+        MAX-ACCESS    accessible-for-notify
+        STATUS        current
+        DESCRIPTION   "This object represents the ifIndex value of a an
+                      interface on a Layer 2 or Layer 3 device."
+        ::= { rmsVarPrefix 8 }
+
+groupCount OBJECT-TYPE
+        SYNTAX        Integer32 (0..2147483647)
+        MAX-ACCESS    accessible-for-notify
+        STATUS        current
+        DESCRIPTION   "The number of multicast groups present on 
+                      a PIM sparse-mode rendezvous point.
+
+                      This value is determined by polling the 
+                      ipMRouteUpstreamNeighbor of the rendezvous
+                      points."
+        ::= { rmsVarPrefix 9 }
+
+groupThreshold OBJECT-TYPE
+        SYNTAX        Integer32 (0..2147483647)
+        MAX-ACCESS    accessible-for-notify
+        STATUS        current
+        DESCRIPTION   "The rendezvous point group threshold specifies 
+                      the maximum number of multicast groups permitted
+                      on this rendezvous point. When this value is 
+                      exceeded, an rpGroupThreshold notification is 
+                      sent."
+        ::= { rmsVarPrefix 10 }
+
+sgDelta OBJECT-TYPE
+        SYNTAX        Integer32 (0..2147483647)
+        MAX-ACCESS    accessible-for-notify
+        STATUS        current
+        DESCRIPTION   "This object represents the deviation in the 
+                      Layer 3 multicast packets per second rate 
+                      measured for a (source,group) between routers 
+                      along a multicast forwarding tree. The value 
+                      is sent in the sgDeltaThresholdExceeded 
+                      notification."
+        ::= { rmsVarPrefix 11 }
+
+sgDeltaThreshold OBJECT-TYPE
+        SYNTAX        Integer32 (0..2147483647)
+        MAX-ACCESS    accessible-for-notify
+        STATUS        current
+        DESCRIPTION   "This object represents the deviation threshold
+                      in the Layer 3 multicast packets per second rate 
+                      measured for a (source,group) between routers 
+                      along a multicast forwarding tree. If this value
+                      is exceeded between any two routers on the 
+                      multicast forwarding tree, then an 
+                      sgDeltaThresholdExceeded notification is sent."
+        ::= { rmsVarPrefix 12 }
+
+routerName OBJECT-TYPE
+        SYNTAX        OCTET STRING (SIZE (1..255))
+        MAX-ACCESS    accessible-for-notify
+        STATUS        current
+        DESCRIPTION   "This object represents the system name of the
+                      router. routerID and routerName will correspond
+                      to the same device."
+        ::= { rmsVarPrefix 13 }
+
+oldDr OBJECT-TYPE
+        SYNTAX        OCTET STRING (SIZE (1..255))
+        MAX-ACCESS    accessible-for-notify
+        STATUS        current
+        DESCRIPTION   "This object represents the designated router 
+                      IP Address used in the drChanged and drRemoved
+                      notifications.
+
+                      Note that this object is defined as an OCTET 
+                      STRING for historical reasons."
+        ::= { rmsVarPrefix 14 }
+
+newDr OBJECT-TYPE
+        SYNTAX        OCTET STRING (SIZE (1..255))
+        MAX-ACCESS    accessible-for-notify
+        STATUS        current
+        DESCRIPTION   "This object represents the designated router
+                      IP Address used in the drChanged and drAdded
+                      notifications.
+
+                      Note that this object is defined as an OCTET 
+                      STRING for historical reasons."
+        ::= { rmsVarPrefix 15 }
+
+unicastRoute OBJECT-TYPE
+        SYNTAX        OCTET STRING (SIZE (1..255))
+        MAX-ACCESS    accessible-for-notify
+        STATUS        current
+        DESCRIPTION   "This object represents the IP Network address
+                      of a unicast routing entry.
+
+                      Note that this object is defined as an OCTET 
+                      STRING for historical reasons."
+        ::= { rmsVarPrefix 16 }
+
+netmask OBJECT-TYPE
+        SYNTAX        OCTET STRING (SIZE (1..255))
+        MAX-ACCESS    accessible-for-notify
+        STATUS        current
+        DESCRIPTION   "This object represents the IP netmask of
+                      a unicast routing entry.
+
+                      Note that this object is defined as an OCTET 
+                      STRING for historical reasons."
+        ::= { rmsVarPrefix 17 }
+
+healthCheckName OBJECT-TYPE
+        SYNTAX        OCTET STRING (SIZE (1..255))
+        MAX-ACCESS    accessible-for-notify
+        STATUS        current
+        DESCRIPTION   "This object represents a health check. Health
+                      checks group several status queries into a 
+                      single view.
+ 
+                      Health checks can check the following:
+                      RP Status
+                      MSDP Status
+                      Existence of a (source,group) on a router
+                      Multicast forwarding tree.
+
+                      If one or more of the configured checks fail, 
+                      then a healthCheckFailed notification is 
+                      sent."
+        ::= { rmsVarPrefix 18 }
+
+deltaLo OBJECT-TYPE
+        SYNTAX        Gauge32 (0..4294967295)
+        MAX-ACCESS    accessible-for-notify
+        STATUS        current
+        DESCRIPTION   "This object represents the deviation measured
+                      between two successive gets of a Counter32 or
+                      the low 32 bits of the deviation measured
+                      between two successive gets of a Counter64."
+        ::= { rmsVarPrefix 19 }
+
+deltaHi OBJECT-TYPE
+        SYNTAX        Gauge32 (0..4294967295)
+        MAX-ACCESS    accessible-for-notify
+        STATUS        current
+        DESCRIPTION   "This object represents the high 32 bits of
+                      the deviation measured between two successive 
+                      gets of a Counter64."
+        ::= { rmsVarPrefix 20 }
+
+rateLo OBJECT-TYPE
+        SYNTAX        Gauge32 (0..4294967295)
+        MAX-ACCESS    accessible-for-notify
+        STATUS        current
+        DESCRIPTION   "A generic value/second object obtained by 
+                      polling a Counter32 at a user specified 
+                      interval or the low 32 bits of a Counter64."
+        ::= { rmsVarPrefix 21 }
+
+rateHi OBJECT-TYPE
+        SYNTAX        Gauge32 (0..4294967295)
+        MAX-ACCESS    accessible-for-notify
+        STATUS        current
+        DESCRIPTION   "The high 32 bits of a generic value/second 
+                      object obtained by polling a Counter64 at a 
+                      user specified interval."
+        ::= { rmsVarPrefix 22 }
+
+gaugeValue OBJECT-TYPE
+        SYNTAX        Gauge32 (0..4294967295)
+        MAX-ACCESS    accessible-for-notify
+        STATUS        current
+        DESCRIPTION   "A generic gauge object obtained by 
+                      polling a gauge32."
+        ::= { rmsVarPrefix 23 }
+
+threshold OBJECT-TYPE
+        SYNTAX        Gauge32 (0..4294967295)
+        MAX-ACCESS    accessible-for-notify
+        STATUS        current
+        DESCRIPTION   "A generic threshold object that is user
+                      defined. MIB objects polled by the application
+                      can be checked against this threshold. Based on 
+                      the result a notification may be sent."
+        ::= { rmsVarPrefix 24 }
+
+oidName OBJECT-TYPE
+        SYNTAX        OCTET STRING (SIZE (1..255))
+        MAX-ACCESS    accessible-for-notify
+        STATUS        current
+        DESCRIPTION   "This object represents the name of a numeric
+                      OID"
+        ::= { rmsVarPrefix 25 }
+
+domain OBJECT-TYPE
+        SYNTAX        OCTET STRING (SIZE (1..255))
+        MAX-ACCESS    accessible-for-notify
+        STATUS        current
+        DESCRIPTION   "This object represents the name of a 
+                      management domain."
+        ::= { rmsVarPrefix 26 }
+
+topologyType OBJECT-TYPE
+        SYNTAX        OCTET STRING (SIZE (1..255))
+        MAX-ACCESS    accessible-for-notify
+        STATUS        current
+        DESCRIPTION   "This object represents the type of network
+                      topology being managed by an application.
+                      This value should be set to either Unicast
+                      or Multicast."
+        ::= { rmsVarPrefix 27 }
+
+interfaceName OBJECT-TYPE
+        SYNTAX        OCTET STRING (SIZE (1..255))
+        MAX-ACCESS    accessible-for-notify
+        STATUS        current
+        DESCRIPTION   "This object represents the name of an 
+                      interface. For example, Ethernet0/1."
+        ::= { rmsVarPrefix 28 }
+
+interfaceDirection OBJECT-TYPE
+        SYNTAX        OCTET STRING (SIZE (1..20))
+        MAX-ACCESS    accessible-for-notify
+        STATUS        current
+        DESCRIPTION   "This object represents the name of the 
+                      interface direction the notification is
+                      for.  It is either the string 'inbound' or 
+                      'outbound'"
+        ::= { rmsVarPrefix 29 }
+
+-- Notifications
+
+hiThresholdExceeded NOTIFICATION-TYPE
+        OBJECTS       { routerName, routerID, group, source, 
+                        pps, ppsThreshold }
+        STATUS        current
+        DESCRIPTION   "Notification that the Layer 3 multicast pps rate 
+                      for a (source,group) has exceeded the high 
+                      packets per second rate threshold (indicated by
+                      the ppsThreshold object in the notification).
+
+                      The pps rate is measured by polling the 
+                      ipMRoutePkts object at a user specified 
+                      interval. If the rate exceeds the packets per
+                      second rate threshold, then this notification will
+                      be sent."
+        ::= { rmsNotificationsPrefix 1 }
+
+loThresholdExceeded NOTIFICATION-TYPE
+        OBJECTS       { routerName, routerID, group, source, 
+                        pps, ppsThreshold }
+        STATUS        current
+        DESCRIPTION   "Notification that the Layer 3 multicast pps rate 
+                      for a (source,group) has exceeded the low 
+                      packets per second rate threshold (indicated by
+                      the ppsThreshold object in the notification).
+
+                      The pps rate is measured by polling the 
+                      ipMRoutePkts object at a user specified 
+                      interval. If the rate exceeds the packet per
+                      second rate threshold, then this notification will
+                      be sent."
+        ::= { rmsNotificationsPrefix 2 }
+
+sgDeletion NOTIFICATION-TYPE
+        OBJECTS       { routerName, routerID, group, source }
+        STATUS        current
+        DESCRIPTION   "Notification that a (source,group) no longer 
+                      exists on the router.
+
+                      This is determined by polling the ipMRoutePkts
+                      object."
+        ::= { rmsNotificationsPrefix 3 }
+
+rpAddition NOTIFICATION-TYPE
+        OBJECTS       { routerName, routerID, group, source }
+        STATUS        current
+        DESCRIPTION   "Notification that a (source,group) has been 
+                      added to the rendezvous point since the last 
+                      poll.
+
+                      This is determined by polling the 
+                      ipMRouteUpstreamNeighbor object on the 
+                      rendezvous point."
+        ::= { rmsNotificationsPrefix 4 }
+
+rpDeletion NOTIFICATION-TYPE
+        OBJECTS       { routerName, routerID, group, source }
+        STATUS        current
+        DESCRIPTION   "Notification that a (source,group) has been 
+                      removed from the rendezvous point since the last 
+                      poll.
+
+                      This is determined by polling the 
+                      ipMRouteUpstreamNeighbor object on the 
+                      rendezvous point."
+        ::= { rmsNotificationsPrefix 5 }
+
+hiL2PortThresholdExceeded NOTIFICATION-TYPE
+        OBJECTS       { routerName, routerID, portIndex, pps, 
+                        ppsThreshold }
+        STATUS        current
+        DESCRIPTION   "Notification of a Layer 2 port multicast pps 
+                      high threshold being exceeded. The pps rate 
+                      is that of the aggregate multicast traffic 
+                      in-bound or out-bound through the Layer 2 port.
+
+                      This value is determined by polling the 
+                      ifInMulticastPkts or ifOutMulticastPkts object
+                      at a user specified interval. If the rate 
+                      exceeds the packets per second rate threshold,
+                      then this notification will be sent." 
+        ::= { rmsNotificationsPrefix 6 }
+
+loL2PortThresholdExceeded NOTIFICATION-TYPE
+        OBJECTS       { routerName, routerID, portIndex, pps, 
+                        ppsThreshold }
+        STATUS        current
+        DESCRIPTION   "Notification of a Layer 2 port multicast pps 
+                      low threshold being exceeded. The pps rate 
+                      is that of the aggregate multicast traffic 
+                      in-bound or out-bound through the Layer 2 port.
+
+                      This value is determined by polling the 
+                      ifInMulticastPkts or ifOutMulticastPkts object
+                      at a user specified interval. If the rate 
+                      exceeds the packets per second rate threshold,
+                      then this notification will be sent." 
+        ::= { rmsNotificationsPrefix 7 }
+
+ssgException NOTIFICATION-TYPE
+        OBJECTS       { group, sourceCount }
+        STATUS        current
+        DESCRIPTION   "Notification of a multicast group that has more
+                      than a single source sending to it. 
+
+                      The number of sources is determined by polling 
+                      the ipMRouteUpstreamNeighbor object on the
+                      rendezvous points."
+        ::= { rmsNotificationsPrefix 8 }
+
+rpTimeOut NOTIFICATION-TYPE
+        OBJECTS       { routerName, routerID }
+        STATUS        current
+        DESCRIPTION   "Notification of a rendezvous point that did not 
+                      respond to a poll."
+        ::= { rmsNotificationsPrefix 9 }
+
+trChanged NOTIFICATION-TYPE
+        OBJECTS       { baseline }
+        STATUS        current
+        DESCRIPTION   "Notification of a multicast forwarding tree that 
+                      has changed from its baseline."
+        ::= { rmsNotificationsPrefix 10 }
+
+trReverted NOTIFICATION-TYPE
+        OBJECTS       { baseline }
+        STATUS        current
+        DESCRIPTION   "Notification of a multicast forwarding tree that
+                      has reverted to its baseline."
+        ::= { rmsNotificationsPrefix 11 }
+
+sgThresholdNormalized NOTIFICATION-TYPE
+        OBJECTS       { routerName, routerID, group, source, 
+                        pps, ppsThreshold }
+        STATUS        current
+        DESCRIPTION   "Notification of the Layer 3 multicast pps rate 
+                      for a (source,group) that is now being measured
+                      at a value between the high and low packet
+                      per second rate thresholds.
+
+                      The pps rate is measured by polling the 
+                      ipMRoutePkts object at a user specified 
+                      interval."
+        ::= { rmsNotificationsPrefix 12 }
+
+l2ThresholdNormalized NOTIFICATION-TYPE
+        OBJECTS       { routerName, routerID, portIndex, pps, 
+                        ppsThreshold }
+        STATUS        current
+        DESCRIPTION   "Notification of the multicast pps rate for
+                      the aggregate multicast traffic on a Layer 2 
+                      port, that is now being measured at a value 
+                      between the high and low packet per second
+                      rate thresholds.
+
+                      This value is determined by polling the 
+                      ifInMulticastPkts or ifOutMulticastPkts object
+                      at a user specified interval."
+        ::= { rmsNotificationsPrefix 13 }
+
+rpGroupThresholdExceeded NOTIFICATION-TYPE
+        OBJECTS       { routerName, routerID, groupCount, 
+                        groupThreshold }
+        STATUS        current
+        DESCRIPTION   "Notification of the multicast group limit 
+                      exceeding the configured threshold on the
+                      rendezvous point.
+
+                      The number of groups is determined by polling 
+                      the ipMRouteUpstreamNeighbor object on the
+                      rendezvous point."
+        ::= { rmsNotificationsPrefix 14 }
+
+sgDeltaThresholdExceeded NOTIFICATION-TYPE
+        OBJECTS       { baseline, group, source, sgDelta, 
+                        sgDeltaThreshold }
+        STATUS        current
+        DESCRIPTION   "Notification that the Layer 3 multicast pps rate 
+                      for a (source,group) has exceeded the set 
+                      threshold when measured between the routers on a
+                      multicast forwarding tree.
+
+                      The pps rate is measured on each router on the
+                      multicast forwarding tree by polling the 
+                      ipMRoutePkts object. When the pps rate between
+                      any two routers on the forwarding tree exceeds
+                      the sgDeltaThreshold, this notification is sent."
+        ::= { rmsNotificationsPrefix 15 }
+
+routeTableChanged NOTIFICATION-TYPE
+        OBJECTS       { routerName, routerID, baseline }
+        STATUS        current
+        DESCRIPTION   "Notification that the unicast or multicast 
+                      routing table has changed compared to the given 
+                      baseline.
+
+                      The table is obtained by polling ipRouteEntry
+                      or ipMRouteEntry. The application will optionally
+                      check the cpu utilization of the router by 
+                      polling the busyPer object to see if it's below
+                      a user defined threshold, prior to polling
+                      ipRouteEntry or ipMRouteEntry."
+        ::= { rmsNotificationsPrefix 16 }
+
+rmsDeviceRediscovered NOTIFICATION-TYPE
+        OBJECTS       { routerName, routerID, domain, topologyType }
+        STATUS        current
+        DESCRIPTION   "Notification that the application has 
+                      rediscovered a router."
+        ::= { rmsNotificationsPrefix 17 }
+
+rpReachable NOTIFICATION-TYPE
+        OBJECTS       { routerName, routerID }
+        STATUS        current
+        DESCRIPTION   "Notification that the rendezvous point responded
+                      to a sysUpTime poll."
+        ::= { rmsNotificationsPrefix 18 }
+
+rpUnreachable NOTIFICATION-TYPE
+        OBJECTS       { routerName, routerID }
+        STATUS        current
+        DESCRIPTION   "Notification that the rendezvous point did not
+                      respond to a sysUpTime poll."
+        ::= { rmsNotificationsPrefix 19 }
+
+drChanged NOTIFICATION-TYPE
+        OBJECTS       { routerName, routerID, portIndex, oldDr, 
+                        newDr }
+        STATUS        current
+        DESCRIPTION   "Notification that the designated router for an 
+                      interface has changed.
+
+                      This information is obtained by polling the
+                      pimInterfaceDR object."
+        ::= { rmsNotificationsPrefix 20 }
+
+drAdded NOTIFICATION-TYPE
+        OBJECTS       { routerName, routerID, portIndex, newDr }
+        STATUS        current
+        DESCRIPTION   "Notification that the designated router for an 
+                      interface has been detected, when on the 
+                      previous poll there was none.
+
+                      This information is obtained by polling the
+                      pimInterfaceDR object."
+        ::= { rmsNotificationsPrefix 21 }
+
+drRemoved NOTIFICATION-TYPE
+        OBJECTS       { routerName, routerID, portIndex, oldDr }
+        STATUS        current
+        DESCRIPTION   "Notification that the designated router for an 
+                      interface has been removed.
+
+                      This information is obtained by polling the
+                      pimInterfaceDR object."
+        ::= { rmsNotificationsPrefix 22 }
+
+unicastRouteChanged NOTIFICATION-TYPE
+        OBJECTS       { routerName, routerID, unicastRoute, netmask }
+        STATUS        current
+        DESCRIPTION   "Notification that one or more parameters of a 
+                      unicast route entry has changed."
+        ::= { rmsNotificationsPrefix 23 }
+
+multicastRouteChanged NOTIFICATION-TYPE
+        OBJECTS       { routerName, routerID, group, source }
+        STATUS        current
+        DESCRIPTION   "Notification that one or more parameters of a 
+                      multicast route entry has changed."
+        ::= { rmsNotificationsPrefix 24 }
+
+healthCheckFailed NOTIFICATION-TYPE
+        OBJECTS       { healthCheckName }
+        STATUS        current
+        DESCRIPTION   "Notification that a health check has detected
+                      one or more failures.
+
+                      Health checks can check the following:
+                      RP Status
+                      MSDP Status
+                      Existence of a (source,group) on a router
+                      Multicast forwarding tree
+
+                      If one or more of the configured checks fail, 
+                      then this notification is sent."
+        ::= { rmsNotificationsPrefix 25 }
+
+rpfFailureThresholdExceeded NOTIFICATION-TYPE
+        OBJECTS       { routerName, routerID, group, source, 
+                        deltaLo, threshold }
+        STATUS        current
+        DESCRIPTION   "Notification of the Layer 3 multicast rpf  
+                      failures for a (source,group) that is now being 
+                      measured at a value above the lo threshold.
+
+                      This value is obtained by polling the 
+                      ipMRouteDifferentInIfPackets object."
+        ::= { rmsNotificationsPrefix 26 }
+
+multicastBandwidthPercentHiThresholdExceeded NOTIFICATION-TYPE
+        OBJECTS       { routerName, routerID, interfaceName, 
+                        interfaceDirection, gaugeValue, threshold }
+        STATUS        current
+        DESCRIPTION   "Notification that the Layer 3 multicast bandwidth
+                      percentage on an interface has exceeded the 
+                      percentage threshold (indicated by
+                      the threshold object in the notification).
+
+                      The multicast bandwidth percentage is measured by 
+                      polling the ipMRouteInterfaceInMcastOctets or
+                      ipMRouteInterfaceOutMcastOctets object at a user 
+                      specified interval and compairing it to the 
+                      ifSpeed of the interface. If the percentage 
+                      exceeds the threshold, then this notification 
+                      will be sent."
+        ::= { rmsNotificationsPrefix 27 }
+
+multicastBandwidthPercentLoThresholdExceeded NOTIFICATION-TYPE
+        OBJECTS       { routerName, routerID, interfaceName, 
+                        interfaceDirection, gaugeValue, threshold }
+        STATUS        current
+        DESCRIPTION   "Notification that the Layer 3 multicast bandwidth
+                      percentage on an interface has exceeded the 
+                      percentage threshold (indicated by
+                      the threshold object in the notification).
+
+                      The multicast bandwidth percentage is measured by 
+                      polling the ipMRouteInterfaceInMcastOctets or
+                      ipMRouteInterfaceOutMcastOctets object at a user 
+                      specified interval and compairing it to the 
+                      ifSpeed of the interface. If the percentage 
+                      exceeds the threshold, then this notification 
+                      will be sent."
+        ::= { rmsNotificationsPrefix 28 }
+        
+multicastBandwidthPercentThresholdNormalized NOTIFICATION-TYPE
+        OBJECTS       { routerName, routerID, interfaceName, 
+                        interfaceDirection, gaugeValue, threshold }
+        STATUS        current
+        DESCRIPTION   "Notification that the multicast bandwidth 
+                      percentage for the aggregate multicast traffic 
+                      on an interface is now at a value lower than the 
+                      high threshold.
+
+                      This value is determined by polling the 
+                      ipMRouteInterfaceInMcastOctets or
+                      ipMRouteInterfaceOutMcastOctets object at a user 
+                      specified interval and compairing it to the 
+                      ifSpeed of the interface."
+        ::= { rmsNotificationsPrefix 29 }
+
+hiBpsThresholdExceeded NOTIFICATION-TYPE
+        OBJECTS       { routerName, routerID, group, source, 
+                        gaugeValue, threshold }
+        STATUS        current
+        DESCRIPTION   "Notification that the Layer 3 multicast bps rate 
+                      for a (source,group) has exceeded the high 
+                      bits per second rate threshold (indicated by
+                      the threshold object in the notification).
+
+                      The bps rate is measured by polling the 
+                      ipMRouteOctets object at a user specified 
+                      interval and multiplying it by 8. If the rate 
+                      exceeds the bits per second rate threshold, then 
+                      this notification will be sent."
+        ::= { rmsNotificationsPrefix 30 }
+
+loBpsThresholdExceeded NOTIFICATION-TYPE
+        OBJECTS       { routerName, routerID, group, source, 
+                        gaugeValue, threshold }
+        STATUS        current
+        DESCRIPTION   "Notification that the Layer 3 multicast bps rate 
+                      for a (source,group) has exceeded the low 
+                      bits per second rate threshold (indicated by
+                      the threshold object in the notification).
+
+                      The bps rate is measured by polling the 
+                      ipMRouteOctets object at a user specified 
+                      interval and multiplying it by 8. If the rate 
+                      exceeds the packet per second rate threshold, then
+                      this notification will be sent."
+        ::= { rmsNotificationsPrefix 31 }
+
+sgBpsThresholdNormalized NOTIFICATION-TYPE
+        OBJECTS       { routerName, routerID, group, source, 
+                        gaugeValue, threshold }
+        STATUS        current
+        DESCRIPTION   "Notification of the Layer 3 multicast bps rate 
+                      for a (source,group) that is now being measured
+                      at a value between the high and low bits
+                      per second rate thresholds.
+
+                      The bps rate is measured by polling the 
+                      ipMRouteOctets object at a user specified 
+                      interval and multiplying it by 8."
+        ::= { rmsNotificationsPrefix 32 }
+
+videoMlrThresholdExceeded NOTIFICATION-TYPE
+        OBJECTS       { routerName, routerID, group, source, 
+                        gaugeValue, threshold }
+        STATUS        current
+        DESCRIPTION   "Notification that the video probe media loss
+                      loss rate (MLR) for a video flow has exceeded the 
+                      configured threshold (indicated by the
+                      threshold object in the notification)."
+        ::= { rmsNotificationsPrefix 33 }
+
+videoDfThresholdExceeded NOTIFICATION-TYPE
+        OBJECTS       { routerName, routerID, group, source, 
+                        gaugeValue, threshold }
+        STATUS        current
+        DESCRIPTION   "Notification that the video probe delay factor
+                      (DF) for a video flow has exceeded the 
+                      configured threshold (indicated by the
+                      threshold object in the notification).
+                      
+                      The threshold and value are in microseconds." 
+        ::= { rmsNotificationsPrefix 34 }
+
+-- Conformance
+
+rmsMIBCompliances OBJECT IDENTIFIER ::= { rmsConformance 1 }
+rmsMIBGroups      OBJECT IDENTIFIER ::= { rmsConformance 2 }
+
+-- Compliance
+
+rmsMIBComplianceRev1 MODULE-COMPLIANCE
+        STATUS        current
+        DESCRIPTION   "The compliance statement for entities that 
+                      implement the Multicast Management/Route 
+                      Management MIB."
+        MODULE   
+        MANDATORY-GROUPS { 
+                      rmsAddressGroup, 
+                      rmsThresholdGroup,
+                      rmsNameGroup,
+                      rmsCountGroup,
+                      rmsInterfaceGroup,
+                      multicastNotifGroup,
+                      routeNotifGroup
+        }
+        ::= { rmsMIBCompliances 1 }
+
+-- Units of Conformance
+
+rmsAddressGroup OBJECT-GROUP
+        OBJECTS       {
+                      routerID,
+                      group,
+                      source,
+                      oldDr,
+                      newDr,
+                      unicastRoute,
+                      netmask
+        }
+        STATUS        current
+        DESCRIPTION   "A collection of objects used to represent
+                       IP Addresses."
+        ::= { rmsMIBGroups 1 }
+
+rmsThresholdGroup OBJECT-GROUP
+        OBJECTS       {
+                      pps,
+                      ppsThreshold,
+                      sgDelta,
+                      sgDeltaThreshold,
+                      groupThreshold,
+                      threshold
+        }
+        STATUS        current
+        DESCRIPTION   "A collection of objects used to provide
+                       threshold information."
+        ::= { rmsMIBGroups 2 }
+
+rmsNameGroup OBJECT-GROUP
+        OBJECTS       {
+                      baseline,
+                      routerName,
+                      healthCheckName,
+                      oidName,
+                      domain,
+                      topologyType,
+                      interfaceName
+        }
+        STATUS        current
+        DESCRIPTION   "A collection of objects used to provide
+                       naming information. E.g.:
+
+                       Device Name
+                       Multicast forwarding tree baseline name
+                       Routing table baseline name
+                       Health check name."
+        ::= { rmsMIBGroups 3 }
+
+rmsCountGroup OBJECT-GROUP
+        OBJECTS       {
+                      sourceCount,
+                      groupCount,
+                      deltaLo,
+                      deltaHi,
+                      rateLo,
+                      rateHi,
+                      gaugeValue
+        }
+        STATUS        current
+        DESCRIPTION   "A collection of objects used to provide
+                       counter information derived from the application
+                       polling other MIB objects."
+        ::= { rmsMIBGroups 4 }
+
+rmsInterfaceGroup OBJECT-GROUP
+        OBJECTS       {
+                      portIndex,
+                      interfaceName,
+                      interfaceDirection
+        }
+        STATUS        current
+        DESCRIPTION   "A collection of objects used to provide
+                       interface index information."
+        ::= { rmsMIBGroups 5 }
+
+
+multicastNotifGroup NOTIFICATION-GROUP
+        NOTIFICATIONS {
+                      hiThresholdExceeded,
+                      loThresholdExceeded,
+                      sgDeletion,
+                      rpAddition,
+                      rpDeletion,
+                      hiL2PortThresholdExceeded,
+                      loL2PortThresholdExceeded,
+                      ssgException,
+                      rpTimeOut,
+                      trChanged,
+                      trReverted,
+                      sgThresholdNormalized,
+                      l2ThresholdNormalized,
+                      rpGroupThresholdExceeded,
+                      sgDeltaThresholdExceeded,
+                      rmsDeviceRediscovered,
+                      rpReachable,
+                      rpUnreachable,
+                      drChanged,
+                      drAdded,
+                      drRemoved,
+                      healthCheckFailed,
+                      rpfFailureThresholdExceeded,
+                      multicastBandwidthPercentHiThresholdExceeded,
+                      multicastBandwidthPercentThresholdNormalized,
+                      hiBpsThresholdExceeded,
+                      loBpsThresholdExceeded,
+                      sgBpsThresholdNormalized,
+                      videoMlrThresholdExceeded,
+                      videoDfThresholdExceeded
+        }
+        STATUS        current
+        DESCRIPTION   "Notifications sent by the application 
+                      for multicast events."
+        ::= { rmsMIBGroups 6 }
+
+
+routeNotifGroup NOTIFICATION-GROUP
+        NOTIFICATIONS {
+                      routeTableChanged,
+                      unicastRouteChanged,
+                      multicastRouteChanged
+        }
+        STATUS        current
+        DESCRIPTION   "Notifications sent by the application 
+                      for routing events."
+        ::= { rmsMIBGroups 7 }
+
+END

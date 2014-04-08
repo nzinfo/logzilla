@@ -1,0 +1,72 @@
+-- *********************************************************************
+-- CISCO-L2-CONTROL-CAPABILITY.my:
+-- Cisco CISCO-L2-CONTROL-MIB AGENT-CAPABILITIES
+--
+-- Oct. 2003, Frank Chao
+--
+-- Copyright(c) 2003, 2004 by Cisco Systems, Inc.
+--
+-- *********************************************************************
+
+CISCO-L2-CONTROL-CAPABILITY DEFINITIONS ::= BEGIN
+IMPORTS
+        MODULE-IDENTITY
+                FROM SNMPv2-SMI
+        AGENT-CAPABILITIES
+                FROM SNMPv2-CONF
+        ciscoAgentCapability
+                FROM CISCO-SMI;   
+
+ciscoL2ControlCapability MODULE-IDENTITY
+        LAST-UPDATED    "200403290000Z"
+        ORGANIZATION    "Cisco Systems, Inc."
+        CONTACT-INFO
+                "       Cisco Systems
+                        Customer Service
+
+                Postal: 170 W Tasman Drive
+                        San Jose, CA  95134
+                        USA
+
+                        Tel: +1 800 553-NETS
+
+                E-mail: cs-lan-switch-snmp@cisco.com"
+        DESCRIPTION
+                "The Agent capabilities for CISCO-L2-CONTROL-MIB."
+        REVISION        "200403290000Z"
+        DESCRIPTION
+                "Added clcCapabilityCatOSV08R0301 agent
+                 capability statement."
+        REVISION        "200310310000Z"
+        DESCRIPTION
+                "Initial version of this MIB module."
+        ::= { ciscoAgentCapability 397 }
+
+
+clcCapabilityV12R0217aSXCat6K AGENT-CAPABILITIES
+    PRODUCT-RELEASE  "Cisco IOS 12.2(17a)SX on Catalyst 6000/6500
+                      and Cisco 7600 series devices."
+    STATUS            current
+    DESCRIPTION       "CISCO-L2-CONTROL-MIB capabilities."
+
+    SUPPORTS          CISCO-L2-CONTROL-MIB
+        INCLUDES      {
+                          clcMacAddressLimitGroup,
+                          clcVlanMacLimitNotifsGroup
+                      }
+
+    ::= { ciscoL2ControlCapability 1 }
+
+clcCapabilityCatOSV08R0301 AGENT-CAPABILITIES
+    PRODUCT-RELEASE  "Cisco CatOS 8.3(1)."
+    STATUS            current
+    DESCRIPTION      "CISCO-L2-CONTROL-MIB capabilities."
+
+    SUPPORTS         CISCO-L2-CONTROL-MIB
+        INCLUDES     {
+                         clcUnicastFloodGroup
+                     }
+
+    ::= { ciscoL2ControlCapability 2 }
+
+END

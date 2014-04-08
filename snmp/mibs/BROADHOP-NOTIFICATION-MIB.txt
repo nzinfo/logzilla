@@ -1,0 +1,66 @@
+BROADHOP-NOTIFICATION-MIB DEFINITIONS ::=BEGIN
+
+IMPORTS
+   MODULE-IDENTITY, 
+   NOTIFICATION-TYPE                FROM SNMPv2-SMI
+   broadhopComponentName,
+   broadhopComponentTime,
+   broadhopComponentNotificationName,
+   broadhopComponentAdditionalInfo,
+   broadhopNotificationFacility,
+   broadhopNotificationSeverity     FROM BROADHOP-MIB
+   broadhopProductsQNS              FROM BROADHOP-QNS-MIB;
+
+
+
+
+broadhopProductsQNSNotification MODULE-IDENTITY
+    LAST-UPDATED "201202100000Z"
+    ORGANIZATION "Broadhop, Inc."
+    CONTACT-INFO
+        "Technical Support
+         Web: www.broadhop.com
+         E-mail: support@broadhop.com
+        "
+    DESCRIPTION "Top Level MIB-II Definitions for BroadHop QNS
+                 Notifications and Traps
+                "
+    REVISION "201202100000Z"
+    DESCRIPTION "Top Level MIB-II Definitions for BroadHop QNS Product"
+    ::= { broadhopProductsQNS 2 }
+
+--
+-- Ensure SMIv1 and SMIv2 convertability with reverse mappability (ie. broadhopProductQNSNotifications(0))
+--
+broadhopProductsQNSNotifications OBJECT IDENTIFIER ::= { broadhopProductsQNS 0 }
+
+
+broadhopQNSComponentNotification NOTIFICATION-TYPE
+       OBJECTS { broadhopComponentName,
+                 broadhopComponentTime,
+                 broadhopComponentNotificationName,
+                 broadhopNotificationFacility,
+                 broadhopNotificationSeverity,
+                 broadhopComponentAdditionalInfo }
+       STATUS current
+       DESCRIPTION "
+                    Trap from any QNS component - ie. device.
+                   "
+       ::= { broadhopProductsQNSNotifications 1 }
+
+broadhopQNSApplicationNotification NOTIFICATION-TYPE
+       OBJECTS { broadhopComponentName,
+                 broadhopComponentTime,
+                 broadhopComponentNotificationName,
+                 broadhopNotificationFacility,
+                 broadhopNotificationSeverity,
+                 broadhopComponentAdditionalInfo }
+       STATUS current
+       DESCRIPTION "
+                    Notification Trap from any QNS application - ie. runtime.
+                   "
+       ::= { broadhopProductsQNSNotifications 2 }
+
+
+
+END
