@@ -2,9 +2,6 @@
 ###
 ### trapgen HOST TRAP-COMMUNITY
 ###
-### Author:	  Simon Leinen  <simon@switch.ch>
-### Date Created: 03-Jun-1998
-###
 ### Send linkDown trap to the designated management host/community
 ###
 ### This is intended to be a very simple example for sending SNMP(v1)
@@ -12,7 +9,7 @@
 ### 
 
 # In Ubuntu, install these libs using:
-# apt-get -y libsnmp-session-perl
+# apt-get -y install libsnmp-session-perl
 use strict;
 use BER '0.58';
 use SNMP_Session '0.58';
