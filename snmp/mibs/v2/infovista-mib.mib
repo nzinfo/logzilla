@@ -1,0 +1,30 @@
+--------------------------------------------------------------------
+-- InfoVista.mib:  InfoVista Definition Mib File
+--------------------------------------------------------------------
+
+INFOVISTA-MIB DEFINITIONS ::= BEGIN
+
+	IMPORTS
+		MODULE-IDENTITY,		
+		enterprises
+			FROM SNMPv2-SMI;
+  
+	-- the path to the InfoVista root OID
+	InfoVistaOID OBJECT IDENTIFIER ::= { enterprises 1899 } 
+
+	InfoVista MODULE-IDENTITY
+		LAST-UPDATED	"9605311434Z"
+		ORGANIZATION	"InfoVista Corp."
+		CONTACT-INFO
+			"   InfoVista
+				Customer Service
+				e-mail : support@infovista.fr
+				www : www.infovista.fr"
+		DESCRIPTION
+			""
+		REVISION	"9605311434Z"
+		DESCRIPTION
+			"InfoVista is the managment OBJECT IDENTIFIER..."
+
+		::= { InfoVistaOID 1 }
+END

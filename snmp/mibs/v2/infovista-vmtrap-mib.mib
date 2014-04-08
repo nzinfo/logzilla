@@ -1,0 +1,310 @@
+--------------------------------------------------------------------
+-- VistaMart-trap-mib.mib: InfoVista Mib File (trap part)
+--------------------------------------------------------------------
+VISTAMART-TRAP-MIB DEFINITIONS ::= BEGIN
+
+IMPORTS
+	OBJECT-TYPE
+	 FROM RFC-1212
+	TRAP-TYPE
+	 FROM RFC-1215
+	MODULE-IDENTITY,  Integer32, Counter32
+		FROM SNMPv2-SMI
+	InfoVista, InfoVistaOID
+		FROM INFOVISTA-MIB
+	ivtrap 
+		FROM INFOVISTA-TRAP-MIB;
+
+
+		
+	vmtrap MODULE-IDENTITY
+		LAST-UPDATED	"9910271621Z"
+		ORGANIZATION	"InfoVista S.A."
+		CONTACT-INFO	"support@infovista.com"
+		DESCRIPTION	"Extended vmtrap definition."
+		::= { ivtrap 40 }
+
+	instanceTag OBJECT-TYPE
+		SYNTAX  OCTET STRING
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+		"instance Tag"
+		::= { vmtrap 1 }
+
+	indicatorName OBJECT-TYPE
+		SYNTAX  OCTET STRING
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+		"indicator which was the event emitter Name"
+		::= { vmtrap 2 }
+
+	message OBJECT-TYPE
+		SYNTAX  OCTET STRING
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+		"message"
+		::= { vmtrap 3 }
+
+	rate OBJECT-TYPE
+		SYNTAX  Integer32
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+		"the rate of the data in second"
+		::= { vmtrap 4 }
+
+	insid OBJECT-TYPE
+		SYNTAX  Integer32
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+		"Internal Vistamart instance ID"
+		::= { vmtrap 5 }
+
+	indid OBJECT-TYPE
+		SYNTAX  Integer32
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+		"Internal Vistamart indicator ID "
+		::= { vmtrap 6 }
+
+	context OBJECT-TYPE
+		SYNTAX  OCTET STRING
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+		"context: list of the wid of the template related to the events"
+		::= { vmtrap 7 }
+
+	time OBJECT-TYPE
+		SYNTAX  Counter32
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+		"The time of the begining of the event in second"
+		::= { vmtrap 8 }
+		
+	serverwid OBJECT-TYPE
+		SYNTAX  OCTET STRING
+		ACCESS  read-only
+		STATUS  optional
+		DESCRIPTION
+		"the ivserver WID"
+		::= { vmtrap 9 }
+		
+	serverConnection OBJECT-TYPE
+		SYNTAX  OCTET STRING
+		ACCESS  read-only
+		STATUS  optional
+		DESCRIPTION
+		"The ivserver Connection String"
+		::= { vmtrap 10 }
+
+
+	instanceName OBJECT-TYPE
+		SYNTAX  OCTET STRING
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+		"instance Name"
+		::= { vmtrap 11 }
+
+	instanceXid OBJECT-TYPE
+		SYNTAX  OCTET STRING
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+		"instance Xid property value"
+		::= { vmtrap 12 }
+
+	indicatorWid OBJECT-TYPE
+		SYNTAX  OCTET STRING
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+		"indicator Wid"
+		::= { vmtrap 13 }
+
+	threshold1Value OBJECT-TYPE
+		SYNTAX  OCTET STRING
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+		"threshold1 Value"
+		::= { vmtrap 14 }
+
+	threshold2Value OBJECT-TYPE
+		SYNTAX  OCTET STRING
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+		"threshold2 Value"
+		::= { vmtrap 15 }
+
+	dataValue OBJECT-TYPE
+		SYNTAX  OCTET STRING
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+		"data value which the cause of the event"
+		::= { vmtrap 16 }
+
+	dataName OBJECT-TYPE
+		SYNTAX  OCTET STRING
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+		"the name of the indicator of data which is the cause of the event"
+		::= { vmtrap 17 }
+
+	dataWid OBJECT-TYPE
+		SYNTAX  OCTET STRING
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+		"dataWid"
+		::= { vmtrap 18 }
+
+	secondarydataValue OBJECT-TYPE
+		SYNTAX  OCTET STRING
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+		"the value of the second data use to emit event (for tunnel)"
+		::= { vmtrap 19 }
+
+	secondarydataName OBJECT-TYPE
+		SYNTAX  OCTET STRING
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+		"The name  of the second data use to emit event (for tunnel)"
+		::= { vmtrap 20 }
+
+	secondarydataWid OBJECT-TYPE
+		SYNTAX  OCTET STRING
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+		"The wid  of the second data use to emit event (for tunnel)"
+		::= { vmtrap 21 }
+
+	severity OBJECT-TYPE
+		SYNTAX  Integer32
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+		"severity"
+		::= { vmtrap 22 }
+
+	conditionaltype OBJECT-TYPE 
+		SYNTAX INTEGER { 
+			Undefined (1), 
+			ThresholdUp (2), 
+			ThresholdDown (3), 
+			TunnelUp (4), 
+			TunnelDown (5), 
+			TunnelIn (6), 
+			TunnelOut (7), 
+			PTunnelUp (8), 
+			PTunnelDown (9), 
+			PTunnelIn (10), 
+			PTunnelOut (11), 
+			PTunnelExUp (12), 
+			PTunnelExDown (13), 
+			PTunnelExIn (14), 
+			PTunnelExOut (15) 
+		} 
+		ACCESS read-only 
+		STATUS mandatory 
+		DESCRIPTION 
+		"conditionaltype" 
+		::= { vmtrap 23 } 
+
+	eventtype OBJECT-TYPE 
+		SYNTAX INTEGER { 
+			Undefined (1), 
+			IVServerTrap (2), 
+			IVServerEvent (3), 
+			VistaMartEvent (4), 
+			VistaWatchEvent (5), 
+			GenericExternalEvent (6), 
+			SDMEvent (7), 
+			5VOCEvent (8) 
+		}
+		ACCESS read-only 
+		STATUS mandatory 
+		DESCRIPTION 
+		"eventtype" 
+		::= { vmtrap 24 } 
+
+	windowValue OBJECT-TYPE
+		SYNTAX  OCTET STRING
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+		"windowValue"
+		::= { vmtrap 25 }
+
+	xid OBJECT-TYPE
+		SYNTAX  OCTET STRING
+		ACCESS  read-only
+		STATUS  optional
+		DESCRIPTION
+		"xid"
+		::= { vmtrap 26 }
+
+	insSID OBJECT-TYPE
+		SYNTAX Integer32
+		ACCESS read-only
+		STATUS optional
+		DESCRIPTION
+		"Internal InfoVista Server instance ID"
+		::= { vmtrap 27 }
+
+    IVTrapIndeterminate	TRAP-TYPE
+      ENTERPRISE	InfoVistaOID
+	  VARIABLES		{ instanceTag, indicatorName, message, rate, insid, indid, context, time, serverwid, instanceName, instanceXid, indicatorWid, threshold1Value, threshold2Value, dataValue, dataName, dataWid, secondarydataValue, secondarydataName, secondarydataWid, severity, conditionaltype, eventtype, windowValue, xid, insSID }       
+	  DESCRIPTION
+			  "Indeterminate trap."
+	  ::= 0
+
+    IVTrapCritical	TRAP-TYPE
+      ENTERPRISE	InfoVistaOID
+	  VARIABLES		{ instanceTag, indicatorName, message, rate, insid, indid, context, time, serverwid, instanceName, instanceXid, indicatorWid, threshold1Value, threshold2Value, dataValue, dataName, dataWid, secondarydataValue, secondarydataName, secondarydataWid, severity, conditionaltype, eventtype, windowValue, xid, insSID }       
+	  DESCRIPTION
+			  "Critical trap."
+	  ::= 1
+
+    IVTrapMajor	TRAP-TYPE
+      ENTERPRISE	InfoVistaOID
+	  VARIABLES		{ instanceTag, indicatorName, message, rate, insid, indid, context, time, serverwid, instanceName, instanceXid, indicatorWid, threshold1Value, threshold2Value, dataValue, dataName, dataWid, secondarydataValue, secondarydataName, secondarydataWid, severity, conditionaltype, eventtype, windowValue, xid, insSID }       
+	  DESCRIPTION
+			  "Major trap."
+	  ::= 2
+
+    IVTrapMinor	TRAP-TYPE
+      ENTERPRISE	InfoVistaOID
+	  VARIABLES		{ instanceTag, indicatorName, message, rate, insid, indid, context, time, serverwid, instanceName, instanceXid, indicatorWid, threshold1Value, threshold2Value, dataValue, dataName, dataWid, secondarydataValue, secondarydataName, secondarydataWid, severity, conditionaltype, eventtype, windowValue, xid, insSID }       
+	  DESCRIPTION
+			  "Minor trap."
+	  ::= 3
+
+    IVTrapWarning	TRAP-TYPE
+      ENTERPRISE	InfoVistaOID
+	  VARIABLES		{ instanceTag, indicatorName, message, rate, insid, indid, context, time, serverwid, instanceName, instanceXid, indicatorWid, threshold1Value, threshold2Value, dataValue, dataName, dataWid, secondarydataValue, secondarydataName, secondarydataWid, severity, conditionaltype, eventtype, windowValue, xid, insSID }       
+	  DESCRIPTION
+			  "Warning trap."
+	  ::= 4
+
+    IVTrapCleared	TRAP-TYPE
+      ENTERPRISE	InfoVistaOID
+	  VARIABLES		{ instanceTag, indicatorName, message, rate, insid, indid, context, time, serverwid, instanceName, instanceXid, indicatorWid, threshold1Value, threshold2Value, dataValue, dataName, dataWid, secondarydataValue, secondarydataName, secondarydataWid, severity, conditionaltype, eventtype, windowValue, xid, insSID }       
+	  DESCRIPTION
+			  "Cleared trap."
+	  ::= 5	
+	END

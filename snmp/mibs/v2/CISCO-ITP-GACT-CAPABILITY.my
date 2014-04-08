@@ -1,0 +1,60 @@
+-- *****************************************************************
+-- CISCO-ITP-GACT-CAPABILITY.my: ITP Gateway Signalling Point 
+--                               Accounting Agent capability MIB
+--
+-- May 2003, John Linton
+--
+-- Copyright (c) 2003 by cisco Systems, Inc.
+-- All rights reserved.
+-- *****************************************************************
+CISCO-ITP-GACT-CAPABILITY DEFINITIONS ::= BEGIN
+
+IMPORTS
+        MODULE-IDENTITY
+                FROM SNMPv2-SMI
+                
+        AGENT-CAPABILITIES
+                FROM SNMPv2-CONF
+                
+        ciscoAgentCapability
+                FROM CISCO-SMI; 
+                
+
+ciscoGactCapability MODULE-IDENTITY
+                LAST-UPDATED    "200307170000Z"
+                ORGANIZATION    "Cisco Systems, Inc."
+                CONTACT-INFO
+                        "       Cisco Systems
+                                Customer Service
+                        
+                        Postal: 170 West Tasman Drive
+                                San Jose, CA  95134
+                                USA
+                        
+                           Tel: +1 800 553-NETS
+                        
+                        E-mail: cs-ss7@cisco.com"
+                DESCRIPTION
+                  "Agent capabilities for the CISCO-ITP-GACT-MIB."
+                        
+
+                REVISION        "200307170000Z"
+                DESCRIPTION
+                        "Initial version of this MIB module."
+        ::= { ciscoAgentCapability 304 }
+
+ciscoGactCapabilityV12R0204MB10 AGENT-CAPABILITIES
+
+PRODUCT-RELEASE "Cisco IOS 12.2(4)MB10"
+  STATUS          current
+  DESCRIPTION     "IOS 12.2(4)MB10 Cisco CISCO-ITP-GACT-MIB.my User 
+                   Agent MIB capabilities."
+
+SUPPORTS        CISCO-ITP-GACT-MIB
+  INCLUDES      { 
+                    ciscoGactMtp3Group,
+                    ciscoGactGttGroup
+                }  
+::= { ciscoGactCapability 1 }
+
+END
