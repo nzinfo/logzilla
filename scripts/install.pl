@@ -68,7 +68,7 @@ sub prompt {
 }
 
 my $version    = "4.5";
-my $subversion = ".563";
+my $subversion = ".573";
 
 # Grab the base path
 my $lzbase = getcwd;
@@ -1131,12 +1131,12 @@ options {
     use_dns(yes); # This should be set to no in high scale environments
 };
 
-# Capture the program name for SNARE events
+# Windows Events from SNARE
+# https://www.assembla.com/spaces/LogZillaWiki/wiki/Receiving_Windows_Events_from_SNARE
 rewrite r_snare { 
     subst("MSWinEventLog.+(Security|Application|System).+", "MSWin_$1", value("PROGRAM") flags(global)); 
 };
-
-# Snare sends TAB delimited messages, we need pipes...
+# SNARE sends TAB delimited messages, we want pipes...
 rewrite r_snare2pipe { 
     subst("\t", "|", value("MESSAGE") 
     flags(global)
@@ -1185,6 +1185,26 @@ rewrite r_rw_prg {
     set("$1", value("PROGRAM") condition(filter(f_rw_prg)));
 };  
 
+# Set Program name for OpenAM events
+filter f_rw_openam { match('openam' value("MSGONLY") ); };
+rewrite r_rw_openam {
+    set("OpenAM", value("PROGRAM") condition(filter(f_rw_openam)));
+};
+
+# Capture SNMP Traps
+# See https://www.assembla.com/spaces/LogZillaWiki/wiki/Sending_SNMP_Traps_to_LogZilla
+# For proper formatting in the snmptrapd.conf file
+# You must enable the system() source (check /etc/syslog-ng.syslog-ng.conf) for this to get logged
+
+filter f_snmptrapd { program("snmptrapd"); };
+parser p_snmptrapd { 
+    csv-parser(columns("SNMPTRAP.HOST", "SNMPTRAP.MSG") delimiters(",") flags(escape-backslash, strip-whitespace));
+};
+rewrite r_snmptrapd {
+ set("${SNMPTRAP.HOST}" value("HOST") condition(filter(f_snmptrapd)));
+ set("${SNMPTRAP.MSG}" value("MESSAGE") condition(filter(f_snmptrapd)));
+};
+
 source s_logzilla {
     tcp();
     udp();
@@ -1212,14 +1232,25 @@ log {
     source(s_logzilla);
     rewrite(r_CiscoCDA);
     rewrite(r_rw_prg);
+    rewrite(r_rw_openam);
     rewrite(r_vmware);
     rewrite(r_snare);
     rewrite(r_snare2pipe);
     rewrite(r_cisco_program);
     destination(d_logzilla);
-    # Uncomment below and restart syslog-ng for debugging
+    # Optional: Log all events to file
     destination(df_logzilla);
     flags(flow-control);
+};
+log {
+    # NOTE: If your /etc/syslog-ng/syslong-ng.conf file does not have "system()" defined in s_src, this will not work.
+    source(s_src);
+    parser(p_snmptrapd);
+    rewrite(r_snmptrapd);
+    destination(d_logzilla);
+    # Optional: Log all events to file
+    destination(df_logzilla);
+    flags(final);
 };
 #</lzconfig> END LogZilla settings
 };

@@ -116,7 +116,7 @@ if ( $options->{dryrun} ) {
 # Finally we are initialized, announce this to the world :-)
 $log->INFO("Program initialized successfully");
 
-my ( $results, $rc, $sth_syslog, $sth_sphinx, $sql );
+my ( $results, $rc, $sth, $sth_sphinx, $sql );
 my bigint $count;
 
 # calcualating yesterday
@@ -248,10 +248,10 @@ sub cleanup_old_views {
     my $ts;
     $rc = 'drop view ';
     $sql = "SELECT table_name from information_schema.views where table_name like '%search_results'";
-    $sth_syslog = $dbh->prepare($sql);
+    $sth = $dbh->prepare($sql);
     DEBUG( 1, "Executing SQL Statement: $sql" );
-    $sth_syslog->execute();
-    while ( $results = $sth_syslog->fetchrow_hashref ) {
+    $sth->execute();
+    while ( $results = $sth->fetchrow_hashref ) {
         # cdukes: #466 - Added TS check for expired view names 
         DEBUG(1, "Checking expire date on %s", $results->{'table_name'});
         ( $ts ) = split( /_/, $results->{'table_name'} );
@@ -298,8 +298,8 @@ sub countUpdate {
             if ( $results->{'Variable_name'} eq "total_found" ) {
                 $log->INFO("There are %s indexed events", commify( $results->{'Value'} ));
                 $count = $results->{'Value'};
-                $sth_syslog = $dbh->prepare('REPLACE INTO cache (name,value,updatetime) VALUES ("msg_sum",?,NOW());');
-                $sth_syslog->execute($count) unless $options->{dryrun};
+                $sth = $dbh->prepare('REPLACE INTO cache (name,value,updatetime) VALUES ("msg_sum",?,NOW());');
+                $sth->execute($count) unless $options->{dryrun};
                 store_metric( "lztool_msgsum", $count );
             }
         }
@@ -309,9 +309,9 @@ sub countUpdate {
     # Check yesterday's counters
     $sql = "show tables like '$sphinx_yesterday'";
     DEBUG( 1, "Preparing SQL Statement: $sql" );
-    $sth_syslog = $dbh->prepare($sql);
-    $sth_syslog->execute();
-    if ( $sth_syslog->rows == 0 ) {
+    $sth = $dbh->prepare($sql);
+    $sth->execute();
+    if ( $sth->rows == 0 ) {
         DEBUG( 1, "No index for $sphinx_yesterday, no need to update counts..." );
     } else {
         if ( $lzminor > 4 ) {
@@ -362,13 +362,13 @@ sub updateHosts {
         }
         $log->INFO("Searching for dropped hosts...");
         $sql = "SELECT value from settings WHERE name='RETENTION_DROPS_HOSTS'";
-        $sth_syslog = $dbh->prepare($sql);
+        $sth = $dbh->prepare($sql);
         DEBUG( 1, "Executing SQL Statement: $sql" );
-        $sth_syslog->execute();
+        $sth->execute();
         if ( ( $sth_sphinx->rows ) < 0 ) {
             $log->ERROR("RETENTION_DROPS_HOST not found in SETTINGS");
         } else {
-            $results = $sth_syslog->fetchrow_hashref;
+            $results = $sth->fetchrow_hashref;
             if ( ( $results->{'value'} ) == 1 ) {
                 $log->INFO("RETENTION_DROPS_HOST found. Dropping hidden hosts");
                 $sql = "delete from hosts where hidden='true'";
@@ -380,7 +380,7 @@ sub updateHosts {
 }
 
 $sth_sphinx->finish if defined( ($sth_sphinx) );
-$sth_syslog->finish if defined( ($sth_syslog) );
+$sth->finish if defined( ($sth) );
 $dbh_sphinx->disconnect();
 $dbh->disconnect();
 
@@ -578,12 +578,12 @@ sub cleanup_old_idx {
     my @views;
     $log->INFO("Pruning old archive views");
     $sql = "SELECT table_name from information_schema.views where table_name like 'log_arch_day_%'";
-    $sth_syslog = $dbh->prepare($sql);
+    $sth = $dbh->prepare($sql);
     DEBUG( 1, "Executing SQL Statement: $sql" );
-    $sth_syslog->execute();
-    if ( $sth_syslog->rows > 0 ) {
+    $sth->execute();
+    if ( $sth->rows > 0 ) {
 
-        while ( $results = $sth_syslog->fetchrow_hashref ) {
+        while ( $results = $sth->fetchrow_hashref ) {
             my ( undef, undef, undef, $yymmdd ) = split( /_/, $results->{'table_name'} );
             my $date = today();
             my $diff = today() - date($yymmdd);
@@ -597,9 +597,9 @@ sub cleanup_old_idx {
             foreach my $view (@views) {
                 $log->INFO("Dropping view: $view");
                 $sql        = "drop view $view";
-                $sth_syslog = $dbh->prepare($sql);
+                $sth = $dbh->prepare($sql);
                 DEBUG( 1, "Executing SQL Statement: $sql" );
-                $sth_syslog->execute() unless $options->{dryrun};
+                $sth->execute() unless $options->{dryrun};
             }
         } else {
             $log->INFO("No old views found");
@@ -679,16 +679,16 @@ sub idx_rotate {
 sub ss {
     $log->INFO("-=Analyzing LogZilla Server Stats=-");
     $sql = "SELECT count(*) as count FROM hosts";
-    $sth_syslog = $dbh->prepare($sql);
+    $sth = $dbh->prepare($sql);
     DEBUG( 1, "Executing SQL Statement: $sql" );
-    $sth_syslog->execute();
-    $results = $sth_syslog->fetchrow_hashref;
+    $sth->execute();
+    $results = $sth->fetchrow_hashref;
     my $hostcount = $results->{count};
     $sql = "SELECT AVG(ROUND(count)) as avg, count(*) as samples FROM events_per_second";
-    $sth_syslog = $dbh->prepare($sql);
+    $sth = $dbh->prepare($sql);
     DEBUG( 1, "Executing SQL Statement: $sql" );
-    $sth_syslog->execute();
-    $results = $sth_syslog->fetchrow_hashref;
+    $sth->execute();
+    $results = $sth->fetchrow_hashref;
     my ($eps, $eph, $epd);
 
     if ( ( $results->{'avg'} ) > 1 ) {
@@ -710,10 +710,10 @@ sub ss {
         my $attrs = `cat $ROOT_DIR/sphinx/sphinx.conf | grep sql_attr | grep -v "#" | wc -l`;
 
         $sql        = "SELECT count(*) AS count FROM events_per_hour";
-        $sth_syslog = $dbh->prepare($sql);
+        $sth = $dbh->prepare($sql);
         DEBUG( 1, "Executing SQL Statement: $sql" );
-        $sth_syslog->execute();
-        $results = $sth_syslog->fetchrow_hashref;
+        $sth->execute();
+        $results = $sth->fetchrow_hashref;
         if ( ( $results->{'count'} ) > 1 ) {
             $log->INFO( "LogZilla uptime is %s hours", $results->{count} );
             store_metric( "lztool_srv_uptime_hours", $results->{count} );
@@ -770,10 +770,10 @@ sub ss {
         $log->INFO( "Current Index Size (on disk) is approximately %s", humanBytes($spdsk) );
         store_metric( "lztool_index_diskused_KB", $spdsk );
         $sql = "SELECT table_schema, Round(Sum(data_length + index_length) / 1024, 0) AS 'dbsize_kbytes' FROM information_schema.tables WHERE table_schema='syslog' GROUP  BY table_schema";
-        $sth_syslog = $dbh->prepare($sql);
+        $sth = $dbh->prepare($sql);
         DEBUG( 1, "Executing SQL Statement: $sql" );
-        $sth_syslog->execute();
-        $results = $sth_syslog->fetchrow_hashref;
+        $sth->execute();
+        $results = $sth->fetchrow_hashref;
         $dbsize_kbytes = $results->{'dbsize_kbytes'};
         $log->INFO( "Current DB size (on disk) is approximately %s", humanBytes( $dbsize_kbytes ) );
         store_metric( "lztool_db_diskused_KB", $dbsize_kbytes );
@@ -782,10 +782,10 @@ sub ss {
 # $sql = "SELECT FROM_UNIXTIME(ts_from) as dt, ts_from AS ts FROM events_per_second limit 1";
         $sql = "SELECT UNIX_TIMESTAMP(fo) AS ts, fo AS dt FROM logs ORDER BY lo ASC LIMIT 1";
         $sql = "SELECT (SELECT UNIX_TIMESTAMP(max(lo)) from logs) as ts, (SELECT min(fo) from logs) as fo, (SELECT max(lo) from logs) as lo";
-        $sth_syslog = $dbh->prepare($sql);
+        $sth = $dbh->prepare($sql);
         DEBUG( 1, "Executing SQL Statement: $sql" );
-        $sth_syslog->execute();
-        $results = $sth_syslog->fetchrow_hashref;
+        $sth->execute();
+        $results = $sth->fetchrow_hashref;
         my $db_numdays = 0;
 
         if ( ( $results->{'ts'} ) > 1 ) {
@@ -809,16 +809,16 @@ sub ss {
         if ( $options->{mysql} ) {
             $log->INFO("MySQL Analysis...");
             $sql = "SELECT CONCAT(ROUND(KBS/POWER(1024,IF(pw<0,0,IF(pw>3,0,pw)))+0.49999), SUBSTR(' KMG',IF(pw<0,0,IF(pw>3,0,pw))+1,1)) recommended_innodb_buffer_pool_size FROM (SELECT SUM(index_length) KBS FROM information_schema.tables WHERE engine='InnoDB') A,(SELECT 3 pw) B;";
-            $sth_syslog = $dbh->prepare($sql);
+            $sth = $dbh->prepare($sql);
             DEBUG( 1, "Executing SQL Statement: $sql" );
-            $sth_syslog->execute();
-            $results = $sth_syslog->fetchrow_hashref;
+            $sth->execute();
+            $results = $sth->fetchrow_hashref;
             my $recommended_innodb_buffer_pool_size = $results->{'recommended_innodb_buffer_pool_size'};
             $sql = "SELECT CONCAT(ROUND(KBS/POWER(1024,IF(pw<0,0,IF(pw>3,0,pw)))+0.49999), SUBSTR(' KMG',IF(pw<0,0,IF(pw>3,0,pw))+1,1)) recommended_key_buffer_size FROM (SELECT SUM(index_length) KBS FROM information_schema.tables WHERE engine='MyISAM' AND table_schema NOT IN ('information_schema','mysql')) A, (SELECT 3 pw) B";
-            $sth_syslog = $dbh->prepare($sql);
+            $sth = $dbh->prepare($sql);
             DEBUG( 1, "Executing SQL Statement: $sql" );
-            $sth_syslog->execute();
-            $results = $sth_syslog->fetchrow_hashref;
+            $sth->execute();
+            $results = $sth->fetchrow_hashref;
             my $recommended_key_buffer_size = $results->{'recommended_key_buffer_size'};
             $log->INFO( "The recommended innodb_buffer_pool_size for this server is %s", $recommended_innodb_buffer_pool_size );
             $log->INFO( "The recommended key_buffer_size for this server is %s", $recommended_key_buffer_size );
@@ -833,11 +833,11 @@ sub ss {
 sub mtti {
     $log->INFO("-=Calculating MTTI Stats=-");
     $sql = "SELECT FROM_UNIXTIME(ts_start) AS start, FROM_UNIXTIME(ts_end) AS end, value FROM sph_metrics WHERE name='indexer' ORDER BY ts_start DESC limit 5000";
-    $sth_syslog = $dbh->prepare($sql);
+    $sth = $dbh->prepare($sql);
     DEBUG( 1, "Executing SQL Statement: $sql" );
-    $sth_syslog->execute();
+    $sth->execute();
     my @vals;
-    while ( $results = $sth_syslog->fetchrow_hashref ) {
+    while ( $results = $sth->fetchrow_hashref ) {
         my $diff = str2time( $results->{end} ) - str2time( $results->{start} );
         DEBUG( 1, "diff between %s and %s is %s", $results->{start}, $results->{end}, sec2human($diff) );
         push( @vals, $results->{value} );
@@ -895,11 +895,11 @@ sub makeview {
             DEBUG( 1, "Executing SQL Statement: $sql" );
             $dbh->do($sql) unless $options->{dryrun};
             $sql = "SELECT table_name FROM INFORMATION_SCHEMA.tables where table_type = 'VIEW' AND table_schema = 'syslog' AND table_name LIKE 'log_arch_day_$y$m$d%'";
-            $sth_syslog = $dbh->prepare($sql);
+            $sth = $dbh->prepare($sql);
             DEBUG( 1, "Executing SQL Statement: $sql" );
-            $sth_syslog->execute();
+            $sth->execute();
 
-            while ( $results = $sth_syslog->fetchrow_hashref ) {
+            while ( $results = $sth->fetchrow_hashref ) {
                 $log->INFO("Creating view_limits for log_arch_day_$y$m$d");
                 $sql = "REPLACE INTO view_limits (view_name, min_id, max_id) values ('$results->{table_name}', (SELECT min(id) FROM $results->{table_name}), (SELECT max(id) FROM $results->{table_name}))";
                 DEBUG( 1, "Executing SQL Statement: $sql" );
@@ -935,20 +935,14 @@ sub delhost {
     my %prghash = ();
     my %mnehash = ();
     my %eidhash = ();
-    my ($sth, $id, $host, $prg, $mne, $eid, $seen);
-    #countUpdate();
-    #updateHosts();
-    #tblSync( "mne",       "mne" );
-    #tblSync( "snare_eid", "eid" );
-    #tblSync( "programs",  "program" );
-
+    my ($sth, $id, $host, $prg, $mne, $eid, $seen, $seenfloor);
     my $hostscsv = join("','", @hosts);
     $log->INFO("-=Calculating events associated with Hosts=-");
     $sql = "SELECT * FROM logs WHERE host IN ('$hostscsv')";
-    $sth_syslog = $dbh->prepare($sql);
+    $sth = $dbh->prepare($sql);
     DEBUG( 1, "Executing SQL Statement: $sql" );
-    $sth_syslog->execute();
-    while ( $results = $sth_syslog->fetchrow_hashref ) {
+    $sth->execute();
+    while ( $results = $sth->fetchrow_hashref ) {
         $id      = $results->{id};
         $host    = $results->{host};
         $prg     = $results->{program};
@@ -966,6 +960,14 @@ sub delhost {
             $seen = $hosthash{$host}{seen};
             $log->INFO("Processing %s events from $host", commify($seen));
             if ($seen > 0) {
+                $sql = "SELECT value AS seen FROM cache where name='msg_sum'";
+                $sth = $dbh->prepare($sql) unless $options->{dryrun};
+                DEBUG( 1, "Executing SQL Statement: $sql" );
+                $sth->execute() unless $options->{dryrun};
+                while ( $results = $sth->fetchrow_hashref ) {
+                    $seenfloor  = $results->{seen};
+                    $seen   = $seenfloor if ($seen>$seenfloor); # Don't allow $seen to be < 0
+                }
                 $sql = "UPDATE cache set value=value-$seen where name='msg_sum'";
                 $sth = $dbh->prepare($sql) unless $options->{dryrun};
                 DEBUG( 1, "Executing SQL Statement: $sql" );
@@ -973,18 +975,18 @@ sub delhost {
 
                 # Update host count
                 $sql = "SELECT seen FROM hosts WHERE host='$host'";
-                $sth_syslog = $dbh->prepare($sql) unless $options->{dryrun};
+                $sth = $dbh->prepare($sql) unless $options->{dryrun};
                 DEBUG( 1, "Executing SQL Statement: $sql" );
-                $sth_syslog->execute() unless $options->{dryrun};
-                while ( $results = $sth_syslog->fetchrow_hashref ) {
-                    my $s2  = $results->{seen};
-                    $seen   = $s2 if ($seen>$s2); # Don't allow $seen to be < 0
+                $sth->execute() unless $options->{dryrun};
+                while ( $results = $sth->fetchrow_hashref ) {
+                    $seenfloor  = $results->{seen};
+                    $seen   = $seenfloor if ($seen>$seenfloor); # Don't allow $seen to be < 0
                 }
                 $log->INFO("Removing %s entries from Hosts->$host", commify($seen));
                 $sql = "UPDATE hosts set seen=seen -$seen where host='$host'";
-                $sth_syslog = $dbh->prepare($sql) unless $options->{dryrun};
+                $sth = $dbh->prepare($sql) unless $options->{dryrun};
                 DEBUG( 1, "Executing SQL Statement: $sql" );
-                $sth_syslog->execute() unless $options->{dryrun};
+                $sth->execute() unless $options->{dryrun};
 
             }
         }
@@ -992,17 +994,25 @@ sub delhost {
             $seen = $prghash{$prg}{seen};
             if ($seen > 0) {
                 # Update program count
+                $sql = "SELECT seen FROM programs WHERE crc='$prg'";
+                $sth = $dbh->prepare($sql) unless $options->{dryrun};
+                DEBUG( 1, "Executing SQL Statement: $sql" );
+                $sth->execute() unless $options->{dryrun};
+                while ( $results = $sth->fetchrow_hashref ) {
+                    $seenfloor  = $results->{seen};
+                    $seen   = $seenfloor if ($seen>$seenfloor); # Don't allow $seen to be < 0
+                }
                 $log->INFO("Removing %s entries from Programs->$prg", commify($seen));
                 $sql = "UPDATE programs set seen=seen -$seen where crc='$prg'";
-                $sth_syslog = $dbh->prepare($sql) unless $options->{dryrun};
+                $sth = $dbh->prepare($sql) unless $options->{dryrun};
                 DEBUG( 1, "Executing SQL Statement: $sql" );
-                $sth_syslog->execute() unless $options->{dryrun};
+                $sth->execute() unless $options->{dryrun};
             } else {
                 $log->INFO("Removing Programs->$prg");
                 $sql = "DELETE FROM programs WHERE crc='$prg'";
-                $sth_syslog = $dbh->prepare($sql) unless $options->{dryrun};
+                $sth = $dbh->prepare($sql) unless $options->{dryrun};
                 DEBUG( 1, "Executing SQL Statement: $sql" );
-                $sth_syslog->execute() unless $options->{dryrun};
+                $sth->execute() unless $options->{dryrun};
             }
         }
 
@@ -1011,16 +1021,24 @@ sub delhost {
             # Update mne count
             if ($seen > 0) {
                 $log->INFO("Removing %s entries from Mnemonics->$mne", commify($seen));
-                $sql = "UPDATE mne set seen=seen -$seen where crc='$mne'";
-                $sth_syslog = $dbh->prepare($sql) unless $options->{dryrun};
+                $sql = "SELECT seen FROM mne WHERE crc='$mne'";
+                $sth = $dbh->prepare($sql) unless $options->{dryrun};
                 DEBUG( 1, "Executing SQL Statement: $sql" );
-                $sth_syslog->execute() unless $options->{dryrun};
+                $sth->execute() unless $options->{dryrun};
+                while ( $results = $sth->fetchrow_hashref ) {
+                    $seenfloor  = $results->{seen};
+                    $seen   = $seenfloor if ($seen>$seenfloor); # Don't allow $seen to be < 0
+                }
+                $sql = "UPDATE mne set seen=seen -$seen where crc='$mne'";
+                $sth = $dbh->prepare($sql) unless $options->{dryrun};
+                DEBUG( 1, "Executing SQL Statement: $sql" );
+                $sth->execute() unless $options->{dryrun};
             } else {
                 $log->INFO("Removing Mnemonics->$mne");
                 $sql = "DELETE FROM mne WHERE crc='$mne'";
-                $sth_syslog = $dbh->prepare($sql) unless $options->{dryrun};
+                $sth = $dbh->prepare($sql) unless $options->{dryrun};
                 DEBUG( 1, "Executing SQL Statement: $sql" );
-                $sth_syslog->execute() unless $options->{dryrun};
+                $sth->execute() unless $options->{dryrun};
             }
         }
 
@@ -1029,32 +1047,47 @@ sub delhost {
             # Update eid count
             if ($seen > 0) {
                 $log->INFO("Removing %s entries from Windows EventIDs->$eid", commify($seen));
-                $sql = "UPDATE snare_eid set seen=seen -$seen where eid='$eid'";
-                $sth_syslog = $dbh->prepare($sql) unless $options->{dryrun};
+                $sql = "SELECT seen FROM snare_eid WHERE eid='$eid'";
+                $sth = $dbh->prepare($sql) unless $options->{dryrun};
                 DEBUG( 1, "Executing SQL Statement: $sql" );
-                $sth_syslog->execute() unless $options->{dryrun};
+                $sth->execute() unless $options->{dryrun};
+                while ( $results = $sth->fetchrow_hashref ) {
+                    $seenfloor  = $results->{seen};
+                    $seen   = $seenfloor if ($seen>$seenfloor); # Don't allow $seen to be < 0
+                }
+                $sql = "UPDATE snare_eid set seen=seen -$seen where eid='$eid'";
+                $sth = $dbh->prepare($sql) unless $options->{dryrun};
+                DEBUG( 1, "Executing SQL Statement: $sql" );
+                $sth->execute() unless $options->{dryrun};
             } else {
                 $log->INFO("Removing EID->$eid");
                 $sql = "DELETE FROM snare_eid WHERE eid='$eid'";
-                $sth_syslog = $dbh->prepare($sql) unless $options->{dryrun};
+                $sth = $dbh->prepare($sql) unless $options->{dryrun};
                 DEBUG( 1, "Executing SQL Statement: $sql" );
-                $sth_syslog->execute() unless $options->{dryrun};
+                $sth->execute() unless $options->{dryrun};
             }
 
         }
         # Remove from logs
         $log->INFO("Removing hosts from Logs table");
         $sql = "DELETE FROM logs WHERE host IN ('$hostscsv')";
-        $sth_syslog = $dbh->prepare($sql) unless $options->{dryrun};
+        $sth = $dbh->prepare($sql) unless $options->{dryrun};
         DEBUG( 1, "Executing SQL Statement: $sql" );
-        $sth_syslog->execute() unless $options->{dryrun};
+        $sth->execute() unless $options->{dryrun};
     } else {
         foreach $host (@hosts) {
             $log->INFO("$host has no associated events, removing from hosts table...");
             $sql = "DELETE FROM hosts where host='$host'";
-            $sth_syslog = $dbh->prepare($sql) unless $options->{dryrun};
+            $sth = $dbh->prepare($sql) unless $options->{dryrun};
             DEBUG( 1, "Executing SQL Statement: $sql" );
-            $sth_syslog->execute() unless $options->{dryrun};
+            $sth->execute() unless $options->{dryrun};
         }
     }
+    # Cleanup/Sync counts
+    countUpdate();
+    updateHosts();
+    tblSync( "mne",       "mne" );
+    tblSync( "snare_eid", "eid" );
+    tblSync( "programs",  "program" );
+
 }
