@@ -1778,9 +1778,48 @@ function utfconvert($content) {
 function EscapeSphinxQL ( $string )
 {
     // Fix for #503 Function EscapeSphinxQL has broken boolean operators
-    // $from = array ( '\\', '(',')','|','-','!','@','~','"','&', '/', '^', '$', '=', "'", "\x00", "\n", "\r", "\x1a" );
-    $from = array ( '\\', '(',')','@','~','"','/','^','$','=',"'","\x00", "\n", "\r", "\x1a" );
-    $to   = array ( '\\\\', '\\\(','\\\)','\\\|','\\\-','\\\!','\\\@','\\\~','\\\"', '\\\&', '\\\/', '\\\^', '\\\$', '\\\=', "\\'", "\\x00", "\\n", "\\r", "\\x1a" );
+    // 2014-04-15: Several of the $to's were out order and a few were missing
+    // Rearranged and added as appropriate
+    $from = array ( '\\', 
+        '(',
+        ')',
+        '@',
+        '~',
+        '"',
+        '/',
+        '^',
+        '$',
+        '=',
+        "'",
+        "\x00",
+        "\n",
+        "\r",
+        "\x1a",
+        '|',
+        '-',
+        '!',
+        '&'
+    );
+    $to   = array ( '\\\\',
+        '\\\(',
+        '\\\)',
+        '\\\@',
+        '\\\~',
+        '\\\"',
+        '\\\/',
+        '\\\^',
+        '\\\$',
+        '\\\=',
+        "\\'",
+        "\\x00",
+        "\\n",
+        "\\r",
+        "\\x1a",
+        '\\\|',
+        '\\\-',
+        '\\\!',
+        '\\\&'
+    );
     return str_replace ( $from, $to, $string );
 }
 ?>
