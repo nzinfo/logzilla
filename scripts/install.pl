@@ -68,7 +68,7 @@ sub prompt {
 }
 
 my $version    = "4.5";
-my $subversion = ".574";
+my $subversion = ".576";
 
 # Grab the base path
 my $lzbase = getcwd;
@@ -2410,6 +2410,7 @@ if ( -d "$crondir" ) {
               my $macUC = uc($mac);
               my $hashUC = md5_hex("$ip$macUC");
               my $url  = "http://lic.logzilla.net/$hashUC.txt";
+              print "Requesting alternate license file from $url\n";
               if ( is_success( getstore( $url, $file ) ) ) {
                   print "License Installed Successfully\n";
               } else {
