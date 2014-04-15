@@ -3,7 +3,7 @@
 #
 # install.pl
 #
-# Developed by Clayton Dukes <cdukes@logzilla.pro>
+# Developed by Clayton Dukes <cdukes@logzilla.net>
 # Copyright (c) 2010 LogZilla, LLC
 # All rights reserved.
 #
@@ -68,7 +68,7 @@ sub prompt {
 }
 
 my $version    = "4.5";
-my $subversion = ".573";
+my $subversion = ".574";
 
 # Grab the base path
 my $lzbase = getcwd;
@@ -1293,7 +1293,7 @@ sub setup_cron {
         my $cron = qq{
 #####################################################
 # BEGIN LogZilla Cron Entries
-# http://www.logzilla.pro
+# http://www.logzilla.net
 # Install date: $now
 #####################################################
 
@@ -2396,6 +2396,7 @@ if ( -d "$crondir" ) {
           my $mac_orig = $mac;
           $ip  =~ s/[^a-zA-Z0-9]//g;
           $mac =~ s/[^a-zA-Z0-9]//g;
+          $mac = lc($mac);
           my $hash = md5_hex("$ip$mac");
 
           my $url  = "http://lic.logzilla.net/$hash.txt";
@@ -2406,9 +2407,16 @@ if ( -d "$crondir" ) {
           if ( is_success( getstore( $url, $file ) ) ) {
               print "License Installed Successfully\n";
           } else {
-              print "\n\033[1m[ERROR] Failed to download: $url\n\033[0m";
-              print "Unable to find your license on the license server\n";
-              print "You can try using the web interface or contact LogZilla support (support\@logzilla.pro) for assistance\n";
+              my $macUC = uc($mac);
+              my $hashUC = md5_hex("$ip$macUC");
+              my $url  = "http://lic.logzilla.net/$hashUC.txt";
+              if ( is_success( getstore( $url, $file ) ) ) {
+                  print "License Installed Successfully\n";
+              } else {
+                  print "\n\033[1m[ERROR] Failed to download: $url\n\033[0m";
+                  print "Unable to find your license on the license server\n";
+                  print "You can try using the web interface or contact LogZilla support (support\@logzilla.net) for assistance\n";
+              }
           }
       }
   }
