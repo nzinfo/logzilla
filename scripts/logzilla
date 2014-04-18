@@ -531,14 +531,21 @@ sub process_line {
         #$log->INFO("Checking for enabled Alert Triggers");
         # Mail Trigger (also SNMP Trap)
         for my $trigger ( @{$triggers} ) {
-        $log->INFO("Found %s active alert pattern(s), processing...", scalar(@{$triggers}));
+            $log->INFO("Found %s active alert pattern(s), processing...", scalar(@{$triggers}));
             my $pattern = $trigger->{pattern};
-            DEBUG( 1, "Looking for pattern \"$pattern\" in message \"$msg\"" );
+            DEBUG( 1, "Looking for pattern '$pattern' in message '$msg'" );
             if ( $msg =~ $pattern ) {
                 DEBUG( 1, "Found pattern '$pattern' in message: '$msg', sending email!" );
                 trigger_mail( $trigger, $host, $msg );
             } else {
-                DEBUG( 1, "No match found for pattern '$pattern'" );
+                DEBUG( 1, "No match found for pattern '$pattern' in Message" );
+            }
+            DEBUG( 1, "Looking for Severity $severity in pattern '$pattern'" );
+            if ($pattern =~ /{SEV$severity}/) {
+                DEBUG( 1, "Found Severity '$severity' match, sending email!" );
+                trigger_mail( $trigger, $host, $msg );
+            } else {
+                DEBUG( 1, "No match found for Severity $severity" );
             }
         }
 
