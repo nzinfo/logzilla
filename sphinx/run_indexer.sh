@@ -26,7 +26,7 @@ TIME=`date +%T`
 # -------------------------------------------
 # Set logzilla base path
 # -------------------------------------------
-lzhome="/path_to_logzilla"
+lzhome="/var/www/logzilla"
 [ ! -d "$lzhome" ] && lzhome="/var/www/logzilla"
 
 sphinxhome="$lzhome/sphinx"
@@ -42,7 +42,7 @@ spconf="sphinx.conf"
 indexer="bin/indexer"
 # changed to use run_searchd so that clusters come up properly
 # searchd="bin/searchd --iostats --cpustats"
-searchd="$lzhome/sphinx/run_searchd"
+searchd="$lzhome/sphinx/run_searchd.sh"
 # Path to logzilla config file
 # -------------------------------------------
 lzconf="$lzhome/html/config/config.php"
