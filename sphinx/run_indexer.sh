@@ -40,12 +40,14 @@ spconf="sphinx.conf"
 # -------------------------------------------
 #indexer="bin/indexer --print-queries"
 indexer="bin/indexer"
-searchd="bin/searchd --iostats --cpustats"
+# changed to use run_searchd so that clusters come up properly
+# searchd="bin/searchd --iostats --cpustats"
+searchd="$lzhome/sphinx/run_searchd"
 # Path to logzilla config file
 # -------------------------------------------
 lzconf="$lzhome/html/config/config.php"
 # -------------------------------------------
-# Whether to start o not to start the daemon if not yet run
+# Whether or not to start the daemon if not yet run
 # -------------------------------------------
 startsearchd='1'
 # -------------------------------------------
