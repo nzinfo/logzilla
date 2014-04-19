@@ -1,61 +1,39 @@
 #!/bin/bash
+allargs=$@
+
+# Just stop if asked
+if [[ $@ == **stop** ]]; then
+    if [[ `pgrep -f "bin/searchd"` ]]; then
+        echo "Stopping Searchd"
+        /var/www/logzilla/sphinx/bin/searchd --stop
+        exit 1
+    else 
+        echo "Searchd not running"
+        exit 0
+    fi
+fi
+
 # ------------------------------------------------------------------
 # Test for missing indexes and auto-create them
-# --------------------------------------------------------$----------
-verbose=$1
-function chkidx(){
-idxARR=()
-errARR=()
+# ------------------------------------------------------------------
+# Make sure we're stopped first
+if [[ `pgrep -f "bin/searchd"` ]]; then
+    echo "Searchd is already running"
+    exit 0
+fi
 idxARR+=(`/var/www/logzilla/sphinx/bin/searchd -c /var/www/logzilla/sphinx/sphinx.conf | grep "sph: No such file or" | awk '{print $3}' | sed "s/'//g" | sed 's/://g'`)
-sphStop
+uniq=$(echo "${idxARR[@]}" | tr ' ' '\n' | sort -u | tr '\n' ' ')
 if [ ${#idxARR[@]} -gt 0 ]; then
     for index in "${idxARR[@]}"
     do
-        [[ "$verbose" == "-v" ]] && echo "Creating Missing Indexes"
+        echo "Creating Missing Index: $index"
         errARR+=(`/var/www/logzilla/sphinx/bin/indexer -c /var/www/logzilla/sphinx/sphinx.conf $index | grep "range-query fetch failed" | awk '{print $3}' | sed "s/'//g" | sed 's/://g'`)
-        #/var/www/logzilla/sphinx/bin/indexer -c /var/www/logzilla/sphinx/sphinx.conf $index
     done
-    for index in "${errARR[@]}"
+    uniq=$(echo "${errARR[@]}" | tr ' ' '\n' | sort -u | tr '\n' ' ')
+    for index in "${uniq[@]}"
     do
         date=`echo $index | awk -F '_' '{print $5}' | sed 's/^\(.\{4\}\)\(.\{2\}\)/\1-\2-/' `
-         [[ "$verbose" == "-v" ]] && echo "Recreating Missing Indexes SQL Views for $date"
-        sphStart
-        /var/www/logzilla/scripts/LZTool -v -r makeview -mvdate $date -y >/dev/null
+        echo "Recreating Missing SQL Views for $date"
+        /var/www/logzilla/scripts/LZTool -v -r makeview -mvdate $date -y 
     done
-fi
-}
-function sphStart(){
-# Added for cluster crm commands
-if [ "$#" -ne 0 ];then
-    /var/www/logzilla/sphinx/bin/searchd $@ --iostats --cpustats
-else
-     [[ "$verbose" == "-v" ]] && echo "Starting Searchd"
-    /var/www/logzilla/sphinx/bin/searchd -c /var/www/logzilla/sphinx/sphinx.conf --iostats --cpustats >/dev/null
-fi
-}
-function sphStop(){
- [[ "$verbose" == "-v" ]] && echo "Stopping Searchd"
-if [ "$#" -ne 0 ];then
-    /var/www/logzilla/sphinx/bin/searchd $@
-else
-    /var/www/logzilla/sphinx/bin/searchd --stop -c /var/www/logzilla/sphinx/sphinx.conf >/dev/null
-fi
-}
-
-# If any command line args, just stop the daemon
-# This is needed in the cluster config
-if [ "$3" == "--stop" ];then
-    sphStop
-else
-    status=`/var/www/logzilla/sphinx/bin/searchd --status -c /var/www/logzilla/sphinx/sphinx.conf | grep uptime`
-    if [ "$status" ]; then
-         [[ "$verbose" == "-v" ]] && echo "LogZilla indexer is already running on PID $PID" 
-        sphStop
-        chkidx
-        sphStart
-    else
-        sphStop
-        chkidx
-        sphStart
-    fi
 fi
