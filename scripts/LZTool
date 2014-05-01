@@ -142,7 +142,7 @@ if ( defined( $options->{functionlist} ) ) {
     }
     exit;
 }
-$dbh_sphinx = DBI->connect( 'DBI:mysql::127.0.0.1:9306', 'root', ) || die "Could not connect to SphinxQL: $DBI::errstr";
+$dbh_sphinx = DBI->connect( "DBI:mysql::$settings->{SPX_SRV}:$settings->{SPX_PORT}", 'root', ) || die "Could not connect to SphinxQL: $DBI::errstr";
 if ($options->{ss}) {
     ss();
     exit;
