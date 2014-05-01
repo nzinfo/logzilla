@@ -1,22 +1,27 @@
-# https://www.assembla.com/spaces/LogZillaWiki/wiki/CRON
-# Sphinx indexer cron times
-# Note: Your setup may require some tweaking depending on expected message rates!
-# Last updated on 2012-12-14
 
 #####################################################
-# Run Sphinx "delta" scans every x minutes throughout 
-# the day.  
+# BEGIN LogZilla Cron Entries
+# http://www.logzilla.net
+# Install date: Thu May  1 12:59:27 2014
 #####################################################
-*/5 * * * * root ( cd /path_to_logzilla/sphinx; ./indexer.sh delta ) >> /path_to_logs/sphinx_indexer.log 2>&1
 
 #####################################################
-# Run Sphinx "merge" scans to merge the deltas with 
-# the main index.
+# Run indexer every minute  
 #####################################################
-3,8,13,18,23,28,33,38,43,48,53,58 * * * * root ( cd /path_to_logzilla/sphinx; ./indexer.sh merge ) >> /path_to_logs/sphinx_indexer.log 2>&1
-
+*/1 * * * * root ( cd /var/www/logzilla/sphinx; ./indexer.sh delta ) >> /var/log/logzilla/sphinx_indexer.log 2>&1
 
 #####################################################
-## Calls the export procedure and gzips archived data
+# Daily DB/SP Maintenance
 #####################################################
-0 1 * * * root sh /path_to_logzilla/scripts/export.sh 
+# Grab some metrics every night @ 11pm
+11 23 * * * root perl /var/www/logzilla/scripts/LZTool -v -ss
+
+# Update and general maintenance @ 1am, 2 attempts
+11,26 1 * * * root perl /var/www/logzilla/scripts/LZTool -v 
+
+# Rotate indexes @ midnight and 2am
+0 0,2 * * * root /var/www/logzilla/scripts/rotate 
+
+#####################################################
+# END LogZilla Cron Entries
+#####################################################
