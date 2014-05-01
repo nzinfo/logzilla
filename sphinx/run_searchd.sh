@@ -2,10 +2,20 @@
 allargs=$@
 
 # Just stop if asked
-if [[ $@ == **stop** ]]; then
+if [[ $@ == **stop ]]; then
     if [[ `pgrep -f "bin/searchd"` ]]; then
         echo "Stopping Searchd"
         /var/www/logzilla/sphinx/bin/searchd -c /var/www/logzilla/sphinx/sphinx.conf --stop
+        exit 1
+    else 
+        echo "Searchd not running"
+        exit 0
+    fi
+fi
+if [[ $@ == **stopwait ]]; then
+    if [[ `pgrep -f "bin/searchd"` ]]; then
+        echo "Stopping Searchd"
+        /var/www/logzilla/sphinx/bin/searchd -c /var/www/logzilla/sphinx/sphinx.conf --stopwait
         exit 1
     else 
         echo "Searchd not running"
