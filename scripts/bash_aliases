@@ -45,5 +45,5 @@ alias lzupdate='(cd $LZ && sudo svn update --accept theirs-conflict && cd script
 alias myspx='mysql -h0 -P9306'
 alias spx_full='(cd $LZ/sphinx && sudo ./indexer.sh full)'
 alias spx_delta='(cd $LZ/sphinx && sudo ./indexer.sh delta)'
-alias spx_stop='(cd $LZ/sphinx && sudo bin/searchd --stop)'
-alias spx_start='(cd $LZ/sphinx && sudo bin/searchd)'
+alias spx_stop='(cd $LZ/sphinx && sudo ./run_searchd.sh --stop)'
+alias spx_start='(cd $LZ/sphinx && sudo ./run_searchd.sh)'
