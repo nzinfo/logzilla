@@ -1300,19 +1300,19 @@ sub setup_cron {
 #####################################################
 # Run indexer every minute  
 #####################################################
-*/1 * * * * root ( cd $lzbase/sphinx; ./indexer.sh delta ) >> $logpath/sphinx_indexer.log 2>&1
+*/1 * * * * root test -d $lzbase && ( cd $lzbase/sphinx; ./indexer.sh delta ) >> $logpath/sphinx_indexer.log 2>&1
 
 #####################################################
 # Daily DB/SP Maintenance
 #####################################################
 # Grab some metrics every night @ 11pm
-11 23 * * * root perl /var/www/logzilla/scripts/LZTool -v -ss
+11 23 * * * root test -d $lzbase && perl /var/www/logzilla/scripts/LZTool -v -ss
 
 # Update and general maintenance @ 1am, 2 attempts
-11,26 1 * * * root perl $lzbase/scripts/LZTool -v 
+11,26 1 * * * root test -d $lzbase && perl $lzbase/scripts/LZTool -v 
 
 # Rotate indexes @ midnight and 2am
-0 0,2 * * * root $lzbase/scripts/rotate 
+0 0,2 * * * root test -d $lzbase && $lzbase/scripts/rotate 
 
 #####################################################
 # END LogZilla Cron Entries
