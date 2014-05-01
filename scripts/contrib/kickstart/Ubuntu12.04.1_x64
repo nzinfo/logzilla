@@ -313,8 +313,8 @@ alias lzupdate='(cd \$LZ && sudo svn update --accept theirs-conflict && echo "To
 alias myspx='mysql -h0 -P9306'
 alias spx_full='(cd \$LZ/sphinx && ./indexer.sh full)'
 alias spx_delta='(cd \$LZ/sphinx && ./indexer.sh delta)'
-alias spx_stop='(cd \$LZ/sphinx && bin/searchd --stop)'
-alias spx_start='(cd \$LZ/sphinx && bin/searchd)'
+alias spx_stop='(cd \$LZ/sphinx && ./run_searchd.sh --stop)'
+alias spx_start='(cd \$LZ/sphinx && ./run_searchd.sh)'
 EOF
         }
     }

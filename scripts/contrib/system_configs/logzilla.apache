@@ -4,12 +4,12 @@
 <VirtualHost *:80>
         ServerAdmin webmaster@localhost
 
-        DocumentRoot /path_to_logzilla/html
+        DocumentRoot /var/www/logzilla/html
         <Directory />
                 Options FollowSymLinks
                 AllowOverride All
         </Directory>
-        <Directory /path_to_logzilla/html/>
+        <Directory /var/www/logzilla/html/>
                 Options Indexes FollowSymLinks MultiViews
                 AllowOverride All
                 Order allow,deny
