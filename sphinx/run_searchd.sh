@@ -5,21 +5,13 @@ allargs=$@
 if [[ $@ == **stop ]]; then
     if [[ `pgrep -f "bin/searchd"` ]]; then
         echo "Stopping Searchd"
-        /var/www/logzilla/sphinx/bin/searchd -c /var/www/logzilla/sphinx/sphinx.conf --stop
-        exit 1
-    else 
-        echo "Searchd not running"
-        exit 0
+        /var/www/logzilla/sphinx/bin/searchd -c /var/www/logzilla/sphinx/sphinx.conf --stop && echo $?
     fi
 fi
 if [[ $@ == **stopwait ]]; then
     if [[ `pgrep -f "bin/searchd"` ]]; then
         echo "Stopping Searchd"
-        /var/www/logzilla/sphinx/bin/searchd -c /var/www/logzilla/sphinx/sphinx.conf --stopwait
-        exit 1
-    else 
-        echo "Searchd not running"
-        exit 0
+        /var/www/logzilla/sphinx/bin/searchd -c /var/www/logzilla/sphinx/sphinx.conf --stopwait && echo $?
     fi
 fi
 
@@ -29,7 +21,7 @@ fi
 # Make sure we're stopped first
 if [[ `pgrep -f "bin/searchd"` ]]; then
     echo "Searchd is already running"
-    exit 0
+    exit 1
 fi
 idxARR+=(`/var/www/logzilla/sphinx/bin/searchd -c /var/www/logzilla/sphinx/sphinx.conf | grep "sph: No such file or" | awk '{print $3}' | sed "s/'//g" | sed 's/://g'`)
 uniq=$(echo "${idxARR[@]}" | tr ' ' '\n' | sort -u | tr '\n' ' ')
@@ -46,4 +38,8 @@ if [ ${#idxARR[@]} -gt 0 ]; then
         echo "Recreating Missing SQL Views for $date"
         /var/www/logzilla/scripts/LZTool -v -r makeview -mvdate $date -y 
     done
+fi
+if [[ `pgrep -f "bin/searchd"` ]]; then
+        /var/www/logzilla/sphinx/bin/searchd -c /var/www/logzilla/sphinx/sphinx.conf --stopwait 
+        /var/www/logzilla/sphinx/bin/searchd -c /var/www/logzilla/sphinx/sphinx.conf $allargs && echo $?
 fi
