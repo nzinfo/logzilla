@@ -1543,7 +1543,7 @@ if ( -d "$crondir" ) {
           my @all = <$config>;
           if ( !grep( /sphinx/, @all ) ) {
               seek $config, 0, 0;
-              splice @all, -1, 0, "# <lzconfig>\n(cd $lzbase/sphinx && bin/searchd)\n# </lzconfig>\n";
+              splice @all, -1, 0, "# <lzconfig>\n(cd $lzbase/sphinx && ./run_searchd.sh)\n# </lzconfig>\n";
               print $config @all;
           }
           close $config;
@@ -1552,7 +1552,7 @@ if ( -d "$crondir" ) {
           print "Unable to locate your $file\n";
           print "You will need to manually add the Sphinx Daemon startup to your system...\n";
           print "Sphinx startup command:\n";
-          print "$lzbase/sphinx/bin/searchd -c $lzbase/sphinx/sphinx.conf\n";
+          print "$lzbase/sphinx/run_searchd.sh -c $lzbase/sphinx/sphinx.conf\n";
       }
   }
 
