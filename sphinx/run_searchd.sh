@@ -1,4 +1,6 @@
 #!/bin/bash
+ulimit -Hn 4096
+ulimit -Sn 4096
 allargs=$@
 
 # Just stop if asked
