@@ -41,6 +41,8 @@ foreach my $mod (@mods) {
 use Cwd;
 use File::Basename;
 use POSIX;
+use Socket;
+require 'sys/ioctl.ph';
 require DBI;
 require CHI;
 require Date::Calc;
@@ -2379,13 +2381,18 @@ if ( -d "$crondir" ) {
       print "You can also run \"$0 install_license\" at any time.\n";
       my $ok = &getYN( "Would you like to attempt automatic license install? (y/n)", "y" );
       if ( $ok =~ /[Yy]/ ) {
+	my ($ip, $mac);
+	# Below uses getIf sub instead of unreliable ifconfig -a to get the IP
+	$ip = getIf('eth0');
+print "getIf Reported IP: $ip\n" if ($ip);
           my @lines = `ifconfig -a`;
-          my ( $ip, $mac );
           for (@lines) {
               if (/\s*HWaddr (\S+)/) {
                   $mac = lc($1);
                   print "Found MAC ($mac)\n";
               }
+	# skip getting ip from ifconfig if getIf worked above
+	next if ($ip);
               if (/\s*inet addr:([\d.]+)/) {
                   $ip = $1;
                   print "Found IP ($ip)\n";
@@ -2490,6 +2497,17 @@ if ( -d "$crondir" ) {
       closedir(DIR);
   }
 
+sub getIf {
+    my ($iface) = @_;
+    my $socket;
+    socket($socket, PF_INET, SOCK_STREAM, (getprotobyname('tcp'))[2]) || die "Sub 'getIf' is unable to create a socket: $!\n";
+    my $buf = pack('a256', $iface);
+    if (ioctl($socket, SIOCGIFADDR(), $buf) && (my @address = unpack('x20 C4', $buf)))
+    {
+        return join('.', @address);
+    }
+    return undef;
+}
   sub EULA {
       print <<EOF;
 
