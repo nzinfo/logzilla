@@ -476,9 +476,10 @@ sub process_line {
 
         $prg =~ s/.*irewall/Firewall/; # Added for Firewalls
         $msg =~ s/\e\[?.*?[\@-~]//g; # Strip ANSI codes
-        DEBUG(1, "Found Program Firewall");
         if( $ts =~ /^(....)-(..)-(..) (..):(..):(..)$/ ) {
+            DEBUG(1, "Converting Time from: $ts");
             $ts = POSIX::mktime( $6, $5, $4, $3, $2 - 1, $1 - 1900 );
+            DEBUG(1, "Converted Time to: $ts");
         }
         else {
             $log->WARN( "Invalid timestamp in log '$ts', skipping" );
