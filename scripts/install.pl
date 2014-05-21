@@ -1200,7 +1200,7 @@ rewrite r_rw_openam {
 
 filter f_snmptrapd { program("snmptrapd"); };
 parser p_snmptrapd { 
-    csv-parser(columns("SNMPTRAP.HOST", "SNMPTRAP.MSG") delimiters(",") flags(escape-backslash, strip-whitespace));
+    csv-parser(columns("SNMPTRAP.HOST", "SNMPTRAP.MSG") delimiters(",") flags(greedy, escape-backslash, strip-whitespace));
 };
 rewrite r_snmptrapd {
  set("${SNMPTRAP.HOST}" value("HOST") condition(filter(f_snmptrapd)));
@@ -1249,6 +1249,7 @@ log {
     source(s_src);
     parser(p_snmptrapd);
     rewrite(r_snmptrapd);
+    rewrite(r_snare2pipe);
     destination(d_logzilla);
     # Optional: Log all events to file
     destination(df_logzilla);
