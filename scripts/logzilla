@@ -948,7 +948,8 @@ sub trigger_mail {
     # Replace each {N} with content of parens from pattern
     my $subject = $trigger->{subject};
     my $body = $trigger->{body};
-    my @vars = ( $msg =~ /$pattern/ ); # FIXME duplicated matching (we do it earlier already)
+    # cdukes: Ticket #509 - Add /g to pick up multiple matches
+    my @vars = ( $msg =~ /$pattern/g ); 
     DEBUG( 1, "Mail Triggers -> Original Subject: $subject" );
     $subject =~ s/\{(\d+)\}/$vars[$1-1] || "no paren $1 in pattern"/ge;
     $body    =~ s/\{(\d+)\}/$vars[$1-1] || "no paren $1 in pattern"/ge;
