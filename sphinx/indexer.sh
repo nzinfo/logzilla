@@ -21,8 +21,8 @@
 # ability to run multiple instances of the indexer when SPX_CORES is set.
 ################################################################
 
-ulimit -Hn 4096
-ulimit -Sn 4096
+ulimit -Hn 100000
+ulimit -Sn 50000
 
 # -------------------------------------------
 # Must wait for daily LZTool cleanup to complete
