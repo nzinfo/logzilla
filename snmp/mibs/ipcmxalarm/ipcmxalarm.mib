@@ -1,0 +1,389 @@
+--
+--      Private MIB for IPC Tradenet MX. 
+--
+--      This MIB contains alarm TRAP definitions for the IPC Tradenet System.
+--
+--
+
+IPCMXALARM-MIB DEFINITIONS ::= BEGIN
+
+IMPORTS OBJECT-TYPE
+                FROM RFC-1212
+        sysDescr,DisplayString
+                FROM RFC1213-MIB
+        TRAP-TYPE 
+                FROM RFC-1215
+	enterprises 
+                FROM RFC1155-SMI;
+        
+-- IPC Enterprise
+ipc         OBJECT IDENTIFIER ::= { enterprises 1453 }
+
+-- IPC Agents
+ipcAgents   OBJECT IDENTIFIER ::= { ipc 1 }
+
+-- IPC Mibs
+ipcMibs     OBJECT IDENTIFIER ::= { ipc 2 }
+
+-- MX Tradenet System Agent 
+ipcMxAgent OBJECT IDENTIFIER ::= { ipcAgents 1 }
+
+-- MX Tradenet System Mibs
+ipcMxMibs OBJECT IDENTIFIER ::= { ipcMibs 1 }
+
+-- MX Tradenet System Trap Mib
+ipcMxTrapMib OBJECT IDENTIFIER ::= { ipcMxMibs 1 }
+
+-- MX Tradenet System Trap Mib Objects
+ipcMxAlarmObjects OBJECT IDENTIFIER ::= { ipcMxTrapMib 1 }
+
+--
+-- MX System Center Alarm TRAP 
+--
+ipcMxAlarmGeneral TRAP-TYPE
+        ENTERPRISE ipcMxAgent
+        VARIABLES { sysDescr }
+        DESCRIPTION
+                   "The ipcMxAlarmGeneral event is generated when a MX critical alarm occures. 
+                    The text description of the alarm is sent in the system.sysDescr variable.
+                    This was the initial trap definition and was replaced with traps 2 - 10."
+        ::= 1
+
+ipcMxAlarmMinorAttended TRAP-TYPE
+        ENTERPRISE ipcMxAgent
+        VARIABLES { ipcMxAlarmCustomer,
+                    ipcMxAlarmSite,
+                    ipcMxAlarmNumber,
+                    ipcMxAlarmIdentifier,
+                    ipcMxAlarmSeverity,
+                    ipcMxAlarmStatus,
+                    ipcMxAlarmCabinet,
+                    ipcMxAlarmShelf,
+                    ipcMxAlarmSlot,
+                    ipcMxAlarmPort,
+                    ipcMxAlarmDDiTrunk,
+                    ipcMxAlarmDDiExtension,
+                    ipcMxAlarmDate,
+                    ipcMxAlarmTime}
+        DESCRIPTION
+                   "The ipcMxAlarmMinorAttended event is generated when a MX minor attended alarm occures."
+        ::= 2
+
+ipcMxAlarmMajorAttended TRAP-TYPE
+        ENTERPRISE ipcMxAgent
+        VARIABLES { ipcMxAlarmCustomer,
+                    ipcMxAlarmSite,
+                    ipcMxAlarmNumber,
+                    ipcMxAlarmIdentifier,
+                    ipcMxAlarmSeverity,
+                    ipcMxAlarmStatus,
+                    ipcMxAlarmCabinet,
+                    ipcMxAlarmShelf,
+                    ipcMxAlarmSlot,
+                    ipcMxAlarmPort,
+                    ipcMxAlarmDDiTrunk,
+                    ipcMxAlarmDDiExtension,
+                    ipcMxAlarmDate,
+                    ipcMxAlarmTime}
+        DESCRIPTION
+                   "The ipcMxAlarmMajorAttended event is generated when a MX major attended alarm occures."
+        ::= 3
+
+ipcMxAlarmCriticalAttended TRAP-TYPE
+        ENTERPRISE ipcMxAgent
+        VARIABLES { ipcMxAlarmCustomer,
+                    ipcMxAlarmSite,
+                    ipcMxAlarmNumber,
+                    ipcMxAlarmIdentifier,
+                    ipcMxAlarmSeverity,
+                    ipcMxAlarmStatus,
+                    ipcMxAlarmCabinet,
+                    ipcMxAlarmShelf,
+                    ipcMxAlarmSlot,
+                    ipcMxAlarmPort,
+                    ipcMxAlarmDDiTrunk,
+                    ipcMxAlarmDDiExtension,
+                    ipcMxAlarmDate,
+                    ipcMxAlarmTime}
+        DESCRIPTION
+                   "The ipcMxAlarmCriticalAttended event is generated when a MX critical attended alarm occures."
+        ::= 4
+
+ipcMxAlarmMinorReported TRAP-TYPE
+        ENTERPRISE ipcMxAgent
+        VARIABLES { ipcMxAlarmCustomer,
+                    ipcMxAlarmSite,
+                    ipcMxAlarmNumber,
+                    ipcMxAlarmIdentifier,
+                    ipcMxAlarmSeverity,
+                    ipcMxAlarmStatus,
+                    ipcMxAlarmCabinet,
+                    ipcMxAlarmShelf,
+                    ipcMxAlarmSlot,
+                    ipcMxAlarmPort,
+                    ipcMxAlarmDDiTrunk,
+                    ipcMxAlarmDDiExtension,
+                    ipcMxAlarmDate,
+                    ipcMxAlarmTime}
+        DESCRIPTION
+                   "The ipcMxAlarmMinorReported event is generated when a MX minor reported alarm occures."
+        ::= 5
+
+ipcMxAlarmMajorReported TRAP-TYPE
+        ENTERPRISE ipcMxAgent
+        VARIABLES { ipcMxAlarmCustomer,
+                    ipcMxAlarmSite,
+                    ipcMxAlarmNumber,
+                    ipcMxAlarmIdentifier,
+                    ipcMxAlarmSeverity,
+                    ipcMxAlarmStatus,
+                    ipcMxAlarmCabinet,
+                    ipcMxAlarmShelf,
+                    ipcMxAlarmSlot,
+                    ipcMxAlarmPort,
+                    ipcMxAlarmDDiTrunk,
+                    ipcMxAlarmDDiExtension,
+                    ipcMxAlarmDate,
+                    ipcMxAlarmTime}
+        DESCRIPTION
+                   "The ipcMxAlarmMajorReported event is generated when a MX major reported alarm occures."
+        ::= 6
+
+ipcMxAlarmCriticalReported TRAP-TYPE
+        ENTERPRISE ipcMxAgent
+        VARIABLES { ipcMxAlarmCustomer,
+                    ipcMxAlarmSite,
+                    ipcMxAlarmNumber,
+                    ipcMxAlarmIdentifier,
+                    ipcMxAlarmSeverity,
+                    ipcMxAlarmStatus,
+                    ipcMxAlarmCabinet,
+                    ipcMxAlarmShelf,
+                    ipcMxAlarmSlot,
+                    ipcMxAlarmPort,
+                    ipcMxAlarmDDiTrunk,
+                    ipcMxAlarmDDiExtension,
+                    ipcMxAlarmDate,
+                    ipcMxAlarmTime}
+        DESCRIPTION
+                   "The ipcMxAlarmReported event is generated when a MX critical reported alarm occures."
+        ::= 7
+
+ipcMxAlarmMinorUnattended TRAP-TYPE
+        ENTERPRISE ipcMxAgent
+        VARIABLES { ipcMxAlarmCustomer,
+                    ipcMxAlarmSite,
+                    ipcMxAlarmNumber,
+                    ipcMxAlarmIdentifier,
+                    ipcMxAlarmSeverity,
+                    ipcMxAlarmStatus,
+                    ipcMxAlarmCabinet,
+                    ipcMxAlarmShelf,
+                    ipcMxAlarmSlot,
+                    ipcMxAlarmPort,
+                    ipcMxAlarmDDiTrunk,
+                    ipcMxAlarmDDiExtension,
+                    ipcMxAlarmDate,
+                    ipcMxAlarmTime}
+        DESCRIPTION
+                   "The ipcMxAlarmMinorUnattended event is generated when a MX minor unattended alarm occures."
+        ::= 8
+
+ipcMxAlarmMajorUnattended TRAP-TYPE
+        ENTERPRISE ipcMxAgent
+        VARIABLES { ipcMxAlarmCustomer,
+                    ipcMxAlarmSite,
+                    ipcMxAlarmNumber,
+                    ipcMxAlarmIdentifier,
+                    ipcMxAlarmSeverity,
+                    ipcMxAlarmStatus,
+                    ipcMxAlarmCabinet,
+                    ipcMxAlarmShelf,
+                    ipcMxAlarmSlot,
+                    ipcMxAlarmPort,
+                    ipcMxAlarmDDiTrunk,
+                    ipcMxAlarmDDiExtension,
+                    ipcMxAlarmDate,
+                    ipcMxAlarmTime}
+        DESCRIPTION
+                   "The ipcMxAlarmMajorUnattended event is generated when a MX major unattended alarm occures."
+        ::= 9
+
+ipcMxAlarmCriticalUnattended TRAP-TYPE
+        ENTERPRISE ipcMxAgent
+        VARIABLES { ipcMxAlarmCustomer,
+                    ipcMxAlarmSite,
+                    ipcMxAlarmNumber,
+                    ipcMxAlarmIdentifier,
+                    ipcMxAlarmSeverity,
+                    ipcMxAlarmStatus,
+                    ipcMxAlarmCabinet,
+                    ipcMxAlarmShelf,
+                    ipcMxAlarmSlot,
+                    ipcMxAlarmPort,
+                    ipcMxAlarmDDiTrunk,
+                    ipcMxAlarmDDiExtension,
+                    ipcMxAlarmDate,
+                    ipcMxAlarmTime}
+        DESCRIPTION
+                   "The ipcMxAlarmUnattended event is generated when a MX critical unattended alarm occures."
+        ::= 10
+
+--
+-- MX System Center Heartbeat TRAP
+--
+ipcMxAlarmHeartbeat TRAP-TYPE
+        ENTERPRISE ipcMxAgent
+        VARIABLES { ipcMxAlarmCustomer,
+                    ipcMxAlarmSite,
+                    ipcMxAlarmDate,
+                    ipcMxAlarmTime,
+                    ipcMxAlarmTrapMode,
+                    ipcMxAlarmSyscenStatus,
+                    ipcMxAlarmInterval}
+        DESCRIPTION
+                   "The ipcMxAlarmHeartbeat event is generated periodically to ensure MX System Center Operation."
+        ::= 11
+
+--
+-- MX System Center Alarm TRAP objects
+--
+ipcMxAlarmCustomer OBJECT-TYPE 
+        SYNTAX  DisplayString
+        ACCESS  not-accessible
+        STATUS  mandatory
+        DESCRIPTION 
+                "The customer description. An example is: customer 101"
+        ::= { ipcMxAlarmObjects 1 }
+
+ipcMxAlarmSite OBJECT-TYPE 
+        SYNTAX  DisplayString
+        ACCESS  not-accessible
+        STATUS  mandatory
+        DESCRIPTION 
+                "The site description. An example is: site 101"
+        ::= { ipcMxAlarmObjects 2 }
+ 
+ipcMxAlarmNumber OBJECT-TYPE 
+        SYNTAX  INTEGER
+        ACCESS  not-accessible
+        STATUS  mandatory
+        DESCRIPTION 
+                "The alarm number. This is an integer 1-400. An example is: 273"
+        ::= { ipcMxAlarmObjects 3 }
+ 
+ipcMxAlarmIdentifier OBJECT-TYPE 
+        SYNTAX  DisplayString
+        ACCESS  not-accessible
+        STATUS  mandatory
+        DESCRIPTION 
+                "The alarm identifier. An example is: 'Alarm on Gateway'"
+        ::= { ipcMxAlarmObjects 4 }
+
+ipcMxAlarmSeverity OBJECT-TYPE 
+        SYNTAX  INTEGER { minor(1), major(2), critical(3)}
+        ACCESS  not-accessible
+        STATUS  mandatory
+        DESCRIPTION 
+                "The alarm severity. An example is: critical(3)"
+        ::= { ipcMxAlarmObjects 5 }
+ 
+ipcMxAlarmStatus OBJECT-TYPE 
+        SYNTAX  INTEGER { attended(1), reported(2), unattended(3)}
+        ACCESS  not-accessible
+        STATUS  mandatory
+        DESCRIPTION 
+                "The alarm status. An example is: reported(2)"
+        ::= { ipcMxAlarmObjects 6 }
+ 
+ipcMxAlarmCabinet OBJECT-TYPE
+        SYNTAX  INTEGER
+        ACCESS  not-accessible
+        STATUS  mandatory
+        DESCRIPTION
+                "The cabinet location of the alarm. This is an integer 0-64. An example is: 1"
+        ::= { ipcMxAlarmObjects 7 }
+
+ipcMxAlarmShelf OBJECT-TYPE
+        SYNTAX  INTEGER
+        ACCESS  not-accessible
+        STATUS  mandatory
+        DESCRIPTION
+                "The shelf location of the alarm. This is an integer 0-5. An example is: 1"
+        ::= { ipcMxAlarmObjects 8 }
+
+ipcMxAlarmSlot OBJECT-TYPE
+        SYNTAX  INTEGER
+        ACCESS  not-accessible
+        STATUS  mandatory
+        DESCRIPTION
+                "The slot location of the alarm. This is an integer 0-17. An example is: 1"
+        ::= { ipcMxAlarmObjects 9 }
+
+ipcMxAlarmPort OBJECT-TYPE
+        SYNTAX  INTEGER
+        ACCESS  not-accessible
+        STATUS  mandatory
+        DESCRIPTION
+                "The port location of the alarm. This is an integer 0-19. An example is: 1"
+        ::= { ipcMxAlarmObjects 10 }
+
+ipcMxAlarmDDiTrunk OBJECT-TYPE
+        SYNTAX  INTEGER
+        ACCESS  not-accessible
+        STATUS  mandatory
+        DESCRIPTION
+                "The DDI trunk location of the alarm. This is an integer 0-3 and will 
+                 be zero if this is not a DDI alarm. An example is: 1"
+        ::= { ipcMxAlarmObjects 11 }
+
+ipcMxAlarmDDiExtension OBJECT-TYPE
+        SYNTAX  DisplayString
+        ACCESS  not-accessible
+        STATUS  mandatory
+        DESCRIPTION
+                "The DDI extension of the alarm. This is a 4 or 6 character string and will 
+                 be blank if this is not a DDI alarm. An example is: 116789"
+        ::= { ipcMxAlarmObjects 12 }
+
+ipcMxAlarmDate OBJECT-TYPE
+        SYNTAX  DisplayString
+        ACCESS  not-accessible
+        STATUS  mandatory
+        DESCRIPTION
+                "The date of the generated alarm. An example is: 1999-08-04"
+        ::= { ipcMxAlarmObjects 13 }
+
+ipcMxAlarmTime OBJECT-TYPE
+        SYNTAX  DisplayString
+        ACCESS  not-accessible
+        STATUS  mandatory
+        DESCRIPTION
+                "The time of the generated alarm. An example is: 09:29:09"
+        ::= { ipcMxAlarmObjects 14 }
+
+ipcMxAlarmTrapMode OBJECT-TYPE 
+        SYNTAX  INTEGER { normal(1), maintanance(2)}
+        ACCESS  not-accessible
+        STATUS  mandatory
+        DESCRIPTION 
+                "The alarm trap mode. In normal mode alarm and heartbeat traps will be sent. 
+                 In maintanance mode only the heartbeat trap will be sent.  An example is: normal(1)"
+        ::= { ipcMxAlarmObjects 15 }
+
+ipcMxAlarmSyscenStatus OBJECT-TYPE 
+        SYNTAX  INTEGER { up(1), down(2)}
+        ACCESS  not-accessible
+        STATUS  mandatory
+        DESCRIPTION 
+                "The System Center status. An example is: up(1)"
+        ::= { ipcMxAlarmObjects 16 }
+
+ipcMxAlarmInterval OBJECT-TYPE 
+        SYNTAX  INTEGER 
+        ACCESS  not-accessible
+        STATUS  mandatory
+        DESCRIPTION 
+                "The delay in minutes between sending heartbeat traps. An example is: 60"
+        ::= { ipcMxAlarmObjects 17 }
+END
