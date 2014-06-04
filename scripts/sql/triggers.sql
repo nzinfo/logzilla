@@ -1,8 +1,8 @@
--- MySQL dump 10.13  Distrib 5.1.41, for debian-linux-gnu (x86_64)
+-- MySQL dump 10.13  Distrib 5.5.37, for debian-linux-gnu (x86_64)
 --
 -- Host: localhost    Database: syslog
 -- ------------------------------------------------------
--- Server version	5.1.41-3ubuntu12.9-log
+-- Server version	5.5.37-0ubuntu0.12.04.1
 
 /*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
 /*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
@@ -14,14 +14,6 @@
 /*!40014 SET @OLD_FOREIGN_KEY_CHECKS=@@FOREIGN_KEY_CHECKS, FOREIGN_KEY_CHECKS=0 */;
 /*!40101 SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='NO_AUTO_VALUE_ON_ZERO' */;
 /*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */;
-
-DROP TABLE IF EXISTS `mails_sent`;
-CREATE TABLE `mails_sent` (
-      `trigger_id` int(10) unsigned NOT NULL,
-      `md5sum` varchar(32) NOT NULL,
-      `send_time` int(10) unsigned DEFAULT NULL,
-      UNIQUE KEY `trigger_id` (`trigger_id`,`md5sum`)
-) ENGINE=InnoDB;
 
 --
 -- Table structure for table `triggers`
@@ -40,7 +32,7 @@ CREATE TABLE `triggers` (
   `body` text CHARACTER SET utf8 NOT NULL,
   `disabled` enum('Yes','No') NOT NULL DEFAULT 'Yes',
   PRIMARY KEY (`id`)
-) ENGINE=MyISAM DEFAULT CHARSET=latin1;
+) ENGINE=MyISAM AUTO_INCREMENT=3 DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -49,7 +41,7 @@ CREATE TABLE `triggers` (
 
 LOCK TABLES `triggers` WRITE;
 /*!40000 ALTER TABLE `triggers` DISABLE KEYS */;
-INSERT INTO `triggers` VALUES (1,'Line Protocol','.*Line protocol on Interface (\\S+) changed state to (\\S+)','root@localhost','root@localhost','Interface {1}','Link {1} Changed to {2}','Yes');
+INSERT INTO `triggers` VALUES (1,'Line Protocol','.*Line protocol on Interface (\\S+) changed state to (\\S+)','root@localhost','root@localhost','Interface {1}','Link {1} Changed to {2}','Yes'),(2,'Alert on CRIT','{SEV2}','root@localhost','root@localhost','Critical Event Sample','{MSG}','Yes');
 /*!40000 ALTER TABLE `triggers` ENABLE KEYS */;
 UNLOCK TABLES;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
@@ -62,4 +54,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2011-03-12 16:19:34
+-- Dump completed on 2014-06-03 21:34:36
