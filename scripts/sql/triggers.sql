@@ -25,7 +25,7 @@ DROP TABLE IF EXISTS `triggers`;
 CREATE TABLE `triggers` (
   `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
   `description` varchar(255) NOT NULL,
-  `pattern` varchar(255) NOT NULL,
+  `pattern` varchar(2048) NOT NULL,
   `mailto` varchar(255) NOT NULL DEFAULT 'root@localhost',
   `mailfrom` varchar(255) NOT NULL DEFAULT 'root@localhost',
   `subject` varchar(255) NOT NULL,
