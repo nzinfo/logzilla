@@ -1060,6 +1060,9 @@ sub update_settings {
         update triggers set mailto='$email', mailfrom='$email';
         " ) or die "Could not update triggers table: $DBI::errstr";
     $sth->execute;
+    # cdukes 2014-06-05: Modify trigger table patterns column to allow larger regex's
+    $sth = $dbh->prepare( "
+        alter table triggers modify pattern varchar(2048) NOT NULL" ) or die "Could not update triggers table: $DBI::errstr";
     $sth = $dbh->prepare( "
         update users set username='$siteadmin' where username='admin';
         " ) or die "Could not insert user data: $DBI::errstr";
