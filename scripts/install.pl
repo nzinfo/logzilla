@@ -70,7 +70,7 @@ sub prompt {
 }
 
 my $version    = "4.5";
-my $subversion = ".576";
+my $subversion = ".605";
 
 # Grab the base path
 my $lzbase = getcwd;
@@ -2515,117 +2515,220 @@ sub getIf {
   sub EULA {
       print <<EOF;
 
-SOFTWARE LICENSE & SUPPORT SUBSCRIPTION AGREEMENT STANDARD TERMS AND CONDITIONS
+END USER LICENSE AGREEMENT
 
-THIS SOFTWARE LICENSE AND SUPPORT SUBSCRIPTION AGREEMENT (this "Agreement") is entered into and effective as of the date you ("Customer") receive the licensed Software which it accompanies (the "Effective Date").
+This End User License Agreement, including any Order which by this reference is incorporated herein (this "Agreement"), is a binding agreement between LogZilla Corporation ("LogZilla") and the person or entity receiving the Software (as defined below) accompanied by this Agreement ("you" or "Customer"). You may have received an "evaluation edition", "alpha", "beta", or other non-commercial release version of the Software ("Evaluation Edition") or a commercially released or generally available version of the Software and your rights will vary depending on the version that you received.
+       
+LOGZILLA PROVIDES THE SOFTWARE SOLELY ON THE TERMS AND CONDITIONS SET FORTH IN THIS AGREEMENT AND ON THE CONDITION THAT CUSTOMER ACCEPTS AND COMPLIES WITH THEM. BY CLICKING THE "ACCEPT" BUTTON, YOU (A) ACCEPT THIS AGREEMENT AND AGREE THAT CUSTOMER IS LEGALLY BOUND BY ITS TERMS; AND (B) REPRESENT AND WARRANT THAT: (I) YOU ARE OF LEGAL AGE TO ENTER INTO A BINDING AGREEMENT; AND (II) IF CUSTOMER IS A CORPORATION, GOVERNMENTAL ORGANIZATION OR OTHER LEGAL ENTITY, YOU HAVE THE RIGHT, POWER AND AUTHORITY TO ENTER INTO THIS AGREEMENT ON BEHALF OF CUSTOMER AND BIND CUSTOMER TO ITS TERMS. IF CUSTOMER DOES NOT AGREE TO THE TERMS OF THIS AGREEMENT, LOGZILLA WILL NOT AND DOES NOT LICENSE THE SOFTWARE TO CUSTOMER AND YOU MUST NOT INSTALL THE SOFTWARE OR DOCUMENTATION.
+       
+NOTWITHSTANDING ANYTHING TO THE CONTRARY IN THIS AGREEMENT OR YOUR OR CUSTOMER'S ACCEPTANCE OF THE TERMS AND CONDITIONS OF THIS AGREEMENT, NO LICENSE IS GRANTED (WHETHER EXPRESSLY, BY IMPLICATION OR OTHERWISE) UNDER THIS AGREEMENT, AND THIS AGREEMENT EXPRESSLY EXCLUDES ANY RIGHT, CONCERNING ANY SOFTWARE THAT CUSTOMER DID NOT ACQUIRE LAWFULLY OR THAT IS NOT A LEGITIMATE, AUTHORIZED COPY OF LOGZILLA'S SOFTWARE.
 
-THE PROVISIONS OF THIS AGREEMENT ALLOCATE THE RISKS BETWEEN CUSTOMER AND LOGZILLA.  
+1. Definitions. For purposes of this Agreement, the following terms have the following meanings:
+       
+"Development Use" means use of the Software by Customer to design, develop and/or test new applications for Production Use.
+       
+"Documentation" means user manuals, technical manuals and any other materials provided by LogZilla, in printed, electronic or other form, that describe the installation, operation, use or technical specifications of the Software.
+       
+"Fees" are the License Fees and the Support Fees.
+       
+"License Fees" means the license fees, including all taxes thereon, paid or required to be paid by Customer for the license granted under this Agreement.
+       
+"License Package" means the type of license selected by Customer depending on the number of hosts and messages Customer needs. License Packages are available in evaluation, small business and enterprise sizes.
+       
+"Order" means the document by which the Software and any Support Services are ordered by Customer.
+       
+"Person" means an individual, corporation, partnership, joint venture, limited liability company, governmental authority, unincorporated organization, trust, association or other entity.
+       
+"Production Use" means using the Software with Customer's applications for internal business purposes only, which may include third party customers' access to or use of such applications. "Production Use" does not include the right to reproduce the software for sublicensing, resale, or distribution, including without limitation, operation on a time sharing or service bureau basis or distributing the software as part of an ASP, VAR, OEM, distributor or reseller arrangement.
+       
+"Software" means the object code versions of the software set forth in the Order.
 
-1.  Definitions.  
+"Support Fees" means the support fees, including all taxes thereon, paid or required to be paid by Customer for the Support Services ordered under this Agreement.
 
-"Development Use" means use of the Software by customer to design, develop and/or test new applications for Production Use.
-"Documentation" means LogZilla's current user manuals, operating instructions and installation guides generally provided with the Software to its licensees. 
-"Maintenance Release" means Upgrades and Updates (as defined in the attached Exhibit A) to the Software which are made available to licensees pursuant to the standard Support Services Terms and Conditions.  
-"Order" means the document by which Software and Support Services are ordered by Customer.  The Order shall reference and be solely governed by this Agreement.  The Order may be electronic (via Logzilla's web portal) or written.
-"Production Use" means using the Software with Customer's applications for internal business purposes only, which may include third party customers' access to or use of such applications.  Production Use does not include the right to reproduce the software for sublicensing, resale, or distribution, including without limitation, operation on a time sharing or service bureau basis or distributing the software as part of an ASP, VAR, OEM, distributor or reseller arrangement.
-"Software" means the object code versions of the Software described on an Order and the related Documentation. 
-"Support Services" means technical support for Software under LogZilla's then-current policies. LogZilla's current, standard Support Services Terms and Conditions are attached hereto. 
-"Subscription Term" means the first year after the Effective Date of this Agreement and a related Order, including any applicable renewal terms.
-"Territory" means the United States and any additional territories explicitly agreed to by the parties, as set forth on an Order. 
+"Third Party" means any Person other than Customer or LogZilla.
 
-2.  License. 
-a. License Grant.  LogZilla grants Customer a fee-bearing, non-exclusive and non-transferable (except as permitted herein) license to use the Software and the Documentation, solely for Customer's Development Use and/or Production Use, as specified in an Order, subject to the terms and conditions of this Agreement and the following limitations: (i) Customer may not copy the Software, except for archival or disaster recovery purposes, and if Customer does copy for these purposes, Customer will preserve any proprietary rights notices on the Software and  place such notices on any and all copies Customer has made or makes; (ii) Customer agrees not to lease, rent or sublicense the Software to any third party, or otherwise use it except as permitted in this Agreement; (iii) Customer may modify the Software as it deems fit for its own internal purposes.  Title, ownership rights and all intellectual property rights in and to the Software shall remain the sole and exclusive property of LogZilla. LogZilla retains all rights not expressly granted to Customer in this Agreement.
+"Use" means Development Use or Production Use.
 
-b.  Consultant Use of Software.  Customer may permit its third party consultants to access and use the Software solely for Customer's operations permitted hereunder, provided that said consultants have signed an agreement with Customer protecting LogZilla's intellectual property with terms no less stringent than the terms and conditions of this Agreement, and that Customer ensures that any such consultant's use of the Software complies with the terms of this Agreement.
+2. License Grant and Scope. Subject to and conditioned upon Customer's strict compliance with all terms and conditions set forth in this Agreement, LogZilla hereby grants to Customer a non-exclusive, non-transferable, non-sublicensable (except as expressly set forth in Section 2(d)), limited license during the Term (as defined below) to use the Software and Documentation, solely as set forth in this Section 2 and subject to all conditions and limitations set forth in Section 4 or elsewhere in this Agreement. This license grants Customer the right to:
 
-c.  Audit.   LogZilla may, at any time during the term of this Agreement and with thirty (30) days prior written notice, request and gain access to Customer's premises, subject to Customer's reasonable security procedures, for the limited purpose of conducting an audit to verify that Customer is in compliance with this Agreement.  Customer will promptly grant such access and cooperate with LogZilla in the audit.  The audit will be restricted in scope, manner and duration to that reasonably necessary to achieve its purpose and not disrupt Customer's operations.  Customer shall be liable for promptly remedying any underpayments revealed during the audit.  If the audit reveals an underpayment discrepancy in excess of five per cent (5%), Customer will also be liable for the costs of the audit.
+       (a) Download and install in accordance with the Documentation the Software and Documentation solely for Customer's Use and in accordance with the number of hosts and messages associated with the License Package, each as specified in the Order. In addition to the foregoing, Customer has the right to make one copy of the Software solely for archival purposes, provided that Customer does not, and does not allow any Person to, install or use any such copy other than if and for so long as the copy installed in accordance with the preceding sentence is inoperable and, provided, further, that Customer uninstalls and otherwise deletes such inoperable copy. All copies of the Software made by Customer:
 
-3.  Confidential Information.  By virtue of this Agreement, the parties may have access to information that is confidential to one another ("Confidential Information").  Confidential Information shall be limited to the Software, the terms and pricing under this Agreement, and all information clearly identified as confidential.  A party's Confidential Information shall not include information that: (i) is or becomes a part of the public domain through no act or omission of the other party; (ii) was in the other party's lawful possession prior to the disclosure and had not been obtained by the other party either directly or indirectly from the disclosing party; (iii) is lawfully disclosed to the other party by a third party without restriction on disclosure; or (iv) is independently developed by the other party. The parties agree to hold each other's Confidential Information in confidence during the term of this Agreement and for a period of two (2) years after termination of this Agreement.  The parties agree, unless required by law, not to make each other's Confidential Information available in any form to any third party for any purpose other than the implementation of this Agreement.  LogZilla may reasonably use Customer's name and a description of Customer's use of the Software for its investor relations and marketing purposes, unless Customer provides written notice to LogZilla that it may not do so.
+             (i) will be the exclusive property of LogZilla;
 
-4.  Payments, Shipments and Taxes.  The total non-refundable (subject to Articles 5(b) and 6(b)(iii)), non-cancelable license and Support Services fees for each Order will be due and payable within thirty (30) days from the date of LogZilla's invoice.  The terms and conditions of this Agreement shall prevail regardless of any preprinted or conflicting terms on a purchase order, other correspondence, and any and all verbal communication. Customer will pay all sales, use, VAT, and other consumption taxes, personal property taxes and other taxes (other than those based on LogZilla's net income) unless Customer furnishes satisfactory proof of exemption.  LogZilla may assess interest charges of one percent (1%) per month for late payments.
+             (ii) will be subject to the terms and conditions of this Agreement; and
 
-5.  Limited Warranty.   
+             (iii) must include all trademark, copyright, patent and other intellectual property rights notices contained in the original.
 
-a.  Exclusive Warranty.  For a period of ninety (90) days after delivery of the Software, LogZilla warrants that the Software shall materially conform to the Documentation.  LogZilla does not warrant that operation of the Software will be uninterrupted or "bug" free.
+       (b) Use and run the Software as properly installed in accordance with this Agreement and the Documentation, solely as set forth in the Documentation and solely for Customer's internal business purposes. If Customer has acquired Software for Development Use, Customer is not permitted to use the Software for Production Use. If Customer has acquired Software for Production Use, Customer is not permitted to use the Software for Development Use.
 
-b.  Remedies.  If LogZilla breaches the foregoing warranty and Customer promptly notifies LogZilla in writing of the nature of the breach, LogZilla shall make commercially reasonable efforts to promptly repair or replace the non-conforming Software without charge.  If, after a reasonable opportunity to cure, LogZilla does not repair or replace the non-conforming Software, Customer must return the Software and Documentation to LogZilla, or certify in writing that all copies have been destroyed, and LogZilla will refund the license fees it received from Customer for the Software.  This is Customer's sole and exclusive remedy for breach of the exclusive warranty in Article 5(a).
+       (c) Download or otherwise make a reasonable number of copies of the Documentation depending on the License Package and use such Documentation, solely in support of its licensed use of the Software in accordance herewith. All copies of the Documentation made by Customer:
 
-c.  Disclaimer of Warranty.  THE FOREGOING WARRANTY IS EXCLUSIVE AND IN LIEU OF ALL OTHER WARRANTIES, EXPRESS OR IMPLIED, INCLUDING WARRANTIES OF FITNESS FOR A PARTICULAR PURPOSE, NONINFRINGEMENT, AND MERCHANTABILITY. 
+             (i) will be the exclusive property of LogZilla;
 
-6.  Intellectual Property Indemnification.
+             (ii) will be subject to the terms and conditions of this Agreement; and
 
-a.  Defense.  If a third party claims that Customer's use of the Software infringes any United States patent, copyright, trademark or trade secret, Customer must promptly notify LogZilla in writing.  LogZilla will defend Customer against such claim if Customer reasonably cooperates with LogZilla and allows LogZilla to control the defense and all related settlement negotia¬tions, and then LogZilla will indemnify Customer from and against any damages finally awarded for such infringement.
+             (iii) must include all trademark, copyright, patent and other intellectual property rights notices contained in the original.
 
-b.  Injunctive Relief.  If an injunction is sought or obtained against Customer's use of the Software as a result of a third party infringement claim, LogZilla may, at its sole option and expense, (i) procure for Customer the right to continue using the affected Software, (ii) replace or modify the affected Software with functionally equivalent software so that it does not infringe, or, if either (i) or (ii) is not commercially feasible,  (iii) terminate the licenses and refund the license fees received from Customer for the affected Software less a pro rata usage charge based on Customer's prior use, if applicable. 
+       (d) Permit third party consultants to access and use the Software solely for Customer's internal business operations, provided that such consultants execute an agreement with Customer with terms and conditions no less protective of LogZilla than those in this Agreement. Customer remains liable for any breach of this Agreement by a third party consultant.
 
-c.  Disclaimer of Liability.  LogZilla shall have no liability for any third party claim of infringement based upon (i) use of other than the then current, unaltered version of the applicable Software, unless the infringing portion is also in the then current, unaltered release; (ii) use, operation or combination of the applicable Soft¬ware with any programs, data, equip¬ment or documentation that is not deemed by LogZilla to work in conjunction with the Software, if such infringement would have been avoided but for such use,  operation or combination; or (iii) any third party software. The foregoing constitutes the entire liability of LogZilla, and Customer's sole and exclusive remedy with respect to any third party claims of infringement of such intellectual property rights.
+3. Third-Party Materials. The Software may include software, content, data or other materials, including related documentation, that are owned by Persons other than LogZilla and that are provided to Customer on terms that are in addition to and/or different from those contained in this Agreement ("Third-Party Licenses"). Customer is bound by and will comply with all Third-Party Licenses. Any breach by Customer or any of its authorized users of any Third-Party License is also a breach of this Agreement.
 
-7.  Limitation of Liability.  
+4. Use Restrictions. Customer will not:
 
-a.  Limitation.  LogZilla's aggregate liability to Customer for damages concerning performance or nonperformance by LogZilla or in any way related to this Agreement, and regardless of whether the claim for such damages is based in contract, tort, strict liability, or otherwise, shall not exceed the license fees received by LogZilla from Customer for the affected Software for the twelve (12) month period preceding the occurrence of such liability.
+       (a) use (including make any copies of) the Software or Documentation beyond the scope of the license granted under Section 2;
 
-b.  No Consequential Damages.  In no event shall LogZilla be liable for any indirect, incidental, special, punitive or consequential damages, including without limitation damages for lost data or lost profits, even if LogZilla has been advised as to the possibility of such damages.  
+       (b) except as may be permitted by Section 2(d) and strictly in compliance with its terms, provide any other Person, including any subcontractor, independent contractor, affiliate or service provider of Customer, with access to or use of the Software or Documentation;
 
-8.  Term and Termination.  This Agreement, including Exhibit A and any Order(s), will continue for the duration set forth in any Order(s) and will automatically renew in one (1) year increments unless either party terminates the Agreement by providing written notice to the other at least thirty (30) days prior to the anniversary of the Effective Date. Either party will be in default if it declares bankruptcy or otherwise fails to perform any of its duties or obligations and does not undertake an effort to substan¬tially cure such default within thirty (30) days after written notice is given to the defaulting party, except that any breach of Article 3 shall be grounds for immediate termination.  In the event of default, the non-defaulting party may terminate this Agree¬ment by providing written notice of termination to the defaulting party.  If Customer is the defaulting party, Customer must promptly, at LogZilla's direction, destroy or return all affected Software and Documentation.  Upon termination of this Agreement for non-default, the provisions of Articles 1, 2, 3, 4, 5(c), 6(c), 7, 8 and 10 will survive.   Upon termination of this Agreement for default, the provisions of Articles 1, 3, 4, 5(c), 6(c), 7, 8 and 10 will survive.
+       (c) modify, translate, adapt or otherwise create derivative works or improvements, whether or not patentable, of the Software or Documentation or any part thereof;
 
-9.  Subscription Term & Support Services.
+       (d) combine the Software or any part thereof with, or incorporate the Software or any part thereof in, any other programs;
 
-a.  Support Services.  Support Services are included as part of this subscription Agreement.  Support Services ordered by Customer will be provided under LogZilla's Support Services policies in effect on the date Support Services are ordered.  LogZilla's Support Services policies as of the Effective Date are attached hereto as Exhibit A.  Except as otherwise provided herein, Support Services fees paid are nonrefundable.
+       (e) reverse engineer, disassemble, decompile, decode or otherwise attempt to derive or gain access to the source code of the Software or any part thereof;
 
-b.  Renewal of Subscription Term.  At the expiration of each Subscription Term, Customer may continue to receive license rights and Support Services in one (1) year increments under LogZilla's then current fees and policies.  LogZilla shall provide Customer reasonable notice of subscription fees due.  If Customer elects not to renew the subscription, Customer shall notify LogZilla of its intent not to renew at least thirty (30) days prior to the end of the applicable Subscription Term.  Reinstatement fees may apply under LogZilla's policies when Customer reinstates its subscription. 
+       (f) remove, delete, alter or obscure any trademarks or any copyright, trademark, patent or other intellectual property or proprietary rights notices from the Software or Documentation, including any copy thereof;
 
-10. General.  
+       (g) except as expressly set forth in Section 2(a) and Section 2(c), copy the Software or Documentation, in whole or in part;
 
-a.  Force Majeure.  Neither party shall be liable for any delay or failure in performance due to causes beyond its reasonable control.
+       (h) rent, lease, lend, sell, sublicense, assign, distribute, publish, transfer or otherwise make available the Software or any features or functionality of the Software, to any Third Party for any reason, whether or not over a network and whether or not on a hosted basis, including in connection with the internet, web hosting, wide area network (WAN), virtual private network (VPN), virtualization, time-sharing, service bureau, software as a service, cloud or other technology or service;
 
-b.  Export Compliance.  Customer may not download or otherwise export or re-export the Software or any underlying information or technology except in full compliance with all United States and other applicable laws and regulations. 
+       (i) use the Software in, or in association with, the design, construction, maintenance or operation of any hazardous environments or systems, including:
 
-c.  Assignment.  Customer may not assign this Agreement without LogZilla's prior written consent which will not be unreasonably withheld.  
+             (i) power generation systems;
 
-d.  Severability.  If any part of this Agreement is held to be unenforceable, in whole or in part, such holding will not affect the validity of the other parts of the Agreement. 
+             (ii) aircraft navigation or communication systems, air traffic control systems or any other transport management systems;
 
-e.  Waiver.  The waiver of a breach of any provision of this Agreement will not operate or be interpreted as a waiver of any other or subsequent breach.  
+             (iii) safety-critical applications, including medical or life-support systems, vehicle operation applications or any police, fire or other safety response systems; and
 
-f.  Notices.  All notices permitted or required under this Agreement shall be in writing and shall be delivered in person, by facsimile, overnight courier service or mailed by first class, registered or certified mail, postage prepaid, to the address of the party specified above or such other address as either party may specify in writing, Attention: Office of the General Counsel.   Such notice shall be deemed to have been given upon receipt. 
+             (iv) military or aerospace applications, weapons systems or environments;
 
-g.  Governing Law.  This Agreement will be governed by both the substantive and procedural laws of North Carolina, U.S.A., excluding its conflict of law rules and the United Nations Convention for the International Sale of Goods.  
+       (j) use the Software in violation of any federal, state or local law, regulation or rule; or
 
-h.  United States Government Rights.  The Software provided under this Agreement is commercial computer software developed exclusively at private expense, and is in all respects the proprietary data belonging solely to LogZilla or its licensors. 
+       (k) use the Software for purposes of competitive analysis of the Software, the development of a competing software product or service or any other purpose that is to LogZilla's commercial disadvantage.
 
-Department of Defense Customers: If the Software is acquired by or on behalf of agencies or units of the Department of Defense (DOD), then, pursuant to DOD FAR Supplement Section 227.7202 and its successors (48 C.F.R. 227.7202) the Government's right to use, reproduce or disclose the Software and any accompanying Documentation acquired under this Agreement is subject to the restrictions of this Agreement. 
+5. Responsibility for Use of Software. Customer is responsible and liable for all uses of the Software through access thereto provided by Customer, directly or indirectly. Specifically, and without limiting the generality of the foregoing, Customer is responsible and liable for all actions and failures to take required actions with respect to the Software by any other Person to whom Customer may provide access to or use of the Software, whether such access or use is permitted by or in violation of this Agreement.
 
-Civilian Agency  Customers: If the Software is acquired by or on behalf of civilian agencies of the United States Government, then, pursuant to FAR Section 12.212 and its successors (48 C.F.R. 12.212), the Government's right to use, reproduce or disclose the Software and any accompanying Documentation acquired under this Agreement is subject to the restrictions of this Agreement. 
+6. Feedback. If Customer provides any feedback to LogZilla concerning the functionality and performance of the Software (including identifying potential errors and improvements) ("Feedback"), Customer hereby assigns to LogZilla all right, title, and interest in and to the Feedback, and LogZilla is free to use the Feedback without any payment or restriction.
 
+7. Compliance Measures.
 
+       (a) The Software may contain technological copy protection or other security features designed to prevent unauthorized use of the Software, including features to protect against use of the Software: (i) beyond the scope of the license granted pursuant to Section 2; or (ii) prohibited under Section 4. Customer will not, and will not attempt to, remove, disable, circumvent or otherwise create or implement any workaround to, any such copy protection or security features.
 
+       (b) Upon reasonable notice to Customer, during the Term and for three years thereafter, Customer will keep current, complete, and accurate records regarding the reproduction, distribution, and use of the Software. Customer will provide such information to LogZilla and certify that it has paid all fees required under this Agreement within five business days of any written request, so long as no more than two requests are made each year. LogZilla may, in LogZilla's sole discretion, audit Customer's use of the Software under this Agreement at any time during the Term and for three years thereafter to ensure Customer's compliance with this Agreement, provided that (i) any such audit will be conducted on not less than 30 days' prior notice to Customer, and (ii) no more than 2 audits may be conducted in any 12 month period except for good cause shown. LogZilla also may, in its sole discretion, audit Customer's systems within 3 months after the end of the Term to ensure Customer has ceased use of the Software and removed the all copies of the Software from such systems as required hereunder. Customer will fully cooperate with LogZilla's personnel conducting such audits and provide all reasonable access requested by LogZilla to records, systems, equipment, information and personnel, including machine IDs, serial numbers and related information. LogZilla will only examine information related to Customer's use of the Software. LogZilla may conduct audits only during Customer's normal business hours and in a manner that does not unreasonably interfere with Customer's business operations.
 
-ENTIRE AGREEMENT.  Any amendment or modification to the Agreement must be in writing signed by both parties. This Agreement constitutes the entire agreement and supersedes all prior or contemporaneous oral or written agreements regarding the subject matter hereof.  Customer agrees that (i) any and all Orders will be governed by these Standard Terms and Conditions and (ii) the appropriate fees will be timely paid.  The terms and conditions of this Agreement shall prevail regardless of any preprinted or conflicting terms on Orders.  
+       (c) If any of the measures taken or implemented under this Section 6 determines that Customer's use of the Software exceeds or exceeded the use permitted by this Agreement then:
 
+             (i) Customer will, within 7 days following the date of receipt of written notice from LogZilla, pay to LogZilla the retroactive License Fees for such excess use and obtain and pay for a valid license to bring Customer's use into compliance with this Agreement. In determining the Customer Fee payable pursuant to the foregoing, (x) unless Customer can demonstrate otherwise by documentary evidence, all excess use of the Software will be deemed to have commenced on the commencement date of this Agreement or, if later, the completion date of any audit previously conducted by LogZilla hereunder, and continued uninterrupted thereafter, and (y) the rates for such licenses will be determined without regard to any discount to which Customer may have been entitled had such use been properly licensed prior to its commencement (or deemed commencement).
 
-    EXHIBIT A
-END USER SUPPORT SERVICES ADDENDUM
-    STANDARD TERMS AND CONDITIONS
+             (ii) If the use exceeds or exceeded the use permitted by this Agreement by more than 5%, Customer will also pay to LogZilla, within 7 days following the date of LogZilla's written request therefor, LogZilla's reasonable costs incurred in conducting the audit.
+LogZilla's remedies set forth in this Section 6 are cumulative and are in addition to, and not in lieu of, all other remedies LogZilla may have at law or in equity, whether under this Agreement or otherwise.
 
+8. Maintenance and Support.
 
-1.  Definitions.
+       (a) Subject to Section 8(d), the license granted hereunder entitles Customer to the technical support and maintenance services ("Support Services") identified on the Order, if any, during the Term.
 
-"Error" means either (a) a failure of the Software to conform to the specifications set forth in the Documentation, resulting in the inability to use, or restriction in the use of, the Software, and/or (b) a problem requiring new procedures, clarifications, additional information and/or requests for product enhancements.
+       (b) Support Services will include provision of such updates, upgrades, bug fixes, patches and other error corrections (collectively, "Updates") as LogZilla makes generally available at no additional charge to all Customers of the Software then entitled to Support Services. LogZilla may develop and provide Updates in its sole discretion, and Customer agrees that LogZilla has no obligation to develop any Updates at all or for particular issues. Customer further agrees that all Updates will be deemed "Software," and related documentation will be deemed "Documentation," all subject to all terms and conditions of this Agreement. Customer acknowledges that LogZilla may provide Updates via download from a website designated by LogZilla and that Customer's receipt thereof will require an internet connection, which connection is Customer's sole responsibility. LogZilla has no obligation to provide Updates via any other media. Support Services do not include any new version or new release of the Software LogZilla may issue as a separate or new product, and LogZilla may determine whether any issuance qualifies as a new version, new release or Update in its sole discretion.
 
-"Update" means either a software modification or addition that, when made or added to the Software, corrects the Error, or a procedure or routine that, when observed in the regular operation of the Software, eliminates the practical adverse effect of the Error on Customer.
+       (c) If Customer reports a bug or error to LogZilla, LogZilla will use commercially reasonable efforts to begin development on an Update for such bug or error within 12 hours of receipt of notification from Customer.
 
-"Upgrade" means a revision of the Software released by LogZilla to its end user customers generally, during the Support Services Term, to add new and different functions or to increase the capacity of the Software.  Upgrade does not include the release of a new product or added features for which there may be a separate charge. 
+       (d) LogZilla reserves the right to condition the provision of Support Services, including all or any Updates, on Customer's registration of the copy of Software for which support is requested. LogZilla has no obligation to provide Support Services, including Updates:
 
-2.  LogZilla Customer Support Services. On the Order, Customer may select either (a) LogZilla Production Support for Production Use licenses or (b) LogZilla Development Support for Development Use licenses.  Each includes Maintenance Releases and support.  Subject to additional terms and conditions, Customer may also order customized Support Options and/or Mission Critical Support.
+             (i) for any but the most current version or release of the Software;
 
-3.  Updates.   LogZilla will make commercially reasonable efforts to provide an Update designed to solve or by-pass a reported Error. If such Error has been corrected in a Maintenance Release, Customer must install and implement the applicable Maintenance Release; otherwise, the Update may be provided in the form of a temporary fix, procedure or routine, to be used until a Maintenance Release containing the permanent Update is available. Customer shall reasonably determine the priority level of Errors, pursuant to the following protocols.  
+             (ii) for any copy of Software for which all previously issued Updates have not been installed;
 
-After Customer provides LogZilla with notice of an Error, LogZilla will make commercial best efforts to begin working on a solution to the reported Error within 12 hours.
+             (iii) if Customer is in breach under this Agreement; or
 
-4.  Maintenance Releases and Upgrades.  During the Support Services Term, LogZilla shall make Maintenance Releases available to Customer if, as and when LogZilla makes any such Maintenance Releases generally available to its customers.   If a question arises as to whether a product offering is an Upgrade or a new product or feature, LogZilla's categorization will govern, provided that LogZilla treats the product offering as a new product or feature for its end user customers generally.
-5.  Conditions for Providing Support.  LogZilla's obligation to provide Support Services is conditioned upon the following:  (a) Customer makes reasonable efforts to correct the Error after consulting with LogZilla; (b) Customer provides LogZilla with sufficient information and resources to correct the Error either at LogZilla's Customer Support Center or via remote access to Customer's site, as well as access to the personnel, hardware, and any additional software involved in discovering the Error; (c) Customer promptly installs all Maintenance Releases; and (d) Customer procures, installs and maintains all equipment, telephone lines, communication interfaces and other hardware necessary to operate the Software.
-6.  Exclusions from LogZilla's Support Services.  LogZilla is not obligated to provide Support Services in the following situations: (a) the Software has been changed, modified or damaged (except if under the direct supervision of LogZilla); (b) the Error is caused by Customer's negligence, hardware malfunction or other causes beyond the reasonable control of LogZilla; (c) the Error is caused by third party software not licensed through LogZilla; (d) Customer has not installed and implemented Maintenance Release(s) so that the Software is a version supported by LogZilla; or (e) Customer has not paid the Support Services fees when due.
-7.  Termination of Support Services. LogZilla reserves the right to discontinue the Support Services should LogZilla, in its sole discretion, determine that continued support for any Software is no longer economically practicable. LogZilla will give Customer at least three (3) months prior written notice of any such discontinuance of Support Services and will refund any unaccrued Support Services fees Customer may have prepaid with respect to the affected Software.  LogZilla shall have no obligation to support or maintain any version of the Software except (i) the then current version of the Software, and (ii) the immediately preceding version of the Software for a period of six (6) months after it is first superseded. LogZilla reserves the right to suspend performance of the Support Services if Customer fails to pay any amount that is payable to LogZilla under the Agreement within thirty (30) days after such amount becomes due.
-8.  Customer Feedback.  Customer is not required to, but is encouraged to, provide comprehensive data to LogZilla in connection with any reported Error, including any attempts at bug fixes that Customer may have made, so that the Error may be fixed as soon as practicable and that code-based solutions may be incorporated into future iterations of the Software.\n
+             (iv) for any Software that has been modified other than by or with the authorization of LogZilla, or that is being used with any hardware, software, configuration or operating system not specified in the Documentation or expressly authorized by LogZilla in writing.
+
+9. Collection and Use of Information.
+
+       (a) Customer acknowledges that LogZilla may, directly or indirectly through the services of Third Parties, collect and store information regarding use of the Software and about equipment on which the Software is installed or through which it otherwise is accessed and used, through:
+
+             (i) the provision of maintenance and support services; and
+
+             (ii) security measures included in the Software as described in Section 6.
+
+       (b) Customer agrees that LogZilla may use such information for any purpose related to any use of the Software by Customer or on Customer's equipment, including but not limited to:
+
+             (i) improving the performance of the Software or developing Updates; and
+
+             (ii) verifying Customer's compliance with the terms of this Agreement and enforcing LogZilla's rights, including all intellectual property rights in and to the Software.
+
+10. Intellectual Property Rights. Customer acknowledges and agrees that the Software and Documentation are provided under license, and not sold, to Customer. Customer does not acquire any ownership interest in the Software or Documentation under this Agreement, or any other rights thereto other than to use the same in accordance with the license granted, and subject to all terms, conditions and restrictions, under this Agreement. LogZilla and its licensors and service providers reserve and retain their entire right, title and interest in and to the Software and all intellectual property rights arising out of or relating to the Software, except as expressly granted to Customer in this Agreement. Customer will safeguard all Software (including all copies thereof) from infringement, misappropriation, theft, misuse or unauthorized access. Customer will promptly notify LogZilla if Customer becomes aware of any infringement of LogZilla's intellectual property rights in the Software and fully cooperate with LogZilla, at LogZilla's sole expense, in any legal action taken by LogZilla to enforce its intellectual property rights.
+
+11. Confidentiality. By virtue of this Agreement, the parties may have access to information that is confidential to one another ("Confidential Information"). Confidential Information includes the Software, Documentation, this Agreement and any Order, and all information clearly identified as confidential. A party's Confidential Information does not include information that: (a) is or becomes a part of the public domain through no act or omission of the other party; (b) was in the other party's lawful possession prior to the disclosure and had not been obtained by the other party either directly or indirectly from the disclosing party; (c) is lawfully disclosed to the other party by a third party without restriction on disclosure; or (d) is independently developed by the other party. The parties agree to hold each other's Confidential Information in confidence during the term of this Agreement and for a period of 2 years after termination of this Agreement. The parties agree, unless required by law, not to make each other's Confidential Information available in any form to any third party for any purpose other than the implementation of this Agreement. LogZilla may reasonably use Customer's name and a description of Customer's use of the Software for its investor relations and marketing purposes, unless Customer provides written notice within 7 days of installation of the Software to LogZilla that it may not do so.
+
+12. Payment. All License Fees and Support Fees are payable within 30 days of the date of invoice from LogZilla and are non-refundable. Any renewal of the license or maintenance and support services hereunder will not be effective until the fees for such renewal have been paid in full. Late payments accrue interest at a rate of 1% per month.
+
+13. Term and Termination.
+
+       (a) This Agreement and the license granted hereunder will remain in effect for the term set forth on the Order or until earlier terminated as set forth herein (the "Initial Term"). This Agreement will renew automatically following the Initial Term for one-year terms (each, a "Renewal Term" and both the Initial Term and the Renewal Term are the "Term") until either party terminates the Agreement upon notice 30 days prior to the end of the then-current term. Notwithstanding the foregoing, for Evaluation Edition licenses, this Agreement and the license granted hereunder will end upon completion of the testing or evaluation period specified by LogZilla, which shall not exceed 30 days from delivery of the Software to Customer unless otherwise expressly agreed in writing by LogZilla.
+
+       (b) LogZilla may terminate this Agreement, effective upon written notice to Customer, if Customer, materially breaches this Agreement and such breach: (i) is incapable of cure; or (ii) being capable of cure, remains uncured 30 days after LogZilla provides written notice thereof.
+
+       (c) LogZilla may terminate this Agreement, effective immediately, if Customer files, or has filed against it, a petition for voluntary or involuntary bankruptcy or pursuant to any other insolvency law, makes or seeks to make a general assignment for the benefit of its creditors or applies for, or consents to, the appointment of a trustee, receiver or custodian for a substantial part of its property.
+
+       (d) Upon expiration or earlier termination of this Agreement, the license granted hereunder will also terminate, and Customer will cease using and destroy all copies of the Software and Documentation. No expiration or termination will affect Customer's obligation to pay all Fees that may have become due before such expiration or termination, or entitle Customer to any refund, in each case except as set forth in Section 14(c).
+
+14. Limited Warranties, Exclusive Remedy and Disclaimer/Warranty Disclaimer.
+
+       (a) If you are using Evaluation Edition of the Software, the Software is provided "AS IS" and without any warranties. Solely with respect to Software for which LogZilla receives a Fee, LogZilla warrants that, for a period of 90 days following the first installation of the Software, the Software will substantially contain the functionality described in the Documentation, and when properly installed on a computer meeting the specifications set forth in, and operated in accordance with, the Documentation, will substantially perform in accordance therewith. THE FOREGOING WARRANTY DOES NOT APPLY, AND LOGZILLA STRICTLY DISCLAIMS ALL WARRANTIES, WITH RESPECT TO ANY THIRD-PARTY MATERIALS.
+
+       (b) The warranties set forth in Section 14(a) will not apply and will become null and void if Customer materially breaches any material provision of this Agreement, or if Customer or any other Person provided access to the Software by Customer, whether or not in violation of this Agreement:
+
+             (i) installs or uses the Software on or in connection with any hardware or software not specified in the Documentation or expressly authorized by LogZilla in writing;
+
+             (ii) modifies or damages the Software; or
+
+             (iii) misuses the Software, including any use of the Software other than as specified in the Documentation or expressly authorized by LogZilla in writing.
+
+       (c) If, during the period specified in Section 14(a), any Software covered by the warranty set forth in such Section fails to perform substantially in accordance with the Documentation, and such failure is not excluded from warranty pursuant to the Section 14(b), LogZilla will, subject to Customer's promptly notifying LogZilla in writing of such failure, either:
+
+             (i) repair or replace the Software, provided that Customer provides LogZilla with all information LogZilla requests to resolve the reported failure, including sufficient information to enable LogZilla to recreate such failure; or
+
+             (ii) if LogZilla is unable to repair or replace the Software, refund the License Fees paid for such Software, subject to Customer's ceasing all use of and, if requested by LogZilla, returning to LogZilla all copies of the Software or certifying in writing that all copies of the Software have been destroyed.
+
+If LogZilla repairs or replaces the Software, the warranty will continue to run from the installation date, and not from Customer's receipt of the repair or replacement. The remedies set forth in this Section 14(c) are Customer's sole remedies and LogZilla's sole liability under the limited warranty set forth in Section 14(a).
+
+       (d) EXCEPT FOR THE LIMITED WARRANTY SET FORTH IN Section 14(a) AND THE SUPPORT SERVICES SET FORTH IN Section 8, THE SOFTWARE AND DOCUMENTATION ARE PROVIDED TO CUSTOMER "AS IS" AND WITH ALL FAULTS AND DEFECTS WITHOUT WARRANTY OF ANY KIND. TO THE MAXIMUM EXTENT PERMITTED UNDER APPLICABLE LAW, LOGZILLA, ON ITS OWN BEHALF AND ON BEHALF OF ITS AFFILIATES AND ITS AND THEIR RESPECTIVE LICENSORS AND SERVICE PROVIDERS, EXPRESSLY DISCLAIMS ALL WARRANTIES, WHETHER EXPRESS, IMPLIED, STATUTORY OR OTHERWISE, WITH RESPECT TO THE SOFTWARE AND DOCUMENTATION, INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, TITLE AND NON-INFRINGEMENT, AND WARRANTIES THAT MAY ARISE OUT OF COURSE OF DEALING, COURSE OF PERFORMANCE, USAGE OR TRADE PRACTICE. WITHOUT LIMITATION TO THE FOREGOING, LOGZILLA PROVIDES NO WARRANTY OR UNDERTAKING, AND MAKES NO REPRESENTATION OF ANY KIND THAT THE LICENSED SOFTWARE WILL MEET CUSTOMER'S REQUIREMENTS, ACHIEVE ANY INTENDED RESULTS, BE COMPATIBLE OR WORK WITH ANY OTHER SOFTWARE, APPLICATIONS, SYSTEMS OR SERVICES, OPERATE WITHOUT INTERRUPTION, MEET ANY PERFORMANCE OR RELIABILITY STANDARDS OR BE ERROR FREE OR THAT ANY ERRORS OR DEFECTS CAN OR WILL BE CORRECTED.
+
+15. Limitation of Liability. TO THE FULLEST EXTENT PERMITTED UNDER APPLICABLE LAW:
+
+       (a) IN NO EVENT WILL LOGZILLA OR ITS AFFILIATES, OR ANY OF ITS OR THEIR RESPECTIVE LICENSORS OR SERVICE PROVIDERS, BE LIABLE TO CUSTOMER OR ANY THIRD PARTY FOR ANY USE, INTERRUPTION, DELAY OR INABILITY TO USE THE SOFTWARE, LOST REVENUES OR PROFITS, DELAYS, INTERRUPTION OR LOSS OF SERVICES, BUSINESS OR GOODWILL, LOSS OR CORRUPTION OF DATA, LOSS RESULTING FROM SYSTEM OR SYSTEM SERVICE FAILURE, MALFUNCTION OR SHUTDOWN, FAILURE TO ACCURATELY TRANSFER, READ OR TRANSMIT INFORMATION, FAILURE TO UPDATE OR PROVIDE CORRECT INFORMATION, SYSTEM INCOMPATIBILITY OR PROVISION OF INCORRECT COMPATIBILITY INFORMATION OR BREACHES IN SYSTEM SECURITY, OR FOR ANY CONSEQUENTIAL, INCIDENTAL, INDIRECT, EXEMPLARY, SPECIAL OR PUNITIVE DAMAGES, WHETHER ARISING OUT OF OR IN CONNECTION WITH THIS AGREEMENT, BREACH OF CONTRACT, TORT (INCLUDING NEGLIGENCE) OR OTHERWISE, REGARDLESS OF WHETHER SUCH DAMAGES WERE FORESEEABLE AND WHETHER OR NOT LOGZILLA WAS ADVISED OF THE POSSIBILITY OF SUCH DAMAGES.
+
+       (b) IN NO EVENT WILL LOGZILLA'S AND ITS AFFILIATES', INCLUDING ANY OF ITS OR THEIR RESPECTIVE LICENSORS AND SERVICE PROVIDERS', COLLECTIVE AGGREGATE LIABILITY ARISING OUT OF OR RELATED TO THIS AGREEMENT, WHETHER ARISING OUT OF OR RELATED TO BREACH OF CONTRACT, TORT (INCLUDING NEGLIGENCE) OR OTHERWISE, EXCEED THE TOTAL AMOUNT PAID TO LOGZILLA PURSUANT TO THIS AGREEMENT IN THE TWELVE MONTHS PRECEDING THE EVENT GIVING RISE TO LIABILITY FOR THE SOFTWARE OR SUPPORT SERVICES THAT ARE THE SUBJECT OF THE CLAIM.
+
+       (c) THE LIMITATIONS SET FORTH IN Section 15(a) AND Section 15(b) WILL APPLY EVEN IF CUSTOMER'S REMEDIES UNDER THIS AGREEMENT FAIL OF THEIR ESSENTIAL PURPOSE.
+
+16. Export Regulation. The Software and Documentation may be subject to U.S. export control laws, including the U.S. Export Administration Act and its associated regulations. Customer will not, directly or indirectly, export, re-export or release the Software or Documentation to, or make the Software or Documentation accessible from, any jurisdiction or country to which export, re-export or release is prohibited by law, rule or regulation. Customer will comply with all applicable federal laws, regulations and rules, and complete all required undertakings (including obtaining any necessary export license or other governmental approval), prior to exporting, re-exporting, releasing or otherwise making the Software or Documentation available outside the US.
+
+17. US Government Rights. The Software is commercial computer software, as such term is defined in 48 C.F.R. §2.101. Accordingly, if Customer is the U.S. Government or any contractor therefor, Customer will receive only those rights with respect to the Software and Documentation as are granted to all other end users under license, in accordance with (a) 48 C.F.R. §227.7201 through 48 C.F.R. §227.7204, with respect to the Department of Defense and their contractors, or (b) 48 C.F.R. §12.212, with respect to all other U.S. Government Customers and their contractors.
+
+18. Miscellaneous.
+
+       (a) This Agreement will be governed by and construed in accordance with the internal laws of the State of Texas without giving effect to any choice or conflict of law provision or rule (whether of the State of Texas or any other jurisdiction) that would cause the application of laws of any jurisdiction other than those of the State of Texas and not including the provisions of the 1980 U.N. Convention on Contracts for the International Sale of Goods.
+
+       (b) LogZilla will not be in default hereunder by reason of any failure or delay in the performance of its obligations hereunder where such failure or delay is due to strikes, labor disputes, civil disturbances, riot, rebellion, invasion, epidemic, hostilities, war, terrorist attack, embargo, natural disaster, acts of God, flood, fire, sabotage, fluctuations or non-availability of electrical power, heat, light, air conditioning or Customer equipment, loss and destruction of property or any other circumstances or causes beyond LogZilla's reasonable control.
+
+       (c) All notices, requests, consents, claims, demands, waivers and other communications hereunder will be in writing and will be deemed to have been given: (i) when delivered by hand (with written confirmation of receipt); (ii) when received by the addressee if sent by a nationally recognized overnight courier (receipt requested); (iii) on the date sent by facsimile or e-mail of a PDF document (with confirmation of transmission) if sent during normal business hours of the recipient, and on the next business day if sent after normal business hours of the recipient; or (iv) on the third day after the date mailed, by certified or registered mail, return receipt requested, postage prepaid. Such communications must be sent to the respective parties at the addresses set forth on the Order (or to such other address as may be designated by a party from time to time in accordance with this Section 18(c)).
+
+       (d) This Agreement (including the Order) and all other documents that are incorporated by reference herein, constitutes the sole and entire agreement between Customer and LogZilla with respect to the subject matter contained herein, and supersedes all prior and contemporaneous understandings, agreements, representations and warranties, both written and oral, with respect to such subject matter. In the event of a conflict between the terms in the body of this Agreement and the Order, the terms of this Agreement will prevail. Any preprinted or other terms on an Order (including any purchase order) or other correspondence that are in addition to or conflict with this Agreement are hereby rejected. If LogZilla provides you with a new version of the Software with a new agreement, then the new agreement will supersede the terms of this Agreement if Customer uses such new version of the Software.
+
+       (e) Customer will not assign or otherwise transfer any of its rights, or delegate or otherwise transfer any of its obligations or performance, under this Agreement, in each case whether voluntarily, involuntarily, by operation of law, merger, a sale of all or substantially all of Customer's assets, business reorganization or otherwise, without LogZilla's prior written consent. Any purported assignment, delegation or transfer in violation of this Section 18(e) is void. LogZilla may freely assign or otherwise transfer all or any of its rights, or delegate or otherwise transfer all or any of its obligations or performance, under this Agreement without Customer's consent. This Agreement is binding upon and inures to the benefit of the parties hereto and their respective permitted successors and assigns.
+
+       (f) This Agreement is for the sole benefit of the parties hereto and their respective successors and permitted assigns and nothing herein, express or implied, is intended to or will confer on any other Person any legal or equitable right, benefit or remedy of any nature whatsoever under or by reason of this Agreement.
+	
+       (g) This Agreement may only be amended, modified or supplemented by an agreement in writing signed by each party hereto. No waiver by any party of any of the provisions hereof will be effective unless explicitly set forth in writing and signed by the party so waiving.
+
+       (h) If any term or provision of this Agreement is invalid, illegal or unenforceable in any jurisdiction, such invalidity, illegality or unenforceability will not affect any other term or provision of this Agreement or invalidate or render unenforceable such term or provision in any other jurisdiction.
+
+       (i) This Agreement will be construed without regard to any presumption or rule requiring construction or interpretation against the party drafting an instrument or causing any instrument to be drafted. The Order referred to herein will be construed with, and as an integral part of, this Agreement to the same extent as if they were set forth verbatim herein.
+
+       (j) The headings in this Agreement are for reference only and will not affect the interpretation of this Agreement.
+
+       (k) The following Sections survive termination of this Agreement: 1, 4, 5, 6, 9, 10, 11, 12, 13, 14, 15, 16, 17, and 18.
+
+       (l) The waiver of a breach of any provision of this Agreement will not operate or be interpreted as a waiver of any other or subsequent breach.
 EOF
       print "Do you accept the LogZilla License Terms? (yes/no)";
       chomp( my $input = <STDIN> );
