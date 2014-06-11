@@ -56,6 +56,12 @@ $gaSql['link'] =  mysql_pconnect( $gaSql['server'], $gaSql['user'], $gaSql['pass
 
 mysql_select_db( $gaSql['db'], $gaSql['link'] ) or 
     die( 'Could not select database '. $gaSql['db'] );
+// #510 - German Umlaut support
+//To send utf8 data to MySql - needed if you need to inject utf8 data for search
+mysql_query("SET character_set_client=utf8", $gaSql['link']);
+mysql_query("SET character_set_connection=utf8", $gaSql['link']);
+//To read utf8 data from MySql - needed if your result set contains utf8 data
+mysql_query("SET character_set_results=utf8", $gaSql['link']);
 
 
 /* 
