@@ -684,7 +684,8 @@ sub ss {
     $sth->execute();
     $results = $sth->fetchrow_hashref;
     my $hostcount = $results->{count};
-    $sql = "SELECT AVG(ROUND(count)) as avg, count(*) as samples FROM events_per_second";
+    # $sql = "SELECT AVG(ROUND(count)) as avg, count(*) as samples FROM events_per_second";
+    $sql = "SELECT AVG(ROUND(count)) as avg, count(*) as samples FROM events_per_second WHERE ts_from >= UNIX_TIMESTAMP(NOW() - INTERVAL 1 WEEK)";
     $sth = $dbh->prepare($sql);
     DEBUG( 1, "Executing SQL Statement: $sql" );
     $sth->execute();
