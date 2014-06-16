@@ -2389,7 +2389,7 @@ if ( -d "$crondir" ) {
 	# Below uses getIf sub instead of unreliable ifconfig -a to get the IP
 	$ip = getIf('eth0');
 print "getIf Reported IP: $ip\n" if ($ip);
-          my @lines = `ifconfig -a`;
+          my @lines = `ifconfig eth0`;
           for (@lines) {
               if (/\s*HWaddr (\S+)/) {
                   $mac = lc($1);
