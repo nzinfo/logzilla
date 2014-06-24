@@ -70,7 +70,7 @@ sub prompt {
 }
 
 my $version    = "4.5";
-my $subversion = ".605";
+my $subversion = ".611";
 
 # Grab the base path
 my $lzbase = getcwd;
@@ -1031,7 +1031,7 @@ sub update_settings {
         $spx_cores = `cat /proc/cpuinfo | grep processor | wc -l`;
     }
     # Added for larger systems where we don't need to use *all* cores - leaves some for mysql
-    $spx_cores = 12 if ($spx_cores > 12);
+    $spx_cores = 6 if ($spx_cores > 12);
     $sth = $dbh->prepare( "
         update settings set value='$spx_cores' where name='SPX_CPU_CORES';
         " ) or die "Could not update settings table: $DBI::errstr";
