@@ -1,6 +1,6 @@
 #!/bin/bash
-ulimit -Hn 100000
-ulimit -Sn 50000
+ulimit -Hn 25000
+ulimit -Sn 25000
 allargs=$@
 
 # Just stop if asked
