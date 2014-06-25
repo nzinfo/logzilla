@@ -8,19 +8,19 @@
 #####################################################
 # Run indexer every minute  
 #####################################################
-*/1 * * * * root test -d /var/www/logzilla && ( cd /var/www/logzilla/sphinx; ./indexer.sh delta ) >> /var/log/logzilla/sphinx_indexer.log 2>&1
+*/1 * * * * root test -d /path_to_logzilla && ( cd /path_to_logzilla/sphinx; ./indexer.sh delta ) >> /path_to_logs/sphinx_indexer.log 2>&1
 
 #####################################################
 # Daily DB/SP Maintenance
 #####################################################
 # Grab some metrics every night @ 11pm
-11 23 * * * root test -d /var/www/logzilla && perl /var/www/logzilla/scripts/LZTool -v -ss
+11 23 * * * root test -d /path_to_logzilla && perl /path_to_logzilla/scripts/LZTool -v -ss
 
 # Update and general maintenance @ 1am, 2 attempts
-11,26 1 * * * root test -d /var/www/logzilla && perl /var/www/logzilla/scripts/LZTool -v 
+11,26 1 * * * root test -d /path_to_logzilla && perl /path_to_logzilla/scripts/LZTool -v 
 
 # Rotate indexes @ midnight and 2am
-0 0,2 * * * root test -d /var/www/logzilla && /var/www/logzilla/scripts/rotate 
+0 0,2 * * * root test -d /path_to_logzilla && /path_to_logzilla/scripts/rotate 
 
 #####################################################
 # END LogZilla Cron Entries
