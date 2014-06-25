@@ -1274,6 +1274,15 @@ function search($json_o, $spx_max,$index="idx_logs idx_delta_logs",$spx_ip,$spx_
         // Test for empty search and remove whitespaces
         $search_string = preg_replace('/^\s+$/', '',$search_string);
         $search_string = preg_replace('/\s+$/', '',$search_string);
+        
+        // cdukes: 2014-06-25 - Added an audit table to keep track of search terms for help in building stopwords files
+        preg_match('!\d+!', $_SESSION['VERSION_SUB'], $matches);
+        if (intval($matches[0] > 613)) {
+            $dbLink = db_connect_syslog(DBADMIN, DBADMINPW);
+            $sql = "INSERT INTO saudit (user, string, seen, lastseen_ts) VALUES ('$_SESSION[username]', '" .mysql_real_escape_string($json_a[msg_mask]) ."', 1, UNIX_TIMESTAMP()) ON DUPLICATE KEY UPDATE seen=seen+1";
+            perform_query($sql, $dbLink, "common_funcs.php, saudit");
+        }
+
         // get the columns we are sorting 
         // speedup: when use use today only idx_inmem is used
         $idx_dim_ts = strtotime(date('Y-m-d',(strtotime ( '-'.$_SESSION[SPX_IDX_DIM].' day' , strtotime (date('Y-m-d'))))));

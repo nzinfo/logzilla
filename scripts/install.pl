@@ -70,7 +70,7 @@ sub prompt {
 }
 
 my $version    = "4.5";
-my $subversion = ".611";
+my $subversion = ".614";
 
 # Grab the base path
 my $lzbase = getcwd;
@@ -1980,6 +1980,11 @@ if ( -d "$crondir" ) {
       if ( tblExists("sph_metrics") eq 0 ) {
           print "Adding Sphinx Metrics Table\n";
           my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/sph_metrics.sql`;
+      }
+      # Insert saudit table
+      if ( tblExists("saudit") eq 0 ) {
+          print "Adding Search Audit Table\n";
+          my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/saudit.sql`;
       }
       # Insert view_limits table
       if ( tblExists("view_limits") eq 1 ) {
