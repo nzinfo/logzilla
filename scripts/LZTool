@@ -18,6 +18,8 @@ use Date::Parse;
 use Date::Format;
 use List::Util qw(sum);
 use Data::Dumper;
+use Socket;
+require 'sys/ioctl.ph';
 
 #FIXME - I had to add below for Perl 5.10 users.
 # on Perl 5.10, I would get the following when running:
@@ -160,8 +162,6 @@ if ( $#runfuncs < 0 ) {
     tblSync( "programs",  "program" );
     cleanup_old_views();
     cleanup_old_idx();
-
-#idx_rotate(); we need to run this separately - calling it during the nightly cron will lock all other procs until it completes.
     mtti();
 } else {
     $log->INFO("Running specific functions only");
@@ -546,7 +546,11 @@ $SIG{__WARN__} = sub {
     $log->WARN($msg);
 };
 
-$log->INFO("Starting logging to $options->{log_file} with pid $$");
+my $ip = getIf('eth0');
+chomp(my $hostname = `hostname`);
+#$log->INFO("Server Name: $hostname");
+#$log->INFO("Server IP: $ip");
+$log->INFO("[$hostname/$ip] Starting logging to $options->{log_file} with pid $$");
 }
 
 sub DEBUG {
@@ -1092,4 +1096,14 @@ sub delhost {
 #tblSync( "mne",       "mne" );
 #tblSync( "snare_eid", "eid" );
 #tblSync( "programs",  "program" );
+}
+sub getIf {
+    my ($iface) = @_;
+    my $socket;
+    socket($socket, PF_INET, SOCK_STREAM, (getprotobyname('tcp'))[2]) || warn "Sub 'getIf' is unable to create a socket: $!\n";
+    my $buf = pack('a256', $iface);
+    if (ioctl($socket, SIOCGIFADDR(), $buf) && (my @address = unpack('x20 C4', $buf))) {
+        return join('.', @address);
+    }
+    return undef;
 }
