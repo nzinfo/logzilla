@@ -70,7 +70,7 @@ sub prompt {
 }
 
 my $version    = "4.5";
-my $subversion = ".614";
+my $subversion = ".616";
 
 # Grab the base path
 my $lzbase = getcwd;
@@ -2517,7 +2517,7 @@ sub getIf {
     }
     return undef;
 }
-  sub EULA {
+sub EULA {
       print <<EOF;
 
 END USER LICENSE AGREEMENT
