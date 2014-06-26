@@ -8,12 +8,14 @@ if [[ $@ == **stop ]]; then
     if [[ `pgrep -f "bin/searchd"` ]]; then
         echo "Stopping Searchd"
         /path_to_logzilla/sphinx/bin/searchd -c /path_to_logzilla/sphinx/sphinx.conf --stop && echo $?
+        exit
     fi
 fi
 if [[ $@ == **stopwait ]]; then
     if [[ `pgrep -f "bin/searchd"` ]]; then
         echo "Stopping Searchd"
         /path_to_logzilla/sphinx/bin/searchd -c /path_to_logzilla/sphinx/sphinx.conf --stopwait && echo $?
+        exit
     fi
 fi
 
@@ -22,8 +24,8 @@ fi
 # ------------------------------------------------------------------
 # Make sure we're stopped first
 if [[ `pgrep -f "bin/searchd"` ]]; then
-    echo "Searchd is already running"
-    exit 1
+    echo "Stopping Search Daemon"
+        /path_to_logzilla/sphinx/bin/searchd -c /path_to_logzilla/sphinx/sphinx.conf --stopwait && echo $?
 fi
 idxARR+=(`/path_to_logzilla/sphinx/bin/searchd -c /path_to_logzilla/sphinx/sphinx.conf | grep "sph: No such file or" | awk '{print $3}' | sed "s/'//g" | sed 's/://g'`)
 uniq=$(echo "${idxARR[@]}" | tr ' ' '\n' | sort -u | tr '\n' ' ')
@@ -41,7 +43,9 @@ if [ ${#idxARR[@]} -gt 0 ]; then
         /path_to_logzilla/scripts/LZTool -v -r makeview -mvdate $date -y 
     done
 fi
-if [[ `pgrep -f "bin/searchd"` ]]; then
-        /path_to_logzilla/sphinx/bin/searchd -c /path_to_logzilla/sphinx/sphinx.conf --stopwait 
-        /path_to_logzilla/sphinx/bin/searchd -c /path_to_logzilla/sphinx/sphinx.conf $allargs && echo $?
+if [[ `pidof searchd` ]]; then
+    echo "Starting Search Daemon"
+    kill -HUP `pidof searchd`
+        #/path_to_logzilla/sphinx/bin/searchd -c /path_to_logzilla/sphinx/sphinx.conf --stopwait 
+        #/path_to_logzilla/sphinx/bin/searchd -c /path_to_logzilla/sphinx/sphinx.conf $allargs && echo $?
 fi
