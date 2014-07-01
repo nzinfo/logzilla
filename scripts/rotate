@@ -1,18 +1,10 @@
-#!/bin/sh
+#!/bin/bash
+lzhome="/var/www/logzilla"
+[ ! -d "$lzhome" ] && lzhome="/var/www/logzilla"
 
 ulimit -Hn 4096
 ulimit -Sn 4096
 
-# -------------------------------------------
-# Must wait for idx-rotate if it is still running from before
-# -------------------------------------------
-#PID=`ps aux | grep "idx-rotate" | grep -v grep | awk '{print $2}'`
-#for pid in "$PID"; do
-    #while kill -0 "$pid" >/dev/null 2>&1; do
-        #echo "Waiting for the idx-rotate process on pid $pid to finish"
-        #sleep 5
-    #done
-#done
 # -------------------------------------------
 # Check to see if we are already running.
 # -------------------------------------------
@@ -21,4 +13,9 @@ if [ "$PID" ]; then
     echo "LogZilla daily index rotation is already running on PID $PID" >&2
     exit 1
 fi
+
+# Restart searchd so all indexes are up to date
+(cd $lzhome/sphinx && ./run_searchd.sh --stop)
+(cd $lzhome/sphinx && ./run_searchd.sh)
+
 /var/www/logzilla/scripts/idx-rotate -v -r idx_rotate 
