@@ -746,17 +746,21 @@ sub ss {
         chomp($total);
         my $free = `cat /proc/meminfo | grep MemFree | awk '{print \$2}'`;
         chomp($free);
+        my $cached = `cat /proc/meminfo | grep ^Cached | awk '{print \$2}'`;
+        chomp($cached);
         $log->INFO( "You have %s total system memory", humanBytes($total) );
         $log->INFO( "You have %s free system memory",  humanBytes($free) );
+        $log->INFO( "You have %s memory Cached (available for use)",  humanBytes($cached) );
         $log->INFO( "Your server is configured to store %d extra day(s) of events in memory (the rest on disk)", $settings->{SPX_IDX_DIM} );
         $log->INFO( "The LogZilla indexer is using %s RAM to store indexed information in memory - note that this is only for the indexer and not for system resources or MySQL", humanBytes($spmem) );
         #$log->INFO( "LogZilla is currently using %s of that %s total.", humanBytes($spmem), humanBytes($needed) );
         store_metric( "lztool_idx_memused", $spmem );
         store_metric( "lztool_mem_total",   $total );
         store_metric( "lztool_mem_free",    $free );
+        store_metric( "lztool_mem_cached",  $cached );
         store_metric( "lztool_spx_dim",     $settings->{SPX_IDX_DIM} );
         store_metric( "lztool_mem_needed",  $needed );
-        my $remainder = $free - ( $needed - $spmem );
+        my $remainder = ($free + $cached) - ( $needed - $spmem );
 
         if ( ($remainder) < 0 ) {
             $remainder = -$remainder;
