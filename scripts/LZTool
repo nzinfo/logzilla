@@ -66,6 +66,7 @@ sub usage_and_exit {
     -mvdate   : Used with 'makeview' function to recreate views for old data imports
     -delhost  : Delete a host and all associated records for that host from LogZilla
     -host     : Host to delete from LogZilla
+    -rename   : Rename a host (e.g: -rename -from 1.1.1.1 -to myhost)
     -c        : config file (defaults to $options->{config_file})
 Example: $myname -l /var/log/foo.log -d 5 -c test/config.php -v
 };
@@ -73,22 +74,25 @@ exit($exit_code);
 }
 
 GetOptions(
-    'debug|d=i'       => \$options->{debug},
-'dryrun|dr'       => \$options->{dryrun},
-    'help|h!'         => \$options->{help},
-'verbose|v!'      => \$options->{verbose},
-    'log-file|l=s'    => \$options->{log_file},
-'config-file|c=s' => \$options->{config_file},
-    'runfuncs|r=s'    => \@runfuncs,
-'functionlist|f!' => \$options->{functionlist},
-    'idx_rotate!'     => \$options->{idx_rotate},
-'mtti!'           => \$options->{mtti},
-    'mysql!'          => \$options->{mysql},
-'mvdate|mvd=s'    => \$options->{mvdate},
-    'yes|y'           => \$options->{yes},
-'delhost|dh'      => \$options->{delhost},
-    'host=s'          => \@hosts,
-'serversizer|ss'  => \$options->{ss},
+'debug|d=i'         => \$options->{debug},
+'dryrun|dr'         => \$options->{dryrun},
+'help|h!'           => \$options->{help},
+'verbose|v!'        => \$options->{verbose},
+'log-file|l=s'      => \$options->{log_file},
+'config-file|c=s'   => \$options->{config_file},
+'runfuncs|r=s'      => \@runfuncs,
+'functionlist|f!'   => \$options->{functionlist},
+'idx_rotate!'       => \$options->{idx_rotate},
+'mtti!'             => \$options->{mtti},
+'mysql!'            => \$options->{mysql},
+'mvdate|mvd=s'      => \$options->{mvdate},
+'yes|y'             => \$options->{yes},
+'delhost|dh'        => \$options->{delhost},
+'host=s'            => \@hosts,
+'serversizer|ss'    => \$options->{ss},
+'rename|ren'        => \$options->{rename},
+'from=s'            => \$options->{from},
+'to=s'            => \$options->{to},
 ) or usage_and_exit(1);    # got some invalid options
 
 if ( $options->{help} ) {
@@ -151,6 +155,11 @@ if ($options->{ss}) {
 }
 if ($options->{delhost}) {
     delhost();
+    exit;
+}
+if ($options->{rename}) {
+    $log->INFO("Renaming Hostname '%s' to Hostname '%s'", $options->{from}, $options->{to});
+    renhost( "$options->{from}", "$options->{to}");
     exit;
 }
 if ( $#runfuncs < 0 ) {
@@ -837,6 +846,45 @@ sub ss {
     } else {
         $log->INFO("Sorry, there's no EPS data avilable yet. Is this a new installation?");
     }
+}
+
+sub renhost {
+    # Performs a renaming of one host to another.
+    # Used for renaming an IP to a hostname
+    my ( $orig, $new ) = @_;
+    my $seen =0;
+
+    # First get the count of $orig 
+    $log->INFO("Collecting info on $orig");
+    $sql = "SELECT seen FROM hosts WHERE host='$orig'";
+    $sth = $dbh->prepare($sql);
+    DEBUG( 1, "Executing SQL Statement: $sql" );
+    $sth->execute();
+    $results = $sth->fetchrow_hashref;
+    if ( $results->{'seen'} > 0 ) {
+        $seen=$results->{'seen'};
+        $log->INFO( "Found %d occurrences of $orig...", $seen );
+    }
+
+    # Rename $orig to $new in the logs table
+    $log->INFO("Performing rename from $orig to $new on logs table");
+    $sql = "UPDATE logs set host='$new' WHERE host='$orig'";
+    $sth = $dbh->prepare($sql);
+    DEBUG( 1, "Executing SQL Statement: $sql" );
+    $sth->execute() unless $options->{dryrun};
+
+    $log->INFO("Updating count for $new in the hosts table");
+    $sql = "INSERT into hosts (host, seen, lastseen) VALUES ('$new', $seen, NOW()) ON DUPLICATE KEY UPDATE lastseen=NOW(), seen=seen+$seen";
+    $sth = $dbh->prepare($sql);
+    DEBUG( 1, "Executing SQL Statement: $sql" );
+    $sth->execute() unless $options->{dryrun};
+
+    # Remove $orig from the hosts table
+    $log->INFO("Removing $orig from hosts table");
+    $sql = "DELETE from hosts WHERE host='$orig'";
+    $sth = $dbh->prepare($sql);
+    DEBUG( 1, "Executing SQL Statement: $sql" );
+    $sth->execute() unless $options->{dryrun};
 }
 
 sub mtti {
