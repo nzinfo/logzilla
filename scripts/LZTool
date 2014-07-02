@@ -864,7 +864,6 @@ sub renhost {
     if ( $results->{'seen'} > 0 ) {
         $seen=$results->{'seen'};
         $log->INFO( "Found %d occurrences of $orig...", $seen );
-    }
 
     # Rename $orig to $new in the logs table
     $log->INFO("Performing rename from $orig to $new on logs table");
@@ -885,6 +884,9 @@ sub renhost {
     $sth = $dbh->prepare($sql);
     DEBUG( 1, "Executing SQL Statement: $sql" );
     $sth->execute() unless $options->{dryrun};
+    } else {
+        $log->INFO("There are no hosts in the DB named $orig");
+    }
 }
 
 sub mtti {
