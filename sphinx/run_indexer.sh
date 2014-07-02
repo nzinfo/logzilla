@@ -26,7 +26,7 @@ TIME=`date +%T`
 # -------------------------------------------
 # Set logzilla base path
 # -------------------------------------------
-lzhome="/path_to_logzilla"
+lzhome="/var/www/logzilla"
 [ ! -d "$lzhome" ] && lzhome="/var/www/logzilla"
 
 sphinxhome="$lzhome/sphinx"
@@ -126,7 +126,7 @@ if [ $CHKFILES -eq 0 ] || [ "$1" = "full" ]; then
     # cdukes: [[ticket:430]] - removing the manual inserts below and using the actual sql file for resetting.
     $MYSQL < $lzhome/scripts/sql/sph_counter.sql
     do_indexing "--all"
-    #echo "Restarting searchd"; $searchd --stopwait; $searchd 
+    echo "Restarting searchd"; $searchd --stopwait; $searchd 
     exit;
 fi
 if [ $1 = "delta" ]; then
@@ -154,7 +154,7 @@ done
  # restart searchd everytime when there was a view rotation
  x=`echo "select index_name from sph_counter where this_run=1" \
      | $MYSQL ` 
- #if [ "z$x" != "z" ]; then  echo "restarting searchd";  $searchd --stopwait; $searchd; fi
+ if [ "z$x" != "z" ]; then  echo "restarting searchd";  $searchd --stopwait; $searchd; fi
 
  # clean out 
  echo "DELETE FROM sph_counter WHERE counter_id>2 and this_run=1" | $MYSQL
