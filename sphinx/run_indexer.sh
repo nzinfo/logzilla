@@ -26,7 +26,7 @@ TIME=`date +%T`
 # -------------------------------------------
 # Set logzilla base path
 # -------------------------------------------
-lzhome="/var/www/logzilla"
+lzhome="/path_to_logzilla"
 [ ! -d "$lzhome" ] && lzhome="/var/www/logzilla"
 
 sphinxhome="$lzhome/sphinx"
@@ -41,8 +41,9 @@ spconf="sphinx.conf"
 #indexer="bin/indexer --print-queries"
 indexer="bin/indexer"
 # changed to use run_searchd so that clusters come up properly
-# searchd="bin/searchd --iostats --cpustats"
-searchd="$lzhome/sphinx/run_searchd.sh"
+# cdukes: 2014-07-07: changed back as calling run_searchd from here threw a ulimit error
+searchd="bin/searchd --iostats --cpustats"
+#searchd="$lzhome/sphinx/run_searchd.sh"
 # Path to logzilla config file
 # -------------------------------------------
 lzconf="$lzhome/html/config/config.php"
