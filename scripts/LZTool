@@ -74,7 +74,7 @@ exit($exit_code);
 }
 
 GetOptions(
-'debug|d=i'         => \$options->{debug},
+    'debug|d=i'         => \$options->{debug},
 'dryrun|dr'         => \$options->{dryrun},
 'help|h!'           => \$options->{help},
 'verbose|v!'        => \$options->{verbose},
@@ -644,23 +644,31 @@ sub idx_rotate {
 
         if ($docinfo) {
             DEBUG( 1, "Docinfo is $docinfo" );
-            DEBUG( 1, "Running command: $ROOT_DIR/sphinx/bin/indextool --config $ROOT_DIR/sphinx/sphinx.conf --dumpheader idx_log_arch_day_${day}_0 | grep total-documents | awk '{print \$2}'" ) if ( !$events );
-            $events = `$ROOT_DIR/sphinx/bin/indextool --config $ROOT_DIR/sphinx/sphinx.conf --dumpheader idx_log_arch_day_${day}_0 | grep total-documents | awk '{print \$2}'` if ( !$events );
-            chomp($events);
-            my $date = today();
-            my $diff = today() - date($day);
+            DEBUG( 1, "Running command: $ROOT_DIR/sphinx/bin/indextool --config $ROOT_DIR/sphinx/sphinx.conf --dumpheader idx_log_arch_day_${day}_0 | grep total-documents | awk '{print \$2}'" ); 
+            $events = `$ROOT_DIR/sphinx/bin/indextool --config $ROOT_DIR/sphinx/sphinx.conf --dumpheader idx_log_arch_day_${day}_0 | grep total-documents | awk '{print \$2}'`;
+            # cdukes: Ticket #511 - For some reason, the if statement below was incorrect - as if someone had joined it with the previous line.
+            if ( $events ) {
+                chomp($events);
+                my $date = today();
+                my $diff = today() - date($day);
+                DEBUG(1, "Calculated Date for Today is $date");
+                DEBUG(1, "Date diff for determining whether to convert to disk-based storage");
+                DEBUG(1, "Calculated Docinfo = $docinfo, Calculated Diff = $diff, Calculated memdays = $memdays");
 
-            if ( ( $diff > $memdays ) && ( $docinfo =~ /extern/ ) ) {
-                $log->INFO("The $day index is $diff day(s) older than today.");
-                $log->INFO("Converting index (${day}_$part) to disk-based storage because it is > $memdays day(s) old...");
-                push( @indexlist, "idx_log_arch_day_${day}_$part" );
-            }
+                DEBUG(1, "If docinfo = extern (memory-based storage) and diff > memdays, then convert to disk-based storage (docinfo=inline)");
+                if ( ( $diff > $memdays ) && ( $docinfo =~ /extern/ ) ) {
+                    $log->INFO("The $day index is $diff day(s) older than today.");
+                    $log->INFO("Converting index (${day}_$part) to disk-based storage (docinfo=inline) because it is > $memdays day(s) old...");
+                    push( @indexlist, "idx_log_arch_day_${day}_$part" );
+                }
 
-# cdukes: added below in case someone changes their idx_mem_days in teh db and we need to go back and convert disk based indexes back to memory based
-            if ( ( $diff < $memdays ) && ( $docinfo =~ /inline/ ) ) {
-                $log->INFO("The $day index is $diff day(s) older than today.");
-                $log->INFO("Converting index (${day}_$part) to memory-based storage because it is < $memdays day(s) old and your SPX_IDX_DIM is set to $memdays");
-                push( @indexlist, "idx_log_arch_day_${day}_$part" );
+                # cdukes: added below in case someone changes their idx_mem_days in the db and we need to go back and convert disk based indexes back to memory based
+                DEBUG(1, "If docinfo = inline (disk-based storage) and diff <= memdays, then convert to memory-based storage (docinfo=extern)");
+                if ( ( $diff <= $memdays ) && ( $docinfo =~ /inline/ ) ) {
+                    $log->INFO("The $day index is $diff day(s) older than today.");
+                    $log->INFO("Converting index (${day}_$part) to memory-based storage (docinfo=extern) because it is <= $memdays day(s) old and your SPX_IDX_DIM is set to $memdays");
+                    push( @indexlist, "idx_log_arch_day_${day}_$part" );
+                }
             }
         } else {
             $log->ERR( "Unable to obtain DOCINFO from the index header for idx_log_arch_day_${day}_$part, you will need to manually run '%s' to find out why", "$ROOT_DIR/sphinx/bin/indextool --config $ROOT_DIR/sphinx/sphinx.conf --dumpheader idx_log_arch_day_${day}_$part" );
@@ -865,25 +873,25 @@ sub renhost {
         $seen=$results->{'seen'};
         $log->INFO( "Found %d occurrences of $orig...", $seen );
 
-    # Rename $orig to $new in the logs table
-    $log->INFO("Performing rename from $orig to $new on logs table");
-    $sql = "UPDATE logs set host='$new' WHERE host='$orig'";
-    $sth = $dbh->prepare($sql);
-    DEBUG( 1, "Executing SQL Statement: $sql" );
-    $sth->execute() unless $options->{dryrun};
+        # Rename $orig to $new in the logs table
+        $log->INFO("Performing rename from $orig to $new on logs table");
+        $sql = "UPDATE logs set host='$new' WHERE host='$orig'";
+        $sth = $dbh->prepare($sql);
+        DEBUG( 1, "Executing SQL Statement: $sql" );
+        $sth->execute() unless $options->{dryrun};
 
-    $log->INFO("Updating count for $new in the hosts table");
-    $sql = "INSERT into hosts (host, seen, lastseen) VALUES ('$new', $seen, NOW()) ON DUPLICATE KEY UPDATE lastseen=NOW(), seen=seen+$seen";
-    $sth = $dbh->prepare($sql);
-    DEBUG( 1, "Executing SQL Statement: $sql" );
-    $sth->execute() unless $options->{dryrun};
+        $log->INFO("Updating count for $new in the hosts table");
+        $sql = "INSERT into hosts (host, seen, lastseen) VALUES ('$new', $seen, NOW()) ON DUPLICATE KEY UPDATE lastseen=NOW(), seen=seen+$seen";
+        $sth = $dbh->prepare($sql);
+        DEBUG( 1, "Executing SQL Statement: $sql" );
+        $sth->execute() unless $options->{dryrun};
 
-    # Remove $orig from the hosts table
-    $log->INFO("Removing $orig from hosts table");
-    $sql = "DELETE from hosts WHERE host='$orig'";
-    $sth = $dbh->prepare($sql);
-    DEBUG( 1, "Executing SQL Statement: $sql" );
-    $sth->execute() unless $options->{dryrun};
+        # Remove $orig from the hosts table
+        $log->INFO("Removing $orig from hosts table");
+        $sql = "DELETE from hosts WHERE host='$orig'";
+        $sth = $dbh->prepare($sql);
+        DEBUG( 1, "Executing SQL Statement: $sql" );
+        $sth->execute() unless $options->{dryrun};
     } else {
         $log->INFO("There are no hosts in the DB named $orig");
     }
