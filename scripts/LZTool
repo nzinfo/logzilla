@@ -229,9 +229,9 @@ sub tblSync {
     $dbh->do($sql) unless $options->{dryrun};
 
     if ( $lzminor > 4 ) {
-        $sql = "SELECT $spx_tbl, sum(counter), max(lo) from idx_all WHERE match('\@dummy dummy') group by $spx_tbl limit 50000 OPTION max_matches=40000";
+        $sql = "SELECT $spx_tbl, sum(counter), max(lo) from idx_all WHERE match('\@dummy dummy') group by $spx_tbl limit 1000 OPTION max_matches=1000";
     } else {
-        $sql = "SELECT $spx_tbl, sum(counter), max(lo) from distributed group by $spx_tbl limit 50000 OPTION max_matches=40000";
+        $sql = "SELECT $spx_tbl, sum(counter), max(lo) from distributed group by $spx_tbl limit 1000 OPTION max_matches=1000";
     }
     $sth_sphinx = $dbh_sphinx->prepare($sql);
     DEBUG( 1, "Executing SQL Statement: $sql" );
@@ -285,9 +285,9 @@ sub countUpdate {
     # Preparing replacement for updateCache db procedure: Count all counters
     # due to a bug in sphinxql when using sum you also need to use a group-by
     if ( $lzminor > 4 ) {
-        $sql = "SELECT severity, sum(counter) from idx_all WHERE match('\@dummy dummy') group by severity limit 50000 OPTION max_matches=40000";
+        $sql = "SELECT severity, sum(counter) from idx_all WHERE match('\@dummy dummy') group by severity limit 0,100 OPTION max_matches=1000";
     } else {
-        $sql = "SELECT severity, sum(counter) from distributed group by severity limit 50000 OPTION max_matches=40000";
+        $sql = "SELECT severity, sum(counter) from distributed group by severity limit 50000 OPTION max_matches=1000";
     }
     DEBUG( 1, "Preparing SQL Statement: $sql" );
     $sth_sphinx = $dbh_sphinx->prepare($sql);
@@ -353,9 +353,9 @@ sub updateHosts {
 
 # Note that DB's with host count > 5000 may be a problem here. This needs testing.
     if ( $lzminor > 4 ) {
-        $sql = "SELECT host_crc, sum(counter), max(lo) from idx_all WHERE match('\@dummy dummy') group by host_crc limit 50000 OPTION max_matches=40000";
+        $sql = "SELECT host_crc, sum(counter), max(lo) from idx_all WHERE match('\@dummy dummy') group by host_crc limit 50000 OPTION max_matches=1000";
     } else {
-        $sql = "SELECT host_crc, sum(counter), max(lo) from distributed group by host_crc limit 50000 OPTION max_matches=40000";
+        $sql = "SELECT host_crc, sum(counter), max(lo) from distributed group by host_crc limit 50000 OPTION max_matches=1000";
     }
     DEBUG( 1, "Executing SQL Statement: $sql" );
     $dbh_sphinx->do($sql);
@@ -632,11 +632,20 @@ sub idx_rotate {
     my @list = `$php $ROOT_DIR/sphinx/sphinx.conf | grep "^index idx_log_arch_day" | awk '{print \$2}' | awk -F'_' '{print \$5"_"\$6}' | uniq`;
     my @indexlist;
 
-    foreach (@list) {
-        my ( $day, $part ) = split /_/, $_;
-        chomp( $day, $part );
+    foreach my $item (@list) {
+        chomp($item);
+        my ( $day, $part ) = split /_/, $item;
+        DEBUG(1, "Processing $item for day $day, part $part");
         next if $day !~ /\d+/;
         next if $part !~ /\d+/;
+        my $date = today();
+        my $diff = today() - date($day);
+        # No need to go back more than 3 days as it is highly unlikely that the indexes would be stored in memory that far back.
+        # This helps speed up nightly rotate on larger servers.
+        if ($diff >= 3) {
+            $log->INFO("Skipping processing of $day since it is $diff days old and should not need to be rotated");
+            #@list = grep { $_ ne $item } @list;
+        } else {
         $log->INFO("Checking Index ($day, part $part)");
         DEBUG( 1, "Running command: $ROOT_DIR/sphinx/bin/indextool --config $ROOT_DIR/sphinx/sphinx.conf --dumpheader idx_log_arch_day_${day}_$part | grep docinfo | awk '{print \$2}'" );
         my $docinfo = `$ROOT_DIR/sphinx/bin/indextool --config $ROOT_DIR/sphinx/sphinx.conf --dumpheader idx_log_arch_day_${day}_$part | grep docinfo | awk '{print \$2}'`;
@@ -649,8 +658,6 @@ sub idx_rotate {
             # cdukes: Ticket #511 - For some reason, the if statement below was incorrect - as if someone had joined it with the previous line.
             if ( $events ) {
                 chomp($events);
-                my $date = today();
-                my $diff = today() - date($day);
                 DEBUG(1, "Calculated Date for Today is $date");
                 DEBUG(1, "Date diff for determining whether to convert to disk-based storage");
                 DEBUG(1, "Calculated Docinfo = $docinfo, Calculated Diff = $diff, Calculated memdays = $memdays");
@@ -672,6 +679,7 @@ sub idx_rotate {
             }
         } else {
             $log->ERR( "Unable to obtain DOCINFO from the index header for idx_log_arch_day_${day}_$part, you will need to manually run '%s' to find out why", "$ROOT_DIR/sphinx/bin/indextool --config $ROOT_DIR/sphinx/sphinx.conf --dumpheader idx_log_arch_day_${day}_$part" );
+        }
         }
     }
     if (@indexlist) {
