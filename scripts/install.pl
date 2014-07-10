@@ -70,7 +70,7 @@ sub prompt {
 }
 
 my $version    = "4.5";
-my $subversion = ".629";
+my $subversion = ".632";
 
 # Grab the base path
 my $lzbase = getcwd;
@@ -1314,11 +1314,11 @@ sub setup_cron {
 # Grab some metrics every night @ 11pm
 11 23 * * * root test -d $lzbase && perl /var/www/logzilla/scripts/LZTool -v -ss
 
-# Update and general maintenance @ 1am, 2 attempts
-11,26 1 * * * root test -d $lzbase && perl $lzbase/scripts/LZTool -v 
+# Update and general maintenance @ 1am
+23 1 * * * root test -d $lzbase && perl $lzbase/scripts/LZTool -v 
 
 # Rotate indexes @ midnight and 2am
-0 0,2 * * * root test -d $lzbase && $lzbase/scripts/rotate 
+0 2 * * * root test -d $lzbase && $lzbase/scripts/rotate 
 
 #####################################################
 # END LogZilla Cron Entries
