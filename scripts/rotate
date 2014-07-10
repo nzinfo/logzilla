@@ -14,10 +14,4 @@ if [ "$PID" ]; then
     exit 1
 fi
 
-# Restart searchd so all indexes are up to date
-#(cd $lzhome/sphinx && ./run_searchd.sh --stopwait)
-#(cd $lzhome/sphinx && ./run_searchd.sh)
-# Sleep for a bit to allow larger servers time to start back up
-#sleep 30
-
-/var/www/logzilla/scripts/idx-rotate -v -r idx_rotate -d 1
+/var/www/logzilla/scripts/idx-rotate -v -r idx_rotate 
