@@ -70,7 +70,7 @@ sub prompt {
 }
 
 my $version    = "4.5";
-my $subversion = ".632";
+my $subversion = ".634";
 
 # Grab the base path
 my $lzbase = getcwd;
@@ -1472,30 +1472,28 @@ if ( -d "$crondir" ) {
       print("\n\033[1m\tSphinx Indexer\n\033[0m");
       print("\n\033[1m========================================\n\n\033[0m\n\n");
       print "Install will attempt to extract and compile your sphinx indexer.\n";
-      print "This option may not work on all systems, so please watch for errors.\n";
-      print "The steps taken are as follows:\n";
-      print "killall searchd (to stop any currently running Sphinx searchd processes).\n";
 
-      # [[ticket:417]] - extract sphinx srouce from tarball
-      print "tar xzvf $lzbase/sphinx/sphinx_source.tgz -C $lzbase/sphinx\n";
-      print "cd $lzbase/sphinx/src\n";
-      print "./configure --enable-id64 --with-syslog --prefix `pwd`/..\n";
-      print "$makecmd\n";
-      print "cd $lzbase/sphinx\n";
-      print "./indexer.sh full\n";
-
+      # [[ticket:417]] - extract sphinx source from tarball
       if ( $do_sphinx_compile !~ /[YyNn]/ ) { # i.e. undefined in .lzrc
 	  $do_sphinx_compile = &getYN( "Ok to continue?", "y" );
       }
       if ( $do_sphinx_compile =~ /[Yy]/ ) {
           my $checkprocess = `ps -C searchd -o pid=`;
+          chomp($checkprocess);
           if ($checkprocess) {
               system("kill -9 $checkprocess");
           }
-          system("tar xzvf $lzbase/sphinx/sphinx_source.tgz -C $lzbase/sphinx && cd $lzbase/sphinx/src && ./configure --enable-id64 --with-syslog --prefix `pwd`/.. && $makecmd");
-          if ( $sphinx_index =~ /[Yy]/ ) {
-              print "Starting Sphinx search daemon and re-indexing data...\n";
-              system("(rm -f $lzbase/sphinx/data/* && cd $lzbase/sphinx && ./indexer.sh full)");
+          system("rm -rf $lzbase/sphinx/src");
+          print "Extracting source tarball to $lzbase/sphinx/src...\n";
+          system("tar xzvf $lzbase/sphinx/sphinx_source.tgz -C $lzbase/sphinx");
+          if ( -d "$lzbase/sphinx/src") {
+              system("cd $lzbase/sphinx/src && ./configure --enable-id64 --with-syslog --prefix `pwd`/.. && $makecmd");
+              if ( $sphinx_index =~ /[Yy]/ ) {
+                  print "Starting Sphinx search daemon and re-indexing data...\n";
+                  system("(rm -f $lzbase/sphinx/data/* && cd $lzbase/sphinx && ./indexer.sh full)");
+              }
+          } else {
+              print "The Unable to locate $lzbase/sphinx/src, did the tarball fail to extract?\n";
           }
       } else {
           print "Skipping Sphinx Installation\n";
@@ -2437,7 +2435,8 @@ print "getIf Reported IP: $ip\n" if ($ip);
               } else {
                   print "\n\033[1m[ERROR] Failed to download: $url\n\033[0m";
                   print "Unable to find your license on the license server\n";
-                  print "You can try using the web interface or contact LogZilla support (support\@logzilla.net) for assistance\n";
+                  print "Have you ordered a license from our website?\n";
+                  print "Please visit http://logzilla.net/products/trying-out-logzilla\n";
               }
           }
       }
