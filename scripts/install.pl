@@ -70,7 +70,7 @@ sub prompt {
 }
 
 my $version    = "4.5";
-my $subversion = ".634";
+my $subversion = ".636";
 
 # Grab the base path
 my $lzbase = getcwd;
@@ -995,6 +995,10 @@ sub update_settings {
     } else {
         my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/settings.sql`;
     }
+    # cdukes: Update SPX Port to use new 9306 port
+    my $sth = $dbh->prepare( "UPDATE settings set value=9306 WHERE name='SPX_PORT'" ) or die "Could not update SPX_PORT in settings table: $DBI::errstr";
+    $sth->execute;
+
     my $sth = $dbh->prepare( "
         update settings set value='$url' where name='SITE_URL';
         " ) or die "Could not update settings table: $DBI::errstr";
@@ -1061,8 +1065,8 @@ sub update_settings {
         " ) or die "Could not update triggers table: $DBI::errstr";
     $sth->execute;
     # cdukes 2014-06-05: Modify trigger table patterns column to allow larger regex's
-    $sth = $dbh->prepare( "
-        alter table triggers modify pattern varchar(2048) NOT NULL" ) or die "Could not update triggers table: $DBI::errstr";
+    $sth = $dbh->prepare( "alter table triggers modify pattern varchar(2048) NOT NULL" ) or die "Could not update triggers table: $DBI::errstr";
+
     $sth = $dbh->prepare( "
         update users set username='$siteadmin' where username='admin';
         " ) or die "Could not insert user data: $DBI::errstr";
