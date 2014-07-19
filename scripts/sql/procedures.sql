@@ -11,33 +11,32 @@ DELIMITER $$
 
 CREATE DEFINER=`root`@`localhost` PROCEDURE `log_arch_hr_proc`()
 BEGIN
-	DECLARE yesterday varchar(20) DEFAULT DATE_FORMAT(DATE_ADD(CURDATE(), INTERVAL -1 DAY), '%Y%m%d');
-	DECLARE hmax bigint DEFAULT 0;      
-	DECLARE arch_hour_start int DEFAULT hour(now())-1;
-	DECLARE arch_hour_stop int DEFAULT hour(now());
+    DECLARE yesterday varchar(20) DEFAULT DATE_FORMAT(DATE_ADD(CURDATE(), INTERVAL -1 DAY), '%Y%m%d');
+    DECLARE hmax bigint DEFAULT 0;      
+    DECLARE arch_hour_start int DEFAULT hour(now())-1;
+    DECLARE arch_hour_stop int DEFAULT hour(now());
 
 
-       SELECT min(id)-1 into hmax FROM logs WHERE (fo>=date_add(date(curdate()),interval arch_hour_stop hour));
+    SELECT max(id) INTO hmax FROM logs WHERE fo<DATE_ADD(DATE(CURDATE()),INTERVAL arch_hour_stop HOUR) AND id>=GREATEST(1,(SELECT min_id FROM view_limits WHERE view_name=CONCAT('log_arch_hr_',arch_hour_start)));
+     
+    
+    if (arch_hour_start < 0) then select 23 into arch_hour_start;
+    end if;
 
-  	
-	if (arch_hour_start < 0) then select 23 into arch_hour_start;
-	end if;
-
-       SET @s = CONCAT('CREATE OR REPLACE VIEW log_arch_hr_',arch_hour_start,' AS SELECT * FROM logs where fo>="',date_add(date(curdate()),interval arch_hour_start hour),'" AND fo<"',date_add(date(curdate()),interval arch_hour_stop hour),'"');
+       SET @s = CONCAT('CREATE OR REPLACE VIEW log_arch_hr_',arch_hour_start,' AS SELECT * FROM logs WHERE fo>="',DATE_ADD(DATE(CURDATE()),INTERVAL arch_hour_start HOUR),'" AND fo<"',DATE_ADD(DATE(CURDATE()),INTERVAL arch_hour_stop HOUR),'"');
        PREPARE stmt FROM @s;
        EXECUTE stmt;
        DEALLOCATE PREPARE stmt;
 
 
-	if hmax is NULL then
+    if hmax is NULL then
         select min_id-1 into hmax from view_limits where view_name=concat('log_arch_hr_',arch_hour_start);
-	end if;
+    end if;
 
-       insert into view_limits (view_name, max_id) values (concat('log_arch_hr_',arch_hour_start), greatest(hmax,1)) on duplicate key update max_id=greatest(hmax, min_id);
-       insert into view_limits (view_name, min_id) values (concat('log_arch_hr_',arch_hour_stop), hmax+1) on duplicate key update min_id=hmax+1;
+       INSERT INTO view_limits (view_name, max_id) VALUES (CONCAT('log_arch_hr_',arch_hour_start), GREATEST(hmax,1)) ON DUPLICATE KEY UPDATE max_id=GREATEST(hmax, min_id);
+       INSERT INTO view_limits (view_name, min_id) VALUES (CONCAT('log_arch_hr_',arch_hour_stop), hmax+1) ON DUPLICATE KEY UPDATE min_id=hmax+1;
 
-
-	  delete from sph_counter WHERE counter_id=3;
+        DELETE FROM sph_counter WHERE counter_id=3;
        
        if arch_hour_start<23 then
          INSERT INTO sph_counter (counter_id,max_id,index_name) VALUES (3,1,CONCAT('log_arch_hr_',arch_hour_start));
@@ -46,40 +45,38 @@ BEGIN
     
      if hmax>(select max_id from sph_counter WHERE index_name='idx_logs') then UPDATE sph_counter set max_id=hmax WHERE index_name='idx_logs';
      end if;
-
 END$$
 
 -- ===============================================================================================
 
 CREATE DEFINER=`root`@`localhost` PROCEDURE `log_arch_qrthr_proc`()
 BEGIN
-	DECLARE cur_start datetime DEFAULT from_unixtime((unix_timestamp(now()) div (60*15)) * (60*15) - (60*15));
-	DECLARE cur_stop datetime DEFAULT from_unixtime((unix_timestamp(now()) div (60*15)) * (60*15));
-	DECLARE cur_step int DEFAULT 0;
+    DECLARE cur_start datetime DEFAULT from_unixtime((unix_timestamp(now()) div (60*15)) * (60*15) - (60*15));
+    DECLARE cur_stop datetime DEFAULT from_unixtime((unix_timestamp(now()) div (60*15)) * (60*15));
+    DECLARE cur_step int DEFAULT 0;
     DECLARE next_step int DEFAULT 0;
-	DECLARE hmax bigint DEFAULT 0;  
-	DECLARE cur_counter int DEFAULT 5;
+    DECLARE hmax bigint DEFAULT 0;  
+    DECLARE cur_counter int DEFAULT 5;
 
-	SET @cur_minute = extract(minute from curtime());
+    SET @cur_minute = extract(minute from curtime());
 
-    SELECT min(id)-1 into hmax FROM logs WHERE fo>=cur_stop;
+    SELECT if(@cur_minute>=15,if(@cur_minute>=30,if(@cur_minute>=45,45,30),15),0) INTO cur_step;
+    SELECT if(@cur_minute>=15,if(@cur_minute>=30,if(@cur_minute>=45,0,45),30),15) INTO next_step;
+    SELECT if(@cur_minute>=15,if(@cur_minute>=30,if(@cur_minute>=45,8,7),6),5) INTO cur_counter;
 
-	SELECT if(@cur_minute>=15,if(@cur_minute>=30,if(@cur_minute>=45,45,30),15),0) into cur_step;
-	SELECT if(@cur_minute>=15,if(@cur_minute>=30,if(@cur_minute>=45,0,45),30),15) into next_step;
+    SELECT max(id) INTO hmax FROM logs WHERE fo<cur_stop AND id>=GREATEST(1,(SELECT min_id FROM view_limits WHERE view_name=CONCAT('log_arch_qrhr_',cur_step)));
 
-	SELECT if(@cur_minute>=15,if(@cur_minute>=30,if(@cur_minute>=45,8,7),6),5) into cur_counter;
-
-    SET @s = CONCAT('CREATE OR REPLACE VIEW log_arch_qrhr_',cur_step,' AS SELECT * FROM logs where fo>="',cur_start,'" AND fo<"',cur_stop,'"');
+    SET @s = CONCAT('CREATE OR REPLACE VIEW log_arch_qrhr_',cur_step,' AS SELECT * FROM logs WHERE fo>="',cur_start,'" AND fo<"',cur_stop,'"');
        PREPARE stmt FROM @s;
        EXECUTE stmt;
        DEALLOCATE PREPARE stmt;
 
-	if hmax is NULL then
+    if hmax is NULL then
         select min_id-1 into hmax from view_limits where view_name=concat('log_arch_qrhr_',cur_step);
-	end if;
+    end if;
  
-       insert into view_limits (view_name, max_id) values (concat('log_arch_qrhr_',cur_step), greatest(hmax,1)) on duplicate key update max_id=greatest(min_id,hmax);
-       insert into view_limits (view_name, min_id) values (concat('log_arch_qrhr_',next_step), hmax+1) on duplicate key update min_id=hmax+1;
+       INSERT INTO view_limits (view_name, max_id) VALUES (concat('log_arch_qrhr_',cur_step), GREATEST(hmax,1)) ON DUPLICATE KEY UPDATE max_id=GREATEST(min_id,hmax);
+       INSERT INTO view_limits (view_name, min_id) VALUES (concat('log_arch_qrhr_',next_step), hmax+1) ON DUPLICATE KEY UPDATE min_id=hmax+1;
  
 
        DELETE from sph_counter WHERE counter_id=cur_counter;
@@ -88,8 +85,8 @@ BEGIN
          REPLACE INTO sph_counter(counter_id,max_id,index_name) VALUES (cur_counter,1, concat('log_arch_qrhr_',cur_step));
        end if; 
    
-     if hmax>(select max_id from sph_counter WHERE index_name='idx_logs') then 
-          UPDATE sph_counter set max_id=hmax WHERE index_name='idx_logs';
+     if hmax>(SELECT max_id FROM sph_counter WHERE index_name='idx_logs') then 
+          UPDATE sph_counter SET max_id=hmax WHERE index_name='idx_logs';
      end if;
 END$$
 
@@ -98,32 +95,31 @@ END$$
 CREATE DEFINER=`root`@`localhost` PROCEDURE `log_arch_daily_proc`()
 BEGIN
 
-	DECLARE hmax bigint DEFAULT 0;   
+    DECLARE hmax bigint DEFAULT 0;   
 
-	set @yesterday = DATE_FORMAT(DATE_ADD(CURDATE(), INTERVAL -1 DAY), '%Y%m%d');
-        set @today = DATE_FORMAT(CURDATE(), '%Y%m%d');
-	set @y_start = DATE_FORMAT(DATE_ADD(CURDATE(), INTERVAL -1 DAY), '%Y-%m-%d 00:00:00');
-	set @y_stop = DATE_FORMAT(CURDATE(), '%Y-%m-%d 00:00:00');
+    SET @yesterday = DATE_FORMAT(DATE_ADD(CURDATE(), INTERVAL -1 DAY), '%Y%m%d');
+    SET @today = DATE_FORMAT(CURDATE(), '%Y%m%d');
+    SET @y_start = DATE_FORMAT(DATE_ADD(CURDATE(), INTERVAL -1 DAY), '%Y-%m-%d 00:00:00');
+    SET @y_stop = DATE_FORMAT(CURDATE(), '%Y-%m-%d 00:00:00');
 
-   SELECT min(id)-1 into hmax FROM logs WHERE (fo>=@y_stop);
+    SELECT max(id) INTO hmax FROM logs WHERE fo<@y_stop AND id>=GREATEST(1,(SELECT min_id FROM view_limits WHERE view_name=CONCAT('log_arch_day_',DATE_FORMAT(DATE_ADD(CURDATE(), INTERVAL -1 DAY), '%Y%m%d')))); 
+
+    SET @s =
+        CONCAT('CREATE OR REPLACE VIEW log_arch_day_',@yesterday,' AS SELECT * FROM logs WHERE fo>="',@y_start,'" AND fo<"',@y_stop,'"');
+    PREPARE stmt FROM @s;
+    EXECUTE stmt;
+    DEALLOCATE PREPARE stmt;
+
+    if hmax is NULL then
+        SELECT min_id-1 INTO hmax FROM view_limits WHERE view_name=concat('log_arch_day_',@yesterday);
+    end if;
+
+    INSERT INTO view_limits (view_name, max_id) VALUES (concat('log_arch_day_',@yesterday), GREATEST(hmax,1)) ON DUPLICATE KEY UPDATE max_id=GREATEST(hmax, min_id);
+    INSERT INTO view_limits (view_name, min_id) VALUES (concat('log_arch_day_',@today), hmax+1) ON DUPLICATE KEY UPDATE min_id=hmax+1;
 
 
-	SET @s =
-		CONCAT('CREATE OR REPLACE VIEW log_arch_day_',@yesterday,' AS SELECT * FROM logs where fo>="',@y_start,'" AND fo<"',@y_stop,'"');
-	PREPARE stmt FROM @s;
-	EXECUTE stmt;
-	DEALLOCATE PREPARE stmt;
-
-	if hmax is NULL then
-        select min_id-1 into hmax from view_limits where view_name=concat('log_arch_day_',@yesterday);
-	end if;
-
-    insert into view_limits (view_name, max_id) values (concat('log_arch_day_',@yesterday), greatest(hmax,1)) on duplicate key update max_id=greatest(hmax, min_id);
-    insert into view_limits (view_name, min_id) values (concat('log_arch_day_',@today), hmax+1) on duplicate key update min_id=hmax+1;
-
-
-	delete from sph_counter WHERE counter_id=4;
-	INSERT INTO sph_counter (counter_id,max_id,index_name) VALUES (4,1,CONCAT('log_arch_day_',@yesterday));
+    DELETE FROM sph_counter WHERE counter_id=4;
+    INSERT INTO sph_counter (counter_id,max_id,index_name) VALUES (4,1,CONCAT('log_arch_day_',@yesterday));
 END$$
 
 -- ===============================================================================================
