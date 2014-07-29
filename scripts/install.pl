@@ -70,7 +70,7 @@ sub prompt {
 }
 
 my $version    = "4.5";
-my $subversion = ".637";
+my $subversion = ".638";
 
 # Grab the base path
 my $lzbase = getcwd;
@@ -992,44 +992,71 @@ sub update_settings {
     # use copy_old settings so upgraders don't get overwritten
     if ( tblExists("settings") eq 1 ) {
         copy_old_settings();
+        my $sth = $dbh->prepare( "
+            update settings set value='$url' where name='SITE_URL';
+            " ) or die "Could not update settings table: $DBI::errstr";
+        $sth->execute;
+        $sth = $dbh->prepare( "
+            update settings set value='$lzbase' where name='PATH_BASE';
+            " ) or die "Could not update settings table: $DBI::errstr";
+        $sth->execute;
+        $sth = $dbh->prepare( "
+            update settings set value='$dbtable' where name='TBL_MAIN';
+            " ) or die "Could not update settings table: $DBI::errstr";
+        $sth->execute;
+        $sth = $dbh->prepare( "
+            update settings set value='$logpath' where name='PATH_LOGS';
+            " ) or die "Could not update settings table: $DBI::errstr";
+        $sth->execute;
     } else {
         my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/settings.sql`;
+        my $sth = $dbh->prepare( "
+            update settings set value='$url' where name='SITE_URL';
+            " ) or die "Could not update settings table: $DBI::errstr";
+        $sth->execute;
+        $sth = $dbh->prepare( "
+            update settings set value='$email' where name='ADMIN_EMAIL';
+            " ) or die "Could not update settings table: $DBI::errstr";
+        $sth->execute;
+        $sth = $dbh->prepare( "
+            update settings set value='$siteadmin' where name='ADMIN_NAME';
+            " ) or die "Could not update settings table: $DBI::errstr";
+        $sth->execute;
+        $sth = $dbh->prepare( "
+            update settings set value='$lzbase' where name='PATH_BASE';
+            " ) or die "Could not update settings table: $DBI::errstr";
+        $sth->execute;
+        $sth = $dbh->prepare( "
+            update settings set value='$sitename' where name='SITE_NAME';
+            " ) or die "Could not update settings table: $DBI::errstr";
+        $sth->execute;
+        $sth = $dbh->prepare( "
+            update settings set value='$dbtable' where name='TBL_MAIN';
+            " ) or die "Could not update settings table: $DBI::errstr";
+        $sth->execute;
+        $sth = $dbh->prepare( "
+            update settings set value='$logpath' where name='PATH_LOGS';
+            " ) or die "Could not update settings table: $DBI::errstr";
+        $sth->execute;
+        $sth = $dbh->prepare( "
+            update settings set value='$retention' where name='RETENTION';
+            " ) or die "Could not update settings table: $DBI::errstr";
+        $sth->execute;
+        $sth = $dbh->prepare( "
+            update triggers set mailto='$email', mailfrom='$email';
+            " ) or die "Could not update triggers table: $DBI::errstr";
+        $sth->execute;
+        $sth = $dbh->prepare( "
+            update users set username='$siteadmin' where username='admin';
+            " ) or die "Could not insert user data: $DBI::errstr";
+        $sth->execute;
+        $sth = $dbh->prepare( "
+            update users set pwhash=MD5('$siteadminpw') where username='$siteadmin';
+            " ) or die "Could not insert user data: $DBI::errstr";
+        $sth->execute;
     }
     # cdukes: Update SPX Port to use new 9306 port
     my $sth = $dbh->prepare( "UPDATE settings set value=9306 WHERE name='SPX_PORT'" ) or die "Could not update SPX_PORT in settings table: $DBI::errstr";
-    $sth->execute;
-
-    my $sth = $dbh->prepare( "
-        update settings set value='$url' where name='SITE_URL';
-        " ) or die "Could not update settings table: $DBI::errstr";
-    $sth->execute;
-    $sth = $dbh->prepare( "
-        update settings set value='$email' where name='ADMIN_EMAIL';
-        " ) or die "Could not update settings table: $DBI::errstr";
-    $sth->execute;
-    $sth = $dbh->prepare( "
-        update settings set value='$siteadmin' where name='ADMIN_NAME';
-        " ) or die "Could not update settings table: $DBI::errstr";
-    $sth->execute;
-    $sth = $dbh->prepare( "
-        update settings set value='$lzbase' where name='PATH_BASE';
-        " ) or die "Could not update settings table: $DBI::errstr";
-    $sth->execute;
-    $sth = $dbh->prepare( "
-        update settings set value='$sitename' where name='SITE_NAME';
-        " ) or die "Could not update settings table: $DBI::errstr";
-    $sth->execute;
-    $sth = $dbh->prepare( "
-        update settings set value='$dbtable' where name='TBL_MAIN';
-        " ) or die "Could not update settings table: $DBI::errstr";
-    $sth->execute;
-    $sth = $dbh->prepare( "
-        update settings set value='$logpath' where name='PATH_LOGS';
-        " ) or die "Could not update settings table: $DBI::errstr";
-    $sth->execute;
-    $sth = $dbh->prepare( "
-        update settings set value='$retention' where name='RETENTION';
-        " ) or die "Could not update settings table: $DBI::errstr";
     $sth->execute;
     if (not $spx_cores) {
         $spx_cores = `cat /proc/cpuinfo | grep processor | wc -l`;
@@ -1060,21 +1087,9 @@ sub update_settings {
             " ) or die "Could not update settings table: $DBI::errstr";
         $sth->execute;
     }
-    $sth = $dbh->prepare( "
-        update triggers set mailto='$email', mailfrom='$email';
-        " ) or die "Could not update triggers table: $DBI::errstr";
-    $sth->execute;
     # cdukes 2014-06-05: Modify trigger table patterns column to allow larger regex's
     $sth = $dbh->prepare( "alter table triggers modify pattern varchar(2048) NOT NULL" ) or die "Could not update triggers table: $DBI::errstr";
 
-    $sth = $dbh->prepare( "
-        update users set username='$siteadmin' where username='admin';
-        " ) or die "Could not insert user data: $DBI::errstr";
-    $sth->execute;
-    $sth = $dbh->prepare( "
-        update users set pwhash=MD5('$siteadminpw') where username='$siteadmin';
-        " ) or die "Could not insert user data: $DBI::errstr";
-    $sth->execute;
     $sth = $dbh->prepare( "
         delete from users where username='guest';
         " ) or die "Could not insert user data: $DBI::errstr";
