@@ -914,7 +914,7 @@ sub mtti {
     my @vals;
     while ( $results = $sth->fetchrow_hashref ) {
         my $diff = str2time( $results->{end} ) - str2time( $results->{start} );
-        DEBUG( 1, "diff between %s and %s is %s", $results->{start}, $results->{end}, sec2human($diff) );
+        DEBUG( 2, "diff between %s and %s is %s", $results->{start}, $results->{end}, sec2human($diff) );
         push( @vals, $results->{value} );
     }
     if (@vals) {
