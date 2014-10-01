@@ -246,14 +246,17 @@ system("perl -i -pe 's|\\\$sphinx_compile = \"Y\"|\\\$sphinx_compile = \"N\"|g' 
 system("perl -i -pe 's|\\\$skiplic = \"Y\"|\\\$skiplic = \"N\"|g' $options->{lzroot}/scripts/.lzrc 2>&1");
 
 if ( $options->{vmbanner} > 0 ) {
-    print "Adding banner to system startup (/etc/rc.local)\n";
+    print "Adding VM Startup options to system startup (/etc/rc.local)\n";
     my $file = "/etc/rc.local";
     if ( -e "$file" ) {
         open my $config, '+<', "$file" or warn "FAILED: $!\n";
-        my @arr = <$config>;
-        if ( !grep( /banner/, @arr ) ) {
-            system("perl -i -pe 's|cd $options->{lzroot}/sphinx && bin/searchd|cd $options->{lzroot}/scripts/VM && ./bootup.sh|g' /etc/rc.local 2>&1");
-        }
+          my @all = <$config>;
+          if ( !grep( /vmstartup/, @all ) ) {
+              seek $config, 0, 0;
+              splice @all, -1, 0, "# <lzconfig>\n$options->{lzroot}/scripts/VM/vmstartup\n# </lzconfig>\n";
+              print $config @all;
+          }
+          close $config;
     }
 }
 
