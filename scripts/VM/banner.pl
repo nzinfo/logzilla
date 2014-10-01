@@ -42,9 +42,6 @@ This server is configured for Eastern Standard Time (EST)
 You will need to set the timezone to your locale by typing:
 dpkg-reconfigure tzdata
 
-First Bootup:
-Please run "lzupdate" to get the latest version.
-
 Access:
 The login/password for the shell is lzadmin/lzadmin
 The login/password for the Web Interface is admin/admin
@@ -54,7 +51,7 @@ $linfo
 More Information and Help:
 Please read /path_to_logzilla/VM-README.txt
 
-Please report any trouble to http://support.logzilla.pro                       
+Please report any trouble to http://support.logzilla.net                       
 #######################################################################
 
 };
