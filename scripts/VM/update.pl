@@ -14,7 +14,7 @@ write_file $filename, {binmode => ':utf8'}, $data;
 
 # Run an upgrade
 
-my $osupdate = system("apt-get update && apt-get -y upgrade")
+my $osupdate = system("apt-get update && apt-get -y upgrade");
 my $svnup = system("cd /var/www/logzilla/ && svn update --accept theirs-conflict");
 my $upgrade = system("cd /var/www/logzilla/scripts && ./upgrade");
 
@@ -30,5 +30,5 @@ write_file $filename, {binmode => ':utf8'}, $data;
 
 # Remove the script from init.d and delete it
 
-my $remjob = ("update-rc.d update.pl remove");
-my $remscript = ("rm /etc/init.d/update.pl");
+my $remjob = system("update-rc.d -f update.pl remove");
+my $remscript = system("rm /etc/init.d/update.pl");
