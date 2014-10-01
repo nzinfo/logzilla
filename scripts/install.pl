@@ -70,7 +70,7 @@ sub prompt {
 }
 
 my $version    = "4.5";
-my $subversion = ".638";
+my $subversion = ".645";
 
 # Grab the base path
 my $lzbase = getcwd;
@@ -1564,7 +1564,7 @@ if ( -d "$crondir" ) {
       if ( -e "$file" ) {
           open my $config, '+<', "$file" or warn "FAILED: $!\n";
           my @all = <$config>;
-          if ( !grep( /sphinx/, @all ) ) {
+          if ( !grep( /sphinx|vmstartup/, @all ) ) {
               seek $config, 0, 0;
               splice @all, -1, 0, "# <lzconfig>\n(cd $lzbase/sphinx && ./run_searchd.sh)\n# </lzconfig>\n";
               print $config @all;
