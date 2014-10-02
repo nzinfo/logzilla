@@ -70,7 +70,7 @@ sub prompt {
 }
 
 my $version    = "4.5";
-my $subversion = ".647";
+my $subversion = ".648";
 
 # Grab the base path
 my $lzbase = getcwd;
@@ -1281,17 +1281,18 @@ log {
     destination(df_logzilla);
     flags(flow-control);
 };
-log {
+# Enable if you are sending SNMP Traps to LogZilla
     # NOTE: If your /etc/syslog-ng/syslong-ng.conf file does not have "system()" defined in s_src, this will not work.
-    source(s_src);
-    parser(p_snmptrapd);
-    rewrite(r_snmptrapd);
-    rewrite(r_snare2pipe);
-    destination(d_logzilla);
-    # Optional: Log all events to file
-    destination(df_logzilla);
-    flags(final);
-};
+#log {
+    #source(s_src);
+    #parser(p_snmptrapd);
+    #rewrite(r_snmptrapd);
+    #rewrite(r_snare2pipe);
+    #destination(d_logzilla);
+    ## Optional: Log all events to file
+    #destination(df_logzilla);
+    #flags(final);
+#};
 #</lzconfig> END LogZilla settings
 };
         if ( !grep( /logzilla|lzconfig/, @arr ) ) {
