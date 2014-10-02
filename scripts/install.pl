@@ -70,7 +70,7 @@ sub prompt {
 }
 
 my $version    = "4.5";
-my $subversion = ".646";
+my $subversion = ".647";
 
 # Grab the base path
 my $lzbase = getcwd;
@@ -1128,6 +1128,19 @@ system "chown mysql.mysql $lzbase/scripts/doimport.sh" and warn "Could not set p
 sub add_syslog_conf {
     my $dir = "/etc/syslog-ng/conf.d";
     my $file = "/etc/syslog-ng/conf.d/logzilla.conf";
+    my @arr = `syslog-ng -V | grep Version`;
+    my $ngmaj;
+    my $ngmin;
+    my $threaded;
+    if ( $arr[0] =~ /\S+\s+(\d)\.(\d+)\..*/ ) { 
+        $ngmaj = $1;
+        $ngmin = $2;
+        if ($ngmin < 3) {
+            $threaded = "# threaded(yes); # enable if using Syslog-NG 3.3.x or greater";
+        } else {
+            $threaded = "threaded(yes); # enable if using Syslog-NG 3.3.x or greater";
+        }
+    }
     system("touch $file");
     unless ( -d "$dir" ) {
         $file = "/etc/syslog-ng/syslog-ng.conf";
@@ -1144,16 +1157,18 @@ sub add_syslog_conf {
 # It is advisable that you learn what is best for your server.
 # There's a great web gui available at http://mitzkia.github.com/syslog-ng-ose-configurator/#/howtouse
 # Install Date: $now
-};
-my $sconf2 = q{
+
 # Global Options
 options {
     chain_hostnames(no);
     keep_hostname(yes);
-    threaded(yes); # enable if using Syslog-NG 3.3.x
+    $threaded
     use_fqdn(yes); # This should be set to no in high scale environments
     use_dns(yes); # This should be set to no in high scale environments
 };
+
+};
+my $sconf2 = q{
 
 # Windows Events from SNARE
 # https://www.assembla.com/spaces/LogZillaWiki/wiki/Receiving_Windows_Events_from_SNARE
