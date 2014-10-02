@@ -70,7 +70,7 @@ sub prompt {
 }
 
 my $version    = "4.5";
-my $subversion = ".645";
+my $subversion = ".646";
 
 # Grab the base path
 my $lzbase = getcwd;
@@ -2368,7 +2368,10 @@ if ( -d "$crondir" ) {
           if ( $do_ioncube =~ /[Yy]/ ) {
               my $file = "/etc/php5/apache2/php.ini";
               if ( !-e "$file" ) {
-                  $file = &prompt( "Please enter the location of your php.ini file", "$file" );
+                  $file = "/etc/php.ini";
+                  if ( !-e "$file" ) {
+                      $file = &prompt( "Please enter the location of your php.ini file", "$file" );
+                  }
               }
               if ( !-e "$file" ) {
                   print "unable to locate $file\n";
