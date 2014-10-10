@@ -70,7 +70,7 @@ sub prompt {
 }
 
 my $version    = "4.5";
-my $subversion = ".648";
+my $subversion = ".651";
 
 # Grab the base path
 my $lzbase = getcwd;
@@ -1163,7 +1163,7 @@ options {
     chain_hostnames(no);
     keep_hostname(yes);
     $threaded
-    use_fqdn(yes); # This should be set to no in high scale environments
+    use_fqdn(no); # This should be set to no in high scale environments
     use_dns(yes); # This should be set to no in high scale environments
 };
 
