@@ -43,13 +43,13 @@ You will need to set the timezone to your locale by typing:
 dpkg-reconfigure tzdata
 
 Access:
-The login/password for the shell is lzadmin/lzadmin
+The login/password for the shell is lzadmin/lzadmin (as in "LogZilla Admin")
 The login/password for the Web Interface is admin/admin
 The login/password for MySQL root is root/mysql
 $linfo
 
 More Information and Help:
-Please read /path_to_logzilla/VM-README.txt
+Please read /var/www/logzilla/VM-README.txt
 
 Please report any trouble to http://support.logzilla.net                       
 #######################################################################
