@@ -3,10 +3,11 @@
 # Also sets console message for VMs
 # This script is called from /etc/rc.local during bootup
 
-lzhome="/path_to_logzilla"
-[ ! -d "$lzhome" ] && lzhome="/path_to_logzilla"
+lzhome="/var/www/logzilla"
+[ ! -d "$lzhome" ] && lzhome="/var/www/logzilla"
 
 for i in 1 2 3 4 5 6; do
+    echo "Waiting for MySQL Startup"
     if [ -S /var/run/mysql/mysql.sock ]; then
         break
     else
@@ -28,6 +29,6 @@ if [ -f $lzhome/scripts/VM/firstboot ]; then
         exit 1
     fi
 fi
-(cd /path_to_logzilla/sphinx && ./run_searchd.sh --stop)
-(cd /path_to_logzilla/sphinx && ./run_searchd.sh)
+(cd /var/www/logzilla/sphinx && ./run_searchd.sh --stop)
+(cd /var/www/logzilla/sphinx && ./run_searchd.sh)
 (cd $lzhome/scripts/VM && ./banner.pl)
