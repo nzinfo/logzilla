@@ -1192,7 +1192,7 @@ sub topmacs {
 }
 sub saudit {
     $log->INFO("-=Last %d Searches=-", $options->{saudit});
-    $sql = "SELECT user,string,seen,from_unixtime(lastseen_ts) as lastseen FROM saudit limit $options->{saudit}";
+    $sql = "SELECT user,string,seen,from_unixtime(lastseen_ts) as lastseen FROM saudit ORDER BY lastseen_ts DESC limit $options->{saudit}";
     $sth = $dbh->prepare($sql);
     DEBUG( 1, "Executing SQL Statement: $sql" );
     $sth->execute();
