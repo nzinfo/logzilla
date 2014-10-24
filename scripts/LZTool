@@ -67,6 +67,8 @@ sub usage_and_exit {
     -delhost  : Delete a host and all associated records for that host from LogZilla
     -host     : Host to delete from LogZilla
     -rename   : Rename a host (e.g: -rename -from 1.1.1.1 -to myhost)
+    -topm     : Show Top N MACs (e.g.: -topm 10 to show top 10)
+    -saudit   : Show last N searches performed (e.g.: -saudit 10 to show last 10)
     -c        : config file (defaults to $options->{config_file})
 Example: $myname -l /var/log/foo.log -d 5 -c test/config.php -v
 };
@@ -90,6 +92,8 @@ GetOptions(
 'delhost|dh'        => \$options->{delhost},
 'host=s'            => \@hosts,
 'serversizer|ss'    => \$options->{ss},
+'topm=i'            => \$options->{topm},
+'saudit=i'          => \$options->{saudit},
 'rename|ren'        => \$options->{rename},
 'from=s'            => \$options->{from},
 'to=s'            => \$options->{to},
@@ -160,6 +164,14 @@ if ($options->{delhost}) {
 if ($options->{rename}) {
     $log->INFO("Renaming Hostname '%s' to Hostname '%s'", $options->{from}, $options->{to});
     renhost( "$options->{from}", "$options->{to}");
+    exit;
+}
+if ($options->{topm}) {
+    topmacs($options->{topm});
+    exit;
+}
+if ($options->{saudit}) {
+    saudit($options->{saudit});
     exit;
 }
 if ( $#runfuncs < 0 ) {
@@ -1176,4 +1188,35 @@ sub getIf {
         return join('.', @address);
     }
     return undef;
+}
+sub topmacs {
+    $log->INFO("-=Top %d MACs=-", $options->{topm});
+    $sql = "SELECT name,seen,lastseen FROM mac GROUP BY name ORDER BY seen DESC limit $options->{topm}";
+    $sth = $dbh->prepare($sql);
+    DEBUG( 1, "Executing SQL Statement: $sql" );
+    $sth->execute();
+    printf("\n%-20s %-20s %-20s\n", "MAC", "Last Seen", "# of Times Seen");
+    while ( $results = $sth->fetchrow_hashref ) {
+        my $mac  = $results->{name};
+        my $seen  = $results->{seen};
+        my $lastseen  = $results->{lastseen};
+        printf("%-20s %-20s %-20s\n", $mac, $lastseen, $seen);
+
+    }
+}
+sub saudit {
+    $log->INFO("-=Last %d Searches=-", $options->{saudit});
+    $sql = "SELECT user,string,seen,from_unixtime(lastseen_ts) as lastseen FROM saudit limit $options->{saudit}";
+    $sth = $dbh->prepare($sql);
+    DEBUG( 1, "Executing SQL Statement: $sql" );
+    $sth->execute();
+    printf("\n%-10s %-25s %-8s %-80s\n", "Username", "Time Stamp", "Count", "Search Term");
+    while ( $results = $sth->fetchrow_hashref ) {
+        my $user  = $results->{user};
+        my $string  = $results->{string};
+        my $seen  = $results->{seen};
+        my $lastseen  = $results->{lastseen};
+        printf("%-10s %-25s %-8s %-80s\n", $user, $lastseen, $seen, $string);
+
+    }
 }
