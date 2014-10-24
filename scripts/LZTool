@@ -434,31 +434,6 @@ sub humanBytes {
     }
 }
 
-sub humanReadable {
-    my $i = shift;
-    $i = $i * 1000;
-    if ( $i > 1000000000000 )       #   TB: 1000 GB
-    {
-        return sprintf( "%.0f T", $i / 1000000000000 );
-    }
-    elsif ( $i > 1073741824 )       #   GB: 1000 MB
-    {
-        return sprintf( "%.0f B", $i / 1000000000 );
-    }
-    elsif ( $i > 1048576 )          #   MB: 1000 KB
-    {
-        return sprintf( "%.0f M", $i / 1000000 );
-    }
-    elsif ( $i > 1000 )             #   KB: 1000 B
-    {
-        return sprintf( "%.0f K", $i / 1000 );
-    }
-    else                            #   bytes
-    {
-        return "$i byte" . ( $i == 1 ? "" : "s" );
-    }
-}
-
 sub HumanToBytes {
     my @strings = @_;
     my $base    = 1024;
@@ -482,6 +457,17 @@ sub HumanToBytes {
         }
     }
     return sprintf "%.0f", $total;
+}
+sub humanReadable {
+    my $int = shift;
+    my $exp = 0;
+    my $units = [qw(K M B T Q)];
+    for (@$units) {
+        last if $int < 1000000;
+        $int /= 1000000;
+        $exp++;
+    }
+    return wantarray ? ($int, $units->[$exp]) : sprintf("%.2f%s", $int, $units->[$exp]);
 }
 
 sub commify {
@@ -658,40 +644,40 @@ sub idx_rotate {
             $log->INFO("Skipping processing of $day since it is $diff days old and should not need to be rotated");
             #@list = grep { $_ ne $item } @list;
         } else {
-        $log->INFO("Checking Index ($day, part $part)");
-        DEBUG( 1, "Running command: $ROOT_DIR/sphinx/bin/indextool --config $ROOT_DIR/sphinx/sphinx.conf --dumpheader idx_log_arch_day_${day}_$part | grep docinfo | awk '{print \$2}'" );
-        my $docinfo = `$ROOT_DIR/sphinx/bin/indextool --config $ROOT_DIR/sphinx/sphinx.conf --dumpheader idx_log_arch_day_${day}_$part | grep docinfo | awk '{print \$2}'`;
-        chomp($docinfo);
+            $log->INFO("Checking Index ($day, part $part)");
+            DEBUG( 1, "Running command: $ROOT_DIR/sphinx/bin/indextool --config $ROOT_DIR/sphinx/sphinx.conf --dumpheader idx_log_arch_day_${day}_$part | grep docinfo | awk '{print \$2}'" );
+            my $docinfo = `$ROOT_DIR/sphinx/bin/indextool --config $ROOT_DIR/sphinx/sphinx.conf --dumpheader idx_log_arch_day_${day}_$part | grep docinfo | awk '{print \$2}'`;
+            chomp($docinfo);
 
-        if ($docinfo) {
-            DEBUG( 1, "Docinfo is $docinfo" );
-            DEBUG( 1, "Running command: $ROOT_DIR/sphinx/bin/indextool --config $ROOT_DIR/sphinx/sphinx.conf --dumpheader idx_log_arch_day_${day}_0 | grep total-documents | awk '{print \$2}'" ); 
-            $events = `$ROOT_DIR/sphinx/bin/indextool --config $ROOT_DIR/sphinx/sphinx.conf --dumpheader idx_log_arch_day_${day}_0 | grep total-documents | awk '{print \$2}'`;
-            # cdukes: Ticket #511 - For some reason, the if statement below was incorrect - as if someone had joined it with the previous line.
-            if ( $events ) {
-                chomp($events);
-                DEBUG(1, "Calculated Date for Today is $date");
-                DEBUG(1, "Date diff for determining whether to convert to disk-based storage");
-                DEBUG(1, "Calculated Docinfo = $docinfo, Calculated Diff = $diff, Calculated memdays = $memdays");
+            if ($docinfo) {
+                DEBUG( 1, "Docinfo is $docinfo" );
+                DEBUG( 1, "Running command: $ROOT_DIR/sphinx/bin/indextool --config $ROOT_DIR/sphinx/sphinx.conf --dumpheader idx_log_arch_day_${day}_0 | grep total-documents | awk '{print \$2}'" ); 
+                $events = `$ROOT_DIR/sphinx/bin/indextool --config $ROOT_DIR/sphinx/sphinx.conf --dumpheader idx_log_arch_day_${day}_0 | grep total-documents | awk '{print \$2}'`;
+                # cdukes: Ticket #511 - For some reason, the if statement below was incorrect - as if someone had joined it with the previous line.
+                if ( $events ) {
+                    chomp($events);
+                    DEBUG(1, "Calculated Date for Today is $date");
+                    DEBUG(1, "Date diff for determining whether to convert to disk-based storage");
+                    DEBUG(1, "Calculated Docinfo = $docinfo, Calculated Diff = $diff, Calculated memdays = $memdays");
 
-                DEBUG(1, "If docinfo = extern (memory-based storage) and diff > memdays, then convert to disk-based storage (docinfo=inline)");
-                if ( ( $diff > $memdays ) && ( $docinfo =~ /extern/ ) ) {
-                    $log->INFO("The $day index is $diff day(s) older than today.");
-                    $log->INFO("Converting index (${day}_$part) to disk-based storage (docinfo=inline) because it is > $memdays day(s) old...");
-                    push( @indexlist, "idx_log_arch_day_${day}_$part" );
+                    DEBUG(1, "If docinfo = extern (memory-based storage) and diff > memdays, then convert to disk-based storage (docinfo=inline)");
+                    if ( ( $diff > $memdays ) && ( $docinfo =~ /extern/ ) ) {
+                        $log->INFO("The $day index is $diff day(s) older than today.");
+                        $log->INFO("Converting index (${day}_$part) to disk-based storage (docinfo=inline) because it is > $memdays day(s) old...");
+                        push( @indexlist, "idx_log_arch_day_${day}_$part" );
+                    }
+
+                    # cdukes: added below in case someone changes their idx_mem_days in the db and we need to go back and convert disk based indexes back to memory based
+                    DEBUG(1, "If docinfo = inline (disk-based storage) and diff <= memdays, then convert to memory-based storage (docinfo=extern)");
+                    if ( ( $diff <= $memdays ) && ( $docinfo =~ /inline/ ) ) {
+                        $log->INFO("The $day index is $diff day(s) older than today.");
+                        $log->INFO("Converting index (${day}_$part) to memory-based storage (docinfo=extern) because it is <= $memdays day(s) old and your SPX_IDX_DIM is set to $memdays");
+                        push( @indexlist, "idx_log_arch_day_${day}_$part" );
+                    }
                 }
-
-                # cdukes: added below in case someone changes their idx_mem_days in the db and we need to go back and convert disk based indexes back to memory based
-                DEBUG(1, "If docinfo = inline (disk-based storage) and diff <= memdays, then convert to memory-based storage (docinfo=extern)");
-                if ( ( $diff <= $memdays ) && ( $docinfo =~ /inline/ ) ) {
-                    $log->INFO("The $day index is $diff day(s) older than today.");
-                    $log->INFO("Converting index (${day}_$part) to memory-based storage (docinfo=extern) because it is <= $memdays day(s) old and your SPX_IDX_DIM is set to $memdays");
-                    push( @indexlist, "idx_log_arch_day_${day}_$part" );
-                }
+            } else {
+                $log->ERR( "Unable to obtain DOCINFO from the index header for idx_log_arch_day_${day}_$part, you will need to manually run '%s' to find out why", "$ROOT_DIR/sphinx/bin/indextool --config $ROOT_DIR/sphinx/sphinx.conf --dumpheader idx_log_arch_day_${day}_$part" );
             }
-        } else {
-            $log->ERR( "Unable to obtain DOCINFO from the index header for idx_log_arch_day_${day}_$part, you will need to manually run '%s' to find out why", "$ROOT_DIR/sphinx/bin/indextool --config $ROOT_DIR/sphinx/sphinx.conf --dumpheader idx_log_arch_day_${day}_$part" );
-        }
         }
     }
     if (@indexlist) {
@@ -1200,7 +1186,7 @@ sub topmacs {
         my $mac  = $results->{name};
         my $seen  = $results->{seen};
         my $lastseen  = $results->{lastseen};
-        printf("%-20s %-20s %-20s\n", $mac, $lastseen, $seen);
+        printf("%-20s %-20s %-20s\n", $mac, $lastseen, commify($seen));
 
     }
 }
@@ -1216,7 +1202,7 @@ sub saudit {
         my $string  = $results->{string};
         my $seen  = $results->{seen};
         my $lastseen  = $results->{lastseen};
-        printf("%-10s %-25s %-8s %-80s\n", $user, $lastseen, $seen, $string);
+        printf("%-10s %-25s %-8s %-80s\n", $user, $lastseen, commify($seen), $string);
 
     }
 }
