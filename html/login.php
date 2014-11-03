@@ -1,3 +1,33 @@
+<style type='text/css'>
+
+.progress {
+        border: 2px solid #5E96E4;
+        height: 52px;
+        width: 540px;
+        margin: 30px auto;
+}
+.progress .prgbar {
+        background: #FA5858;
+        width: <?php echo $dp; ?>%;
+        position: relative;
+        height: 52px;
+        z-index: 999;
+}
+.progress .prgtext {
+        color: #FFFFFF;
+        text-align: center;
+        font-size: 18px;
+        padding: 9px 0 0;
+        width: 540px;
+        position: absolute;
+        z-index: 1000;
+}
+.progress .prginfo {
+        margin: 3px 0;
+}
+
+</style>
+
 <?php
 
 /*
@@ -9,6 +39,7 @@
  * 2006-12-11 - created
  *
  */
+
 
 
 session_start();
@@ -62,6 +93,45 @@ tryfunc("gd_info", "php_gd");
 tryfunc("ioncube_license_properties", "ionCube Loader");
 tryfunc("json_encode", "json");
 
+
+
+// Get disk space info
+/* get disk space free (in bytes) */
+$mnt = $_SESSION['PATH_BASE'];
+$df = disk_free_space("$mnt");
+/* and get disk space total (in bytes)  */
+$dt = disk_total_space("$mnt");
+/* now we calculate the disk space used (in bytes) */
+$du = $dt - $df;
+/* percentage of disk used - this will be used to also set the width % of the progress bar */
+$dpint = round((($du / $dt) * 100), 2);
+$dp = sprintf('%.2f',($du / $dt) * 100);
+
+/* and we formate the size from bytes to MB, GB, etc. */
+$df = formatSize($df);
+$du = formatSize($du);
+$dt = formatSize($dt);
+function formatSize( $bytes ) {
+    $types = array( 'B', 'KB', 'MB', 'GB', 'TB' );
+    for( $i = 0; $bytes >= 1024 && $i < ( count( $types ) -1 ); $bytes /= 1024, $i++ );
+    return( round( $bytes, 2 ) . " " . $types[$i] );
+}
+if ($dpint > 90) {
+?>
+<div class='progress'>
+        <div class='prgtext'>DISK SPACE ALERT: The server's disk is <?php echo $dp; ?>% full!</div>
+        <div class='prgbar'></div>
+<!--
+        <div class='prginfo'>
+                <span style='float: left;'><?php echo "$du of $dt used"; ?></span>
+                <span style='float: right;'><?php echo "$df of $dt free"; ?></span>
+                <span style='clear: both;'></span>
+-->
+        </div>
+</div>
+
+<?php
+}
 if($_SESSION['AUTHTYPE'] == "none") {
     $username = "local_noauth";
     $sessionId = session_id();
@@ -102,7 +172,7 @@ if ($_POST) {
     }
 
 } else {
-    ?>
+?>
         <html>
         <head>
         <title><?php echo $_SESSION['PROGNAME'] ." v". $_SESSION['VERSION'] ." ". $_SESSION['VERSION_SUB']?> Login</title>
@@ -110,14 +180,14 @@ if ($_POST) {
         <div align="center">
         <form method="post" action="<?php echo  $_SERVER['PHP_SELF']; ?>">
 
-        <?php
+<?php
 
-        if (!empty($_SERVER['QUERY_STRING']))
-        {
-            $queryString = htmlspecialchars($_SERVER['QUERY_STRING']);
-            echo '<input type="hidden" name="searchQuery" value="' . $queryString . '">';
-        }
-    ?>
+    if (!empty($_SERVER['QUERY_STRING']))
+    {
+        $queryString = htmlspecialchars($_SERVER['QUERY_STRING']);
+        echo '<input type="hidden" name="searchQuery" value="' . $queryString . '">';
+    }
+?>
         <div align="center">
 
         <br><br><br><br>
@@ -138,14 +208,14 @@ if ($_POST) {
         <table width="100%" border="0" cellspacing="3" cellpadding="0">
 
         <tr>
-        <?php 
-        if (isset($_SESSION['error'])) {
-            echo "<div style='align: center; text-align: center; border: 2px dotted red;'>$_SESSION[error]</div>\n";
-            $act = $_SESSION['error'];
-            $res = action($act);
-            unset($_SESSION['error']);
-        }
-    ?>
+<?php 
+    if (isset($_SESSION['error'])) {
+        echo "<div style='align: center; text-align: center; border: 2px dotted red;'>$_SESSION[error]</div>\n";
+        $act = $_SESSION['error'];
+        $res = action($act);
+        unset($_SESSION['error']);
+    }
+?>
         <!--[if lt IE 8]>
         <div style='align: left; text-align: left; border: 2px dotted red;'>LogZilla has not been certified to work with the browser you are using. You may continue, but the application might not behave as expected.</div>
         <![endif]-->
@@ -184,20 +254,20 @@ if ($_POST) {
                 </SELECT>    
                 </td>
                 </tr>
-                <?php if($_SESSION['AUTHTYPE'] == "ldap") {
-                    if (!function_exists('ldap_connect')) {
-                        echo "<div style='align: center; text-align: center; border: 3px dotted red;'>ERROR!<br>Your version of PHP does not have ldap_connect(), which LogZilla requires.</div>\n";
-                    }
-                } ?>
+<?php if($_SESSION['AUTHTYPE'] == "ldap") {
+    if (!function_exists('ldap_connect')) {
+        echo "<div style='align: center; text-align: center; border: 3px dotted red;'>ERROR!<br>Your version of PHP does not have ldap_connect(), which LogZilla requires.</div>\n";
+    }
+} ?>
     </table>
-        <?
-        //Start security update v0.1
-        //echo $_SESSION['num_login_tries'];
-        if($appConfig['captcha']=='on' && $appConfig['num_login_tries']<=$_SESSION['num_login_tries']) {
-            echo recaptcha_get_html($appConfig['captcha_public_key']);
-        }
+<?
+    //Start security update v0.1
+    //echo $_SESSION['num_login_tries'];
+    if($appConfig['captcha']=='on' && $appConfig['num_login_tries']<=$_SESSION['num_login_tries']) {
+        echo recaptcha_get_html($appConfig['captcha_public_key']);
+    }
     //End security update v0.1
-    ?>
+?>
         <input type=image src="images/GoGo_brn.png" width="50px" height="30px" alt="Login" name="image">
         <br>
         </div>
@@ -229,6 +299,6 @@ if ($_POST) {
                  </div>
                  </body>
                  </html>
-                 <?php 
+<?php 
 } 
 ?>
