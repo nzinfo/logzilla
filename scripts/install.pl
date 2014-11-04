@@ -70,7 +70,7 @@ sub prompt {
 }
 
 my $version    = "4.5";
-my $subversion = ".651";
+my $subversion = ".657";
 
 # Grab the base path
 my $lzbase = getcwd;
@@ -257,6 +257,18 @@ if ( $skipdb !~ /[Yy]/ ) {
     }
     if ( $installdb =~ /[Yy]/ ) {
         my $dbh = DBI->connect( "DBI:mysql:mysql:$dbhost:$dbport", $dbroot, $dbrootpass );
+        if (!$dbh) {
+            print("\n\033[1m\tERROR!\n\033[0m");
+            print "Unable to connect to the $dbname database on $dbhost:$dbport using the credentials set in $lzbase/scripts/.lzrc\n";
+            $dbroot     = &prompt( "Enter the MySQL root username",      "root" );
+            $dbrootpass = &prompt( "Enter the password for $dbroot",     "mysql" );
+            $dbh = DBI->connect( "DBI:mysql:mysql:$dbhost:$dbport", $dbroot, $dbrootpass );
+        }
+        if (!$dbh) {
+            print("\n\033[1m\tERROR!\n\033[0m");
+            print "Still unable to connect. Please edit your .lzrc file (https://www.assembla.com/wiki/show/LogZillaWiki/RC_File) and set the correct credentials\n";
+            exit;
+        }
         my $sth = $dbh->prepare("SELECT version()") or die "Could not get MySQL version: $DBI::errstr";
         $sth->execute;
         while ( my @data = $sth->fetchrow_array() ) {
