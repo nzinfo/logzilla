@@ -15,25 +15,20 @@ $| = 1;
 ################################################
 # Help user if Perl mods are missing
 ################################################
-my @mods = (qw(DBI Date::Calc Term::ReadLine File::Copy Digest::MD5 LWP::Simple File::Spec String::CRC32 MIME::Lite IO::Socket::INET Getopt::Long CHI Net::SNMP Test::mysqld PerlIO::Util Find::Lib MooseX::Params::Validate Test::Deep Test::MockTime Date::Simple ));
+my @mods = (qw(DBI Date::Calc Term::ReadLine File::Copy Digest::MD5 LWP::Simple File::Spec String::CRC32 MIME::Lite IO::Socket::INET Getopt::Long CHI Net::SNMP Test::mysqld PerlIO::Util Find::Lib MooseX::Params::Validate Test::Deep Test::MockTime Date::Simple Log::Fast ));
+my $cpanm = `which cpanm`;
 
 foreach my $mod (@mods) {
-    ( my $fn = "$mod.pm" ) =~ s|::|/|g;    # Foo::Bar::Baz => Foo/Bar/Baz.pm
+    ( my $fn = "$mod.pm" ) =~ s|::|/|g;
     if ( eval { require $fn; 1; } ) {
         ##print "Module $mod loaded ok\n";
     } else {
         print "You are missing a required Perl Module: $mod\nI will attempt to install it for you.\n";
-        system("(echo o conf prerequisites_policy follow;echo o conf commit)|cpan");
-        #my $ok = &getYN( "Shall I attempt to install it for you?", "y" );
-        #if ( $ok =~ /[Yy]/ ) {
-        require CPAN;
-        CPAN::install($mod);
-        #} else {
-        #print "LogZilla requires $mod\n";
-        #exit;
-        #}
-        print "Module installation complete. Please re-run install\n";
-        exit;
+        if (!$cpanm) {
+            print "Cpanimus Not found, installing...\n";
+            system("wget --no-check-certificate -O /usr/bin/cpanm https://raw.github.com/miyagawa/cpanminus/master/cpanm && chmod +x /usr/bin/cpanm");
+        }
+            system("cpanm -S $mod");
     }
 }
 
@@ -1172,11 +1167,11 @@ sub add_syslog_conf {
 
 # Global Options
 options {
-    chain_hostnames(no);
-    keep_hostname(yes);
-    $threaded
-    use_fqdn(no); # This should be set to no in high scale environments
-    use_dns(yes); # This should be set to no in high scale environments
+chain_hostnames(no);
+keep_hostname(yes);
+$threaded
+use_fqdn(no); # This should be set to no in high scale environments
+use_dns(yes); # This should be set to no in high scale environments
 };
 
 };
@@ -1185,24 +1180,24 @@ my $sconf2 = q{
 # Windows Events from SNARE
 # https://www.assembla.com/spaces/LogZillaWiki/wiki/Receiving_Windows_Events_from_SNARE
 rewrite r_snare { 
-    subst("MSWinEventLog.+(Security|Application|System).+", "MSWin_$1", value("PROGRAM") flags(global)); 
+subst("MSWinEventLog.+(Security|Application|System).+", "MSWin_$1", value("PROGRAM") flags(global)); 
 };
 # SNARE sends TAB delimited messages, we want pipes...
 rewrite r_snare2pipe { 
-    subst("\t", "|", value("MESSAGE") 
-    flags(global)
-    ); 
+subst("\t", "|", value("MESSAGE") 
+flags(global)
+); 
 };
 
 # Grab Cisco Mnemonics and write program name
-    filter f_rw_cisco { match('^(%[A-Z]+\-\d\-[0-9A-Z]+): ([^\n]+)' value("MSGONLY") type("pcre") flags("store-matches" "nobackref")); };
-    filter f_rw_cisco_2 { match('^[\*\.]?(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\s+\d{1,2}\s\d{1,2}:\d{1,2}:\d{1,2}(?:\.\d+)?(?: [A-Z]{3})?: (%[^:]+): ([^\n]+)' value("MSGONLY") type("pcre") flags("store-matches" "nobackref")); };
-    filter f_rw_cisco_3 { match('^\d+[ywdh]\d+[ywdh]: (%[^:]+): ([^\n]+)' value("MSGONLY") type("pcre") flags("store-matches" "nobackref")); };
-    filter f_rw_cisco_4 { match('^\d{6}: [\*\.]?(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\s+\d{1,2}\s\d{1,2}:\d{1,2}:\d{1,2}(?:\.\d+)?(?: [A-Z]{3})?: (%[^:]+): ([^\n]+)' value("MSGONLY") type("pcre") flags("store-matches" "nobackref")); };
+filter f_rw_cisco { match('^(%[A-Z]+\-\d\-[0-9A-Z]+): ([^\n]+)' value("MSGONLY") type("pcre") flags("store-matches" "nobackref")); };
+filter f_rw_cisco_2 { match('^[\*\.]?(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\s+\d{1,2}\s\d{1,2}:\d{1,2}:\d{1,2}(?:\.\d+)?(?: [A-Z]{3})?: (%[^:]+): ([^\n]+)' value("MSGONLY") type("pcre") flags("store-matches" "nobackref")); };
+filter f_rw_cisco_3 { match('^\d+[ywdh]\d+[ywdh]: (%[^:]+): ([^\n]+)' value("MSGONLY") type("pcre") flags("store-matches" "nobackref")); };
+filter f_rw_cisco_4 { match('^\d{6}: [\*\.]?(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\s+\d{1,2}\s\d{1,2}:\d{1,2}:\d{1,2}(?:\.\d+)?(?: [A-Z]{3})?: (%[^:]+): ([^\n]+)' value("MSGONLY") type("pcre") flags("store-matches" "nobackref")); };
 
 rewrite r_cisco_program {
-    set("Cisco_Syslog", value("PROGRAM") condition(filter(f_rw_cisco) or filter(f_rw_cisco_2) or filter(f_rw_cisco_3) or filter(f_rw_cisco_4)));
-    set("$1: $2", value("MESSAGE") condition(filter(f_rw_cisco) or filter(f_rw_cisco_2) or filter(f_rw_cisco_3) or filter(f_rw_cisco_4)));
+set("Cisco_Syslog", value("PROGRAM") condition(filter(f_rw_cisco) or filter(f_rw_cisco_2) or filter(f_rw_cisco_3) or filter(f_rw_cisco_4)));
+set("$1: $2", value("MESSAGE") condition(filter(f_rw_cisco) or filter(f_rw_cisco_2) or filter(f_rw_cisco_3) or filter(f_rw_cisco_4)));
 };
 
 # Some guesses to detect VMWare, feel free to add your hostname to the HOST matches below
@@ -1218,28 +1213,28 @@ match('vmware|vim\.' value("MSGONLY"))
     or match("[Vv][Cc][Ee][Nn][Tt][Ee][Rr].*" value("HOST"))
 }; 
 rewrite r_vmware {
-    set("VMWare", value("PROGRAM") condition(filter(f_vmware)));
+set("VMWare", value("PROGRAM") condition(filter(f_vmware)));
 };
 
 # Cisco Context Directory Agent doesn't send host or program name properly
 filter f_CiscoCDA {  
-    match('ContextManager: ' value("MSGONLY"))
+match('ContextManager: ' value("MSGONLY"))
 };  
 rewrite r_CiscoCDA {
-    set("CiscoCDA", value("PROGRAM") condition(filter(f_CiscoCDA)));
-    set("$SOURCEIP", value("HOST") condition(filter(f_CiscoCDA)));
+set("CiscoCDA", value("PROGRAM") condition(filter(f_CiscoCDA)));
+set("$SOURCEIP", value("HOST") condition(filter(f_CiscoCDA)));
 };  
 
 # Capture real program name in case it's missing in the syslog header
 filter f_rw_prg { match('(\w+)\[\d+' value("MSGONLY") type("pcre") flags("store-matches" "nobackref")); };
 rewrite r_rw_prg {
-    set("$1", value("PROGRAM") condition(filter(f_rw_prg)));
+set("$1", value("PROGRAM") condition(filter(f_rw_prg)));
 };  
 
 # Set Program name for OpenAM events
 filter f_rw_openam { match('openam' value("MSGONLY") ); };
 rewrite r_rw_openam {
-    set("OpenAM", value("PROGRAM") condition(filter(f_rw_openam)));
+set("OpenAM", value("PROGRAM") condition(filter(f_rw_openam)));
 };
 
 # Capture SNMP Traps
@@ -1249,92 +1244,92 @@ rewrite r_rw_openam {
 
 filter f_snmptrapd { program("snmptrapd"); };
 parser p_snmptrapd { 
-    csv-parser(columns("SNMPTRAP.HOST", "SNMPTRAP.MSG") delimiters(",") flags(greedy, escape-backslash, strip-whitespace));
+csv-parser(columns("SNMPTRAP.HOST", "SNMPTRAP.MSG") delimiters(",") flags(greedy, escape-backslash, strip-whitespace));
 };
 rewrite r_snmptrapd {
- set("${SNMPTRAP.HOST}" value("HOST") condition(filter(f_snmptrapd)));
- set("${SNMPTRAP.MSG}" value("MESSAGE") condition(filter(f_snmptrapd)));
+set("${SNMPTRAP.HOST}" value("HOST") condition(filter(f_snmptrapd)));
+set("${SNMPTRAP.MSG}" value("MESSAGE") condition(filter(f_snmptrapd)));
 };
 
 source s_logzilla {
-    tcp();
-    udp();
-    # Use no-multi-line so that java events get read properly
-    syslog(flags(no-multi-line));
+tcp();
+udp();
+# Use no-multi-line so that java events get read properly
+syslog(flags(no-multi-line));
 };
 
 destination d_logzilla {
-    program(
-    "/var/www/logzilla/scripts/logzilla"
-    log_fifo_size(1000)
-    flush_lines(100)
-    flush_timeout(1)
-    template("$R_YEAR-$R_MONTH-$R_DAY $R_HOUR:$R_MIN:$R_SEC\t$HOST\t$PRI\t$PROGRAM\t$MSGONLY\n")
-    );
+program(
+"/var/www/logzilla/scripts/logzilla"
+log_fifo_size(1000)
+flush_lines(100)
+flush_timeout(1)
+template("$R_YEAR-$R_MONTH-$R_DAY $R_HOUR:$R_MIN:$R_SEC\t$HOST\t$PRI\t$PROGRAM\t$MSGONLY\n")
+);
 };
 
 destination df_logzilla {
-    file("/var/log/logzilla/DEBUG.log"
-    template("$R_YEAR-$R_MONTH-$R_DAY $R_HOUR:$R_MIN:$R_SEC\t$HOST\t$PRI\t$PROGRAM\t$MSGONLY\n")
-    ); 
+file("/var/log/logzilla/DEBUG.log"
+template("$R_YEAR-$R_MONTH-$R_DAY $R_HOUR:$R_MIN:$R_SEC\t$HOST\t$PRI\t$PROGRAM\t$MSGONLY\n")
+); 
 };
 
 log {
-    source(s_logzilla);
-    rewrite(r_CiscoCDA);
-    rewrite(r_rw_prg);
-    rewrite(r_rw_openam);
-    rewrite(r_vmware);
-    rewrite(r_snare);
-    rewrite(r_snare2pipe);
-    rewrite(r_cisco_program);
-    destination(d_logzilla);
-    # Optional: Log all events to file
-    destination(df_logzilla);
-    flags(flow-control);
+source(s_logzilla);
+rewrite(r_CiscoCDA);
+rewrite(r_rw_prg);
+rewrite(r_rw_openam);
+rewrite(r_vmware);
+rewrite(r_snare);
+rewrite(r_snare2pipe);
+rewrite(r_cisco_program);
+destination(d_logzilla);
+# Optional: Log all events to file
+destination(df_logzilla);
+flags(flow-control);
 };
 # Enable if you are sending SNMP Traps to LogZilla
-    # NOTE: If your /etc/syslog-ng/syslong-ng.conf file does not have "system()" defined in s_src, this will not work.
+# NOTE: If your /etc/syslog-ng/syslong-ng.conf file does not have "system()" defined in s_src, this will not work.
 #log {
-    #source(s_src);
-    #parser(p_snmptrapd);
-    #rewrite(r_snmptrapd);
-    #rewrite(r_snare2pipe);
-    #destination(d_logzilla);
-    ## Optional: Log all events to file
-    #destination(df_logzilla);
-    #flags(final);
+#source(s_src);
+#parser(p_snmptrapd);
+#rewrite(r_snmptrapd);
+#rewrite(r_snare2pipe);
+#destination(d_logzilla);
+## Optional: Log all events to file
+#destination(df_logzilla);
+#flags(final);
 #};
 #</lzconfig> END LogZilla settings
 };
-        if ( !grep( /logzilla|lzconfig/, @arr ) ) {
-            print "Creating LogZilla configuration for syslog-ng at $file\n";
-            open FILE, ">>$file" or die $!;
-            print FILE $sconf . $sconf2;
-        } else {
-            print "Skipping syslog-ng config as $file already exists...\n";
-        }
+if ( !grep( /logzilla|lzconfig/, @arr ) ) {
+    print "Creating LogZilla configuration for syslog-ng at $file\n";
+    open FILE, ">>$file" or die $!;
+    print FILE $sconf . $sconf2;
+} else {
+    print "Skipping syslog-ng config as $file already exists...\n";
+}
     }
 }
 
 sub setup_cron {
     my $crondir;
-    
+
     if ( $docron !~ /[YyNn]/ ) { # i.e. undefined in .lzrc
-	# Cronjob  Setup
-	print("\n\033[1m\n\n========================================\033[0m\n");
-	print("\n\033[1m\tCron Setup\n\033[0m");
-	print("\n\033[1m========================================\n\n\033[0m\n");
-	print "\n";
-	print "Cron is used to run backend indexing and data exports.\n";
-	print "Install will attempt to do this automatically for you by adding it to /etc/cron.d\n";
-	print "In the event that something fails or you skip this step, \n";
-	print "You MUST create it manually or create the entries in your root's crontab file.\n";
-	$docron = &getYN( "Ok to continue?", "y" );
+        # Cronjob  Setup
+        print("\n\033[1m\n\n========================================\033[0m\n");
+        print("\n\033[1m\tCron Setup\n\033[0m");
+        print("\n\033[1m========================================\n\n\033[0m\n");
+        print "\n";
+        print "Cron is used to run backend indexing and data exports.\n";
+        print "Install will attempt to do this automatically for you by adding it to /etc/cron.d\n";
+        print "In the event that something fails or you skip this step, \n";
+        print "You MUST create it manually or create the entries in your root's crontab file.\n";
+        $docron = &getYN( "Ok to continue?", "y" );
     }
     if ( $docron =~ /[Yy]/ ) {
         my $minute;
-	
+
 # due hourly views cron can always run every minute
 #        my $sml = &getYN( "\n\nWill this copy of LogZilla be used to process more than 1 Million messages per day?\nNote: Your answer here only determines how often to run indexing.", "n" );
 #        if ( $sml =~ /[Yy]/ ) {
@@ -1406,7 +1401,7 @@ if ( -d "$crondir" ) {
       print "Note that you do not HAVE to do this, but it will make things much easier on your for both licensing and Email Alert editing.\n";
       print "If you choose not to install the sudo commands, then you must manually SIGHUP syslog-ng each time an Email Alert is added, changed or removed.\n";
       if ( $set_sudo !~ /[YyNn]/ ) { # i.e. undefined in .lzrc
-	  $set_sudo = &getYN( "Ok to continue?", "y" );
+          $set_sudo = &getYN( "Ok to continue?", "y" );
       }
       if ( $set_sudo =~ /[Yy]/ ) {
           my $file = "/etc/sudoers";
@@ -1522,7 +1517,7 @@ if ( -d "$crondir" ) {
 
       # [[ticket:417]] - extract sphinx source from tarball
       if ( $do_sphinx_compile !~ /[YyNn]/ ) { # i.e. undefined in .lzrc
-	  $do_sphinx_compile = &getYN( "Ok to continue?", "y" );
+          $do_sphinx_compile = &getYN( "Ok to continue?", "y" );
       }
       if ( $do_sphinx_compile =~ /[Yy]/ ) {
           my $checkprocess = `ps -C searchd -o pid=`;
@@ -1561,9 +1556,9 @@ if ( -d "$crondir" ) {
               print("\n\033[1m========================================\n\n\033[0m\n\n");
               print "In order for MySQL to import and export data, you must take measures to allow it access from AppArmor.\n";
               print "Install will attempt do do this for you, but please be sure to check /etc/apparmor.d/usr.sbin.mysqld and also to restart the AppArmor daemon once install completes.\n";
-	      if ( $set_apparmor !~ /[YyNn]/ ) { # i.e. undefined in .lzrc
-		  $set_apparmor = &getYN( "Ok to continue?", "y" );
-	      }
+              if ( $set_apparmor !~ /[YyNn]/ ) { # i.e. undefined in .lzrc
+                  $set_apparmor = &getYN( "Ok to continue?", "y" );
+              }
               if ( $set_apparmor =~ /[Yy]/ ) {
                   print "Adding the following to lines to $file:\n";
                   print "/tmp/logzilla_import.txt r,\n$lzbase/exports/** rw,\n";
@@ -1574,10 +1569,10 @@ if ( -d "$crondir" ) {
                   print $config @all;
                   close $config;
               }
-	      if ( $apparmor_restart !~ /[YyNn]/ ) { # i.e. undefined in .lzrc
-		  print "\n\nAppArmor must be restarted, would you like to restart it now?\n";
-		  $apparmor_restart  = &getYN( "Ok to continue?", "y" );
-	      }
+              if ( $apparmor_restart !~ /[YyNn]/ ) { # i.e. undefined in .lzrc
+                  print "\n\nAppArmor must be restarted, would you like to restart it now?\n";
+                  $apparmor_restart  = &getYN( "Ok to continue?", "y" );
+              }
               if ( $apparmor_restart =~ /[Yy]/ ) {
                   my $r = `/etc/init.d/apparmor restart`;
               } else {
@@ -1622,7 +1617,7 @@ if ( -d "$crondir" ) {
       print "You can always disable it by selecting 'Admin>Settings>FEEDBACK' from the main menu\n";
 
       if ( $do_fback !~ /[YyNn]/ ) { # i.e. undefined in .lzrc
-	  $do_fback = &getYN( "Ok to add support and feedback?", "y" );
+          $do_fback = &getYN( "Ok to add support and feedback?", "y" );
       }
       if ( $do_fback =~ /[Yy]/ ) {
           my $sth = $dbh->prepare( "
@@ -1639,20 +1634,20 @@ if ( -d "$crondir" ) {
       my $checkprocess = `ps -C syslog-ng -o pid=`;
       if ($checkprocess) {
           if ( $do_hup_syslog !~ /[YyNn]/ ) { # i.e. undefined in .lzrc
-	      print "\n\nSyslog-ng MUST be restarted, would you like to send a HUP signal to the process?\n";
-	      $do_hup_syslog = &getYN( "Ok to HUP syslog-ng?", "y" );
-	  }
-	  if ( $do_hup_syslog =~ /[Yy]/ ) {
-	      if ( $checkprocess =~ /(\d+)/ ) {
-		  my $pid = $1;
-		  print STDOUT "HUPing syslog-ng PID $pid\n";
-		  my $r = `kill -HUP $pid`;
-	      } else {
-		  print STDOUT "Unable to find PID for syslog-ng\n";
-	      }
-	  } else {
-	      print("\033[1m\n\tPlease be sure to restart syslog-ng..\n\033[0m");
-	  }
+              print "\n\nSyslog-ng MUST be restarted, would you like to send a HUP signal to the process?\n";
+              $do_hup_syslog = &getYN( "Ok to HUP syslog-ng?", "y" );
+          }
+          if ( $do_hup_syslog =~ /[Yy]/ ) {
+              if ( $checkprocess =~ /(\d+)/ ) {
+                  my $pid = $1;
+                  print STDOUT "HUPing syslog-ng PID $pid\n";
+                  my $r = `kill -HUP $pid`;
+              } else {
+                  print STDOUT "Unable to find PID for syslog-ng\n";
+              }
+          } else {
+              print("\033[1m\n\tPlease be sure to restart syslog-ng..\n\033[0m");
+          }
       }
   }
 
@@ -1661,9 +1656,9 @@ if ( -d "$crondir" ) {
       my $checkprocess = `cat /var/run/crond.pid`;
       if ($checkprocess) {
           if ( $do_hup_cron !~ /[YyNn]/ ) { # i.e. undefined in .lzrc
-	      print "\n\nCron.d should be restarted, would you like to send a HUP signal to the process?\n";
-	      $do_hup_cron = &getYN( "Ok to HUP CRON?", "y" );
-	  }
+              print "\n\nCron.d should be restarted, would you like to send a HUP signal to the process?\n";
+              $do_hup_cron = &getYN( "Ok to HUP CRON?", "y" );
+          }
           if ( $do_hup_cron =~ /[Yy]/ ) {
               if ( $checkprocess =~ /(\d+)/ ) {
                   my $pid = $1;
@@ -2390,9 +2385,9 @@ if ( -d "$crondir" ) {
       my $phpver = `/usr/bin/php -v | head -1`;
       my $ver = $1 if ( $phpver =~ /PHP (\d\.\d)/ );
       if ( $ver !~ /[45]\.[04]/ ) {	  
-	  if ( $do_ioncube !~ /[YyNn]/ ) { # i.e. undefined in .lzrc
-	      $do_ioncube = &getYN( "\nInstall will try to add the license loader to php.ini for you is this ok?", "y" );
-	  }
+          if ( $do_ioncube !~ /[YyNn]/ ) { # i.e. undefined in .lzrc
+              $do_ioncube = &getYN( "\nInstall will try to add the license loader to php.ini for you is this ok?", "y" );
+          }
           if ( $do_ioncube =~ /[Yy]/ ) {
               my $file = "/etc/php5/apache2/php.ini";
               if ( !-e "$file" ) {
@@ -2414,9 +2409,9 @@ if ( -d "$crondir" ) {
                   close $config;
 
                   if ( -e "/etc/init.d/apache2" ) {
-		      if ( $restart_php !~ /[YyNn]/ ) { # i.e. undefined in .lzrc
-			  $restart_php = &getYN( "Is it ok to restart Apache to apply changes?", "y" );
-		      }
+                      if ( $restart_php !~ /[YyNn]/ ) { # i.e. undefined in .lzrc
+                          $restart_php = &getYN( "Is it ok to restart Apache to apply changes?", "y" );
+                      }
                       if ( $restart_php =~ /[Yy]/ ) {
                           my $r = `/etc/init.d/apache2 restart`;
                       } else {
@@ -2443,18 +2438,18 @@ if ( -d "$crondir" ) {
       print "You can also run \"$0 install_license\" at any time.\n";
       my $ok = &getYN( "Would you like to attempt automatic license install? (y/n)", "y" );
       if ( $ok =~ /[Yy]/ ) {
-	my ($ip, $mac);
-	# Below uses getIf sub instead of unreliable ifconfig -a to get the IP
-	$ip = getIf('eth0');
-print "getIf Reported IP: $ip\n" if ($ip);
+          my ($ip, $mac);
+          # Below uses getIf sub instead of unreliable ifconfig -a to get the IP
+          $ip = getIf('eth0');
+          print "getIf Reported IP: $ip\n" if ($ip);
           my @lines = `ifconfig eth0`;
           for (@lines) {
               if (/\s*HWaddr (\S+)/) {
                   $mac = lc($1);
                   print "Found MAC ($mac)\n";
               }
-	# skip getting ip from ifconfig if getIf worked above
-	next if ($ip);
+              # skip getting ip from ifconfig if getIf worked above
+              next if ($ip);
               if (/\s*inet addr:([\d.]+)/) {
                   $ip = $1;
                   print "Found IP ($ip)\n";
@@ -2560,46 +2555,46 @@ print "getIf Reported IP: $ip\n" if ($ip);
       closedir(DIR);
   }
 
-sub getIf {
-    my ($iface) = @_;
-    my $socket;
-    socket($socket, PF_INET, SOCK_STREAM, (getprotobyname('tcp'))[2]) || die "Sub 'getIf' is unable to create a socket: $!\n";
-    my $buf = pack('a256', $iface);
-    if (ioctl($socket, SIOCGIFADDR(), $buf) && (my @address = unpack('x20 C4', $buf)))
-    {
-        return join('.', @address);
-    }
-    return undef;
-}
-sub EULA {
+  sub getIf {
+      my ($iface) = @_;
+      my $socket;
+      socket($socket, PF_INET, SOCK_STREAM, (getprotobyname('tcp'))[2]) || die "Sub 'getIf' is unable to create a socket: $!\n";
+      my $buf = pack('a256', $iface);
+      if (ioctl($socket, SIOCGIFADDR(), $buf) && (my @address = unpack('x20 C4', $buf)))
+      {
+          return join('.', @address);
+      }
+      return undef;
+  }
+  sub EULA {
       print <<EOF;
 
 END USER LICENSE AGREEMENT
 
 This End User License Agreement, including any Order which by this reference is incorporated herein (this "Agreement"), is a binding agreement between LogZilla Corporation ("LogZilla") and the person or entity receiving the Software (as defined below) accompanied by this Agreement ("you" or "Customer"). You may have received an "evaluation edition", "alpha", "beta", or other non-commercial release version of the Software ("Evaluation Edition") or a commercially released or generally available version of the Software and your rights will vary depending on the version that you received.
-       
+
 LOGZILLA PROVIDES THE SOFTWARE SOLELY ON THE TERMS AND CONDITIONS SET FORTH IN THIS AGREEMENT AND ON THE CONDITION THAT CUSTOMER ACCEPTS AND COMPLIES WITH THEM. BY CLICKING THE "ACCEPT" BUTTON, YOU (A) ACCEPT THIS AGREEMENT AND AGREE THAT CUSTOMER IS LEGALLY BOUND BY ITS TERMS; AND (B) REPRESENT AND WARRANT THAT: (I) YOU ARE OF LEGAL AGE TO ENTER INTO A BINDING AGREEMENT; AND (II) IF CUSTOMER IS A CORPORATION, GOVERNMENTAL ORGANIZATION OR OTHER LEGAL ENTITY, YOU HAVE THE RIGHT, POWER AND AUTHORITY TO ENTER INTO THIS AGREEMENT ON BEHALF OF CUSTOMER AND BIND CUSTOMER TO ITS TERMS. IF CUSTOMER DOES NOT AGREE TO THE TERMS OF THIS AGREEMENT, LOGZILLA WILL NOT AND DOES NOT LICENSE THE SOFTWARE TO CUSTOMER AND YOU MUST NOT INSTALL THE SOFTWARE OR DOCUMENTATION.
-       
+
 NOTWITHSTANDING ANYTHING TO THE CONTRARY IN THIS AGREEMENT OR YOUR OR CUSTOMER'S ACCEPTANCE OF THE TERMS AND CONDITIONS OF THIS AGREEMENT, NO LICENSE IS GRANTED (WHETHER EXPRESSLY, BY IMPLICATION OR OTHERWISE) UNDER THIS AGREEMENT, AND THIS AGREEMENT EXPRESSLY EXCLUDES ANY RIGHT, CONCERNING ANY SOFTWARE THAT CUSTOMER DID NOT ACQUIRE LAWFULLY OR THAT IS NOT A LEGITIMATE, AUTHORIZED COPY OF LOGZILLA'S SOFTWARE.
 
 1. Definitions. For purposes of this Agreement, the following terms have the following meanings:
-       
+
 "Development Use" means use of the Software by Customer to design, develop and/or test new applications for Production Use.
-       
+
 "Documentation" means user manuals, technical manuals and any other materials provided by LogZilla, in printed, electronic or other form, that describe the installation, operation, use or technical specifications of the Software.
-       
+
 "Fees" are the License Fees and the Support Fees.
-       
+
 "License Fees" means the license fees, including all taxes thereon, paid or required to be paid by Customer for the license granted under this Agreement.
-       
+
 "License Package" means the type of license selected by Customer depending on the number of hosts and messages Customer needs. License Packages are available in evaluation, small business and enterprise sizes.
-       
+
 "Order" means the document by which the Software and any Support Services are ordered by Customer.
-       
+
 "Person" means an individual, corporation, partnership, joint venture, limited liability company, governmental authority, unincorporated organization, trust, association or other entity.
-       
+
 "Production Use" means using the Software with Customer's applications for internal business purposes only, which may include third party customers' access to or use of such applications. "Production Use" does not include the right to reproduce the software for sublicensing, resale, or distribution, including without limitation, operation on a time sharing or service bureau basis or distributing the software as part of an ASP, VAR, OEM, distributor or reseller arrangement.
-       
+
 "Software" means the object code versions of the software set forth in the Order.
 
 "Support Fees" means the support fees, including all taxes thereon, paid or required to be paid by Customer for the Support Services ordered under this Agreement.
@@ -2776,7 +2771,7 @@ If LogZilla repairs or replaces the Software, the warranty will continue to run 
        (e) Customer will not assign or otherwise transfer any of its rights, or delegate or otherwise transfer any of its obligations or performance, under this Agreement, in each case whether voluntarily, involuntarily, by operation of law, merger, a sale of all or substantially all of Customer's assets, business reorganization or otherwise, without LogZilla's prior written consent. Any purported assignment, delegation or transfer in violation of this Section 18(e) is void. LogZilla may freely assign or otherwise transfer all or any of its rights, or delegate or otherwise transfer all or any of its obligations or performance, under this Agreement without Customer's consent. This Agreement is binding upon and inures to the benefit of the parties hereto and their respective permitted successors and assigns.
 
        (f) This Agreement is for the sole benefit of the parties hereto and their respective successors and permitted assigns and nothing herein, express or implied, is intended to or will confer on any other Person any legal or equitable right, benefit or remedy of any nature whatsoever under or by reason of this Agreement.
-	
+
        (g) This Agreement may only be amended, modified or supplemented by an agreement in writing signed by each party hereto. No waiver by any party of any of the provisions hereof will be effective unless explicitly set forth in writing and signed by the party so waiving.
 
        (h) If any term or provision of this Agreement is invalid, illegal or unenforceable in any jurisdiction, such invalidity, illegality or unenforceability will not affect any other term or provision of this Agreement or invalidate or render unenforceable such term or provision in any other jurisdiction.
