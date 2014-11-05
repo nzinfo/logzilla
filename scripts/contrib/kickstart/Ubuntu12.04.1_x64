@@ -126,6 +126,7 @@ my $exit_code=system("mysql -uroot -p$options->{mypass} -e ''");
 if($exit_code!=0) {
     print("\n\033[1m\tERROR!\n\033[0m");
     print "Unable to connect to the mysql server using the default password. Please use the -mypass option on the command line!\n";
+    exit;
 }
 
 # Download code from subversion
