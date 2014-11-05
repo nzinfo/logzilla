@@ -122,6 +122,7 @@ if ( $options->{prereqs} > 0 ) {
     system("apt-get -y install libtest-deep-perl libtest-mocktime-perl libberkeleydb-perl libfile-slurp-perl libdigest-crc-perl libdevel-nytprof-perl curl cpanminus 2>&1");
 }
 
+$options->{mypass} = quotemeta($options->{mypass});
 my $exit_code=system("mysql -uroot -p$options->{mypass} -e ''");
 if($exit_code!=0) {
     print("\n\033[1m\tERROR!\n\033[0m");
