@@ -29,10 +29,10 @@ my $options = {
     apache      => 1,
     ng          => 1,
     license     => 1,
-    cpan        => 1,
     agree       => 0,
     vmbanner    => 0,
     alias       => 1,
+    mypass      => "mysql",
 };
 
 sub usage_and_exit {
@@ -46,6 +46,7 @@ sub usage_and_exit {
     -h        : this (help) message
     -d        : debug level (0-5) (0 = disabled [default])
     -v        : Also print results to STDERR
+    -mypass   : Set the password for the root mysql user (default: mysql)
     -b        : set the base directory for logzilla (defaults to $options->{lzroot})
     -vmb      : Create console boot banner (for VMWare deployments) (default 0)
     -alias    : Create bash_aliases for both root and lzadmin user (if exists) (default 1)
@@ -55,9 +56,8 @@ sub usage_and_exit {
     -p        : Install System Prerequisites (default 1)
     -a        : Set up Apache (default 1)
     -ng       : Set up syslog-ng (default 1)
-    -cp       : Set CPAN autoconfig (default 1)
     -agree    : Agree to the license terms and to this install method (default 0)
-    Example: ./$myname -d 1 -v -base "/var/www/logzilla" -s 0 -c 0 -i 0 -p 0 -a 0 -ng 0 -alias 0 -agree 1
+    Example: ./$myname -d 1 -v -base "/var/www/logzilla" -s 0 -c 0 -i 0 -p 0 -a 0 -ng 0 -alias 0 -agree 1 -mypass mysqlrootpass
     };
     exit($exit_code);
 }
@@ -74,10 +74,10 @@ GetOptions(
     'apache|a=i'      => \$options->{apache},
     'ng|ng=i'         => \$options->{ng},
     'license|lic=i'   => \$options->{license},
-    'cpan|cp=i'       => \$options->{cpan},
     'agree=i'         => \$options->{agree},
     'vmbanner|vmb=i'  => \$options->{vmbanner},
     'alias=i'         => \$options->{alias},
+    'mypass=s'        => \$options->{mypass},
 ) or usage_and_exit(1);    # got some invalid options
 
 if ( $options->{help} ) {
@@ -119,24 +119,13 @@ if ( $options->{prereqs} > 0 ) {
     print "Installing system prerequisites 8 of 8\n";
     system("apt-get -y install libmoosex-params-validate-perl librrdtool-oo-perl 2>&1");
     print "Installing system prerequisites 9 of 9\n";
-    system("apt-get -y install libtest-deep-perl libtest-mocktime-perl libberkeleydb-perl libfile-slurp-perl libdigest-crc-perl libdevel-nytprof-perl 2>&1");
+    system("apt-get -y install libtest-deep-perl libtest-mocktime-perl libberkeleydb-perl libfile-slurp-perl libdigest-crc-perl libdevel-nytprof-perl curl cpanminus 2>&1");
 }
-################################################
-# Help if Perl mods are missing
-################################################
-if ( $options->{cpan} > 0 ) {
-    system("(echo o conf prerequisites_policy follow;echo o conf commit)|cpan");
-}
-my @mods = (qw(DBI Date::Calc Term::ReadLine File::Copy Digest::MD5 LWP::Simple File::Spec String::CRC32 MIME::Lite IO::Socket::INET Getopt::Long CHI Net::SNMP Test::mysqld PerlIO::Util Log::Fast));
 
-foreach my $mod (@mods) {
-    ( my $fn = "$mod.pm" ) =~ s|::|/|g;    # Foo::Bar::Baz => Foo/Bar/Baz.pm
-    if ( eval { require $fn; 1; } ) {
-    } else {
-        print "Installing required Perl module: $mod\n";
-        require CPAN;
-        CPAN::install($mod);
-    }
+my $exit_code=system("mysql -uroot -p$options->{mypass} -e ''");
+if($exit_code!=0) {
+    print("\n\033[1m\tERROR!\n\033[0m");
+    print "Unable to connect to the mysql server using the default password. Please use the -mypass option on the command line!\n";
 }
 
 # Download code from subversion
@@ -155,7 +144,7 @@ print FILE <<EOF;
 # basic properties # 
 #------------------# 
 \$dbroot = "root"; 
-\$dbrootpass = "mysql"; 
+\$dbrootpass = "$options->{mypass}"; 
 \$dbname = "syslog"; 
 \$dbhost = "localhost"; 
 \$dbport = "3306"; 
@@ -250,13 +239,13 @@ if ( $options->{vmbanner} > 0 ) {
     my $file = "/etc/rc.local";
     if ( -e "$file" ) {
         open my $config, '+<', "$file" or warn "FAILED: $!\n";
-          my @all = <$config>;
-          if ( !grep( /vmstartup/, @all ) ) {
-              seek $config, 0, 0;
-              splice @all, -1, 0, "# <lzconfig>\n$options->{lzroot}/scripts/VM/vmstartup\n# </lzconfig>\n";
-              print $config @all;
-          }
-          close $config;
+        my @all = <$config>;
+        if ( !grep( /vmstartup/, @all ) ) {
+            seek $config, 0, 0;
+            splice @all, -1, 0, "# <lzconfig>\n$options->{lzroot}/scripts/VM/vmstartup\n# </lzconfig>\n";
+            print $config @all;
+        }
+        close $config;
     }
 }
 
