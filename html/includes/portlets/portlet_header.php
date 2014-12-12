@@ -565,6 +565,11 @@ if (!$sphinx_results) {
     if (preg_match('/Operation now in progress/', $meta[0]['Value'])) {
         unset ($error);
     }
+    if (preg_match("/unknown local index 'idx_ondisk' in search request/", $meta[0]['Value'])) {
+            // $error .= "<br>This error indicates that you have no logs for the given date range.";
+            // $error .= "<br>If you are certain there are log entries, try recreating the views for the given date using the LZTool.";
+            unset ($error);
+    }
 }
 if ($error) {
     //------------------------------------------------------------
