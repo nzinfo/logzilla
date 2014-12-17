@@ -1190,10 +1190,10 @@ flags(global)
 };
 
 # Grab Cisco Mnemonics and write program name
-filter f_rw_cisco { match('^(%[A-Z]+\-\d\-[0-9A-Z]+): ([^\n]+)' value("MSGONLY") type("pcre") flags("store-matches" "nobackref")); };
-filter f_rw_cisco_2 { match('^[\*\.]?(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\s+\d{1,2}\s\d{1,2}:\d{1,2}:\d{1,2}(?:\.\d+)?(?: [A-Z]{3})?: (%[^:]+): ([^\n]+)' value("MSGONLY") type("pcre") flags("store-matches" "nobackref")); };
-filter f_rw_cisco_3 { match('^\d+[ywdh]\d+[ywdh]: (%[^:]+): ([^\n]+)' value("MSGONLY") type("pcre") flags("store-matches" "nobackref")); };
-filter f_rw_cisco_4 { match('^\d{6}: [\*\.]?(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\s+\d{1,2}\s\d{1,2}:\d{1,2}:\d{1,2}(?:\.\d+)?(?: [A-Z]{3})?: (%[^:]+): ([^\n]+)' value("MSGONLY") type("pcre") flags("store-matches" "nobackref")); };
+filter f_rw_cisco { match('^(%[A-Z]+\-\d\-[0-9A-Z]+): ([^\n]+)' value("MSGONLY") type("pcre") flags("store-matches")); };
+filter f_rw_cisco_2 { match('^[\*\.]?(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\s+\d{1,2}\s\d{1,2}:\d{1,2}:\d{1,2}(?:\.\d+)?(?: [A-Z]{3})?: (%[^:]+): ([^\n]+)' value("MSGONLY") type("pcre") flags("store-matches")); };
+filter f_rw_cisco_3 { match('^\d+[ywdh]\d+[ywdh]: (%[^:]+): ([^\n]+)' value("MSGONLY") type("pcre") flags("store-matches")); };
+filter f_rw_cisco_4 { match('^\d{6}: [\*\.]?(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\s+\d{1,2}\s\d{1,2}:\d{1,2}:\d{1,2}(?:\.\d+)?(?: [A-Z]{3})?: (%[^:]+): ([^\n]+)' value("MSGONLY") type("pcre") flags("store-matches")); };
 
 rewrite r_cisco_program {
 set("Cisco_Syslog", value("PROGRAM") condition(filter(f_rw_cisco) or filter(f_rw_cisco_2) or filter(f_rw_cisco_3) or filter(f_rw_cisco_4)));
@@ -1226,7 +1226,7 @@ set("$SOURCEIP", value("HOST") condition(filter(f_CiscoCDA)));
 };  
 
 # Capture real program name in case it's missing in the syslog header
-filter f_rw_prg { match('(\w+)\[\d+' value("MSGONLY") type("pcre") flags("store-matches" "nobackref")); };
+filter f_rw_prg { match('(\w+)\[\d+' value("MSGONLY") type("pcre") flags("store-matches")); };
 rewrite r_rw_prg {
 set("$1", value("PROGRAM") condition(filter(f_rw_prg)));
 };  
