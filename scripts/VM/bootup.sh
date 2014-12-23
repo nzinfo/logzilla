@@ -20,6 +20,9 @@ if [ -f $lzhome/scripts/VM/firstboot ]; then
     if [ -f /tmp/test ]; then
         $lzhome/scripts/VM/update.pl
         rm -f $lzhome/scripts/VM/firstboot
+	# cleanup the test entry
+	$lzhome/scripts/LZTool -delhost -host "host-1"
+	$lzhome/scripts/LZTool -delhost -host "host-1"
     else
         printf "\n\033[1m\tERROR!\n\033[0m\n"
         echo "LogZilla requires internet access upon first boot. Please configure your network properly then reboot the system"
