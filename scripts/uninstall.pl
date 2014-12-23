@@ -5,7 +5,6 @@
 use strict;
 $| = 1;
 use DBI;
-use Switch;
 use POSIX;
 
 # Get LogZilla base directory
