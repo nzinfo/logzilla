@@ -3,12 +3,12 @@
 # Also sets console message for VMs
 # This script is called from /etc/rc.local during bootup
 
-lzhome="/var/www/logzilla"
+lzhome="/path_to_logzilla"
 [ ! -d "$lzhome" ] && lzhome="/var/www/logzilla"
 
 
 function getyn {
-	while echo "$1" >&2 ; do
+	while echo -e '\E[37;44m'"\033[1m$1\033[0m" >&2 ; do
 		read ANS dummy
 		case $ANS in
 			[Yy]*)	return 0 ;;
@@ -36,12 +36,13 @@ if [ -f $lzhome/scripts/VM/firstboot ]; then
 	$lzhome/scripts/LZTool -delhost -host "host-1"
 	$lzhome/scripts/LZTool -delhost -host "host-1"
 	# Reconfigure Timezone and Keyboard
-	echo "This VM is configured for US Eastern Standard Time (GMT-5)"
-	if getyn "Would you like to configure a different Timezone?" ; then
+	echo
+	echo -e '\E[37;44m'"\033[1mThis VM is configured for US Eastern Standard Time (GMT-5)\033[0m"
+	if getyn "Would you like to configure a different Timezone?[y/n]" ; then
 		dpkg-reconfigure tzdata
 	fi
-	echo "This VM is configured for a US Keyboard"
-	if getyn "Would you like to set a different keyboard layout?" ; then
+	echo -e '\E[37;44m'"\033[1mThis VM is configured for a US Keyboard\033[0m"
+	if getyn "Would you like to set a different keyboard layout?[y/n]" ; then
 		dpkg-reconfigure keyboard-configuration
 	fi
     else
@@ -53,6 +54,7 @@ if [ -f $lzhome/scripts/VM/firstboot ]; then
         exit 1
     fi
 fi
-(cd /var/www/logzilla/sphinx && ./run_searchd.sh --stop)
-(cd /var/www/logzilla/sphinx && ./run_searchd.sh)
+tput sgr0
+(cd /path_to_logzilla/sphinx && ./run_searchd.sh --stop)
+(cd /path_to_logzilla/sphinx && ./run_searchd.sh)
 (cd $lzhome/scripts/VM && ./banner.pl)
