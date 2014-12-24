@@ -35,16 +35,17 @@ if [ -f $lzhome/scripts/VM/firstboot ]; then
 	# cleanup the test entry
 	$lzhome/scripts/LZTool -delhost -host "host-1"
 	$lzhome/scripts/LZTool -delhost -host "host-1"
-	# Reconfigure Timezone and Keyboard
-	echo
-	echo -e '\E[37;44m'"\033[1mThis VM is configured for US Eastern Standard Time (GMT-5)\033[0m"
-	if getyn "Would you like to configure a different Timezone?[y/n]" ; then
-		dpkg-reconfigure tzdata
-	fi
-	echo -e '\E[37;44m'"\033[1mThis VM is configured for a US Keyboard\033[0m"
-	if getyn "Would you like to set a different keyboard layout?[y/n]" ; then
-		dpkg-reconfigure keyboard-configuration
-	fi
+	# Reconfigure Timezone and Keyboard 
+#TODO: Figure out how to allow this to run during bootup - I wasn't able to answer/use the keyboard
+	#echo
+	#echo -e '\E[37;44m'"\033[1mThis VM is configured for US Eastern Standard Time (GMT-5)\033[0m"
+	#if getyn "Would you like to configure a different Timezone?[y/n]" ; then
+		#dpkg-reconfigure tzdata
+	#fi
+	#echo -e '\E[37;44m'"\033[1mThis VM is configured for a US Keyboard\033[0m"
+	#if getyn "Would you like to set a different keyboard layout?[y/n]" ; then
+		#dpkg-reconfigure keyboard-configuration
+	#fi
     else
         printf "\n\033[1m\tERROR!\n\033[0m\n"
         echo "LogZilla requires internet access upon first boot. Please configure your network properly then reboot the system"
@@ -55,6 +56,6 @@ if [ -f $lzhome/scripts/VM/firstboot ]; then
     fi
 fi
 tput sgr0
-(cd /path_to_logzilla/sphinx && ./run_searchd.sh --stop)
-(cd /path_to_logzilla/sphinx && ./run_searchd.sh)
+(cd /var/www/logzilla/sphinx && ./run_searchd.sh --stop)
+(cd /var/www/logzilla/sphinx && ./run_searchd.sh)
 (cd $lzhome/scripts/VM && ./banner.pl)
