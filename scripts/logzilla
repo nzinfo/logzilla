@@ -40,6 +40,7 @@ use IO::Select;
 use PerlIO::Util;
 use List::Util qw(max);
 use Time::HiRes qw(gettimeofday tv_interval);
+use feature 'unicode_strings';
 
 use LogZilla::Config;
 use LogZilla::RateMeter;
@@ -350,7 +351,7 @@ sub save_messages {
     chmod( 0644, $dumpfile ) or croak( "chmod $dumpfile: $!" );
     for my $msg ( @messages ) {
         my @values = (
-            $msg->{host},
+            lc($msg->{host}),
             $msg->{facility},
             $msg->{severity},
             crc32($msg->{prg}),
