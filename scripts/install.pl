@@ -65,7 +65,7 @@ sub prompt {
 }
 
 my $version    = "4.5";
-my $subversion = ".657";
+my $subversion = ".668";
 
 # Grab the base path
 my $lzbase = getcwd;
@@ -1526,8 +1526,9 @@ if ( -d "$crondir" ) {
               system("kill -9 $checkprocess");
           }
           system("rm -rf $lzbase/sphinx/src");
+          system("mkdir $lzbase/sphinx/src");
           print "Extracting source tarball to $lzbase/sphinx/src...\n";
-          system("tar xzvf $lzbase/sphinx/sphinx_source.tgz -C $lzbase/sphinx");
+          system("tar xzvf $lzbase/sphinx/sphinx_source.tgz --strip-components=1 -C $lzbase/sphinx/src");
           if ( -d "$lzbase/sphinx/src") {
               system("cd $lzbase/sphinx/src && ./configure --enable-id64 --with-syslog --prefix `pwd`/.. && $makecmd");
               if ( $sphinx_index =~ /[Yy]/ ) {
@@ -2384,7 +2385,7 @@ if ( -d "$crondir" ) {
       }
       my $phpver = `/usr/bin/php -v | head -1`;
       my $ver = $1 if ( $phpver =~ /PHP (\d\.\d)/ );
-      if ( $ver !~ /[45]\.[04]/ ) {	  
+      if ( $ver !~ /[45]\.[06]/ ) {	  
           if ( $do_ioncube !~ /[YyNn]/ ) { # i.e. undefined in .lzrc
               $do_ioncube = &getYN( "\nInstall will try to add the license loader to php.ini for you is this ok?", "y" );
           }

@@ -3,7 +3,7 @@
 # Also sets console message for VMs
 # This script is called from /etc/rc.local during bootup
 
-lzhome="/var/www/logzilla"
+lzhome="/path_to_logzilla"
 [ ! -d "$lzhome" ] && lzhome="/var/www/logzilla"
 
 for i in 1 2 3 4 5 6; do
@@ -32,6 +32,6 @@ if [ -f $lzhome/scripts/VM/firstboot ]; then
         exit 1
     fi
 fi
-(cd /var/www/logzilla/sphinx && ./run_searchd.sh --stop)
-(cd /var/www/logzilla/sphinx && ./run_searchd.sh)
+(cd /path_to_logzilla/sphinx && ./run_searchd.sh --stop)
+(cd /path_to_logzilla/sphinx && ./run_searchd.sh)
 (cd $lzhome/scripts/VM && ./banner.pl)
