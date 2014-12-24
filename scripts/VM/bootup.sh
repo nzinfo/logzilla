@@ -23,6 +23,9 @@ if [ -f $lzhome/scripts/VM/firstboot ]; then
 	# cleanup the test entry
 	$lzhome/scripts/LZTool -delhost -host "host-1"
 	$lzhome/scripts/LZTool -delhost -host "host-1"
+	# Reconfigure Timezone and Keyboard
+	dpkg-reconfigure tzdata
+	dpkg-reconfigure keyboard-configuration
     else
         printf "\n\033[1m\tERROR!\n\033[0m\n"
         echo "LogZilla requires internet access upon first boot. Please configure your network properly then reboot the system"
