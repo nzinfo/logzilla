@@ -36,12 +36,12 @@ if [ -f $lzhome/scripts/VM/firstboot ]; then
 	$lzhome/scripts/LZTool -delhost -host "host-1"
 	$lzhome/scripts/LZTool -delhost -host "host-1"
 	# Reconfigure Timezone and Keyboard 
+	echo
+	echo -e '\E[37;44m'"\033[1mSetting TimeZone...\033[0m"
+        export tz=`wget -qO - http://geoip.ubuntu.com/lookup | sed -n -e 's/.*<TimeZone>\(.*\)<\/TimeZone>.*/\1/p'` &&  timedatectl set-timezone $tz >> /var/log/tlog
+        export tz=`timedatectl status| grep Timezone | awk '{print $2}'`
+	echo -e '\E[37;44m'"\033[1mTimeZone set to $tz\033[0m"
 #TODO: Figure out how to allow this to run during bootup - I wasn't able to answer/use the keyboard
-	#echo
-	#echo -e '\E[37;44m'"\033[1mThis VM is configured for US Eastern Standard Time (GMT-5)\033[0m"
-	#if getyn "Would you like to configure a different Timezone?[y/n]" ; then
-		#dpkg-reconfigure tzdata
-	#fi
 	#echo -e '\E[37;44m'"\033[1mThis VM is configured for a US Keyboard\033[0m"
 	#if getyn "Would you like to set a different keyboard layout?[y/n]" ; then
 		#dpkg-reconfigure keyboard-configuration
