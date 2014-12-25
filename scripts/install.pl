@@ -28,7 +28,7 @@ foreach my $mod (@mods) {
             print "Cpanimus Not found, installing...\n";
             system("wget --no-check-certificate -O /usr/bin/cpanm https://raw.github.com/miyagawa/cpanminus/master/cpanm && chmod +x /usr/bin/cpanm");
         }
-            system("cpanm -S $mod");
+            system("cpanm -Sn $mod");
     }
 }
 
@@ -65,7 +65,7 @@ sub prompt {
 }
 
 my $version    = "4.5";
-my $subversion = ".671";
+my $subversion = ".672";
 
 # Grab the base path
 my $lzbase = getcwd;
