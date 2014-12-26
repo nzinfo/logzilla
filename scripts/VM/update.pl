@@ -16,11 +16,7 @@ write_file $filename, {binmode => ':utf8'}, $data;
 
 my $osupdate = system("apt-get update && apt-get -y upgrade");
 my $svnup = system("cd /path_to_logzilla/ && svn update --accept theirs-conflict");
-my $upgrade = system("cd /path_to_logzilla/scripts && ./upgrade");
-
-# Remove the test message and host
-my $remhost = system("/path_to_logzilla/scripts/LZTool -delhost -host host-1");
-
+my $upgrade = system("cd /path_to_logzilla/scripts && ./upgrade nohup notest");
 
 # Change the skip license option back to 'n'
 my $filename = '/path_to_logzilla/scripts/.lzrc';

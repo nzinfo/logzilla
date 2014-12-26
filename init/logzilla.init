@@ -1,0 +1,147 @@
+#!/bin/bash
+### BEGIN INIT INFO
+# Provides:          logzilla
+# Required-Start:    $local_fs $network $remote_fs $syslog
+# Required-Stop:     $local_fs $network $remote_fs $syslog
+# Should-Start:      $NetworkManager
+# Should-Stop:       $NetworkManager
+# Default-Start:     2 3 4 5
+# Default-Stop:      0 1 6
+# X-Interactive:     true
+# Short-Description: starts instance of LogZilla
+# Description:       starts instance of LogZilla using start-stop-daemon
+### END INIT INFO
+
+set -e
+
+# Check for defaults file and use if so...
+if [ -f /etc/default/logzilla ]; then
+    . /etc/default/logzilla
+else
+    echo "/etc/default/logzilla not found, using default settings.";
+fi
+DESC=LogZilla
+LZ_PATH=${LZ_PATH-"/var/www/logzilla"}
+SPCONF=${SPCONF-"$LZ_PATH/sphinx/sphinx.conf"}
+DAEMON="$LZ_PATH/sphinx/bin/searchd"
+PIDFILE=`cat $SPCONF | grep -i pid_file | awk '{print $3}'`
+BANNER=${BANNER-true}
+ULIMITH=${ULIMITH-25000}
+ULIMITS=${ULIMITS-25000}
+QUIET=${QUIET-true}
+FRESHSTART=${FRESHSTART-false}
+NAME=logzilla
+ulimit -Hn $ULIMITH
+ulimit -Sn $ULIMITS
+
+. /lib/lsb/init-functions
+
+# Function to see if searchd is already running
+run_check() {
+    if [ -e $PIDFILE ]; then
+        status_of_proc -p $PIDFILE $DAEMON $NAME > /dev/null && RETVAL=0 || RETVAL="$?"
+    else
+        RETVAL="2"
+    fi
+}
+
+case "$1" in
+    start)
+        log_action_begin_msg "Starting LogZilla"
+        if [ $FRESHSTART = true ]; then
+            log_progress_msg "First boot of LogZilla detected, running updates..."
+            # The wget below will check for internet access as it is required for updates
+            wget -qO /tmp/lztest "http://www.logzilla.net/pingme"
+            test=`cat /tmp/lztest | grep -i rawr | wc -l`
+            if [ "${test}" == 1 ]; then
+                #apt-get update && apt-get -y upgrade
+                cd $LZ_PATH && svn update --accept tc
+                cd $LZ_PATH/scripts ; echo "y" | perl $LZ_PATH/scripts/install.pl nohup notest
+                cat /tmp/lztest
+                rm -f /tmp/lztest
+                # Reconfigure Timezone and Keyboard 
+                log_action_begin_msg "Setting TimeZone..."
+                tz=`wget -qO - http://geoip.ubuntu.com/lookup | sed -n -e 's/.*<TimeZone>\(.*\)<\/TimeZone>.*/\1/p'` 
+                log_action_begin_msg "Running command timedatectl --no-ask-password set-timezone \"$tz\""
+                timedatectl set-timezone "$tz" 
+                log_action_begin_msg "Running command timedatectl --adjust-system-clock  set-local-rtc 0"
+                timedatectl --adjust-system-clock  set-local-rtc 0
+                tz=`timedatectl status| grep Timezone | awk '{print $2}'`
+                log_action_begin_msg "TimeZone set to $tz"
+                #TODO: Figure out how to allow this to run during bootup - I wasn't able to answer/use the keyboard
+                #echo -e "This VM is configured for a US Keyboard"
+                #if getyn "Would you like to set a different keyboard layout?[y/n]" ; then
+                #dpkg-reconfigure keyboard-configuration
+                #fi
+                perl -i -pe 's/FRESHSTART=true/FRESHSTART=false/g' /etc/default/logzilla
+                service syslog-ng restart
+            else
+                log_failure_msg "LogZilla requires internet access upon first boot. Please configure your network properly then reboot the system"
+                exit 1
+            fi
+        fi
+        log_progress_msg "Checking index health..."
+        run_check
+        if [ $RETVAL = 0 ]; then
+            log_action_msg "$DESC: Currently running with PID $(cat $PIDFILE). Stopping to check indexes, but will restart automatcally..."
+            $0 stop
+        fi
+        idxlist="/tmp/idxtest"
+        idxdays="/tmp/idxdays"
+        $LZ_PATH/sphinx/bin/searchd -c $SPCONF | grep "sph: No such file or" | awk '{print $3}' | sed "s/'//g" | sed 's/://g' >$idxlist
+        if [ -f $idxlist ]; then
+            uniq=`cat $idxlist | tr ' ' '\n' | sort -u | tr '\n' ' '`
+            for index in $uniq
+            do
+                log_progress_msg "$DESC: Creating Missing Index: '$index'"
+                $LZ_PATH/sphinx/bin/indexer -c $SPCONF $index | grep "range-query fetch failed" | awk '{print $3}' | sed "s/'//g" | sed 's/://g' >>$idxdays
+            done
+            if [ -f $idxdays ]; then
+                uniq=`cat $idxdays | tr ' ' '\n' | sort -u | tr '\n' ' '`
+                for index in $uniq
+                do
+                    date=`echo $index | awk -F '_' '{print $5}' | sed 's/^\(.\{4\}\)\(.\{2\}\)/\1-\2-/'`
+                    if [[ "$date" ]]; then
+                        log_progress_msg "$DESC: Recreating Missing SQL Views for $date"
+                        $LZ_PATH/scripts/LZTool -v -r makeview -mvdate $date -y 
+                    fi
+                done
+            fi
+        fi
+        rm -f $idxlist
+        rm -f $idxdays
+        if [ $BANNER = true ]; then
+            log_action_msg "$DESC: Setting console banner"
+            $LZ_PATH/scripts/VM/banner.pl >/dev/null
+        fi
+        ;;
+    stop)
+        run_check
+        if [ $RETVAL = 0 ]; then
+            log_action_begin_msg "Stopping LogZilla Search Daemon"
+            if [ $QUIET = true ]; then
+                $LZ_PATH/sphinx/bin/searchd -c $SPCONF --stopwait >/dev/null
+            else
+                $LZ_PATH/sphinx/bin/searchd -c $SPCONF --stopwait 
+                log_action_end_msg $?
+            fi
+        fi
+        ;;
+    restart)
+        run_check
+        if [ $RETVAL = 0 ]; then
+            log_action_msg "$DESC: Restarting Search Daemon..."
+            $0 stop
+            $0 start
+        else
+            $0 start
+        fi
+        ;;
+    status)
+        status_of_proc -p $PIDFILE "$DAEMON" "$NAME"
+        ;;
+    *)
+        echo "Usage: $0 {start|stop|restart|status}" >&2
+        exit 1
+        ;;
+esac
