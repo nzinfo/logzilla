@@ -54,7 +54,7 @@ case "$1" in
             wget -qO /tmp/lztest "http://www.logzilla.net/pingme"
             test=`cat /tmp/lztest | grep -i rawr | wc -l`
             if [ "${test}" == 1 ]; then
-                #apt-get update && apt-get -y upgrade
+                apt-get update && apt-get -y upgrade
                 cd $LZ_PATH && svn update --accept tc
                 cd $LZ_PATH/scripts ; echo "y" | perl $LZ_PATH/scripts/install.pl nohup notest
                 cat /tmp/lztest
