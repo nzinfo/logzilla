@@ -1,6 +1,5 @@
 #
 # LogZilla Defaults
-# Copy this file to /etc/default/logzilla
 #
 LZ_PATH="/var/www/logzilla"
 SPCONF="$LZ_PATH/sphinx/sphinx.conf"
@@ -11,8 +10,8 @@ BANNER=true
 # Set quiet to false for searchd return values at startup
 QUIET=true
 
-# WARNING!!! Setting firstboot to true will cause LogZilla to DROP YOUR DATABASE and start a fresh install!
-FIRSTBOOT=false
+# WARNING!!! Setting this to true will cause LogZilla to DROP YOUR DATABASE and start a fresh install!
+FRESHSTART=false
 
 # Sets the system hard and soft ulimits
 # For larger servers with long retention of data, increase this (25000 is the default for our larger systems)
