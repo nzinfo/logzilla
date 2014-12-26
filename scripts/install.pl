@@ -1,5 +1,4 @@
 #!/usr/bin/perl
-
 #
 # install.pl
 #
@@ -65,7 +64,7 @@ sub prompt {
 }
 
 my $version    = "4.5";
-my $subversion = ".672";
+my $subversion = ".675";
 
 # Grab the base path
 my $lzbase = getcwd;
@@ -327,7 +326,7 @@ setup_cron()      unless $skipcron   =~ /[Yy]/;
 setup_sudo()      unless $skipsudo   =~ /[Yy]/;
 setup_apparmor()  unless $skipapparmor   =~ /[Yy]/;
 install_sphinx()  unless $sphinx_compile   =~ /[Nn]/;
-insert_test();
+insert_test() unless ( grep( /notest/, @ARGV ) ); 
 if ($sphinx_index   =~ /[Yy]/) {
     print "Starting Sphinx search daemon and re-indexing data...\n";
     system("(rm -f $lzbase/sphinx/data/* && cd $lzbase/sphinx && ./indexer.sh full)");
@@ -338,7 +337,7 @@ install_license() unless $skiplic      =~ /[Yy]/;
 # run_tests()       unless $test    =~ /[Nn]/;
 
 setup_rclocal();
-hup_syslog();
+hup_syslog() unless ( grep( /nohup/, @ARGV ) );
 
 sub make_archive_tables {
     my $i = 0; 
@@ -355,7 +354,7 @@ sub make_archive_tables {
     if ( tblExists("archives") eq 1 ) {
         copy_old_archives();
     } else {
-        my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/archives.sql`;
+        my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < $lzbase/scripts/sql/archives.sql`;
     }
 
     # TH: seed the hourly views with the no record
@@ -406,24 +405,24 @@ sub do_install {
 
     # Create sphinx table
     if ( $upgrade !~ /[Yy][Ee][Ss]/ ) {
-        my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/sph_counter.sql`;
+        my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < $lzbase/scripts/sql/sph_counter.sql`;
         print $res;
     }
 
     # Create cache table
-    my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/cache.sql`;
+    my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < $lzbase/scripts/sql/cache.sql`;
     print $res;
 
     # Create hosts table
-    $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/hosts.sql`;
+    $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < $lzbase/scripts/sql/hosts.sql`;
     print $res;
 
     # Create mnemonics table
-    $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/mne.sql`;
+    $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < $lzbase/scripts/sql/mne.sql`;
     print $res;
 
     # Create mnemonics table
-    $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/mac.sql`;
+    $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < $lzbase/scripts/sql/mac.sql`;
     print $res;
 
     # Create snare_eid table
@@ -433,71 +432,71 @@ sub do_install {
     do_programs();
 
     # Create suppress table
-    $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/suppress.sql`;
+    $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < $lzbase/scripts/sql/suppress.sql`;
     print $res;
 
     # Create facilities table
-    $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/facilities.sql`;
+    $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < $lzbase/scripts/sql/facilities.sql`;
     print $res;
 
     # Create severities table
-    $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/severities.sql`;
+    $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < $lzbase/scripts/sql/severities.sql`;
     print $res;
 
     # Create ban table
-    $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/banned_ips.sql`;
+    $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < $lzbase/scripts/sql/banned_ips.sql`;
     print $res;
 
     # Create epx tables
-    `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/epx.sql` if ( colExists( "events_per_second", "name" ) eq 0 );
+    `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < $lzbase/scripts/sql/epx.sql` if ( colExists( "events_per_second", "name" ) eq 0 );
 
     # Create email alerts table
     do_email_alerts();
 
     # Groups
-    $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/groups.sql`;
+    $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < $lzbase/scripts/sql/groups.sql`;
     print $res;
 
     # Insert totd data
-    $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/totd.sql`;
+    $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < $lzbase/scripts/sql/totd.sql`;
     print $res;
 
     # Insert LZECS data
-    $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/lzecs.sql`;
+    $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < $lzbase/scripts/sql/lzecs.sql`;
     print $res;
 
     # Insert Suppress data
-    $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/suppress.sql`;
+    $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < $lzbase/scripts/sql/suppress.sql`;
     print $res;
 
     # Insert ui_layout data
     if ( tblExists("ui_layout") eq 1 ) {
         upgrade_ui_layout();
     } else {
-        my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/ui_layout.sql`;
+        my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < $lzbase/scripts/sql/ui_layout.sql`;
     }
 
     # Insert help data
-    $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/help.sql`;
+    $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < $lzbase/scripts/sql/help.sql`;
     print $res;
 
     # Insert history table
-    $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/history.sql`;
+    $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < $lzbase/scripts/sql/history.sql`;
     print $res;
 
     # Insert users table
-    $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/users.sql`;
+    $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < $lzbase/scripts/sql/users.sql`;
     print $res;
 
     # Insert system_log table
-    $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/system_log.sql`;
+    $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < $lzbase/scripts/sql/system_log.sql`;
     print $res;
 
     # Insert rbac table
     if ( tblExists("rbac") eq 1 ) {
         copy_old_rbac();
     } else {
-        my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/rbac.sql`;
+        my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < $lzbase/scripts/sql/rbac.sql`;
     }
 
     # Insert view_limits table
@@ -505,7 +504,7 @@ sub do_install {
     #if ( tblExists("view_limits") eq 1 ) {
     #copy_old_view_limits();
     #} else {
-    #my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/view_limits.sql`;
+    #my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < $lzbase/scripts/sql/view_limits.sql`;
     #}
     make_partitions();
     create_views();
@@ -615,8 +614,8 @@ sub make_partitions {
     my $dbh = db_connect( $dbname, $lzbase, $dbroot, $dbrootpass );
 
     # Import procedures
-    system "perl -i -pe 's| logs | $dbtable |g' sql/procedures.sql" and warn "Could not modify sql/procedures.sql $!\n";
-    my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/procedures.sql`;
+    system "perl -i -pe 's| logs | $dbtable |g' $lzbase/scripts/sql/procedures.sql" and warn "Could not modify $lzbase/scripts/sql/procedures.sql $!\n";
+    my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < $lzbase/scripts/sql/procedures.sql`;
     print $res;
     # Create initial Partition of the $dbtable table
     $dbh->do( "CALL manage_logs_partitions();" )
@@ -856,8 +855,8 @@ sub do_procs {
     do_events();
     # cdukes: added below after v4.25 because we moved some procedures to file but they were getting deleted above
     # this will all get cleaned up when Piotr writes the new install :-)
-    system "perl -i -pe 's| logs | $dbtable |g' sql/procedures.sql" and warn "Could not modify sql/procedures.sql $!\n";
-    my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/procedures.sql`;
+    system "perl -i -pe 's| logs | $dbtable |g' $lzbase/scripts/sql/procedures.sql" and warn "Could not modify $lzbase/scripts/sql/procedures.sql $!\n";
+    my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < $lzbase/scripts/sql/procedures.sql`;
     print $res;
 }
 
@@ -1016,7 +1015,7 @@ sub update_settings {
             " ) or die "Could not update settings table: $DBI::errstr";
         $sth->execute;
     } else {
-        my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/settings.sql`;
+        my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < $lzbase/scripts/sql/settings.sql`;
         my $sth = $dbh->prepare( "
             update settings set value='$url' where name='SITE_URL';
             " ) or die "Could not update settings table: $DBI::errstr";
@@ -1111,10 +1110,10 @@ sub add_logrotate {
             $logrotate = &getYN( "Ok to continue?", "y" );
         }
         if ( $logrotate =~ /[Yy]/ ) {
-            system("cp contrib/system_configs/logzilla.logrotate /etc/logrotate.d/logzilla");
+            system("cp $lzbase/scripts/contrib/system_configs/logzilla.logrotate /etc/logrotate.d/logzilla");
         } else {
             print "Skipped logrotate.d file, you will need to manually copy:\n";
-            print "cp contrib/system_configs/logzilla.logrotate /etc/logrotate.d/logzilla\n";
+            print "cp $lzbase/scripts/contrib/system_configs/logzilla.logrotate /etc/logrotate.d/logzilla\n";
         }
     } else {
         print("\n\033[1m\tWARNING!\n\033[0m");
@@ -1125,7 +1124,7 @@ sub add_logrotate {
 }
 
 # [[ticket:10]] Modifies the exports dir to he correct user
-system "chown mysql.mysql ../exports" and warn "Could not modify archive directory";
+system "chown mysql.mysql $lzbase/exports" and warn "Could not modify archive directory";
 
 # [[ticket:300]] chown scripts also
 system "chown mysql.mysql $lzbase/scripts/export.sh" and warn "Could not set permission on $lzbase/scripts/export.sh";
@@ -1376,7 +1375,7 @@ if ( -d "$crondir" ) {
     print FILE $cron;
     close FILE;
     print "Cronfile added to $crondir\n";
-    hup_crond();
+    hup_crond() unless ( grep( /nohup/, @ARGV ) );
 } else {
     print "$crondir does not exist\n";
     print "You will need to manually copy $lzbase/scripts/contrib/system_configs/logzilla.crontab to /etc/cron.d\n";
@@ -1575,7 +1574,9 @@ if ( -d "$crondir" ) {
                   $apparmor_restart  = &getYN( "Ok to continue?", "y" );
               }
               if ( $apparmor_restart =~ /[Yy]/ ) {
-                  my $r = `/etc/init.d/apparmor restart`;
+                  unless ( grep( /nohup/, @ARGV ) ) {
+                      my $r = `/etc/init.d/apparmor restart`;
+                  }
               } else {
                   print("\033[1m\n\tPlease be sure to restart apparmor..\n\033[0m");
               }
@@ -1853,10 +1854,10 @@ if ( -d "$crondir" ) {
       if ( tblExists("ui_layout") eq 1 ) {
           upgrade_ui_layout();
       } else {
-          my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/ui_layout.sql`;
+          my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < $lzbase/scripts/sql/ui_layout.sql`;
       }
       update_settings();
-      hup_syslog();
+      hup_syslog() unless ( grep( /nohup/, @ARGV ) );
   }
 
   sub db_connect {
@@ -1939,7 +1940,7 @@ if ( -d "$crondir" ) {
           copy_old_snare();
       } else {
           print "Adding SNARE table...\n";
-          my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/snare_eid.sql`;
+          my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < $lzbase/scripts/sql/snare_eid.sql`;
       }
   }
 
@@ -1947,7 +1948,7 @@ if ( -d "$crondir" ) {
       my $dbh = db_connect( $dbname, $lzbase, $dbroot, $dbrootpass );
       print "Updating SNARE table...\n";
       $dbh->do("RENAME TABLE snare_eid TO snare_eid_orig") or die "Could not update $dbname: $DBI::errstr";
-      my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/snare_eid.sql`;
+      my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < $lzbase/scripts/sql/snare_eid.sql`;
       print $res;
       $dbh->do("REPLACE INTO snare_eid SELECT * FROM snare_eid_orig; ") or die "Could not update $dbname: $DBI::errstr";
       $dbh->do("DROP TABLE snare_eid_orig") or die "Could not update $dbname: $DBI::errstr";
@@ -1957,7 +1958,7 @@ if ( -d "$crondir" ) {
       my $dbh = db_connect( $dbname, $lzbase, $dbroot, $dbrootpass );
       print "Updating Archives table...\n";
       $dbh->do("RENAME TABLE archives TO archives_orig") or die "Could not update $dbname: $DBI::errstr";
-      my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/archives.sql`;
+      my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < $lzbase/scripts/sql/archives.sql`;
       print $res;
       $dbh->do("REPLACE INTO archives SELECT * FROM archives_orig; ") or die "Could not update $dbname: $DBI::errstr";
       $dbh->do("DROP TABLE archives_orig") or die "Could not update $dbname: $DBI::errstr";
@@ -1975,7 +1976,7 @@ if ( -d "$crondir" ) {
           my $table = $_;
           if ( colExists( "$table", "id" ) eq 0 ) {
               print "Creating $table table...\n";
-              my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/$table.sql`;
+              my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < $lzbase/scripts/sql/$table.sql`;
               print "$res\n";
           }
           foreach (@cols) {
@@ -2010,7 +2011,7 @@ if ( -d "$crondir" ) {
       my $table = 'events_per_second';
       if ( colExists( "$table", "name" ) eq 0 ) {
           print "Creating $table table...\n";
-          my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/epx.sql`;
+          my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < $lzbase/scripts/sql/epx.sql`;
           print "$res\n";
       }
 
@@ -2020,23 +2021,23 @@ if ( -d "$crondir" ) {
       # Insert sph metrics
       if ( tblExists("sph_metrics") eq 0 ) {
           print "Adding Sphinx Metrics Table\n";
-          my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/sph_metrics.sql`;
+          my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < $lzbase/scripts/sql/sph_metrics.sql`;
       }
       # Insert saudit table
       if ( tblExists("saudit") eq 0 ) {
           print "Adding Search Audit Table\n";
-          my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/saudit.sql`;
+          my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < $lzbase/scripts/sql/saudit.sql`;
       }
       # Insert mails_sent table
       if ( tblExists("mails_sent") eq 0 ) {
           print "Adding Mail Audit Table\n";
-          my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/mails_sent.sql`;
+          my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < $lzbase/scripts/sql/mails_sent.sql`;
       }
       # Insert view_limits table
       if ( tblExists("view_limits") eq 1 ) {
           copy_old_view_limits();
       } else {
-          my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/view_limits.sql`;
+          my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < $lzbase/scripts/sql/view_limits.sql`;
           print "Building view limits\n";
           system("for f in `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport INFORMATION_SCHEMA --skip-column-names --batch -e \"select table_name from tables where table_type = 'VIEW' and table_schema = '$dbname'\"  | grep \"log_arch_day\"`; do mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname -e \"insert ignore into view_limits (view_name, min_id, max_id) values ('\$f', (select min(id) from \$f), (select max(id) from \$f))\"; done");
       }
@@ -2075,7 +2076,7 @@ if ( -d "$crondir" ) {
           print "Updating column: mne\n";
           $dbh->do("ALTER TABLE $dbtable CHANGE `mne` `mne` int(10) unsigned NOT NULL") or die "Could not update $dbname: $DBI::errstr";
           print "Adding Sphinx Counter table\n";
-          my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/sph_counter.sql`;
+          my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < $lzbase/scripts/sql/sph_counter.sql`;
       }
   }
 
@@ -2172,30 +2173,30 @@ if ( -d "$crondir" ) {
           $dbh->do("DROP TABLE user_access") or die "Could not update $dbname: $DBI::errstr";
 
           print "Adding Sphinx Counter table\n";
-          my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/sph_counter.sql`;
+          my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < $lzbase/scripts/sql/sph_counter.sql`;
 
           print "Adding Cache Table\n";
-          $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/cache.sql`;
+          $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < $lzbase/scripts/sql/cache.sql`;
           print $res;
 
           print "Adding Groups Table\n";
-          $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/groups.sql`;
+          $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < $lzbase/scripts/sql/groups.sql`;
           print $res;
 
           print "Adding History Table\n";
-          $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/history.sql`;
+          $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < $lzbase/scripts/sql/history.sql`;
           print $res;
 
           print "Adding lzecs Table\n";
-          $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/lzecs.sql`;
+          $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < $lzbase/scripts/sql/lzecs.sql`;
           print $res;
 
           print "Creating Suppress Table\n";
-          $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/suppress.sql`;
+          $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < $lzbase/scripts/sql/suppress.sql`;
           print $res;
 
           print "Creating Totd Table\n";
-          $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/totd.sql`;
+          $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < $lzbase/scripts/sql/totd.sql`;
 
           print "Creating views\n";
           create_views();
@@ -2206,7 +2207,7 @@ if ( -d "$crondir" ) {
       my $dbh = db_connect( $dbname, $lzbase, $dbroot, $dbrootpass );
       if ( tblExists("triggers") eq 0 ) {
           print "Adding Email Alerts...\n";
-          my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/triggers.sql`;
+          my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < $lzbase/scripts/sql/triggers.sql`;
       } else {
           print "Updating Email Alerts...\n";
           if ( colExists( "triggers", "description" ) eq 0 ) {
@@ -2224,7 +2225,7 @@ if ( -d "$crondir" ) {
 
           #continue
           $dbh->do("RENAME TABLE triggers TO triggers_orig") or die "Could not update $dbname: $DBI::errstr";
-          my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/triggers.sql`;
+          my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < $lzbase/scripts/sql/triggers.sql`;
           print $res;
           $dbh->do("REPLACE INTO triggers SELECT * FROM triggers_orig; ") or die "Could not update $dbname: $DBI::errstr";
           $dbh->do("DROP TABLE triggers_orig") or die "Could not update $dbname: $DBI::errstr";
@@ -2235,11 +2236,11 @@ if ( -d "$crondir" ) {
       my $dbh = db_connect( $dbname, $lzbase, $dbroot, $dbrootpass );
       if ( tblExists("programs") eq 0 ) {
           print "Adding Programs Table...\n";
-          my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/programs.sql`;
+          my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < $lzbase/scripts/sql/programs.sql`;
       } else {
           print "Updating Programs Table...\n";
           $dbh->do("RENAME TABLE programs TO programs_orig") or die "Could not update $dbname: $DBI::errstr";
-          my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/programs.sql`;
+          my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < $lzbase/scripts/sql/programs.sql`;
           print $res;
           $dbh->do("REPLACE INTO programs SELECT * FROM programs_orig; ") or die "Could not update $dbname: $DBI::errstr";
           $dbh->do("DROP TABLE programs_orig") or die "Could not update $dbname: $DBI::errstr";
@@ -2249,7 +2250,7 @@ if ( -d "$crondir" ) {
   sub tbl_add_severities {
       if ( tblExists("severities") eq 0 ) {
           print "Adding Severities Table...\n";
-          my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/severities.sql`;
+          my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < $lzbase/scripts/sql/severities.sql`;
           print $res;
       }
   }
@@ -2257,14 +2258,14 @@ if ( -d "$crondir" ) {
   sub tbl_add_facilities {
       if ( tblExists("facilities") eq 0 ) {
           print "Adding Facilities Table...\n";
-          my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/facilities.sql`;
+          my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < $lzbase/scripts/sql/facilities.sql`;
           print $res;
       }
   }
 
   sub update_help {
       print "Updating help files...\n";
-      my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/help.sql`;
+      my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < $lzbase/scripts/sql/help.sql`;
       print $res;
   }
 
@@ -2272,7 +2273,7 @@ if ( -d "$crondir" ) {
       my $dbh = db_connect( $dbname, $lzbase, $dbroot, $dbrootpass );
       print "Updating UI Layout...\n";
       $dbh->do("RENAME TABLE ui_layout TO ui_layout_orig") or die "Could not update $dbname: $DBI::errstr";
-      my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/ui_layout.sql`;
+      my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < $lzbase/scripts/sql/ui_layout.sql`;
       print $res;
       $dbh->do("REPLACE INTO ui_layout SELECT * FROM ui_layout_orig; ") or die "Could not update $dbname: $DBI::errstr";
       $dbh->do("DROP TABLE ui_layout_orig") or die "Could not update $dbname: $DBI::errstr";
@@ -2282,7 +2283,7 @@ if ( -d "$crondir" ) {
       my $dbh = db_connect( $dbname, $lzbase, $dbroot, $dbrootpass );
       print "Updating Settings...\n";
       $dbh->do("RENAME TABLE settings TO settings_orig") or die "Could not update $dbname: $DBI::errstr";
-      my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/settings.sql`;
+      my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < $lzbase/scripts/sql/settings.sql`;
       print $res;
       $dbh->do("REPLACE INTO settings SELECT * FROM settings_orig; ") or die "Could not update $dbname: $DBI::errstr";
       $dbh->do("DROP TABLE settings_orig") or die "Could not update $dbname: $DBI::errstr";
@@ -2292,7 +2293,7 @@ if ( -d "$crondir" ) {
       my $dbh = db_connect( $dbname, $lzbase, $dbroot, $dbrootpass );
       print "Updating RBAC...\n";
       $dbh->do("RENAME TABLE rbac TO rbac_orig") or die "Could not update $dbname: $DBI::errstr";
-      my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/rbac.sql`;
+      my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < $lzbase/scripts/sql/rbac.sql`;
       print $res;
       $dbh->do("REPLACE INTO rbac SELECT * FROM rbac_orig; ") or die "Could not update $dbname: $DBI::errstr";
       $dbh->do("DROP TABLE rbac_orig") or die "Could not update $dbname: $DBI::errstr";
@@ -2302,7 +2303,7 @@ if ( -d "$crondir" ) {
       my $dbh = db_connect( $dbname, $lzbase, $dbroot, $dbrootpass );
       print "Updating view_limits...\n";
       $dbh->do("RENAME TABLE view_limits TO view_limits_orig") or die "Could not update $dbname: $DBI::errstr";
-      my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/view_limits.sql`;
+      my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < $lzbase/scripts/sql/view_limits.sql`;
       print $res;
       $dbh->do("REPLACE INTO view_limits SELECT * FROM view_limits_orig; ") or die "Could not update $dbname: $DBI::errstr";
       $dbh->do("DROP TABLE view_limits_orig") or die "Could not update $dbname: $DBI::errstr";
@@ -2313,26 +2314,26 @@ if ( -d "$crondir" ) {
       print "Updating SQL Procedures...\n";
 
       # Import procedures
-      system "perl -i -pe 's| logs | $dbtable |g' sql/procedures.sql" and warn "Could not modify sql/procedures.sql $!\n";
-      my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/procedures.sql`;
+      system "perl -i -pe 's| logs | $dbtable |g' $lzbase/scripts/sql/procedures.sql" and warn "Could not modify $lzbase/scripts/sql/procedures.sql $!\n";
+      my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < $lzbase/scripts/sql/procedures.sql`;
       print $res;
 
       # Insert system_log table
-      $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/system_log.sql`;
+      $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < $lzbase/scripts/sql/system_log.sql`;
       print $res;
 
       # Insert rbac table
       if ( tblExists("rbac") eq 1 ) {
           copy_old_rbac();
       } else {
-          my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/rbac.sql`;
+          my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < $lzbase/scripts/sql/rbac.sql`;
       }
 
       # Insert view_limits table
       if ( tblExists("view_limits") eq 1 ) {
           copy_old_view_limits();
       } else {
-          my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < sql/view_limits.sql`;
+          my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < $lzbase/scripts/sql/view_limits.sql`;
           print "Building view limits\n";
           system("for f in `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport INFORMATION_SCHEMA --skip-column-names --batch -e \"select table_name from tables where table_type = 'VIEW' and table_schema = '$dbname'\"  | grep \"log_arch_day\"`; do mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname -e \"insert ignore into view_limits (view_name, min_id, max_id) values ('\$f', (select min(id) from \$f), (select max(id) from \$f))\"; done");
       }
@@ -2379,9 +2380,9 @@ if ( -d "$crondir" ) {
       print "Extracting IONCube files to /usr/local/ioncube\n";
       my $arch = `uname -m`;
       if ( $arch =~ /64/ ) {
-          system("tar xzvf ioncube/ioncube_loaders_lin_x86-64.tar.gz -C /usr/local");
+          system("tar xzvf $lzbase/scripts/ioncube/ioncube_loaders_lin_x86-64.tar.gz -C /usr/local");
       } else {
-          system("tar xzvf ioncube/ioncube_loaders_lin_x86.tar.gz -C /usr/local");
+          system("tar xzvf $lzbase/scripts/ioncube/ioncube_loaders_lin_x86.tar.gz -C /usr/local");
       }
       my $phpver = `/usr/bin/php -v | head -1`;
       my $ver = $1 if ( $phpver =~ /PHP (\d\.\d)/ );
@@ -2414,7 +2415,9 @@ if ( -d "$crondir" ) {
                           $restart_php = &getYN( "Is it ok to restart Apache to apply changes?", "y" );
                       }
                       if ( $restart_php =~ /[Yy]/ ) {
-                          my $r = `/etc/init.d/apache2 restart`;
+                          unless ( grep( /nohup/, @ARGV ) ) {
+                              my $r = `/etc/init.d/apache2 restart`;
+                          }
                       } else {
                           print("\033[1m\n\tPlease be sure to restart your Apache server..\n\033[0m");
                       }
