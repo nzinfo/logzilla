@@ -1,11 +1,12 @@
 #
 # LogZilla Defaults
 #
-LZ_PATH="/var/www/logzilla"
+LZ_PATH="/path_to_logzilla"
 SPCONF="$LZ_PATH/sphinx/sphinx.conf"
+SPDATA="$LZ_PATH/sphinx/data"
 
 # Set Banner to false if you don't want your server console to be updated with the local LogZilla install/help information
-BANNER=true
+BANNER=false
 
 # Set quiet to false for searchd return values at startup
 QUIET=true
@@ -17,3 +18,10 @@ FRESHSTART=false
 # For larger servers with long retention of data, increase this (25000 is the default for our larger systems)
 ULIMITH=10000
 ULIMITS=10000
+
+
+DBUSER="syslogadmin"
+DBPASS="syslogadmin"
+DB="syslog"
+DBHOST="localhost"
+DBPORT=3306

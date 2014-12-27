@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 ### BEGIN INIT INFO
 # Provides:          logzilla
 # Required-Start:    $local_fs $network $remote_fs $syslog
@@ -20,9 +20,17 @@ if [ -f /etc/default/logzilla ]; then
 else
     echo "/etc/default/logzilla not found, using default settings.";
 fi
+
+########################################################################
+###
+### Please don't edit anything below, edit /etc/default/logzilla instead
+###
+########################################################################
+NAME=logzilla
 DESC=LogZilla
-LZ_PATH=${LZ_PATH-"/var/www/logzilla"}
+LZ_PATH=${LZ_PATH-"/path_to_logzilla"}
 SPCONF=${SPCONF-"$LZ_PATH/sphinx/sphinx.conf"}
+SPDATA=${SPDATA-"$LZ_PATH/sphinx/data"}
 DAEMON="$LZ_PATH/sphinx/bin/searchd"
 PIDFILE=`cat $SPCONF | grep -i pid_file | awk '{print $3}'`
 BANNER=${BANNER-true}
@@ -30,7 +38,13 @@ ULIMITH=${ULIMITH-25000}
 ULIMITS=${ULIMITS-25000}
 QUIET=${QUIET-true}
 FRESHSTART=${FRESHSTART-false}
-NAME=logzilla
+DBUSER=${DBUSER-"syslogadmin"}
+DBPASS=${DBPASS-"syslogadmin"}
+DB=${DB-"syslog"}
+DBHOST=${DBHOST-"localhost"}
+DBPORT=${DBPORT-3306}
+MYSQL="mysql -N -u$DBUSER -p$DBPASS -h$DBHOST -P$DBPORT $DB"
+
 ulimit -Hn $ULIMITH
 ulimit -Sn $ULIMITS
 
@@ -45,29 +59,71 @@ run_check() {
     fi
 }
 
+waitforit(){
+    proc="$1"
+    pid=`pidof -x $proc`
+    secs=1
+    if [ $pid ]; then
+        log_action_msg "Waiting for $proc[$pid] to exit"
+        while pidof -x $proc > /dev/null
+        do
+            printf "|"
+            sleep $secs
+            printf "\b"
+            printf "/"
+            sleep $secs
+            printf "\b"
+            printf "\\"
+            sleep $secs
+            printf "\b"
+            printf "|"
+            sleep $secs
+            printf "\b"
+            printf "*"
+        done
+    fi
+    return 0
+}
+
+do_index() {
+    str=""
+    indices=$1
+    rotate=$2
+    for i in $indices
+    do
+        if [ "z$rotate" != "z" ]; then 
+            log_action_msg "Rotating index $i"
+        else
+            log_action_msg "Creating new index for $i"
+        fi
+        [ "$QUIET" = true ] || log_action_msg "Running command '$LZ_PATH/sphinx/bin/indexer -c $SPCONF $indices $rotate --sighup-each'"
+        str=${str}`$LZ_PATH/sphinx/bin/indexer -c $SPCONF $indices $rotate --sighup-each | tail -n +7`
+    done
+        [ "$QUIET" = true ] || log_action_msg $str
+}
 case "$1" in
     start)
-        log_action_begin_msg "Starting LogZilla"
+        log_action_msg "$DESC: Starting"
         if [ $FRESHSTART = true ]; then
-            log_progress_msg "First boot of LogZilla detected, running updates..."
+            log_action_msg "First boot of LogZilla detected, running updates..."
             # The wget below will check for internet access as it is required for updates
             wget -qO /tmp/lztest "http://www.logzilla.net/pingme"
             test=`cat /tmp/lztest | grep -i rawr | wc -l`
             if [ "${test}" == 1 ]; then
-                apt-get update && apt-get -y upgrade
+                #apt-get update && apt-get -y upgrade
                 cd $LZ_PATH && svn update --accept tc
                 cd $LZ_PATH/scripts ; echo "y" | perl $LZ_PATH/scripts/install.pl nohup notest
                 cat /tmp/lztest
                 rm -f /tmp/lztest
                 # Reconfigure Timezone and Keyboard 
-                log_action_begin_msg "Setting TimeZone..."
+                log_action_msg "Setting TimeZone..."
                 tz=`wget -qO - http://geoip.ubuntu.com/lookup | sed -n -e 's/.*<TimeZone>\(.*\)<\/TimeZone>.*/\1/p'` 
-                log_action_begin_msg "Running command timedatectl --no-ask-password set-timezone \"$tz\""
+                log_action_msg "Running command timedatectl --no-ask-password set-timezone \"$tz\""
                 timedatectl set-timezone "$tz" 
-                log_action_begin_msg "Running command timedatectl --adjust-system-clock  set-local-rtc 0"
+                log_action_msg "Running command timedatectl --adjust-system-clock  set-local-rtc 0"
                 timedatectl --adjust-system-clock  set-local-rtc 0
                 tz=`timedatectl status| grep Timezone | awk '{print $2}'`
-                log_action_begin_msg "TimeZone set to $tz"
+                log_action_msg "TimeZone set to $tz"
                 #TODO: Figure out how to allow this to run during bootup - I wasn't able to answer/use the keyboard
                 #echo -e "This VM is configured for a US Keyboard"
                 #if getyn "Would you like to set a different keyboard layout?[y/n]" ; then
@@ -80,7 +136,7 @@ case "$1" in
                 exit 1
             fi
         fi
-        log_progress_msg "Checking index health..."
+        log_action_msg "Checking index health..."
         run_check
         if [ $RETVAL = 0 ]; then
             log_action_msg "$DESC: Currently running with PID $(cat $PIDFILE). Stopping to check indexes, but will restart automatcally..."
@@ -93,7 +149,7 @@ case "$1" in
             uniq=`cat $idxlist | tr ' ' '\n' | sort -u | tr '\n' ' '`
             for index in $uniq
             do
-                log_progress_msg "$DESC: Creating Missing Index: '$index'"
+                log_action_msg "Creating Missing Index: '$index'"
                 $LZ_PATH/sphinx/bin/indexer -c $SPCONF $index | grep "range-query fetch failed" | awk '{print $3}' | sed "s/'//g" | sed 's/://g' >>$idxdays
             done
             if [ -f $idxdays ]; then
@@ -102,7 +158,7 @@ case "$1" in
                 do
                     date=`echo $index | awk -F '_' '{print $5}' | sed 's/^\(.\{4\}\)\(.\{2\}\)/\1-\2-/'`
                     if [[ "$date" ]]; then
-                        log_progress_msg "$DESC: Recreating Missing SQL Views for $date"
+                        log_action_msg "Recreating Missing SQL Views for $date"
                         $LZ_PATH/scripts/LZTool -v -r makeview -mvdate $date -y 
                     fi
                 done
@@ -115,10 +171,60 @@ case "$1" in
             $LZ_PATH/scripts/VM/banner.pl >/dev/null
         fi
         ;;
+    fullindex)
+        log_action_msg "[`date +%F` `date +%T`]: Creating NEW indexes, this may take a while, please be patient..."
+        if `pidof -x "LZTool" >dev/null`; then
+            waitforit "LZTool"
+        fi
+        $MYSQL < $LZ_PATH/scripts/sql/sph_counter.sql
+        rm -rf $SPDATA/*
+        do_index "--all"
+        $0 start
+        log_action_msg "[`date +%F` `date +%T`]: Completed rebuilding of indexes"
+        ;;
+    deltaindex)
+        log_action_msg "[`date +%F` `date +%T`]: Starting delta indexer"
+        if `pidof -x "LZTool" >dev/null`; then
+            waitforit "LZTool"
+        fi
+        ts_start=`date +"%s"`
+        log_action_msg "Rotating old indices"
+        # to avoid race conditions first mark all log_arch* indexes for this run
+        $MYSQL -Nse "UPDATE sph_counter SET this_run=1 where counter_id>2" 
+        indexes=''
+        cores=`$MYSQL -Nse "SELECT value-1 FROM settings WHERE name='SPX_CPU_CORES'"`
+        for a in `$MYSQL -Nse "SELECT index_name FROM sph_counter WHERE this_run=1"`
+        do 
+            for b in `seq 0 $cores` 
+            do 
+                do_index "idx_"$a"_"$b --rotate &
+            done
+        done
+        wait
+
+        # Now we can run the deltas
+        indexes="idx_delta_logs"
+        do_index "$indexes" "--rotate"
+
+        # If we rotated views, we need to restart the daemon
+        x=`$MYSQL -Nse "SELECT index_name FROM sph_counter WHERE this_run=1"` 
+        if [ "z$x" != "z" ]; then 
+            log_action_msg "Restarting due to view rotation"
+            $0 restart
+        fi
+
+        # Cleanup
+        $MYSQL -Nse "DELETE FROM sph_counter WHERE counter_id>2 and this_run=1"
+        ts_end=`date +"%s"`
+        value=`expr $ts_start - $ts_end`
+        # Log our metrics
+        $MYSQL -Nse "INSERT INTO sph_metrics (name,ts_start,ts_end,value) VALUES ('indexer', $ts_start, $ts_end, $value)"
+        log_action_msg "[`date +%F` `date +%T`]: Completed delta index"
+        ;;
     stop)
         run_check
         if [ $RETVAL = 0 ]; then
-            log_action_begin_msg "Stopping LogZilla Search Daemon"
+            log_action_msg "Stopping LogZilla Search Daemon"
             if [ $QUIET = true ]; then
                 $LZ_PATH/sphinx/bin/searchd -c $SPCONF --stopwait >/dev/null
             else
@@ -141,7 +247,7 @@ case "$1" in
         status_of_proc -p $PIDFILE "$DAEMON" "$NAME"
         ;;
     *)
-        echo "Usage: $0 {start|stop|restart|status}" >&2
+        echo "Usage: $0 {start|stop|restart|status|deltaindex|fullindex}" >&2
         exit 1
         ;;
 esac
