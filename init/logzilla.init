@@ -28,6 +28,8 @@ NAME=logzilla
 DESC=LogZilla
 LZ_PATH=${LZ_PATH-"/var/www/logzilla"}
 SPCONF=${SPCONF-"$LZ_PATH/sphinx/sphinx.conf"}
+SPOPTS=${SPOPTS-"--cpustats --iostats"}
+
 SPDATA=${SPDATA-"$LZ_PATH/sphinx/data"}
 DAEMON="$LZ_PATH/sphinx/bin/searchd"
 PIDFILE=`cat $SPCONF | grep -i pid_file | awk '{print $3}'`
@@ -53,6 +55,16 @@ ulimit -Sn $ULIMITS
 run_check() {
     if [ -e $PIDFILE ]; then
         status_of_proc -p $PIDFILE $DAEMON $NAME > /dev/null && RETVAL=0 || RETVAL="$?"
+    else
+        RETVAL="2"
+    fi
+}
+# Error checking for MySQL Commands
+query() {
+    query=$1
+    if [ -e $PIDFILE ]; then
+        status_of_proc -p $PIDFILE $DAEMON $NAME > /dev/null && RETVAL=0 || RETVAL="$?"
+        $MYSQL -Nse "$query" > /dev/null && RETVAL=0 || RETVAL="$?"
     else
         RETVAL="2"
     fi
@@ -102,9 +114,9 @@ do_index() {
 }
 case "$1" in
     start)
-        log_action_msg "$DESC: Starting"
+        log_action_msg "$DESC[$$]: Starting"
         if [ $FRESHSTART = true ]; then
-            log_action_msg "$DESC: FRESHSTART Detected - Creating a NEW installation of LogZilla"
+            log_action_msg "$DESC[$$]: FRESHSTART Detected - Creating a NEW installation of LogZilla"
             # The wget below will check for internet access as it is required for updates
             wget -qO /tmp/lztest "http://www.logzilla.net/pingme"
             if [ "`cat /tmp/lztest | grep -i rawr | wc -l`" -eq 1 ]; then
@@ -138,12 +150,12 @@ case "$1" in
         log_action_msg "Checking index health..."
         run_check
         if [ $RETVAL = 0 ]; then
-            log_action_msg "$DESC: Currently running with PID $(cat $PIDFILE). Stopping to check indexes, but will restart automatcally..."
+            log_action_msg "$DESC[$$]: Indexer is currently running with PID $(cat $PIDFILE). Stopping to check indexes, but will restart automatcally..."
             $0 stop
         fi
         idxlist="/tmp/idxtest"
         idxdays="/tmp/idxdays"
-        $LZ_PATH/sphinx/bin/searchd -c $SPCONF | grep "sph: No such file or" | awk '{print $3}' | sed "s/'//g" | sed 's/://g' >$idxlist
+        $LZ_PATH/sphinx/bin/searchd -c $SPCONF $SPOPTS | grep "sph: No such file or" | awk '{print $3}' | sed "s/'//g" | sed 's/://g' >$idxlist
         if [ -f $idxlist ]; then
             uniq=`cat $idxlist | tr ' ' '\n' | sort -u | tr '\n' ' '`
             for index in $uniq
@@ -166,12 +178,12 @@ case "$1" in
         rm -f $idxlist
         rm -f $idxdays
         if [ $BANNER = true ]; then
-            log_action_msg "$DESC: Setting console banner"
+            log_action_msg "$DESC[$$]: Setting console banner"
             $LZ_PATH/scripts/VM/banner.pl >/dev/null
         fi
         ;;
-    fullindex)
-        log_action_msg "[`date +%F` `date +%T`]: Creating NEW indexes, this may take a while, please be patient..."
+    reindex)
+        log_action_msg "$NAME[$$]: [`date +%F` `date +%T`] - Creating NEW indexes, this may take a while, please be patient..."
         if `pidof -x "LZTool" >dev/null`; then
             waitforit "LZTool"
         fi
@@ -179,19 +191,33 @@ case "$1" in
         rm -rf $SPDATA/*
         do_index "--all"
         $0 start
-        log_action_msg "[`date +%F` `date +%T`]: Completed rebuilding of indexes"
+        log_action_msg "$NAME[$$]: Completed rebuilding of indexes at `date +%F` `date +%T`"
         ;;
-    deltaindex)
-        log_action_msg "[`date +%F` `date +%T`]: Starting delta indexer"
+    index)
+        log_action_msg "$NAME[$$]: Starting delta indexer at `date +%F` `date +%T`"
         if `pidof -x "LZTool" >dev/null`; then
             waitforit "LZTool"
         fi
         ts_start=`date +"%s"`
         log_action_msg "Rotating old indices"
         # to avoid race conditions first mark all log_arch* indexes for this run
-        $MYSQL -Nse "UPDATE sph_counter SET this_run=1 where counter_id>2" 
+        query "UPDATE sph_counter SET this_run=1 where counter_id>2" 
+        if [ $RETVAL != 0 ]; then
+            log_failure_msg "$DESC: MySQL is not responding"
+        fi
         indexes=''
-        cores=`$MYSQL -Nse "SELECT value-1 FROM settings WHERE name='SPX_CPU_CORES'"`
+        query "SELECT value-1 FROM settings WHERE name='SPX_CPU_CORES'"
+        if [ $RETVAL = 0 ]; then
+            cores=`$MYSQL -Nse "SELECT value-1 FROM settings WHERE name='SPX_CPU_CORES'"`
+        else
+            log_failure_msg "$DESC: MySQL is not responding"
+            exit
+        fi
+        query "SELECT index_name FROM sph_counter WHERE this_run=1"
+        if [ $RETVAL != 0 ]; then
+            log_failure_msg "$DESC: MySQL is not responding"
+            exit
+        fi
         for a in `$MYSQL -Nse "SELECT index_name FROM sph_counter WHERE this_run=1"`
         do 
             for b in `seq 0 $cores` 
@@ -216,9 +242,14 @@ case "$1" in
         $MYSQL -Nse "DELETE FROM sph_counter WHERE counter_id>2 and this_run=1"
         ts_end=`date +"%s"`
         value=`expr $ts_start - $ts_end`
+
         # Log our metrics
-        $MYSQL -Nse "INSERT INTO sph_metrics (name,ts_start,ts_end,value) VALUES ('indexer', $ts_start, $ts_end, $value)"
-        log_action_msg "[`date +%F` `date +%T`]: Completed delta index"
+        query "INSERT INTO sph_metrics (name,ts_start,ts_end,value) VALUES ('indexer', $ts_start, $ts_end, $value)"
+        if [ $RETVAL != 0 ]; then
+            log_failure_msg "$DESC: MySQL is not responding"
+            exit
+        fi
+        log_action_msg "$NAME[$$]: Completed delta index at `date +%F` `date +%T`"
         ;;
     stop)
         run_check
@@ -235,18 +266,25 @@ case "$1" in
     restart)
         run_check
         if [ $RETVAL = 0 ]; then
-            log_action_msg "$DESC: Restarting Search Daemon..."
-            $0 stop
-            $0 start
+            log_action_msg "$DESC[$$]: Restarting Search Daemon on PID $(cat $PIDFILE)"
+            kill -HUP $(cat $PIDFILE)
         else
             $0 start
         fi
+        ;;
+    stats)
+        run_check
+        if [ $RETVAL = 0 ]; then
+                $LZ_PATH/sphinx/bin/searchd -c $SPCONF --status | tail -n +8
+            else
+                log_action_msg "LogZilla is not running..."
+            fi
         ;;
     status)
         status_of_proc -p $PIDFILE "$DAEMON" "$NAME"
         ;;
     *)
-        echo "Usage: $0 {start|stop|restart|status|deltaindex|fullindex}" >&2
+        echo "Usage: $0 {start|stop|restart|status|index|reindex|stats}" >&2
         exit 1
         ;;
 esac
