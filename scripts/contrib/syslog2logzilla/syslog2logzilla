@@ -146,6 +146,7 @@ while ( my $line = <STDIN> ) {
         ( $month, $day, $hms, $host, $prg, $msg ) = split( '\s+', $line, 6 );
         DEBUG( 1, "Incorrect Y-m-d value, converting..." );
         my ( $month, $day ) = split( '\s+', $line, 3 );
+            $day = sprintf( "%02d", $day);
         DEBUG( 1, "Month found is $month" );
         my $yr = strftime( "%Y", localtime );
         $month_num = sprintf( "%02d", ( aIndex( $month, @months ) ) + 1 );
