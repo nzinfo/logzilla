@@ -17,7 +17,7 @@ QUIET=true
 FRESHSTART=false
 
 # Sets the system hard and soft ulimits
-# For larger servers with long retention of data, increase this (25000 is the default for our larger systems)
+# For larger servers with long retention of data, we use 100k/50k
 ULIMITH=100000
 ULIMITS=50000
 
