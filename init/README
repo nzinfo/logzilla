@@ -1,5 +1,5 @@
 # Run the following commands on Ubuntu to use these:
-cp logzilla.default /etc/default
-cp logzilla.init /etc/init.d/logzilla
+cp logzilla.default /etc/default/logzilla
+cp logzilla.ubuntu /etc/init.d/logzilla
 update-rc.d logzilla defaults
 

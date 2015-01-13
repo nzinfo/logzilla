@@ -167,8 +167,9 @@ case "$1" in
                 uniq=`cat $idxdays | tr ' ' '\n' | sort -u | tr '\n' ' '`
                 for index in $uniq
                 do
+                    date=""
                     date=`echo $index | awk -F '_' '{print $5}' | sed 's/^\(.\{4\}\)\(.\{2\}\)/\1-\2-/'`
-                    if [[ "$date" ]]; then
+                    if [ -n "$date" ]; then
                         log_action_msg "Recreating Missing SQL Views for $date"
                         $LZ_PATH/scripts/LZTool -v -r makeview -mvdate $date -y 
                     fi

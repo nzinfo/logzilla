@@ -4,6 +4,7 @@
 LZ_PATH="/var/www/logzilla"
 SPCONF="$LZ_PATH/sphinx/sphinx.conf"
 SPDATA="$LZ_PATH/sphinx/data"
+#SPOPTS="--cpustats --iostats --logdebugv"
 SPOPTS="--cpustats --iostats"
 
 # Set Banner to false if you don't want your server console to be updated with the local LogZilla install/help information
@@ -17,8 +18,8 @@ FRESHSTART=false
 
 # Sets the system hard and soft ulimits
 # For larger servers with long retention of data, increase this (25000 is the default for our larger systems)
-ULIMITH=10000
-ULIMITS=10000
+ULIMITH=100000
+ULIMITS=50000
 
 
 DBUSER="syslogadmin"
