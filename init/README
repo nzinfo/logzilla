@@ -3,3 +3,12 @@ cp logzilla.default /etc/default/logzilla
 cp logzilla.ubuntu /etc/init.d/logzilla
 update-rc.d logzilla defaults
 
+You MUST edit your /etc/rc.local and /etc/cron.d/logzilla.
+in rc.local, comment out the startup of searchd:
+# No needed as of LZ v4.5.683 - now using init.d
+# (cd /var/www/logzilla/sphinx && ./run_searchd.sh)
+
+In cron.d/logzilla, run the init.d for indexing:
+#*/1 * * * * root test -d /var/www/logzilla && ( cd /var/www/logzilla/sphinx; ./indexer.sh delta ) >> /var/log/logzilla/sphinx_indexer.log 2>&1                                                                                                                 
+# below is the "new" way - using init.d                                                                                                                                                                                                                         
+*/1 * * * * root service logzilla index >> /var/log/logzilla/indexer.log 2>&1      
