@@ -64,7 +64,7 @@ sub prompt {
 }
 
 my $version    = "4.5";
-my $subversion = ".679";
+my $subversion = ".680";
 
 # Grab the base path
 my $lzbase = getcwd;
@@ -154,6 +154,10 @@ foreach my $arg (@ARGV) {
     }
     elsif($arg eq "test") {
         run_tests();
+        exit;
+    }
+    elsif($arg eq "reset_sql_user") {
+        make_dbuser();
         exit;
     }
     elsif($arg eq "insert_test") {
