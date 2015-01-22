@@ -98,14 +98,15 @@ my $cmd;
 # Install Prereq's
 if ( $options->{prereqs} > 0 ) {
 my $sngpath = $osver;
-$sngpath = "trusty" if $osver eq 14;
+$sngpath = "trusty" if $osver eq 14.04;
     print "Making sure OS is up to date...\n";
     system("printf '# Replacement for the default syslog-ng included in Ubuntu as that one has a memory leak\ndeb http://packages.madhouse-project.org/ubuntu $sngpath syslog-ng-3.6\n' > /etc/apt/sources.list.d/syslog-ng_logzilla.list");
     system("wget --no-check-certificate https://packages.madhouse-project.org/debian/archive-key.txt");
     system("apt-key add archive-key.txt");
     system("apt-get update && apt-get -y upgrade");
+    system("apt-get -y purge rsyslog && apt-get -y install syslog-ng");
     print "Installing system prerequisites 1 of 9\n";
-    system("apt-get -y --force-yes install build-essential apache2 mysql-server php5 libmysqlclient-dev syslog-ng php5-cli libapache2-mod-php5 subversion");
+    system("apt-get -y --force-yes install build-essential apache2 mysql-server php5 libmysqlclient-dev php5-cli libapache2-mod-php5 subversion");
     print "Installing system prerequisites 2 of 9\n";
     system("apt-get -y install linux-headers-\$(uname -r)");
     print "Installing system prerequisites 3 of 9\n";
