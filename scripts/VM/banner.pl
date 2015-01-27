@@ -6,6 +6,7 @@
 
 use strict;
 my ($linfo, $ip);
+my $release = `lsb_release -a | grep Description | cut -f2`;
 
 my $re = qr/\b\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\b/;
 sub getip {
@@ -28,19 +29,27 @@ if (getip =~ /$re/) {
 }
 my $banner = qq{
 #######################################################################
-LOGZILLA
+                                                                   
+       `,;:.                                                       
+     .;;;;;;;:                                                     
+    :;;;;;;;;;;`                                                   
+   :;;,,;,,,,;;;    ..    `,:`    ,:.   .... `.. `..   ..    ....  
+  `;;;  ;`   ;;;:   ;;`  `;;;;, `;;;;:  ;;;; .;; ,;;   ;;`   :;;;  
+  ;;;;  ;;; `;;;;   ;;`  :;:.;; ,;;`;;  .:;; .;; ,;;   ;;`   ;;;;  
+  ;;;;  ;;. :;;;;.  ;;`  :;:.;; ,;;`;;   ;;; .;; ,;;   ;;`   ;;:;` 
+  ;;;;  ;; `;;;;;:  ;;`  :;:.;; ,;;      ;;. .;; ,;;   ;;`   ;;:;. 
+  ;;;;  ;` ;;;;;;:  ;;`  :;:.;; ,;;:;;  .;;  .;; ,;;   ;;`  `;;,;: 
+  ;;;;  ;    ;;;;,  ;;`  :;:.;; ,;;.;;  :;;  .;; ,;;   ;;`  .;:.;: 
+  ;;;;  ;,,,,;;;;`  ;;`  :;:.;; ,;; ;;  ;;,  .;; ,;;   ;;`  ,;;;;; 
+  :;;;  ::::;;;;;   ;;:: ,;;,;; .;;`;; `;;:: .;; ,;;:. ;;:: :;:.;; 
+   ;;;     `;;;;.   ;;;;  ;;;;`  ;;;:; .;;;; .;; ,;;;. ;;;: ;;:`;; 
+   .;;;;;;;;;;;:           ``     `                                
+    .;;;;;;;;;:                                                    
+      :;;;;;;`                                                     
+
 #######################################################################
-This VM is running LogZilla v4.5 on Ubuntu 12.04 LTS Server x64
-To obtain an evaluation license, please visit http://www.logzilla.pro
-
-
-
-! READ THIS, IT IS ACTUALLY IMPORTANT!
-
-Timezone:
-This server is configured for Eastern Standard Time (EST)
-You will need to set the timezone to your locale by typing:
-dpkg-reconfigure tzdata
+This VM is running LogZilla v4.5 $release
+To obtain an evaluation license, please visit http://www.logzilla.net
 
 Access:
 The login/password for the shell is lzadmin/lzadmin (as in "LogZilla Admin")
@@ -48,12 +57,8 @@ The login/password for the Web Interface is admin/admin
 The login/password for MySQL root is root/mysql
 $linfo
 
-More Information and Help:
-Please read /path_to_logzilla/VM-README.txt
-
 Please report any trouble to http://support.logzilla.net                       
 #######################################################################
-
 };
 
 open(FILE,">/etc/issue");
