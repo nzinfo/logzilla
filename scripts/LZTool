@@ -974,7 +974,7 @@ sub makeview {
 
             while ( $results = $sth->fetchrow_hashref ) {
                 $log->INFO("Creating view_limits for log_arch_day_$y$m$d");
-                $sql = "REPLACE INTO view_limits (view_name, min_id, max_id) values ('$results->{table_name}', (SELECT min(id) FROM $results->{table_name}), (SELECT max(id) FROM $results->{table_name}))";
+                $sql = "REPLACE INTO view_limits (view_name, min_id, max_id) values ('$results->{table_name}', IFNULL((SELECT min(id) FROM $results->{table_name}),1), IFNULL((SELECT max(id) FROM $results->{table_name}),1))";
                 DEBUG( 1, "Executing SQL Statement: $sql" );
                 $dbh->do($sql) unless $options->{dryrun};
                 $log->INFO("View creation complete");
