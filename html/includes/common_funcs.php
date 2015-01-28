@@ -1200,6 +1200,7 @@ function search($json_o, $spx_max,$index="idx_logs idx_delta_logs",$spx_ip,$spx_
             if ($h !== '') {
                 // #407 - make sure all hosts are crc32
                 if (!is_numeric($h)) { 
+                    $h=strtolower($h);
                     $h = crc32($h); 
                 }
             $hosts =  $hosts . $h . ",";
@@ -1668,6 +1669,7 @@ function search_graph($json_o, $spx_max,$index="idx_logs idx_delta_logs",$spx_ip
             if ($h !== '') { // [[ticket:304]]
                 // #407 - make sure all hosts are crc32
                 if (!is_numeric($h)) { 
+                    $h=strtolower($h);
                     $h = crc32($h); 
                 }
             $hosts =  $hosts . $h . ",";
