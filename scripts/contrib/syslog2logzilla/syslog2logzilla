@@ -55,6 +55,7 @@ sub usage_and_exit {
     -mv	      : Create associated view tables in the DB - needed when importing data older than today.
     -csco     : Only import cisco-type events (matching Cisco mnemonics)
     -ct       : Use current timestamp for all incoming logs instead of their original timestamps
+    -kiwi     : Process logs saved from a Kiwi syslog host
 
 Example Usage:
 cat logfile | $myname -l /var/log/foo.log -d 1 -v
@@ -75,6 +76,7 @@ GetOptions(
     'makeview|mv!'    => \$options->{makeview},
     'sis!'            => \$options->{sis},
     'curtime|ct!'     => \$options->{ct},
+    'kiwi!'           => \$options->{kiwi},
 ) or usage_and_exit(1);    # got some invalid options
 
 if ( $options->{help} ) {
@@ -123,12 +125,25 @@ sub read_settings_from_db {
     return \%settings;
 }
 
+my ($facsev, $fac, $sev, $ymdhms, $host, $msg);
 while ( my $line = <STDIN> ) {
     chomp $line;
     # Skip useless "MARK" messages
     next if ( $line =~ /-- MARK --/ );
     DEBUG( 1, "Original Line = $line" );
     my ( $ymd, $month, $day, $hms, $host, $prg, $msg );
+    if ( $options->{kiwi} ) {
+        # 2013-11-17 00:00:00	Local4.Notice	10.4.1.254	:Nov 17 00:00:00 EST: %ASA-vpn-5-713257: Phase 1 failure:  Mismatched attribute types for class Group Description:  Rcv'd: Group 2  Cfg'd: Group 5
+        ( $ymdhms, $facsev, $host, $msg ) = split(/\t/, $line);
+        ($fac, $sev) = split (/\./, $facsev);
+        $msg = $1 if ($msg =~ /:\S{3}\s+\d{2}\s+\d{2}:\d{2}:\d{2}\s+\S+\s+(.*)/); 
+        DEBUG( 1, "YMD HMS = $ymdhms" );
+        DEBUG( 1, "FAC = $fac" );
+        DEBUG( 1, "SEV = $sev" );
+        DEBUG( 1, "HOST = $host" );
+        DEBUG( 1, "MSG = $msg" );
+        $line = $msg;
+    }
     if ( $options->{sis} ) {
         $host = 'SomeHost';
         $prg = 'MyProgram';
@@ -146,7 +161,7 @@ while ( my $line = <STDIN> ) {
         ( $month, $day, $hms, $host, $prg, $msg ) = split( '\s+', $line, 6 );
         DEBUG( 1, "Incorrect Y-m-d value, converting..." );
         my ( $month, $day ) = split( '\s+', $line, 3 );
-            $day = sprintf( "%02d", $day);
+        $day = sprintf( "%02d", $day);
         DEBUG( 1, "Month found is $month" );
         my $yr = strftime( "%Y", localtime );
         $month_num = sprintf( "%02d", ( aIndex( $month, @months ) ) + 1 );
@@ -154,7 +169,7 @@ while ( my $line = <STDIN> ) {
         $ymd = "$yr-$month_num-$day";
         DEBUG( 1, "Setting YMD to %s", $ymd );
     }
-    if ( $msg =~ /\%([^:]*)\-(\d+)\-([A-Z\-\_\d]+?)(?:\:|\s)/ ) {
+    if ( $msg =~ /(%[^:]*\-\d+\-[A-Z\-\_\d]+?)(?:\:|\s)/ ) {
         $prg = "1019293";    # the logzilla processor will pick this up
         $sev = $2
     } else {
@@ -177,7 +192,7 @@ while ( my $line = <STDIN> ) {
 
     my $fac = 23;    # Manually set Local7 since we don't know the IETF facility
     my $pri = ( 23 * 8 + $sev );
-    my $ymdhms = "$ymd $hms";
+    $ymdhms = "$ymd $hms" if (!$ymdhms);
     $ymdhms = strftime "%Y-%m-%d %H:%M:%S", localtime if ($options->{ct});
     print "$ymdhms\t$host\t$pri\t$prg\t$msg\n";
     push( @ymds, $ymd ) if ( $options->{makeview} );
@@ -253,7 +268,7 @@ sub setup_log {
 
         # make multiplexer FH sending data both to file and STDERR
         open( my $fh, '>>:tee', $options->{logfile}, \*STDERR )
-          or die("$options->{logfile}: $!");
+            or die("$options->{logfile}: $!");
         $fh->autoflush(1);
         $log_options->{fh} = $fh;
     }
