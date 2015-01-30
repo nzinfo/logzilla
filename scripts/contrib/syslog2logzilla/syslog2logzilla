@@ -197,6 +197,7 @@ while ( my $line = <STDIN> ) {
     my $pri = ( $fac * 8 + $sev );
     $ymdhms = "$ymd $hms" if (!$ymdhms);
     $ymdhms = strftime "%Y-%m-%d %H:%M:%S", localtime if ($options->{ct});
+    ( $ymd, $hms ) = split( '\s+', $ymdhms );
     DEBUG( 1, "YMDHMS = %s, Host = %s, Program = %s, Message = %s", $ymdhms, $host, $prg, $msg );
     print "$ymdhms\t$host\t$pri\t$prg\t$msg\n";
     push( @ymds, $ymd ) if ( $options->{makeview} );
@@ -218,13 +219,12 @@ sub makeview {
     @ymds = uniq(@ymds);
     for my $ymd (@ymds) {
         $log->INFO("Creating view for $ymd");
-        next;
         my ( $y, $m, $d );
         if ($ymd) {
             if ( $ymd =~ /(\d{4})-?(\d{2})-?(\d{2})-?/ ) {
-                my $y = $1;
-                my $m = $2;
-                my $d = $3;
+                $y = $1;
+                $m = $2;
+                $d = $3;
                 $log->INFO("Creating view name log_arch_day_$y$m$d");
                 $sql = "CREATE OR REPLACE VIEW log_arch_day_$y$m$d AS SELECT `logs`.`id` AS `id`,`logs`.`host` AS `host`,`logs`.`facility` AS `facility`,`logs`.`severity` AS `severity`,`logs`.`program` AS `program`,`logs`.`msg` AS `msg`,`logs`.`mne` AS `mne`,`logs`.`eid` AS `eid`,`logs`.`suppress` AS `suppress`,`logs`.`counter` AS `counter`,`logs`.`fo` AS `fo`,`logs`.`lo` AS `lo`,`logs`.`notes` AS `notes` FROM `logs` where ((`logs`.`fo` >= '$ymd 00:00:00') AND (`logs`.`fo` <= '$ymd 23:59:59'))";
                 DEBUG( 1, "Executing SQL Statement: $sql" );
