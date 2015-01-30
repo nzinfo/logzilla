@@ -95,12 +95,12 @@ my $date = strftime "%Y-%m-%d %H:%M:%S", localtime;
 # Main
 my @months   = qw(Jan Feb Mar Apr May Jun Jul Aug Sep Oct Nov Dec);
 my @days     = qw(Sun Mon Tue Wed Thu Fri Sat);
+my %facs     = ("kernel", "0", "user", "1", "mail", "2", "system", "daemon", "security/auth(4)", "4", "syslog-ng", "internal", "printer", "subsystem", "network", "news", "UUCP", "subsystem", "clock", "daemon(9)", "security/auth(10)", "10", "FTP", "daemon", "NTP", "subsystem", "log", "audit", "log", "alert", "clock", "daemon(15)", "local0", "16", "local1", "17", "local2", "18", "local3", "19", "local4", "20", "local5", "21", "local6", "22", "local7", "23");
 my %months_h = map { $_ => 1 } @months;
 my $datetime = strftime( "%Y-%m-%d %H:%M:%S", localtime );
-my ( $hms, $msg, $day, $ymd, $prg, $month_num );
+my ( $hms, $msg, $day, $ymd, $prg, $month_num, $facsev, $fac, $sev, $ymdhms, $host);
 my ( $results, $sth, $sql, $dbh );
 my @ymds;
-my $sev = 7;    # Default set to debug if no sev is found
 my $cfg = LogZilla::Config->new( path => $options->{config_file} );
 $dbh = connect_to_db();
 
@@ -125,7 +125,6 @@ sub read_settings_from_db {
     return \%settings;
 }
 
-my ($facsev, $fac, $sev, $ymdhms, $host, $msg);
 while ( my $line = <STDIN> ) {
     chomp $line;
     # Skip useless "MARK" messages
@@ -136,9 +135,12 @@ while ( my $line = <STDIN> ) {
         # 2013-11-17 00:00:00	Local4.Notice	10.4.1.254	:Nov 17 00:00:00 EST: %ASA-vpn-5-713257: Phase 1 failure:  Mismatched attribute types for class Group Description:  Rcv'd: Group 2  Cfg'd: Group 5
         ( $ymdhms, $facsev, $host, $msg ) = split(/\t/, $line);
         ($fac, $sev) = split (/\./, $facsev);
+        $fac = lc($fac);
         $msg = $1 if ($msg =~ /:\S{3}\s+\d{2}\s+\d{2}:\d{2}:\d{2}\s+\S+\s+(.*)/); 
         DEBUG( 1, "YMD HMS = $ymdhms" );
         DEBUG( 1, "FAC = $fac" );
+        $fac = $facs{"$fac"};
+        DEBUG( 1, "FACNUM = $fac" );
         DEBUG( 1, "SEV = $sev" );
         DEBUG( 1, "HOST = $host" );
         DEBUG( 1, "MSG = $msg" );
@@ -169,9 +171,9 @@ while ( my $line = <STDIN> ) {
         $ymd = "$yr-$month_num-$day";
         DEBUG( 1, "Setting YMD to %s", $ymd );
     }
-    if ( $msg =~ /(%[^:]*\-\d+\-[A-Z\-\_\d]+?)(?:\:|\s)/ ) {
+    if ( $msg =~ /\%([^:]*)\-(\d+)\-([A-Z\-\_\d]+?)(?:\:|\s)/ ) {
         $prg = "1019293";    # the logzilla processor will pick this up
-        $sev = $2
+        $sev = $2;
     } else {
         if ( $options->{cisco_only} ) {
             $log->INFO("Skipping non-cisco based message");
@@ -183,17 +185,19 @@ while ( my $line = <STDIN> ) {
     if ( $prg =~ /\%([^:]*)\-(\d+)\-([A-Z\-\_\d]+?)(?:\:|\s)/ ) {
         $sev = $2
     }
-    DEBUG( 1, "Setting Severity to $sev" );
     if ( !$prg ) {
         DEBUG( 1, "No program name found, setting to \"Syslog\"" );
         $prg = "Syslog";
     }
-    DEBUG( 1, "Month = %s, Day = %s, HMS = %s, Host = %s, Program = %s, Message = %s", $month_num, $day, $hms, $host, $prg, $msg );
 
-    my $fac = 23;    # Manually set Local7 since we don't know the IETF facility
-    my $pri = ( 23 * 8 + $sev );
+    $sev = 7 if ($sev !~ /\d/);    # Default set to debug if no sev is found
+    $fac = 23 if ($fac !~ /\d+/);    # Manually set Local7 if blank
+    DEBUG( 1, "Severity set to $sev" );
+    DEBUG( 1, "Facility set to $fac" );
+    my $pri = ( $fac * 8 + $sev );
     $ymdhms = "$ymd $hms" if (!$ymdhms);
     $ymdhms = strftime "%Y-%m-%d %H:%M:%S", localtime if ($options->{ct});
+    DEBUG( 1, "YMDHMS = %s, Host = %s, Program = %s, Message = %s", $ymdhms, $host, $prg, $msg );
     print "$ymdhms\t$host\t$pri\t$prg\t$msg\n";
     push( @ymds, $ymd ) if ( $options->{makeview} );
 }
