@@ -91,9 +91,27 @@ waitforit(){
             sleep $secs
             printf "\b"
             printf "*"
+            printf "\b"
         done
     fi
     return 0
+}
+pwait() {
+    sleeptime=`echo "$1/4" | bc -l |xargs printf "%.2f"`
+    printf "|"
+    sleep $sleeptime
+    printf "\b"
+    printf "/"
+    sleep $sleeptime
+    printf "\b"
+    printf "-"
+    sleep $sleeptime
+    printf "\b"
+    printf "|"
+    sleep $sleeptime
+    printf "\b"
+    printf "-"
+    printf "\b"
 }
 
 do_index() {
@@ -110,7 +128,7 @@ do_index() {
         [ "$QUIET" = true ] || log_action_msg "Running command '$LZ_PATH/sphinx/bin/indexer -c $SPCONF $indices $rotate --sighup-each'"
         str=${str}`$LZ_PATH/sphinx/bin/indexer -c $SPCONF $indices $rotate --sighup-each | tail -n +7`
     done
-        [ "$QUIET" = true ] || log_action_msg $str
+    [ "$QUIET" = true ] || log_action_msg $str
 }
 case "$1" in
     start)
@@ -147,6 +165,22 @@ case "$1" in
                 exit 1
             fi
         fi
+        # wait until mysql started
+        WHILE_CNT=0
+        WAITFOR=30
+        REMAINDER=$WAITFOR
+        log_action_msg "$DESC[$$]: Making sure MySQL is running..."
+        while [ "$WHILE_CNT" -lt $WAITFOR ] ; do
+            if [ "$(service mysql status | grep -i running)" ]; then
+                log_action_msg "$DESC[$$]: MySQL is running, continuing..."
+                WHILE_CNT=30
+            else
+                REMAINDER=`expr $REMAINDER - 1`
+                log_action_msg "$DESC[$$]: Waiting $REMAINDER more seconds for MySQL to start..."
+                pwait 1
+                WHILE_CNT=`expr $WHILE_CNT + 1`
+            fi
+        done
         log_action_msg "Checking index health..."
         run_check
         if [ $RETVAL = 0 ]; then
@@ -276,10 +310,10 @@ case "$1" in
     stats)
         run_check
         if [ $RETVAL = 0 ]; then
-                $LZ_PATH/sphinx/bin/searchd -c $SPCONF --status | tail -n +8
-            else
-                log_action_msg "LogZilla is not running..."
-            fi
+            $LZ_PATH/sphinx/bin/searchd -c $SPCONF --status | tail -n +8
+        else
+            log_action_msg "LogZilla is not running..."
+        fi
         ;;
     status)
         status_of_proc -p $PIDFILE "$DAEMON" "$NAME"
