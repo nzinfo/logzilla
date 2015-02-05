@@ -660,18 +660,24 @@ sub idx_rotate {
                     DEBUG(1, "Date diff for determining whether to convert to disk-based storage");
                     DEBUG(1, "Calculated Docinfo = $docinfo, Calculated Diff = $diff, Calculated memdays = $memdays");
 
-                    DEBUG(1, "If docinfo = extern (memory-based storage) and diff > memdays, then convert to disk-based storage (docinfo=inline)");
-                    if ( ( $diff > $memdays ) && ( $docinfo =~ /extern/ ) ) {
+                    #DEBUG(1, "If docinfo = extern (memory-based storage) and diff > memdays, then convert to disk-based storage (docinfo=inline)");
+                    DEBUG(1, "If docinfo = extern (memory-based storage) and diff > memdays, then convert to disk-based storage (ondisk_attrs=1)");
+                    #if ( ( $diff > $memdays ) && ( $docinfo =~ /extern/ ) ) {
+                    if ( ( $diff > $memdays ) && ( $docinfo =~ /ondisk_attrs\s+=\s+0/ ) ) {
                         $log->INFO("The $day index is $diff day(s) older than today.");
-                        $log->INFO("Converting index (${day}_$part) to disk-based storage (docinfo=inline) because it is > $memdays day(s) old...");
+                        #$log->INFO("Converting index (${day}_$part) to disk-based storage (docinfo=inline) because it is > $memdays day(s) old...");
+                        $log->INFO("Converting index (${day}_$part) to disk-based storage (ondisk_attrs=1) because it is > $memdays day(s) old...");
                         push( @indexlist, "idx_log_arch_day_${day}_$part" );
                     }
 
                     # cdukes: added below in case someone changes their idx_mem_days in the db and we need to go back and convert disk based indexes back to memory based
-                    DEBUG(1, "If docinfo = inline (disk-based storage) and diff <= memdays, then convert to memory-based storage (docinfo=extern)");
-                    if ( ( $diff <= $memdays ) && ( $docinfo =~ /inline/ ) ) {
+                    #DEBUG(1, "If docinfo = inline (disk-based storage) and diff <= memdays, then convert to memory-based storage (docinfo=extern)");
+                    DEBUG(1, "If ondisk_attrs=1 (disk-based storage) and diff <= memdays, then convert to memory-based storage (ondisk_attrs=0)");
+                    # if ( ( $diff <= $memdays ) && ( $docinfo =~ /inline/ ) ) {
+                    if ( ( $diff <= $memdays ) && ( $docinfo =~ /ondisk_attrs\s+=\s+1/ ) ) {
                         $log->INFO("The $day index is $diff day(s) older than today.");
-                        $log->INFO("Converting index (${day}_$part) to memory-based storage (docinfo=extern) because it is <= $memdays day(s) old and your SPX_IDX_DIM is set to $memdays");
+                        #$log->INFO("Converting index (${day}_$part) to memory-based storage (docinfo=extern) because it is <= $memdays day(s) old and your SPX_IDX_DIM is set to $memdays");
+                        $log->INFO("Converting index (${day}_$part) to memory-based storage (ondisk_attrs=0) because it is <= $memdays day(s) old and your SPX_IDX_DIM is set to $memdays");
                         push( @indexlist, "idx_log_arch_day_${day}_$part" );
                     }
                 }
@@ -750,7 +756,7 @@ sub ss {
             exit;
         }
         my $multiplier = $settings->{SPX_IDX_DIM} + 2;  # needed for current day
-        # Search-time memory requirements for extern storage are (1+number_of_attrs)*number_of_docs*4 bytes, ie. 10 million docs with 2 groups and 1 timestamp will take (1+2+1)*10M*4 = 160 MB of RAM. This is PER DAEMON, ie. searchd will alloc 160 MB on startup, read the data and keep it shared between queries; the children will NOT allocate additional copies of this data.
+        # Search-time memory requirements for ondisk_attrs=0 storage are (1+number_of_attrs)*number_of_docs*4 bytes, ie. 10 million docs with 2 groups and 1 timestamp will take (1+2+1)*10M*4 = 160 MB of RAM. This is PER DAEMON, ie. searchd will alloc 160 MB on startup, read the data and keep it shared between queries; the children will NOT allocate additional copies of this data.
         my $count = 0;
         my $tmp = $dbh_sphinx->do('SELECT * from idx_inmem limit 1');
         my $spx_meta  = $dbh_sphinx->prepare('show meta');
