@@ -18,5 +18,5 @@ fi
 [[ -f /etc/init.d/logzilla ]] && service logzilla stop || (cd $lzhome/sphinx && ./bin/searchd --stopwait)
 [[ -f /etc/init.d/logzilla ]] && service logzilla start || (cd $lzhome/sphinx && ./run_searchd.sh)
 
-/var/www/logzilla/scripts/idx-rotate -v -r idx_rotate -d 1
+/var/www/logzilla/scripts/idx-rotate -v -r idx_rotate 
 
