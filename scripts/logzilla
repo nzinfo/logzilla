@@ -40,7 +40,7 @@ use IO::Select;
 use PerlIO::Util;
 use List::Util qw(max);
 use Time::HiRes qw(gettimeofday tv_interval);
-use feature 'unicode_strings';
+#use feature 'unicode_strings';
 
 use LogZilla::Config;
 use LogZilla::RateMeter;
@@ -470,7 +470,7 @@ sub process_line {
 
         # v3.2 and up Fields are: TS, Host, PRI, Program,  and MSG
         my $ts       = $1;
-        my $host     = $2;
+        my $host     = lc($2);
         my $pri      = $3;
         my $prg      = $4;
         my $msg      = $5;
