@@ -64,7 +64,7 @@ sub prompt {
 }
 
 my $version    = "4.5";
-my $subversion = ".680";
+my $subversion = ".710";
 
 # Grab the base path
 my $lzbase = getcwd;
@@ -1256,8 +1256,8 @@ set("${SNMPTRAP.MSG}" value("MESSAGE") condition(filter(f_snmptrapd)));
 
 source s_logzilla {
 tcp();
-udp();
 # Use no-multi-line so that java events get read properly
+udp(flags(no-multi-line));
 syslog(flags(no-multi-line));
 };
 
