@@ -171,14 +171,15 @@ case "$1" in
         REMAINDER=$WAITFOR
         log_action_msg "$DESC[$$]: Making sure MySQL is running..."
         while [ "$WHILE_CNT" -lt $WAITFOR ] ; do
-            if [ "$(service mysql status | grep -i running)" ]; then
-                log_action_msg "$DESC[$$]: MySQL is running, continuing..."
-                WHILE_CNT=30
-            else
+            if [ $(pgrep mysql | wc -l) -eq 0 ]; then 
+                service mysql start
                 REMAINDER=`expr $REMAINDER - 1`
                 log_action_msg "$DESC[$$]: Waiting $REMAINDER more seconds for MySQL to start..."
-                pwait 1
+                sleep 1
                 WHILE_CNT=`expr $WHILE_CNT + 1`
+            else
+                log_action_msg "$DESC[$$]: MySQL is running, continuing..."
+                WHILE_CNT=30
             fi
         done
         log_action_msg "Checking index health..."

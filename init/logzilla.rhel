@@ -13,6 +13,8 @@
 # Description: Starts instance of LogZilla using start-stop-daemon
 ### END INIT INFO
 
+echo "not implemented yet"
+exit
 set -e
 
 # Check for defaults file and use if so...
