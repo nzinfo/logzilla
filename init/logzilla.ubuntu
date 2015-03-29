@@ -75,23 +75,18 @@ waitforit(){
     pid=`pidof -x $proc`
     secs=1
     if [ $pid ]; then
-        log_action_msg "Waiting for $proc[$pid] to exit"
-        while pidof -x $proc > /dev/null
-        do
-            printf "|"
-            sleep $secs
-            printf "\b"
-            printf "/"
-            sleep $secs
-            printf "\b"
-            printf "\\"
-            sleep $secs
-            printf "\b"
-            printf "|"
-            sleep $secs
-            printf "\b"
-            printf "*"
-            printf "\b"
+        WHILE_CNT=0
+        WAITFOR=30
+        REMAINDER=$WAITFOR
+        while [ "$WHILE_CNT" -lt $WAITFOR ] ; do
+            if [ $(pgrep $proc | wc -l) -ne 0 ]; then 
+                REMAINDER=`expr $REMAINDER - 1`
+                log_action_msg "Waiting $REMAINDER more seconds for $proc[$pid] to exit"
+                sleep 1
+                WHILE_CNT=`expr $WHILE_CNT + 1`
+            else
+                WHILE_CNT=30
+            fi
         done
     fi
     return 0
@@ -233,6 +228,9 @@ case "$1" in
         log_action_msg "$NAME[$$]: Starting delta indexer at `date +%F` `date +%T`"
         if `pidof -x "LZTool" >dev/null`; then
             waitforit "LZTool"
+        fi
+        if `pidof -x "indexer" >dev/null`; then
+            waitforit "indexer"
         fi
         ts_start=`date +"%s"`
         log_action_msg "Rotating old indices"
