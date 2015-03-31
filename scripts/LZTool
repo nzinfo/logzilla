@@ -200,7 +200,7 @@ if ($options->{report}) {
     $range = "Daily" if ($range !~ /^[Dd]|[Ww]|[Mm]/);
     $output = "Screen" if ($output !~ /[Cc]|[Tt]|[Ee]$/);
     @tables = ("Host") if (!@tables);
-    @tables = ("Host", "Program", "Mnemonic", "Windows", "MAC") if ($tables[0] =~ /^[Aa]/);
+    @tables = ("Host", "Program", "Mnemonic", "MAC") if ($tables[0] =~ /^[Aa]/);
     if ($output =~ /^[Ee]/ ) {
         $log->INFO("Running Excel Report");
         excel($range, @tables);
@@ -1307,15 +1307,15 @@ sub excel {
         $sth->execute();
         my $rownum = 2; # Start at row 2 since header is row 1
         my $c1width = (length($table) + 1);
-        my $c2width = (length("Seen") + 1); # Yeah, I could have just set this to 4, but we may make this variable later :)
+        my $c2width = (length("Seen") + 3); # Yeah, I could have just set this to 4, but we may make this variable later :)
         while ( $results = $sth->fetchrow_hashref ) {
             if ($table =~ /^[Mm][Aa]/) {
                 $results->{name} =~ s/:/-/g;
             }
             $worksheet->write_string("A$rownum", "$results->{name}", $col1Format);
             $worksheet->write("B$rownum", $results->{seen}, $col2Format);
-            $c1width = length($results->{name}) if $c1width < length($results->{name});
-            $c2width = (length($results->{seen}) + 3) if $c2width < length($results->{seen});
+            $c1width = length($results->{name}) if $c1width < (length($results->{name}) + 1);
+            $c2width = (length($results->{seen}) + 3) if $c2width < (length($results->{seen}) + 3);
             $rownum++;
         }
         $worksheet->set_column(0, 0,  $c1width); 
