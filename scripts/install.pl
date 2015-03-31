@@ -14,7 +14,7 @@ $| = 1;
 ################################################
 # Help user if Perl mods are missing
 ################################################
-my @mods = (qw(DBI Date::Calc Term::ReadLine File::Copy Digest::MD5 LWP::Simple File::Spec String::CRC32 MIME::Lite IO::Socket::INET Getopt::Long CHI Net::SNMP Test::mysqld PerlIO::Util Find::Lib MooseX::Params::Validate Test::Deep Test::MockTime Date::Simple Log::Fast ));
+my @mods = (qw(DBI Date::Calc Term::ReadLine File::Copy Digest::MD5 LWP::Simple File::Spec String::CRC32 MIME::Lite IO::Socket::INET Getopt::Long CHI Net::SNMP Test::mysqld PerlIO::Util Find::Lib MooseX::Params::Validate Test::Deep Test::MockTime Date::Simple Log::Fast Excel::Writer::XLSX));
 my $cpanm = `which cpanm`;
 
 foreach my $mod (@mods) {
