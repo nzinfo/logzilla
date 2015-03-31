@@ -20,7 +20,10 @@ use List::Util qw(sum);
 use Data::Dumper;
 use Socket;
 use Excel::Writer::XLSX;
+use MIME::Lite;
 require 'sys/ioctl.ph';
+
+my $date = Date::Simple->new()->format("%Y-%m-%d");
 
 #FIXME - I had to add below for Perl 5.10 users.
 # on Perl 5.10, I would get the following when running:
@@ -68,13 +71,18 @@ sub usage_and_exit {
     -mvdate   : Used with 'makeview' function to recreate views for old data imports
     -delhost  : Delete a host and all associated records for that host from LogZilla
     -host     : Host to delete from LogZilla
-    -rename   : Rename a host (e.g: -rename -from 1.1.1.1 -to myhost)
+    -rename   : Rename a host (e.g: -rename -renfrom 1.1.1.1 -rento myhost)
     -report   : Run Top 10 Report - Available Types: [Daily/Weekly/Monthly],[Screen/CSV/TSV/Excel] 
-                Example: $0 -report D,S -rt P -rt Mne -rt Mac (Daily Report to screen of top Programs, Mnemonics, and MACs)
-                Default: $0 -report d (produces a Daily Top 10 report to Screen of Hosts) (-rt assumes Host when left out)
+    Example: $0 -report D,S -rt P -rt Mne -rt Mac (Daily Report to screen of top Programs, Mnemonics, and MACs)
+    Default: $0 -report d (produces a Daily Top 10 report to Screen of Hosts) (-rt assumes Host when left out)
     -rt       : Optional - specify one or more tables to report on, e.g.: -rt Host -rt Program -rt Mac
-              : Available -rt columns are: Host, Program, Mnemonic, Windows (events), MAC (addresses seen in events) and All (all available columns)
+                Available -rt columns are: Host, Program, Mnemonic, Windows (events), MAC (addresses seen in events) and All (all available columns)
     -topn     : Change Top 10 for -report to another value such as -topn 5
+    -mail     : Send Excel-based report as email instead of saving to file
+    -mailhost : Set mail host to use for sending emails (default: localhost)
+    -mailfrom : Who to send the email from
+    -mailto   : Who to send the email to
+                Example of -mail Usage: $0 -report d,e -mail -mailhost localhost -mailfrom root\@localhost -mailto someguy\@foo.com
     -saudit   : Show last N searches performed (e.g.: -saudit 10 to show last 10)
     -c        : config file (defaults to $options->{config_file})
     Example: $myname -l /var/log/foo.log -d 5 -c test/config.php -v
@@ -101,11 +109,15 @@ GetOptions(
     'serversizer|ss'    => \$options->{ss},
     'report=s'          => \$options->{report},
     'rtables|rt=s'      => \@tables,
+    'mail!'             => \$options->{mail},
+    'mailhost=s'        => \$options->{mailhost},
+    'mailfrom=s'        => \$options->{mailfrom},
+    'mailto=s'          => \$options->{mailto},
     'host=s'            => \@hosts,
     'saudit=i'          => \$options->{saudit},
     'rename|ren'        => \$options->{rename},
-    'from=s'            => \$options->{from},
-    'to=s'              => \$options->{to},
+    'renfrom=s'         => \$options->{renfrom},
+    'rento=s'           => \$options->{rento},
 ) or usage_and_exit(1);    # got some invalid options
 
 if ( $options->{help} ) {
@@ -1253,9 +1265,8 @@ sub excel {
     my @tables = @_;
     $options->{topn} = 10 if (!$options->{topn});
     my ($workbook, $worksheet, $headings, $data, $chart);
-    my $date = Date::Simple->new()->format("%Y-%m-%d");
     my $fn = "/tmp/LogZilla-Report-$date.xlsx";
-    $workbook  = Excel::Writer::XLSX->new( $fn );
+    $workbook  = Excel::Writer::XLSX->new( "$fn" );
     my $headerCol1 = $workbook->add_format(); 
     my $headerCol2 = $workbook->add_format(); 
     my $col1Format = $workbook->add_format(); 
@@ -1318,7 +1329,12 @@ sub excel {
         # Insert the chart into the worksheet.
         $worksheet->insert_chart( 'D2', $chart, 0, 10 );
     }
-    printf "File saved as $fn\n";
+    $workbook->close();
+    if ($options->{mail}) {
+        mailto($fn);
+    } else {
+        printf "File saved as $fn\n";
+    }
 }
 sub saudit {
     $log->INFO("-=Last %d Searches=-", $options->{saudit});
@@ -1335,4 +1351,34 @@ sub saudit {
         printf("%-10s %-25s %-8s %-80s\n", $user, $lastseen, commify($seen), $string);
 
     }
+}
+sub mailto {
+    my $fn = shift;
+    my ($range, undef) = split (',', $options->{report});
+    $range = "Daily" if ($range =~ /^[Dd]/);
+    $range = "Weekly" if ($range =~ /^[Ww]/);
+    $range = "Monthly" if ($range =~ /^[Mm]/);
+    $log->INFO("Sending $fn");
+    my $body = "Here's your $range LogZilla Report for $date";
+    my $sig = "Sincerely,\nThe LogZilla Teami\nhttp://www.logzilla.net\n\t\t    __\n\t\t   / *_) Rawr!\n\t  _.----. _ /../\n\t/.............../\n        __/...(....|.(....|\n       /__.--.|_|--|_|\n";
+    my $subject = "LogZilla $range Report";
+    ### Start with a simple text message:
+    my $mail = MIME::Lite->new(
+        'From'          => $options->{mailfrom},
+        'To'            => $options->{mailto},
+        'Subject'       => "$subject",
+        'Type'          => 'multipart/mixed',
+    );
+    $mail->attach(
+        'Type'          => 'TEXT',
+        'Data'          => "$body\n\n$sig",
+    );
+    $mail->attach(
+        #'Type'          => 'application/vnd.ms-excel',
+        'Type'          => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        Path => $fn,
+        Disposition => 'attachment',
+    ) or die "Error adding $fn: $!\n";
+    # DEBUG(1, $mail->send('smtp',$options->{mailhost}, Debug=>1 )) 
+    $mail->send('smtp', $options->{mailhost});
 }
