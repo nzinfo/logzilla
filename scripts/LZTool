@@ -200,7 +200,7 @@ if ($options->{report}) {
     $range = "Daily" if ($range !~ /^[Dd]|[Ww]|[Mm]/);
     $output = "Screen" if ($output !~ /[Cc]|[Tt]|[Ee]$/);
     @tables = ("Host") if (!@tables);
-    @tables = ("Host", "Program", "Mnemonic", "MAC") if ($tables[0] =~ /^[Aa]/);
+    @tables = ("Host", "Program", "Mnemonic", "MAC", "Severity", "Facility") if ($tables[0] =~ /^[Aa]/);
     if ($output =~ /^[Ee]/ ) {
         $log->INFO("Running Excel Report");
         excel($range, @tables);
@@ -1221,164 +1221,203 @@ sub report {
     my $range = shift;
     my $output = shift;
     my @tables = @_;
+    my $lastseen = "";
     $log->INFO("-=Running Reports=-");
     $options->{topn} = 10 if (!$options->{topn});
     foreach my $table (@tables) {
-        if ($table =~ /^[Hh]/) {
-            $table = "Host";
-            $sql = "SELECT host AS name,seen,lastseen FROM hosts GROUP BY host ORDER BY seen DESC limit $options->{topn}";
-        }
-        if ($table =~ /^[Mm][Nn]/) {
-            $table = "Mnemonic";
-            $sql = "SELECT name,seen,lastseen FROM mne WHERE name !='None' GROUP BY name ORDER BY seen DESC limit $options->{topn}";
-        }
-        if ($table =~ /^[Pp]/) {
-            $table = "Program";
-            $sql = "SELECT name,seen,lastseen FROM programs GROUP BY name ORDER BY seen DESC limit $options->{topn}";
-        }
-        if ($table =~ /^[Mm][Aa]/) {
-            $table = "MAC";
-            $sql = "SELECT name,seen,lastseen FROM mac GROUP BY name ORDER BY seen DESC limit $options->{topn}";
-        }
-        if ($table =~ /^[Ww]/) {
-            $table = "Windows Event";
-            $sql = "SELECT eid AS name,seen,lastseen FROM snare_eid GROUP BY name ORDER BY seen DESC limit $options->{topn}";
-        }
-        $sth = $dbh->prepare($sql);
-        DEBUG( 1, "Executing SQL Statement: $sql" );
-        $sth->execute();
-        printf ("\n%-25s %-20s %-20s\n", "$table", "Last Seen", "# of Times Seen") if ($output =~ /^[Ss]/);
-        printf "$table,Last Seen,Times Seen\n" if ($output =~ /^[Cc]/);
-        printf "$table\tLast Seen\tTimes Seen\n" if ($output =~ /^[Tt]/);
-        while ( $results = $sth->fetchrow_hashref ) {
-            my $name = $results->{name};
-            my $seen = $results->{seen};
-            my $lastseen = $results->{lastseen};
-            printf ("%-25s %-20s %-20s\n", $name, $lastseen, commify($seen)) if ($output =~ /^[Ss]/);
-            printf "$name,$lastseen,$seen\n" if ($output =~ /^[Cc]/);
-            printf "$name\t$lastseen\t$seen\n" if ($output =~ /^[Tt]/);
-        }
+	    my $name = "";
+	    if ($table =~ /^[Hh]/) {
+		    $table = "Hosts";
+		    $sql = "SELECT host AS name,seen,lastseen FROM hosts GROUP BY host ORDER BY seen DESC limit $options->{topn}";
+		    $sth = $dbh->prepare($sql);
+	    }
+	    if ($table =~ /^[Mm][Nn]/) {
+		    $table = "Mnemonics";
+		    $sql = "SELECT name,seen,lastseen FROM mne WHERE name !='None' GROUP BY name ORDER BY seen DESC limit $options->{topn}";
+		    $sth = $dbh->prepare($sql);
+	    }
+	    if ($table =~ /^[Pp]/) {
+		    $table = "Programs";
+		    $sql = "SELECT name,seen,lastseen FROM programs GROUP BY name ORDER BY seen DESC limit $options->{topn}";
+		    $sth = $dbh->prepare($sql);
+	    }
+	    if ($table =~ /^[Mm][Aa]/) {
+		    $table = "MACs";
+		    $sql = "SELECT name,seen,lastseen FROM mac GROUP BY name ORDER BY seen DESC limit $options->{topn}";
+		    $sth = $dbh->prepare($sql);
+	    }
+	    if ($table =~ /^[Ww]/) {
+		    $table = "Windows Events";
+		    $sql = "SELECT eid AS name,seen,lastseen FROM snare_eid GROUP BY name ORDER BY seen DESC limit $options->{topn}";
+		    $sth = $dbh->prepare($sql);
+	    }
+	    if ($table =~ /^[Ss]/) {
+		    $table = "Severities";
+		    $sql = "SELECT sum(counter) as seen, severity, lo FROM idx_inmem GROUP BY severity ORDER BY seen DESC limit $options->{topn}";
+		    $sth = $dbh_sphinx->prepare($sql);
+	    }
+	    if ($table =~ /^[Ff]/) {
+		    $table = "Facilities";
+		    $sql = "SELECT sum(counter) as seen, facility, lo FROM idx_inmem GROUP BY facility ORDER BY seen DESC limit $options->{topn}";
+		    $sth = $dbh_sphinx->prepare($sql);
+	    }
+	    printf ("\n%-25s %-20s %-20s\n", "$table", "Last Seen", "# of Times Seen") if ($output =~ /^[Ss]/);
+	    printf "$table,Last Seen,Times Seen\n" if ($output =~ /^[Cc]/);
+	    printf "$table\tLast Seen\tTimes Seen\n" if ($output =~ /^[Tt]/);
+	    DEBUG( 1, "Executing SQL Statement: $sql" );
+	    $sth->execute();
+	    while ( $results = $sth->fetchrow_hashref ) {
+		    $name = $results->{name} if ($results->{name});
+		    $lastseen = $results->{lastseen} if ($results->{lastseen});
+		    $name = $dbh->selectrow_array("SELECT name FROM facilities WHERE code='$results->{facility}'") if ($table =~ /^[Ff]/);
+		    $name = $dbh->selectrow_array("SELECT name FROM severities WHERE code='$results->{severity}'") if ($table =~ /^[Ss]/);
+		    $lastseen = $dbh->selectrow_array("SELECT FROM_UNIXTIME($results->{lo})") if ($results->{lo});
+		    my $seen = $results->{seen};
+		    printf ("%-25s %-20s %-20s\n", $name, $lastseen, commify($seen)) if ($output =~ /^[Ss]/);
+		    printf "$name,$lastseen,$seen\n" if ($output =~ /^[Cc]/);
+		    printf "$name\t$lastseen\t$seen\n" if ($output =~ /^[Tt]/);
+	    }
     }
 }
 sub excel {
-    my $range = shift;
-    my @tables = @_;
-    $options->{topn} = 10 if (!$options->{topn});
-    my ($workbook, $worksheet, $headings, $data, $chart);
-    my $fn = "/tmp/LogZilla-Report-$date.xlsx";
-    $workbook  = Excel::Writer::XLSX->new( "$fn" );
-    my $headerCol1 = $workbook->add_format(); 
-    my $headerCol2 = $workbook->add_format(); 
-    my $col1Format = $workbook->add_format(); 
-    my $col2Format = $workbook->add_format(); 
-    $headerCol1->set_bold();
-    $headerCol2->set_bold();
-    $headerCol2->set_align('right');
-    $col1Format->set_num_format('@'); # Sets format as text
-    $col2Format->set_num_format('#,##0');
-    $col2Format->set_align('right');
-    $log->INFO("-=Creating Excel Report=-");
-    foreach my $table (@tables) {
-        if ($table =~ /^[Hh]/) {
-            $table = "Hosts";
-            $sql = "SELECT host AS name,seen,lastseen FROM hosts GROUP BY host ORDER BY seen DESC limit $options->{topn}";
-        }
-        if ($table =~ /^[Mm][Nn]/) {
-            $table = "Mnemonics";
-            $sql = "SELECT name,seen,lastseen FROM mne WHERE name !='None' GROUP BY name ORDER BY seen DESC limit $options->{topn}";
-        }
-        if ($table =~ /^[Pp]/) {
-            $table = "Programs";
-            $sql = "SELECT name,seen,lastseen FROM programs GROUP BY name ORDER BY seen DESC limit $options->{topn}";
-        }
-        if ($table =~ /^[Mm][Aa]/) {
-            $table = "MAC Addresses";
-            $sql = "SELECT name,seen,lastseen FROM mac GROUP BY name ORDER BY seen DESC limit $options->{topn}";
-        }
-        if ($table =~ /^[Ww]/) {
-            $table = "Windows Events";
-            $sql = "SELECT eid AS name,seen,lastseen FROM snare_eid GROUP BY name ORDER BY seen DESC limit $options->{topn}";
-        }
-        $worksheet = $workbook->add_worksheet("$table");
-        $worksheet->write( 'A1', $table, $headerCol1 );
-        $worksheet->write( 'B1', "Seen", $headerCol2 );
-        $sth = $dbh->prepare($sql);
-        DEBUG( 1, "Executing SQL Statement: $sql" );
-        $sth->execute();
-        my $rownum = 2; # Start at row 2 since header is row 1
-        my $c1width = (length($table) + 1);
-        my $c2width = (length("Seen") + 3); # Yeah, I could have just set this to 4, but we may make this variable later :)
-        while ( $results = $sth->fetchrow_hashref ) {
-            if ($table =~ /^[Mm][Aa]/) {
-                $results->{name} =~ s/:/-/g;
-            }
-            $worksheet->write_string("A$rownum", "$results->{name}", $col1Format);
-            $worksheet->write("B$rownum", $results->{seen}, $col2Format);
-            $c1width = length($results->{name}) if $c1width < (length($results->{name}) + 1);
-            $c2width = (length($results->{seen}) + 3) if $c2width < (length($results->{seen}) + 3);
-            $rownum++;
-        }
-        $worksheet->set_column(0, 0,  $c1width); 
-        $worksheet->set_column(1, 1,  $c2width); 
-        $chart = $workbook->add_chart( type => 'pie', embedded => 1 );
-        # Configure the series.
-        $rownum--;
-        $chart->add_series(categories=>"=$table".'!$A$2:$A$'.$rownum,values=>"=$table".'!$B$2:$B$'.$rownum,name=>"Top $options->{topn} ${table}");
-        # Add a title.
-        $chart->set_title( name => "Top $options->{topn} ${table}" );
-        # Insert the chart into the worksheet.
-        $worksheet->insert_chart( 'D2', $chart, 0, 10 );
-    }
-    $workbook->close();
-    if ($options->{mail}) {
-        mailto($fn);
-    } else {
-        printf "File saved as $fn\n";
-    }
+	my $range = shift;
+	my @tables = @_;
+	$options->{topn} = 10 if (!$options->{topn});
+	my ($workbook, $worksheet, $headings, $data, $chart);
+	my $fn = "/tmp/LogZilla-Report-$date.xlsx";
+	my ($name, $lastseen);
+	$workbook  = Excel::Writer::XLSX->new( "$fn" );
+	my $headerCol1 = $workbook->add_format(); 
+	my $headerCol2 = $workbook->add_format(); 
+	my $col1Format = $workbook->add_format(); 
+	my $col2Format = $workbook->add_format(); 
+	$headerCol1->set_bold();
+	$headerCol2->set_bold();
+	$headerCol2->set_align('right');
+	# Sets format as text
+	$col1Format->set_num_format('@'); 
+	$col2Format->set_num_format('#,##0');
+	$col2Format->set_align('right');
+	$log->INFO("-=Creating Excel Report=-");
+	foreach my $table (@tables) {
+		if ($table =~ /^[Hh]/) {
+			$table = "Hosts";
+			$sql = "SELECT host AS name,seen,lastseen FROM hosts GROUP BY host ORDER BY seen DESC limit $options->{topn}";
+			$sth = $dbh->prepare($sql);
+		}
+		if ($table =~ /^[Mm][Nn]/) {
+			$table = "Mnemonics";
+			$sql = "SELECT name,seen,lastseen FROM mne WHERE name !='None' GROUP BY name ORDER BY seen DESC limit $options->{topn}";
+			$sth = $dbh->prepare($sql);
+		}
+		if ($table =~ /^[Pp]/) {
+			$table = "Programs";
+			$sql = "SELECT name,seen,lastseen FROM programs GROUP BY name ORDER BY seen DESC limit $options->{topn}";
+			$sth = $dbh->prepare($sql);
+		}
+		if ($table =~ /^[Mm][Aa]/) {
+			$table = "MAC Addresses";
+			$sql = "SELECT name,seen,lastseen FROM mac GROUP BY name ORDER BY seen DESC limit $options->{topn}";
+			$sth = $dbh->prepare($sql);
+		}
+		if ($table =~ /^[Ww]/) {
+			$table = "Windows Events";
+			$sql = "SELECT eid AS name,seen,lastseen FROM snare_eid GROUP BY name ORDER BY seen DESC limit $options->{topn}";
+			$sth = $dbh->prepare($sql);
+		}
+		if ($table =~ /^[Ss]/) {
+			$table = "Severities";
+			$sql = "SELECT sum(counter) as seen, severity, lo FROM idx_inmem GROUP BY severity ORDER BY seen DESC limit $options->{topn}";
+			$sth = $dbh_sphinx->prepare($sql);
+		}
+		if ($table =~ /^[Ff]/) {
+			$table = "Facilities";
+			$sql = "SELECT sum(counter) as seen, facility, lo FROM idx_inmem GROUP BY facility ORDER BY seen DESC limit $options->{topn}";
+			$sth = $dbh_sphinx->prepare($sql);
+		}
+		$worksheet = $workbook->add_worksheet("$table");
+		$worksheet->write( 'A1', $table, $headerCol1 );
+		$worksheet->write( 'B1', "Seen", $headerCol2 );
+		DEBUG( 1, "Executing SQL Statement: $sql" );
+		$sth->execute();
+		my $rownum = 2; 
+		my $c1width = (length($table) + 1);
+		my $c2width = (length("Seen") + 3); # Yeah, I could have just set this to 4, but we may make this variable later :)
+			while ( $results = $sth->fetchrow_hashref ) {
+				$name = $results->{name} if ($results->{name});
+				$lastseen = $results->{lastseen} if ($results->{lastseen});
+				$name = $dbh->selectrow_array("SELECT name FROM facilities WHERE code='$results->{facility}'") if ($table =~ /^[Ff]/); 
+				$name = $dbh->selectrow_array("SELECT name FROM severities WHERE code='$results->{severity}'") if ($table =~ /^[Ss]/);
+				$name =~ s/:/-/g if ($table =~ /^[Mm][Aa]/); 
+				DEBUG(1, "$name - $table - $results->{seen} - SELECT name FROM facilities WHERE code='$results->{facility}'") if ($results->{facility});
+				$lastseen = $dbh->selectrow_array("SELECT FROM_UNIXTIME($results->{lo})") if ($results->{lo});
+				$worksheet->write_string("A$rownum", "$name", $col1Format);
+				$worksheet->write("B$rownum", $results->{seen}, $col2Format);
+				$c1width = length($name) if $c1width < (length($name) + 1);
+				$c2width = (length($results->{seen}) + 3) if $c2width < (length($results->{seen}) + 3);
+				$rownum++;
+			}
+		$worksheet->set_column(0, 0,  $c1width); 
+		$worksheet->set_column(1, 1,  $c2width); 
+		$chart = $workbook->add_chart( type => 'pie', embedded => 1 );
+# Configure the series.
+		$rownum--;
+		$chart->add_series(categories=>"=$table".'!$A$2:$A$'.$rownum,values=>"=$table".'!$B$2:$B$'.$rownum,name=>"Top $options->{topn} ${table}");
+# Add a title.
+		$chart->set_title( name => "Top $options->{topn} ${table}" );
+# Insert the chart into the worksheet.
+		$worksheet->insert_chart( 'D2', $chart, 0, 10 );
+	}
+	$workbook->close();
+	if ($options->{mail}) {
+		mailto($fn);
+	} else {
+		printf "File saved as $fn\n";
+	}
 }
 sub saudit {
-    $log->INFO("-=Last %d Searches=-", $options->{saudit});
-    $sql = "SELECT user,string,seen,from_unixtime(lastseen_ts) as lastseen FROM saudit ORDER BY lastseen_ts DESC limit $options->{saudit}";
-    $sth = $dbh->prepare($sql);
-    DEBUG( 1, "Executing SQL Statement: $sql" );
-    $sth->execute();
-    printf("\n%-10s %-25s %-8s %-80s\n", "Username", "Time Stamp", "Count", "Search Term");
-    while ( $results = $sth->fetchrow_hashref ) {
-        my $user  = $results->{user};
-        my $string  = $results->{string};
-        my $seen  = $results->{seen};
-        my $lastseen  = $results->{lastseen};
-        printf("%-10s %-25s %-8s %-80s\n", $user, $lastseen, commify($seen), $string);
+	$log->INFO("-=Last %d Searches=-", $options->{saudit});
+	$sql = "SELECT user,string,seen,from_unixtime(lastseen_ts) as lastseen FROM saudit ORDER BY lastseen_ts DESC limit $options->{saudit}";
+	$sth = $dbh->prepare($sql);
+	DEBUG( 1, "Executing SQL Statement: $sql" );
+	$sth->execute();
+	printf("\n%-10s %-25s %-8s %-80s\n", "Username", "Time Stamp", "Count", "Search Term");
+	while ( $results = $sth->fetchrow_hashref ) {
+		my $user  = $results->{user};
+		my $string  = $results->{string};
+		my $seen  = $results->{seen};
+		my $lastseen  = $results->{lastseen};
+		printf("%-10s %-25s %-8s %-80s\n", $user, $lastseen, commify($seen), $string);
 
-    }
+	}
 }
 sub mailto {
-    my $fn = shift;
-    my ($range, undef) = split (',', $options->{report});
-    $range = "Daily" if ($range =~ /^[Dd]/);
-    $range = "Weekly" if ($range =~ /^[Ww]/);
-    $range = "Monthly" if ($range =~ /^[Mm]/);
-    $log->INFO("Sending $fn");
-    my $body = "Here's your $range LogZilla Report for $date";
-    my $sig = "Sincerely,\nThe LogZilla Teami\nhttp://www.logzilla.net\n\t\t    __\n\t\t   / *_) Rawr!\n\t  _.----. _ /../\n\t/.............../\n        __/...(....|.(....|\n       /__.--.|_|--|_|\n";
-    my $subject = "LogZilla $range Report";
-    ### Start with a simple text message:
-    my $mail = MIME::Lite->new(
-        'From'          => $options->{mailfrom},
-        'To'            => $options->{mailto},
-        'Subject'       => "$subject",
-        'Type'          => 'multipart/mixed',
-    );
-    $mail->attach(
-        'Type'          => 'TEXT',
-        'Data'          => "$body\n\n$sig",
-    );
-    $mail->attach(
-        #'Type'          => 'application/vnd.ms-excel',
-        'Type'          => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-        Path => $fn,
-        Disposition => 'attachment',
-    ) or die "Error adding $fn: $!\n";
-    # DEBUG(1, $mail->send('smtp',$options->{mailhost}, Debug=>1 )) 
-    $mail->send('smtp', $options->{mailhost});
+	my $fn = shift;
+	my ($range, undef) = split (',', $options->{report});
+	$range = "Daily" if ($range =~ /^[Dd]/);
+	$range = "Weekly" if ($range =~ /^[Ww]/);
+	$range = "Monthly" if ($range =~ /^[Mm]/);
+	$log->INFO("Sending $fn");
+	my $body = "Here's your $range LogZilla Report for $date";
+	my $sig = "Sincerely,\nThe LogZilla Teami\nhttp://www.logzilla.net\n\t\t    __\n\t\t   / *_) Rawr!\n\t  _.----. _ /../\n\t/.............../\n        __/...(....|.(....|\n       /__.--.|_|--|_|\n";
+	my $subject = "LogZilla $range Report";
+### Start with a simple text message:
+	my $mail = MIME::Lite->new(
+			'From'          => $options->{mailfrom},
+			'To'            => $options->{mailto},
+			'Subject'       => "$subject",
+			'Type'          => 'multipart/mixed',
+			);
+	$mail->attach(
+			'Type'          => 'TEXT',
+			'Data'          => "$body\n\n$sig",
+		     );
+	$mail->attach(
+#'Type'          => 'application/vnd.ms-excel',
+			'Type'          => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+			Path => $fn,
+			Disposition => 'attachment',
+		     ) or die "Error adding $fn: $!\n";
+# DEBUG(1, $mail->send('smtp',$options->{mailhost}, Debug=>1 )) 
+	$mail->send('smtp', $options->{mailhost});
 }
