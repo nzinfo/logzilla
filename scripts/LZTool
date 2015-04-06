@@ -1414,7 +1414,8 @@ sub mailto {
 		     );
 	$mail->attach(
 #'Type'          => 'application/vnd.ms-excel',
-			'Type'          => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+			#'Type'          => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+			'Type'          => 'application/zip',
 			Path => $fn,
 			Disposition => 'attachment',
 		     ) or die "Error adding $fn: $!\n";
