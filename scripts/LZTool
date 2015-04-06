@@ -197,6 +197,20 @@ if ($options->{saudit}) {
 }
 if ($options->{report}) {
     my ($range, $output) = split (',', $options->{report});
+    if ($range =~ /^[Aa]/) { 
+	# File saved as /tmp/USB-Logs_LogZilla_Alerts-2015.04.06.csv
+		DEBUG(1, "Executing $settings->{PATH_BASE}/scripts/tools/alerts2csv.sh | grep \"File saved as\" | awk '{print \$4}'");
+	my $dumpfile = `$settings->{PATH_BASE}/scripts/tools/alerts2csv.sh | grep "File saved as" | awk '{print \$4}'`;
+	chomp($dumpfile);
+	DEBUG(1, "Dumpfile = $dumpfile");
+	if ( $dumpfile ) {
+		DEBUG(1, "Running gzip -f $dumpfile");
+		system("gzip -f $dumpfile");
+		DEBUG(1, "Dump saved as $dumpfile.gz");
+		mailto("$dumpfile.gz");
+	}
+	exit 0;
+    }
     $range = "Daily" if ($range !~ /^[Dd]|[Ww]|[Mm]/);
     $output = "Screen" if ($output !~ /[Cc]|[Tt]|[Ee]$/);
     @tables = ("Host") if (!@tables);
@@ -1394,6 +1408,7 @@ sub saudit {
 sub mailto {
 	my $fn = shift;
 	my ($range, undef) = split (',', $options->{report});
+	$range = "Dumpfile" if ($range =~ /^[Aa]/);
 	$range = "Daily" if ($range =~ /^[Dd]/);
 	$range = "Weekly" if ($range =~ /^[Ww]/);
 	$range = "Monthly" if ($range =~ /^[Mm]/);
