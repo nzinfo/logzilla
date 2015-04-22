@@ -188,12 +188,15 @@ if ( $options->{spx_compile} > 0 ) {
 }
 
 # Customization for this script and a fresh syslog-ng install
-if ( $options->{ng} > 0 ) {
-    add_syslog_conf();
-}
+# cdukes, 2015-04-21: Deprecated in favor of doing it during install
+#if ( $options->{ng} > 0 ) {
+    #add_syslog_conf();
+#}
 
 # Install LogZilla
 if ( $options->{install} > 0 ) {
+    print "Installing Perl Prerequisites\n";
+    system("cpanm -n Spreadsheet::WriteExcel Test::mysqld PerlIO::Util Log::Fast Date::Calc LWP::Simple String::CRC32 MIME::Lite Net::SNMP CHI Excel::Writer::XLSX");
     print "Installing LogZilla\n";
     system("(cd $options->{lzroot}/scripts && echo \"q\"| sudo ./install) 2>&1");
 }
@@ -322,7 +325,9 @@ if ($checkprocess) {
     system("service mysql stop");
 }
 &chk_ib_logs;
-&setup_mycnf("/etc/mysql/conf.d/logzilla.cnf");
+# Use the contrib script instead of here so we don't maintain two separate copies
+# &setup_mycnf("/etc/mysql/conf.d/logzilla.cnf");
+system("(cd $options->{lzroot}/scripts/contrib/Ubuntu_MySQL_Conf_Gen && ./Ubuntu12_my.cnf_gen.pl)");
 
 if ($checkprocess) {
     print "Starting MySQL\n";
