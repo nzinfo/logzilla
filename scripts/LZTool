@@ -326,12 +326,13 @@ sub cleanup_old_views {
         # cdukes: #466 - Added TS check for expired view names 
         DEBUG(1, "Checking expire date on %s", $results->{'table_name'});
         ( $ts ) = split( /_/, $results->{'table_name'} );
-        DEBUG(1, "View TS = %d, Current TS = %d", $ts, time());
-        if ($ts <= time()) { 
+        my $expire = (time() - 86400);
+        DEBUG(1, "View TS = %d, Current TS = %d", $ts, $expire);
+        if ($ts < $expire) { 
             $rc = $rc . $results->{'table_name'};
             $rc = $rc . ",";
         } else {
-            DEBUG(1, "%s has not expired, keeping view", $results->{'table_name'});
+            DEBUG(1, "View %s will not be removed because it does not expire until %s", $results->{'table_name'}, time2str("%D", $ts) );
         }
     }
     $rc = substr( $rc, 0, -1 );
@@ -683,9 +684,9 @@ sub idx_rotate {
     foreach my $item (@list) {
         chomp($item);
         my ( $day, $part ) = split /_/, $item;
-        DEBUG(1, "Processing $item for day $day, part $part");
         next if $day !~ /\d+/;
         next if $part !~ /\d+/;
+        DEBUG(1, "Processing $item for day $day, part $part");
         my $date = today();
         my $diff = today() - date($day);
         # No need to go back more than 3 days as it is highly unlikely that the indexes would be stored in memory that far back.
