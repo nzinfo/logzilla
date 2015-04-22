@@ -1,7 +1,7 @@
 #
 # LogZilla Defaults
 #
-LZ_PATH="/var/www/logzilla"
+LZ_PATH="/path_to_logzilla"
 SPCONF="$LZ_PATH/sphinx/sphinx.conf"
 SPDATA="$LZ_PATH/sphinx/data"
 #SPOPTS="--cpustats --iostats --logdebugv"

@@ -31,7 +31,7 @@ fi
 ########################################################################
 NAME=logzilla
 DESC=LogZilla
-LZ_PATH=${LZ_PATH-"/var/www/logzilla"}
+LZ_PATH=${LZ_PATH-"/path_to_logzilla"}
 SPCONF=${SPCONF-"$LZ_PATH/sphinx/sphinx.conf"}
 SPOPTS=${SPOPTS-"--cpustats --iostats"}
 
