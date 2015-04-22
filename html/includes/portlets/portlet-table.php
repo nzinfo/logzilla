@@ -93,13 +93,14 @@ if ((has_portlet_access($_SESSION['username'], 'Search Results') == TRUE) || ($_
 
         // CD: #466 - Cleanup of views kills tail table when users run tail mode > 24 hours
         // As a result, we'll use unix ts to set when the view should expire. This way LZTool will
-        // only delete views that are expired
+        // only delete views that are expired after 14 days
         if ($tail > 0) {
-            $exp = time() + (365 * 24 * 60 * 60);
+            $exp = time() + (86400 * 14);
+            $_SESSION['viewname'] = "${exp}_${uname_clean}_tail__search_results";
         } else {
-            $exp = time() + (24 * 60 * 60);
+            $exp = time() + (86400);
+            $_SESSION['viewname'] = "${exp}_${uname_clean}_search_results";
         }
-        $_SESSION['viewname'] = "${exp}_${uname_clean}_search_results";
 
         switch ($show_suppressed):
         case "suppressed":
