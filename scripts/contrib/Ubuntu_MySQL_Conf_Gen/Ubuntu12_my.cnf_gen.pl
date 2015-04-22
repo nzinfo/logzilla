@@ -100,7 +100,7 @@ sub setup_mycnf {
 # Based on http://www.mysqlperformanceblog.com/2007/11/01/innodb-performance-optimization-basics/
 # And also from http://themattreid.com/uploads/innodb_flush_method-CNF-loadtest.txt
 # Do not depend on these settings to be correct for your server. Please consult your DBA
-# You can also run /path_to_logzilla/scripts/tools/mysqltuner.pl for help.
+# You can also run /var/www/logzilla/scripts/tools/mysqltuner.pl for help.
 #
 #
 [mysqld]
@@ -159,9 +159,9 @@ query_cache_limit               = $query_cache_limit  #max query result size to 
 #--------------------------------------
 ## Connections
 #--------------------------------------
-max_connections                 = 1000  #multiplier for memory usage via per-thread buffers
-thread_cache_size               = 50    #recommend 5% of max_connections
-max_connect_errors              = 100   #default: 10
+max_connections                 = 100   #multiplier for memory usage via per-thread buffers
+thread_cache_size               = 30    #recommend 5% of max_connections
+max_connect_errors              = 5     #default: 10
 concurrent_insert               = 2     #default: 1, 2: enable insert for all instances
 connect_timeout                 = 30    #default -5.1.22: 5, +5.1.22: 10
 max_allowed_packet              = 32M   #max size of incoming data to allow
