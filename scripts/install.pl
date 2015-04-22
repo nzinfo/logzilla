@@ -64,7 +64,7 @@ sub prompt {
 }
 
 my $version    = "4.5";
-my $subversion = ".719";
+my $subversion = ".723";
 
 # Grab the base path
 my $lzbase = getcwd;
@@ -1346,6 +1346,11 @@ sub setup_cron {
         $minute = 1;
 
         #        }
+my $indexrun = "*/1 * * * * root test -d $lzbase && ( cd $lzbase/sphinx; ./indexer.sh delta ) >> $logpath/sphinx_indexer.log 2>&1";
+if ( -f "$lzbase/init/logzilla.ubuntu") {
+$indexrun = "*/1 * * * * root service logzilla index >> /var/log/logzilla/indexer.log 2>&1";
+}
+
         my $cron = qq{
 #####################################################
 # BEGIN LogZilla Cron Entries
@@ -1356,7 +1361,7 @@ sub setup_cron {
 #####################################################
 # Run indexer every minute  
 #####################################################
-*/1 * * * * root test -d $lzbase && ( cd $lzbase/sphinx; ./indexer.sh delta ) >> $logpath/sphinx_indexer.log 2>&1
+$indexrun
 
 #####################################################
 # Daily DB/SP Maintenance
@@ -1594,6 +1599,46 @@ if ( -d "$crondir" ) {
   }
 
   sub setup_rclocal {
+if ( -f "$lzbase/init/logzilla.ubuntu") {
+    print "Creating LogZilla init script at /etc/default/logzilla\n";
+system("cp $lzbase/init/logzilla.ubuntu /etc/init.d/logzilla && update-rc.d logzilla defaults");
+my $file = "/etc/default/logzilla";
+my $conf = qq{
+#
+# LogZilla Defaults
+#
+LZ_PATH="$lzbase"
+SPCONF="$lzbase/sphinx/sphinx.conf"
+SPDATA="$lzbase/sphinx/data"
+#SPOPTS="--cpustats --iostats --logdebugv"
+SPOPTS="--cpustats --iostats"
+
+# Set Banner to false if you don't want your server console to be updated with the local LogZilla install/help information
+BANNER=false
+
+# Set quiet to false for searchd return values at startup
+QUIET=true
+
+# WARNING!!! Setting this to true will cause LogZilla to DROP YOUR DATABASE and start a fresh install!
+FRESHSTART=false
+
+# Sets the system hard and soft ulimits
+# For larger servers with long retention of data, we use 100k/50k
+ULIMITH=100000
+ULIMITS=50000
+
+
+DBUSER="$dbadmin"
+DBPASS="$dbadminpw"
+DB="$dbname"
+DBHOST="$dbhost"
+DBPORT=$dbport
+};
+    print "Creating LogZilla init script at $file\n";
+    open FILE, ">>$file" or die $!;
+    print FILE $conf;
+    } else {
+
       my $file = "/etc/rc.local";
       if ( -e "$file" ) {
           open my $config, '+<', "$file" or warn "FAILED: $!\n";
@@ -1611,6 +1656,7 @@ if ( -d "$crondir" ) {
           print "Sphinx startup command:\n";
           print "$lzbase/sphinx/run_searchd.sh -c $lzbase/sphinx/sphinx.conf\n";
       }
+}
   }
 
   sub fbutton {
