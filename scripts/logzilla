@@ -303,10 +303,12 @@ sub save_messages {
         my %last_seen;
         for my $msg ( @messages ) {
             my $key = $msg->{ $counter->{message_field} };
+	    next if ! defined $key;
             $counts{$key} += $msg->{counter};
             if( ! $last_seen{$key} || $last_seen{$key} < $msg->{lo} ) {
                 $last_seen{$key} = $msg->{lo};
             }
+    DEBUG(1, 'key, counts, msg = %s', Dumper([$key, %counts, $msg]) );
         }
         for my $k ( keys %counts ) {
             my @params = ( 
@@ -451,6 +453,8 @@ sub save_messages {
 # Subs
 
 sub process_line {
+my $mne = "";
+my $mac = "MAC";
     my( $line ) = @_;
 
 
@@ -487,7 +491,8 @@ sub process_line {
             return;
         }
 
-        DEBUG( 1, "ts=%s, host=%s, pri=%s, prg=%s, msg=%s", $ts, $host, $pri, $prg, $msg );
+       $mac = $1 if ( $msg =~ /(([0-9A-F]{2}[:-]){5}([0-9A-F]{2}))/i ); 
+        DEBUG( 1, "mac=%s, ts=%s, host=%s, pri=%s, prg=%s, msg=%s", $mac, $ts, $host, $pri, $prg, $msg );
 
         my $facility = int($pri / 8);
         my $severity =    ($pri % 8);
@@ -551,12 +556,6 @@ sub process_line {
             }
         }
 
-        my ($mne, $mac);
-        if ( $msg =~ /(([0-9A-F]{2}[:-]){5}([0-9A-F]{2}))/i ) {
-            $mac = $1;
-        } else {
-            $mac = "MAC";
-        }
         if ( $prg !~ /Firewall/ && $msg =~ /\%([^:]*\-\d+\-[A-Z\-\_\d]+?)(?:\:|\s)/ ) {
             DEBUG( 1, "Searching for Mnemonic" );
             $mne = $1;
@@ -630,6 +629,7 @@ sub process_line {
             lo => $ts,
             counter => 1,
         };
+	DEBUG(1, "Returning Message array as: " . Dumper($message));
         return $message;
     } 
     else {
