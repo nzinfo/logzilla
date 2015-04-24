@@ -1416,7 +1416,9 @@ sub mailto {
 	$log->INFO("Sending $fn");
 	my $body = "Here's your $range LogZilla Report for $date";
 	my $sig = "Sincerely,\nThe LogZilla Teami\nhttp://www.logzilla.net\n\t\t    __\n\t\t   / *_) Rawr!\n\t  _.----. _ /../\n\t/.............../\n        __/...(....|.(....|\n       /__.--.|_|--|_|\n";
-	my $subject = "LogZilla $range Report";
+	my $hn = `hostname`;
+	chomp ($hn);
+	my $subject = "[$hn] LogZilla $range Report";
 ### Start with a simple text message:
 	my $mail = MIME::Lite->new(
 			'From'          => $options->{mailfrom},
