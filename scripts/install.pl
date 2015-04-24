@@ -1346,8 +1346,10 @@ sub setup_cron {
         $minute = 1;
 
         #        }
+my $osver = `lsb_release -d -s | awk '{print \$2}' | cut -d '.' -f1-2`;
+chomp($osver);
 my $indexrun = "*/1 * * * * root test -d $lzbase && ( cd $lzbase/sphinx; ./indexer.sh delta ) >> $logpath/sphinx_indexer.log 2>&1";
-if ( -f "$lzbase/init/logzilla.ubuntu") {
+if ( $osver =~ /12|14/ ) {
 $indexrun = "*/1 * * * * root service logzilla index >> /var/log/logzilla/indexer.log 2>&1";
 }
 
@@ -1599,7 +1601,10 @@ if ( -d "$crondir" ) {
   }
 
   sub setup_rclocal {
+my $osver = `lsb_release -d -s | awk '{print \$2}' | cut -d '.' -f1-2`;
+chomp($osver);
 if ( -f "$lzbase/init/logzilla.ubuntu") {
+if ( $osver =~ /12|14/ ) {
     print "Creating LogZilla init script at /etc/default/logzilla\n";
 system("cp $lzbase/init/logzilla.ubuntu /etc/init.d/logzilla && update-rc.d logzilla defaults");
 my $file = "/etc/default/logzilla";
@@ -1637,10 +1642,15 @@ DBPORT=$dbport
     print "Creating LogZilla init script at $file\n";
     open FILE, ">>$file" or die $!;
     print FILE $conf;
+}
     } else {
 
       my $file = "/etc/rc.local";
       if ( -e "$file" ) {
+my $osver = `lsb_release -d -s | awk '{print \$2}' | cut -d '.' -f1-2`;
+chomp($osver);
+my $indexrun = "*/1 * * * * root test -d $lzbase && ( cd $lzbase/sphinx; ./indexer.sh delta ) >> $logpath/sphinx_indexer.log 2>&1";
+if ( $osver !~ /12|14/ ) {
           open my $config, '+<', "$file" or warn "FAILED: $!\n";
           my @all = <$config>;
           if ( !grep( /sphinx|vmstartup/, @all ) ) {
@@ -1649,6 +1659,7 @@ DBPORT=$dbport
               print $config @all;
           }
           close $config;
+}
       } else {
           print("\n\033[1m\tERROR!\n\033[0m");
           print "Unable to locate your $file\n";
