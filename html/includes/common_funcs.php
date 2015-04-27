@@ -1807,8 +1807,6 @@ function EscapeSphinxQL ( $string )
         "\r",
         "\x1a",
         '-',
-        '!',
-        '&'
     );
     $to   = array ( '\\\\',
         '\\\(',
@@ -1826,8 +1824,6 @@ function EscapeSphinxQL ( $string )
         "\\r",
         "\\x1a",
         '\\\-',
-        '\\\!',
-        '\\\&'
     );
     return str_replace ( $from, $to, $string );
 }
