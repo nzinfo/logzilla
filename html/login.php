@@ -1,33 +1,3 @@
-<style type='text/css'>
-
-.progress {
-        border: 2px solid #5E96E4;
-        height: 52px;
-        width: 540px;
-        margin: 30px auto;
-}
-.progress .prgbar {
-        background: #FA5858;
-        width: <?php echo $dp; ?>%;
-        position: relative;
-        height: 52px;
-        z-index: 999;
-}
-.progress .prgtext {
-        color: #FFFFFF;
-        text-align: center;
-        font-size: 18px;
-        padding: 9px 0 0;
-        width: 540px;
-        position: absolute;
-        z-index: 1000;
-}
-.progress .prginfo {
-        margin: 3px 0;
-}
-
-</style>
-
 <?php
 
 /*
@@ -47,6 +17,16 @@ include_once ("config/config.php");
 include_once ("includes/js_header.php");
 include_once ("includes/common_funcs.php");
 include_once ("includes/modules/functions.security.php");
+
+//------------------------------------------------------------------------
+// Determine what page is being requested
+//------------------------------------------------------------------------
+$pageId = get_input('pageId');
+if (!$pageId) { $pageId = "login.php"; }
+if(!validate_input($pageId, 'pageId')) {
+	echo "Error on pageId validation! <br>Check your regExpArray in config.php!\n";
+   	$pageId = "login.php";
+}
 
 
 //Start security update v0.1
@@ -74,6 +54,7 @@ if($appConfig['ban_ip']=='on') {
 	die("Ooops");
 	}
 }
+
 
 //End security update v0.1
 
@@ -116,20 +97,46 @@ function formatSize( $bytes ) {
     for( $i = 0; $bytes >= 1024 && $i < ( count( $types ) -1 ); $bytes /= 1024, $i++ );
     return( round( $bytes, 2 ) . " " . $types[$i] );
 }
-if ($dpint > 90) {
+if ($dpint > 95) {
 ?>
 <div class='progress'>
         <div class='prgtext'>DISK SPACE ALERT: The server's disk is <?php echo $dp; ?>% full!</div>
         <div class='prgbar'></div>
-<!--
         <div class='prginfo'>
                 <span style='float: left;'><?php echo "$du of $dt used"; ?></span>
                 <span style='float: right;'><?php echo "$df of $dt free"; ?></span>
                 <span style='clear: both;'></span>
--->
         </div>
 </div>
+<style type='text/css'>
 
+.progress {
+        border: 2px solid #5E96E4;
+        height: 52px;
+        width: 540px;
+        margin: 30px auto;
+}
+.progress .prgbar {
+        background: #FA5858;
+        width: <?php echo $dp; ?>%;
+        position: relative;
+        height: 52px;
+        z-index: 999;
+}
+.progress .prgtext {
+        color: #FFFFFF;
+        text-align: center;
+        font-size: 18px;
+        padding: 9px 0 0;
+        width: 540px;
+        position: absolute;
+        z-index: 1000;
+}
+.progress .prginfo {
+        margin: 3px 0;
+}
+
+</style>
 <?php
 }
 if($_SESSION['AUTHTYPE'] == "none") {
@@ -178,7 +185,7 @@ if ($_POST) {
         <title><?php echo $_SESSION['PROGNAME'] ." v". $_SESSION['VERSION'] ." ". $_SESSION['VERSION_SUB']?> Login</title>
         </head>
         <div align="center">
-        <form method="post" action="<?php echo  $_SERVER['PHP_SELF']; ?>">
+        <form method="post" action="<?php echo  $pageId; ?>">
 
 <?php
 
