@@ -1806,7 +1806,6 @@ function EscapeSphinxQL ( $string )
         "\n",
         "\r",
         "\x1a",
-        '|',
         '-',
         '!',
         '&'
@@ -1826,7 +1825,6 @@ function EscapeSphinxQL ( $string )
         "\\n",
         "\\r",
         "\\x1a",
-        '\\\|',
         '\\\-',
         '\\\!',
         '\\\&'
