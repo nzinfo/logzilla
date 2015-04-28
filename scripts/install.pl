@@ -64,7 +64,7 @@ sub prompt {
 }
 
 my $version    = "4.5";
-my $subversion = ".723";
+my $subversion = ".732";
 
 # Grab the base path
 my $lzbase = getcwd;
