@@ -519,7 +519,7 @@ my $mac = "MAC";
 	$log->INFO("Windows Event Detected");
 	$facilityname = $1;
 	$facility = { Application => 23, Security => 4, System => 3, }->{$facilityname} || 16;
-	(undef, $eid, $source, undef, undef, $audit_type, $pcname, $category, undef, $msgtext) = split (/\|/, $msg);
+	(undef, $eid, $source, undef, undef, $audit_type, $pcname, $category, undef, $msgtext) = split (/\|/, $msg, 10);
 	$msg = 
 		"EventID=" . $eid . ", " . 
 		"Source=" . $source . ", " .
@@ -529,6 +529,7 @@ my $mac = "MAC";
 		"MessageText=" . $msgtext;
 	}
 
+        DEBUG(1, "Message here is %s", $msg);
         $msg =~ s/\\//;     # Some messages come in with a trailing slash 
         $msg =~ s/-Traceback/Traceback/; # Remove - so searches are easier and don't have to escape negative boolean
 
