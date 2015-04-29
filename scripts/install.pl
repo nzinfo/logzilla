@@ -1369,7 +1369,7 @@ $indexrun
 # Daily DB/SP Maintenance
 #####################################################
 # Grab some metrics every night @ 11pm
-11 23 * * * root test -d $lzbase && perl /var/www/logzilla/scripts/LZTool -v -ss
+11 23 * * * root test -d $lzbase && perl /var/www/logzilla/scripts/LZTool -v -ss -mysql
 
 # Update and general maintenance @ 1am
 23 1 * * * root test -d $lzbase && perl $lzbase/scripts/LZTool -v 
