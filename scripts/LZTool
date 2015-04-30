@@ -225,14 +225,23 @@ if ($options->{report}) {
     }
 }
 if ( $#runfuncs < 0 ) {
+    DEBUG( 1, "Running waitfor()");
     waitfor( "indexer", 5, 300 );
+    DEBUG( 1, "Running countUpdate()");
     countUpdate();
+    DEBUG( 1, "Running updateHosts()");
     updateHosts();
+    DEBUG( 1, "Running tblSync(mne)");
     tblSync( "mne",       "mne" );
+    DEBUG( 1, "Running tblSync(snare_eid)");
     tblSync( "snare_eid", "eid" );
+    DEBUG( 1, "Running tblSync(programs)");
     tblSync( "programs",  "program" );
+    DEBUG( 1, "Running cleanup_old_views()");
     cleanup_old_views();
+    DEBUG( 1, "Running cleanup_old_idx()");
     cleanup_old_idx();
+    DEBUG( 1, "Running mtti()");
     mtti();
 } else {
     $log->INFO("Running specific functions only");
