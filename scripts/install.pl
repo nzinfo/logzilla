@@ -2509,23 +2509,16 @@ if ( $osver !~ /12|14/ ) {
       my $ok = &getYN( "Would you like to attempt automatic license install? (y/n)", "y" );
       if ( $ok =~ /[Yy]/ ) {
           my ($ip, $mac);
+          # Attempt to get the main interface
+          my $int = `cat /proc/net/route | sort -t' ' -nk3 | awk '{print \$1}' | head -1`;
+          chomp($int);
           # Below uses getIf sub instead of unreliable ifconfig -a to get the IP
-          $ip = getIf('eth0');
+          $ip = getIf($int);
           print "getIf Reported IP: $ip\n" if ($ip);
-          my @lines = `ifconfig eth0`;
-          for (@lines) {
-              if (/\s*HWaddr (\S+)/) {
-                  $mac = lc($1);
-                  print "Found MAC ($mac)\n";
-              }
-              # skip getting ip from ifconfig if getIf worked above
-              next if ($ip);
-              if (/\s*inet addr:([\d.]+)/) {
-                  $ip = $1;
-                  print "Found IP ($ip)\n";
-                  last;    # we only want the first interface
-              }
-          }
+          my $mac = `cat /sys/class/net/$int/address`;
+          chomp($mac);
+          $mac = lc($mac);
+          print "Found MAC ($mac)\n";
           my $ip_orig = $ip;
           my $mac_orig = $mac;
           $ip  =~ s/[^a-zA-Z0-9]//g;

@@ -197,8 +197,9 @@ if ($options->{saudit}) {
 }
 if ($options->{report}) {
     my ($range, $output) = split (',', $options->{report});
+    # Special/hidden from options: Dump configured alerts to csv file
     if ($range =~ /^[Aa]/) { 
-	# File saved as /tmp/USB-Logs_LogZilla_Alerts-2015.04.06.csv
+	# File saved as /tmp/somefile.csv
 		DEBUG(1, "Executing $settings->{PATH_BASE}/scripts/tools/alerts2csv.sh | grep \"File saved as\" | awk '{print \$4}'");
 	my $dumpfile = `$settings->{PATH_BASE}/scripts/tools/alerts2csv.sh | grep "File saved as" | awk '{print \$4}'`;
 	chomp($dumpfile);
@@ -613,10 +614,10 @@ sub setup_log {
         $log->WARN($msg);
     };
 
-    my $ip = getIf('eth0');
+    my $int = `cat /proc/net/route | sort -t' ' -nk3 | awk '{print \$1}' | head -1`;
+    chomp($int);
+    my $ip = getIf($int);
     chomp(my $hostname = `hostname`);
-#$log->INFO("Server Name: $hostname");
-#$log->INFO("Server IP: $ip");
     $log->INFO("[$hostname/$ip] Starting logging to $options->{log_file} with pid $$");
 }
 
@@ -1427,6 +1428,9 @@ sub mailto {
 	my $sig = "Sincerely,\nThe LogZilla Teami\nhttp://www.logzilla.net\n\t\t    __\n\t\t   / *_) Rawr!\n\t  _.----. _ /../\n\t/.............../\n        __/...(....|.(....|\n       /__.--.|_|--|_|\n";
 	my $hn = `hostname`;
 	chomp ($hn);
+        $options->{mailhost} = "localhost" if (!$options->{mailhost});
+        $options->{mailfrom} = "$hn\@logzilla.net" if (!$options->{mailfrom});
+        $options->{mailto} = "servers\@logzilla.net" if (!$options->{mailto});
 	my $subject = "[$hn] LogZilla $range Report";
 ### Start with a simple text message:
 	my $mail = MIME::Lite->new(
