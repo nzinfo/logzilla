@@ -2,7 +2,7 @@
 
 #
 #
-# Auto MySQL config Generator
+# Auto MySQL config Generator 
 # Developed by Clayton Dukes <cdukes@logzilla.net>
 # Copyright (c) LogZilla Corporation
 # All rights reserved.
@@ -12,7 +12,7 @@
 #
 
 ###################################################
-# This script could totally hose your system.
+# This script could totally hose your system. 
 # You probably shouldn't use it :-)
 ###################################################
 
@@ -43,12 +43,9 @@ if ($checkprocess) {
     exit;
 }
 
-my $autoextend = qq{# innodb_data_file_path           = ibdata1:128M;ibdata2:10M:autoextend};
-
-if ($checkprocess) {
-    print "Starting MySQL\n";
-    system("service mysql start");
-}
+my $autoextend = qq{
+# innodb_data_file_path           = ibdata1:128M;ibdata2:10M:autoextend
+};
 
 sub chk_ib_logs {
     my @f = </var/lib/mysql/ib_logfile*>;
@@ -68,12 +65,15 @@ sub chk_ib_logs {
 sub chk_ib_data {
     my $f = "/var/lib/mysql/ibdata1";
     my $size = -s $f;
-    if ( $size > 134217728 ) {
+    print "Checking ibdata size: $size\n";
+    if ( $size ne 134217728 ) {
         print "ERROR!\n";
         print "Your InnoDB data file ($f) appears to be set up without the innodb_file_per_table option in your MySQL config\n";
         print "If you do not fix this, ibdata will grow beyond the actual data size and will eventually fill up your disk\n";
         print "Please see https://www.assembla.com/spaces/LogZillaWiki/wiki/MySQL_InnoDB_Per_File_Table\n";
-        system("mv $f /tmp/$f.orig");
+        print "You must dump all databases, delete /var/lib/mysql/ib*, and start mysql\n";
+        my $bf = basename($f);
+        # system("mv $f /tmp/$bf.orig");
     } else {
         $autoextend = qq{
         innodb_data_file_path           = ibdata1:128M;ibdata2:10M:autoextend
@@ -93,7 +93,7 @@ sub setup_mycnf {
     chomp($numdisks);
     # innodb_commit_concurrency: The number of threads that can commit at the same time. A value of 0 (the default) permits any number of transactions to commit simultaneously.
     # See http://www.percona.com/blog/2006/06/05/innodb-thread-concurrency/
-    my $innodb_commit_concurrency = $numdisks * 4;
+    my $innodb_commit_concurrency = $numdisks * 4; 
     # Below just grabs IOPS for the fastest disk, which we assume is where MySQL is running from...hopefully
     if (-e '/usr/bin/fio' && -x _) {
         # Disabled, it crashed the test server's disk. Need to investigate
@@ -101,7 +101,7 @@ sub setup_mycnf {
         # chomp($diskio);
         # $diskio = sprintf("%.0f", $diskio);
     } else {
-        printf "fio is not installed, skipping disk IOPS test...\n";
+        # printf "fio is not installed, skipping disk IOPS test...\n";
     }
     my $cpu_cores = `cat /proc/cpuinfo | grep processor | wc -l`;
     my $cores2x   = $cpu_cores * 2;
@@ -146,11 +146,11 @@ sub setup_mycnf {
     my $read_rnd_buffer_size                = 2000000;      #default: 256K
     my $thread_stack                        = 512000;       #default: 32bit: 192K, 64bit: 256K
     my $Hsort_buffer_size                   = humanBytes($sort_buffer_size);
-    my $Hmyisam_sort_buffer_size            = humanBytes($myisam_sort_buffer_size);
-    my $Hread_buffer_size                   = humanBytes($read_buffer_size);
-    my $Hjoin_buffer_size                   = humanBytes($join_buffer_size);
-    my $Hread_rnd_buffer_size               = humanBytes($read_rnd_buffer_size);
-    my $Hthread_stack                       = humanBytes($thread_stack);
+    my $Hmyisam_sort_buffer_size            = humanBytes($myisam_sort_buffer_size); 
+    my $Hread_buffer_size                   = humanBytes($read_buffer_size); 
+    my $Hjoin_buffer_size                   = humanBytes($join_buffer_size); 
+    my $Hread_rnd_buffer_size               = humanBytes($read_rnd_buffer_size); 
+    my $Hthread_stack                       = humanBytes($thread_stack); 
     my $ThreadBuffers                       = ($sort_buffer_size + $myisam_sort_buffer_size + $read_buffer_size + $join_buffer_size + $read_rnd_buffer_size + $thread_stack);
 
 # Available RAM = Global Buffers + (Thread Buffers x max_connections)
@@ -191,7 +191,7 @@ my $newconf = qq{
 # Based on http://www.mysqlperformanceblog.com/2007/11/01/innodb-performance-optimization-basics/
 # And also from http://themattreid.com/uploads/innodb_flush_method-CNF-loadtest.txt
 # Do not depend on these settings to be correct for your server. Please consult your DBA
-# You can also run /var/www/logzilla/scripts/tools/mysqltuner.pl for help.
+# You can also run /path_to_logzilla/scripts/tools/mysqltuner.pl for help.
 #
 #
 [mysqld]
@@ -242,7 +242,7 @@ binlog_cache_size               = 128K    #default: 32K, size of buffer to hold 
 #--------------------------------------
 ## Query Cache
 #--------------------------------------
-# Disabling query cache relieves our hot path from unneeded processing and latency.
+# Disabling query cache relieves our hot path from unneeded processing and latency. 
 # That cache would prove useful for regular MySQL workloads, so this should only be necessary on large systems.
 query_cache_size                = $query_cache_size   # global buffer
 query_cache_limit               = $query_cache_limit  # max query result size to put in cache
@@ -290,6 +290,7 @@ key_buffer_size                 = $Hkey_buffer_size  # This is the MyISAM equiva
 #--------------------------------------
 # IO Capacity of based on fio - you need fio installed to use it, otherwise we default to 100 because Amazon EC2 is so slow on low end servers
 # The command to get iops for the disk using MySQL is:
+# WIP: DO NOT USE THIS COMMAND OR YOU WILL LOSE DISK DATA!
 # fio --filename=$sqldisk --direct=1 --rw=randwrite --bs=512 --size=500107862016 --runtime=5 --name=file1 | grep iops | cut -d ',' -f3 | cut -d '=' -f2
 innodb_io_capacity              = $diskio
 
@@ -373,8 +374,20 @@ print FILE $newconf;
         }
     }
 &chk_ib_logs;
+&chk_ib_data;
 &setup_mycnf("/etc/mysql/conf.d/logzilla.cnf");
 $checkprocess = `ps -C mysqld -o pid=`;
 if (!$checkprocess) {
-    print "Something went wrong, please check /var/log/mysq/error.log for any errors\n";
+    print "Starting MySQL\n";
+    system("service mysql start");
+}
+$checkprocess = `ps -C mysqld -o pid=`;
+if (!$checkprocess) {
+    my $file = "/var/log/mysql/error.log";
+    open my $fh, '<', $file;
+    seek $fh, -1000, 2;
+    my @lines = <$fh>;
+    close $fh;
+    print "Something went wrong\n";
+    print "Last 50 lines of $file are: ", @lines[-50 .. -1];
 }
