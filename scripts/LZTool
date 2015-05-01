@@ -131,10 +131,11 @@ my $cfg = LogZilla::Config->new( path => $options->{config_file} );
 my $dbh = connect_to_db();
 
 # Read settings from DB.
+my $lzsub = 0;
+my $svnsub = 0;
 my $settings = read_settings_from_db();
-my ( $lzmajor, $lzminor ) = split( /\./, $settings->{VERSION} );
-my ( undef,    $lzsub )   = split( /\./, $settings->{VERSION_SUB} );
-DEBUG( 1, "LogZilla Version Check: $lzmajor, $lzminor, $lzsub" );
+my ( $lzmajor, $lzminor )   = split( /\./, $settings->{VERSION} );
+( undef,    $lzsub )        = split( /\./, $settings->{VERSION_SUB} );
 
 # Reconfigure log to use log_file (as we finally got it from $settings), also
 # set proper level and output based on $options{verbose} and $options{debug}
@@ -144,8 +145,13 @@ if ( $options->{dryrun} ) {
     $log->INFO("Dry Run Mode - No modifications will be made");
 }
 
-# Finally we are initialized, announce this to the world :-)
-$log->INFO("Program initialized successfully");
+$log->INFO("LogZilla Version $lzmajor.$lzminor.$lzsub" );
+$svnsub = `svn info  | grep '^Revision:' | awk '{print \$2}'`;
+chomp($svnsub);
+my $vdiff = ($svnsub - $lzsub);
+
+$log->ERR("Your version of LogZilla is %s revisions behind, please upgrade using: (cd $settings->{PATH_BASE}/scripts && sudo ./upgrade)", $vdiff) if  ($lzsub < $svnsub);
+$log->ERR("Please visit https://www.assembla.com/spaces/LogZillaWiki/wiki/Upgrading for simple instructions") if  ($lzsub < $svnsub);
 
 my ( $results, $rc, $sth, $sth_sphinx, $sql );
 my bigint $count;
@@ -448,7 +454,7 @@ sub updateHosts {
         DEBUG( 1, "Executing SQL Statement: $sql" );
         $sth->execute();
         if ( ( $sth_sphinx->rows ) < 0 ) {
-            $log->ERROR("RETENTION_DROPS_HOST not found in SETTINGS");
+            $log->ERR("RETENTION_DROPS_HOST not found in SETTINGS");
         } else {
             $results = $sth->fetchrow_hashref;
             if ( ( $results->{'value'} ) == 1 ) {
@@ -618,6 +624,7 @@ sub setup_log {
     chomp($int);
     my $ip = getIf($int);
     chomp(my $hostname = `hostname`);
+    $log->INFO("Program initialized successfully");
     $log->INFO("[$hostname/$ip] Starting logging to $options->{log_file} with pid $$");
 }
 
