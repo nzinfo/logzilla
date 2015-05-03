@@ -146,7 +146,7 @@ if ( $options->{dryrun} ) {
 }
 
 $log->INFO("LogZilla Version $lzmajor.$lzminor.$lzsub" );
-$svnsub = `svn info  | grep '^Revision:' | awk '{print \$2}'`;
+$svnsub = `svn info $settings->{PATH_BASE}  | grep '^Revision:' | awk '{print \$2}'`;
 chomp($svnsub);
 my $vdiff = ($svnsub - $lzsub);
 
