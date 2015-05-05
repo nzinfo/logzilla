@@ -734,14 +734,14 @@ sub clean_dedup_cache {
     $last_cache_cleanup = time();
 
     # First find min fo and max fo in dedup cache
-    my $min_fo = undef;
-    my $max_lo = undef;
+    my $min_fo = 0;
+    my $max_lo = 0;
 
     for my $msg (values(%{$dedup_by_key})) {
-        if(!$min_fo || $msg->{fo} < $min_fo) {
+        if($min_fo == 0 || $msg->{fo} < $min_fo) {
             $min_fo = $msg->{fo};
         }
-        if(!$max_lo || $msg->{lo} > $max_lo) {
+        if($max_lo == 0 || $msg->{lo} > $max_lo) {
             $max_lo = $msg->{lo};
         }
     }
