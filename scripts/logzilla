@@ -285,7 +285,7 @@ sub save_messages {
         $dbh->do("START TRANSACTION");
         for my $msg ( @messages ) {
             if( $msg->{id} ) {
-                DEBUG( 2, "Updating logs for id=%d, counter+=%d, lo=%d", 
+                DEBUG( 1, "Updating logs for id=%d, counter+=%d, lo=%d", 
                     $msg->{id}, $msg->{counter}, $msg->{lo} );
                 $sth->execute( $msg->{counter}, $msg->{lo}, $msg->{id} );
                 if( $sth->{mysql_warning_count} > 0 ) {
@@ -399,7 +399,7 @@ sub save_messages {
         $prep_sth->{max_id}->execute($new_max_id);
     }
     else {
-        $log->WARN("Wrong new max_id ($new_max_id, last_insert_id=$last_insert_id, " .
+        DEBUG( 2, "Dedup: new max_id ($new_max_id, last_insert_id=$last_insert_id, " .
             "inserted_num=$inserted_num");
     }
 
@@ -470,6 +470,7 @@ sub process_line {
     #}
     #}
 
+my $prg = "";
     if ( $line =~ /(\S+ \S+)\t(\S+)\t(\d+)\t(\S+)?.*\t(.*)/ ) {
 
         # v3.2 and up Fields are: TS, Host, PRI, Program,  and MSG
@@ -479,12 +480,14 @@ sub process_line {
         my $prg      = $4;
         my $msg      = $5;
 
+        # Catch-All:
+        $prg = "Syslog" if ((!defined $prg) || ($prg eq "")); 
         $prg =~ s/.*irewall/Firewall/; # Added for Firewalls
         $msg =~ s/\e\[?.*?[\@-~]//g; # Strip ANSI codes
         if( $ts =~ /^(....)-(..)-(..) (..):(..):(..)$/ ) {
-            DEBUG(1, "Converting Time from: $ts");
+            DEBUG(3, "Converting Time from: $ts");
             $ts = POSIX::mktime( $6, $5, $4, $3, $2 - 1, $1 - 1900 );
-            DEBUG(1, "Converted Time to: $ts");
+            DEBUG(3, "Converted Time to: $ts");
         }
         else {
             $log->WARN( "Invalid timestamp in log '$ts', skipping" );
@@ -533,9 +536,9 @@ sub process_line {
                 "Category=" . $5 . ", " .
                 "MessageText=" . $6;
             }
+        DEBUG( 1, "Windows Event: EventID = '%s', Source = '%s', Type = '%s', Computer = '%s', Category = '%s', MessageText = '%s'", $eid, $source, $audit_type, $pcname, $category, $msgtext);
         }
         DEBUG( 1, "mac=%s, ts=%s, host=%s, pri=%s, prg=%s, msg=%s", $mac, $ts, $host, $pri, $prg, $msg );
-        DEBUG( 1, "Windows Event: EventID = '%s', Source = '%s', Type = '%s', Computer = '%s', Category = '%s', MessageText = '%s'", $eid, $source, $audit_type, $pcname, $category, $msgtext);
 
         $msg =~ s/\\//;     # Some messages come in with a trailing slash 
         $msg =~ s/-Traceback/Traceback/; # Remove - so searches are easier and don't have to escape negative boolean
@@ -546,21 +549,21 @@ sub process_line {
         #$log->INFO("Checking for enabled Alert Triggers");
         # Mail Trigger (also SNMP Trap)
         for my $trigger ( @{$triggers} ) {
-            $log->INFO("Found %s active alert pattern(s), processing...", scalar(@{$triggers}));
+            DEBUG( 2, "Found %s active alert pattern(s), processing...", scalar(@{$triggers}));
             my $pattern = $trigger->{pattern};
-            DEBUG( 1, "Looking for pattern '$pattern' in message '$msg'" );
+            DEBUG( 2, "Looking for pattern '$pattern' in message '$msg'" );
             if ( $msg =~ $pattern ) {
-                DEBUG( 1, "Found pattern '$pattern' in message: '$msg', sending email!" );
+                DEBUG( 2, "Found pattern '$pattern' in message: '$msg', sending email!" );
                 trigger_mail( $trigger, $host, $msg );
             } else {
-                DEBUG( 1, "No match found for pattern '$pattern' in Message" );
+                DEBUG( 2, "No match found for pattern '$pattern' in Message" );
             }
-            DEBUG( 1, "Looking for Severity $severity in pattern '$pattern'" );
+            DEBUG( 2, "Looking for Severity $severity in pattern '$pattern'" );
             if ($pattern =~ /{SEV$severity}/) {
-                DEBUG( 1, "Found Severity '$severity' match, sending email!" );
+                DEBUG( 2, "Found Severity '$severity' match, sending email!" );
                 trigger_mail( $trigger, $host, $msg );
             } else {
-                DEBUG( 1, "No match found for Severity $severity" );
+                DEBUG( 2, "No match found for Severity $severity" );
             }
         }
 
@@ -589,11 +592,7 @@ sub process_line {
         $msg =~ s/time=\d+:\d+:\d+\s//; # Added because Fortigate's don't s follow IETF standards
         $prg =~ s/wc\d+-.*/Cisco Wireless/; # Special for CV - bad wlc's! they send their hostname as a program...ugh!
 
-        # Catch-All:
         $prg =~ s/^\d+$/Cisco Syslog/; # Cisco Messages send the program as an int string.
-        if ( !$prg ) {
-            $prg = "Syslog";
-        }
 
         # Added below to strip paths from program names so that just the program is listed
         # i.e.: /USR/SBIN/CRON would be inserted into the DB as just CRON
@@ -637,7 +636,7 @@ sub process_line {
             lo => $ts,
             counter => 1,
         };
-        DEBUG(2, "Returning Message array as: " . Dumper($message));
+        DEBUG(1, "Returning Message array as: " . Dumper($message));
         return $message;
     } 
     else {
