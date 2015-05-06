@@ -516,28 +516,30 @@ my $prg = "";
 
         # Handle Snare Format
         # Fix for #497, note that you must be using the new syslog-ng config as of v4.5.495 for this to work!
-        my ($facilityname, $eid, $audit_type, $domainController, $category, $msgtext, $user);
+        my ($facilityname, $eid, $audit_type, $domainController, $category, $msgtext, $userLogin, $userDomain);
         if ( $prg =~ /MSWin_(Security|Application|System)/  ) {
             $log->INFO("Windows Event Detected");
             $facilityname = $1;
             $facility = { Application => 23, Security => 4, System => 3, }->{$facilityname} || 16;
             #if ($msg =~ /\d{4}\|(\d+)\|(.*?)\|.*?\|.*?\|(.*?)\|(.*?)\|(\d+)\|(.*)/g ) {
-            if ($msg =~ /\d{4}\|(\d+)\|.*?\|\s?(.*?)\|.*?\|(.*?)\|(.*?)\|(.*?)\|\|?(.*)/g) {
+            if ($msg =~ /\d{4}\|(\d+)\|.*?\|\s?(.*?)\\(.*?)\|(.*?)\|(.*?)\|(.*?)\|\|?(.*)/) {
                 $eid = $1;
-                $user = $2;
-                $audit_type = $3;
-                $domainController = $4;
-                $category = $5;
-                $msgtext = $6;
+                $userDomain = $2;
+                $userLogin = $3;
+                $audit_type = $4;
+                $domainController = $5;
+                $category = $6;
+                $msgtext = $7;
                 $msg = 
                 "EventID=" . $eid . ", " . 
-                "User=" . $user . ", " .
+                "User Domain=" . $userDomain . ", " .
+                "User Login=" . $userLogin . ", " .
                 "Audit Type=" . $audit_type . ", " .
                 "Domain Controller=" . $domainController . ", " .
                 "Category=" . $category . ", " .
                 "MessageText=" . $msgtext;
             }
-        DEBUG( 1, "Windows Event: EventID = '%s', User = '%s', Audit Type = '%s', Domain Controller = '%s', Category = '%s', MessageText = '%s'", $eid, $user, $audit_type, $domainController, $category, $msgtext);
+        DEBUG( 1, "Windows Event: EventID = '%s', User Domain = '%s', User Login = %s, Audit Type = '%s', Domain Controller = '%s', Category = '%s', MessageText = '%s'", $eid, $userDomain, $userLogin, $audit_type, $domainController, $category, $msgtext);
         }
         DEBUG( 1, "mac=%s, ts=%s, host=%s, pri=%s, prg=%s, msg=%s", $mac, $ts, $host, $pri, $prg, $msg );
 
