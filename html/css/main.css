@@ -367,4 +367,16 @@ tr.invisibleRow
       float:none !important; 
       display: block; 
       text-align: center; 
-  } 
+} 
+.colorSwatch {   
+    position: relative;
+    bottom: 3px;
+    left: 3px;
+    width: 30px;
+    height: 30px;
+    margin: 5px;
+    padding: 10px;
+    border-width: 1px;
+    border-style: solid;
+    border-color: rgba(0,0,0,.2);
+}
