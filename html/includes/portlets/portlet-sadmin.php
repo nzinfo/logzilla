@@ -259,7 +259,11 @@ if ((has_portlet_access($_SESSION['username'], 'Server Settings') == TRUE) || ($
                     } else {
                         $("#settingsContent").html('<input type=text class="rounded ui-widget ui-corner-all" id="inp_'+name+'" value="'+curValue+'"  /><span id="result"></span>');
                     }
-                    $("#settingsDescription").html("<div style='padding:10px;'>" + data.description + "<br>Default: " + data.def + "<div>");
+                    if (name.match(/TBL_SEV_[0-7]/g)) {
+                        $("#settingsDescription").html("<div style='padding:10px;'>" + data.description + "</div><br />Current Value: " +curValue+ "<br /><div class='colorSwatch' style='background-color:#" +curValue+ ";'></div>Default Value: " +data.def+ "<br /><div class='colorSwatch' style='background-color:#" +data.def+ ";'></div>");
+                    } else {
+                        $("#settingsDescription").html("<div style='padding:10px;'>" + data.description + "<br />Default: " + data.def + "</div>");
+                    }
                 }, "json");
 
         })
