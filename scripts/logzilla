@@ -506,7 +506,7 @@ my $prg = "";
 
         # Handle Snare Format
         # Fix for #497, note that you must be using the new syslog-ng config as of v4.5.495 for this to work!
-        my ($facilityname, $eid, $audit_type, $domainController, $category, $msgtext, $userLogin, $userDomain, $source);
+        my ($facilityname, $eid, $audit_type, $domainController, $category, $msgtext, $userLogin, $userDomain, $source, $type);
         if ( $prg =~ /MSWin_(Security|Application|System)/  ) {
             $log->INFO("Windows Event Detected");
             $facilityname = $1;
@@ -520,6 +520,10 @@ my $prg = "";
                 $domainController = $5;
                 $category = $6;
                 $msgtext = $7;
+                $userLogin =~ s/N\/A//g;
+                if ($userLogin =~ /(.*?)\\(\w+)/) {
+                    $userLogin = "{Host, $1}, {Login Name, $2}";
+                }
                 $msg = 
                 "EventID=" . $eid . ", " . 
                 "Source=" . $source . ", " .
@@ -529,7 +533,7 @@ my $prg = "";
                 "Category=" . $category . ", " .
                 "MessageText=" . $msgtext;
             }
-        DEBUG( 1, "Windows Event: EventID = '%s', User Domain = '%s', User Login = %s, Audit Type = '%s', Domain Controller = '%s', Category = '%s', MessageText = '%s'", $eid, $userDomain, $userLogin, $audit_type, $domainController, $category, $msgtext);
+        DEBUG( 1, "Windows Event: EventID = '%s', Source = '%s', User = %s, Type = '%s', Computer = '%s', Category = '%s', MessageText = '%s'", $eid, $source, $userLogin, $type, $domainController, $category, $msgtext);
         }
         DEBUG( 1, "mac=%s, ts=%s, host=%s, pri=%s, prg=%s, msg=%s", $mac, $ts, $host, $pri, $prg, $msg );
 
