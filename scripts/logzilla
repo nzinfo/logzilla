@@ -460,16 +460,6 @@ sub process_line {
 
     DEBUG( 1, "INCOMING MESSAGE: $line" );
 
-    #if ( $line =~ m/MSWinEventLog.+?(Security|Application|System).+?/ ) {
-    #$win = "MSWinEventLog";
-    #$facilityname = $1;
-    #if( ( $line =~ m/201\d(\d+)$facilityname/ ) || 
-    #( $line =~ m/\d+:\d+:\d+\s+201\d(\d+)/ ) || 
-    #( $line =~ m/\d+:\d+:\d+ 20\d+\\011(\d+)\\011/ ) ) {
-    #$eid = $1;
-    #}
-    #}
-
 my $prg = "";
     if ( $line =~ /(\S+ \S+)\t(\S+)\t(\d+)\t(\S+)?.*\t(.*)/ ) {
 
@@ -516,26 +506,26 @@ my $prg = "";
 
         # Handle Snare Format
         # Fix for #497, note that you must be using the new syslog-ng config as of v4.5.495 for this to work!
-        my ($facilityname, $eid, $audit_type, $domainController, $category, $msgtext, $userLogin, $userDomain);
+        my ($facilityname, $eid, $audit_type, $domainController, $category, $msgtext, $userLogin, $userDomain, $source);
         if ( $prg =~ /MSWin_(Security|Application|System)/  ) {
             $log->INFO("Windows Event Detected");
             $facilityname = $1;
             $facility = { Application => 23, Security => 4, System => 3, }->{$facilityname} || 16;
             #if ($msg =~ /\d{4}\|(\d+)\|(.*?)\|.*?\|.*?\|(.*?)\|(.*?)\|(\d+)\|(.*)/g ) {
-            if ($msg =~ /\d{4}\|(\d+)\|.*?\|\s?(.*?)\\(.*?)\|(.*?)\|(.*?)\|(.*?)\|\|?(.*)/) {
+            if ($msg =~ /.*?\d{4}\|(\d+)\|(.*?)\|\\?(.*?)\|.*?\|(.*?)\|(.*?)\|(.*?)\|\|?(.*)/) {
                 $eid = $1;
-                $userDomain = $2;
+                $source = $2;
                 $userLogin = $3;
-                $audit_type = $4;
+                $type = $4;
                 $domainController = $5;
                 $category = $6;
                 $msgtext = $7;
                 $msg = 
                 "EventID=" . $eid . ", " . 
-                "User Domain=" . $userDomain . ", " .
-                "User Login=" . $userLogin . ", " .
-                "Audit Type=" . $audit_type . ", " .
-                "Domain Controller=" . $domainController . ", " .
+                "Source=" . $source . ", " .
+                "User=" . $userLogin . ", " .
+                "Type=" . $type . ", " .
+                "Computer=" . $domainController . ", " .
                 "Category=" . $category . ", " .
                 "MessageText=" . $msgtext;
             }

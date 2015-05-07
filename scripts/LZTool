@@ -458,7 +458,7 @@ sub updateHosts {
         } else {
             $results = $sth->fetchrow_hashref;
             if ( ( $results->{'value'} ) == 1 ) {
-                $log->INFO("RETENTION_DROPS_HOST found. Dropping hidden hosts");
+                $log->INFO("Purging stale hosts no longer reporting in...");
                 $sql = "delete from hosts WHERE hidden='true'";
                 DEBUG( 1, "Executing SQL Statement: $sql" );
                 $dbh->do($sql) unless $options->{dryrun};
@@ -894,7 +894,7 @@ sub ss {
         $results = $sth->fetchrow_hashref;
         my $db_numdays = 0;
 
-        if ( ( $results->{'ts'} ) > 1 ) {
+        if (($results->{'ts'} > 1) && ($results->{'fo'} ne "0000-00-00 00:00:00")) {
             my $date = today();
             my ( $ymd, undef ) = split( /\s+/, $results->{fo} );
             $db_numdays = today() - date($ymd) + 1; # Note: add +1 here to include today in the disk usage calculation
