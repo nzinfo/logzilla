@@ -64,7 +64,7 @@ sub prompt {
 }
 
 my $version    = "4.5";
-my $subversion = ".749";
+my $subversion = ".751";
 
 # Grab the base path
 my $lzbase = getcwd;
@@ -1285,7 +1285,7 @@ log {
     destination(d_logzilla);
     # Optional: Log all events to file
     destination(df_logzilla);
-    flags(flow-control);
+    #flags(flow-control);
 };
 #</lzconfig> END LogZilla settings}; # end $sconf2
 if ( !grep( /logzilla|lzconfig/, @arr ) ) {
