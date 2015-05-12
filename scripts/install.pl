@@ -64,7 +64,7 @@ sub prompt {
 }
 
 my $version    = "4.5";
-my $subversion = ".753";
+my $subversion = ".754";
 
 # Grab the base path
 my $lzbase = getcwd;
@@ -334,20 +334,20 @@ if ( $skipdb !~ /[Yy]/ ) {
     do_procs();
     update_version();
 }
-add_logrotate()   unless $skiplogrot =~ /[Yy]/;
-add_syslog_conf() unless $skipsysng  =~ /[Yy]/;
-setup_cron()      unless $skipcron   =~ /[Yy]/;
-setup_sudo()      unless $skipsudo   =~ /[Yy]/;
-setup_apparmor()  unless $skipapparmor   =~ /[Yy]/;
-install_sphinx()  unless $sphinx_compile   =~ /[Nn]/;
-insert_test() unless ( grep( /notest/, @ARGV ) ); 
+add_logrotate()   unless $skiplogrot =~ /[Yy]/ || $0 =~ /upgrade/;
+add_syslog_conf() unless $skipsysng  =~ /[Yy]/ || $0 =~ /upgrade/;
+setup_cron()      unless $skipcron   =~ /[Yy]/ || $0 =~ /upgrade/;
+setup_sudo()      unless $skipsudo   =~ /[Yy]/ || $0 =~ /upgrade/;
+setup_apparmor()  unless $skipapparmor   =~ /[Yy]/ || $0 =~ /upgrade/;
+install_sphinx()  unless $sphinx_compile   =~ /[Nn]/ || $0 =~ /upgrade/;
+insert_test() unless ( grep( /notest/, @ARGV ) || $0 =~ /upgrade/ ); 
 if ($sphinx_index   =~ /[Yy]/) {
     print "Starting Sphinx search daemon and re-indexing data...\n";
     system("(rm -f $lzbase/sphinx/data/* && cd $lzbase/sphinx && ./indexer.sh full)");
 }
-fbutton()         unless $skipfb       =~ /[Yy]/;
-add_ioncube()     unless $skip_ioncube =~ /[Yy]/;
-install_license() unless $skiplic      =~ /[Yy]/;
+fbutton()         unless $skipfb       =~ /[Yy]/ || $0 =~ /upgrade/;
+add_ioncube()     unless $skip_ioncube =~ /[Yy]/ || $0 =~ /upgrade/;
+install_license() unless $skiplic      =~ /[Yy]/ || $0 =~ /upgrade/;
 # run_tests()       unless $test    =~ /[Nn]/;
 
 setup_rclocal();
