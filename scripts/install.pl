@@ -64,7 +64,7 @@ sub prompt {
 }
 
 my $version    = "4.5";
-my $subversion = ".752";
+my $subversion = ".753";
 
 # Grab the base path
 my $lzbase = getcwd;
@@ -2303,7 +2303,7 @@ sub copy_old_settings {
     $dbh->do("RENAME TABLE settings TO settings_orig") or die "Could not update $dbname: $DBI::errstr";
     my $res = `mysql -u$dbroot -p'$dbrootpass' -h $dbhost -P $dbport $dbname < $lzbase/scripts/sql/settings.sql`;
     print $res;
-    $dbh->do("REPLACE INTO settings SELECT * FROM settings_orig; ") or die "Could not update $dbname: $DBI::errstr";
+    $dbh->do("REPLACE INTO settings SELECT * FROM settings_orig WHERE name NOT LIKE 'TBL_SEV_%'") or die "Could not update $dbname: $DBI::errstr";
     $dbh->do("DROP TABLE settings_orig") or die "Could not update $dbname: $DBI::errstr";
 }
 
