@@ -1476,8 +1476,6 @@ sub excel {
         $range = "Weekly" if ($range =~ /^[Ww]/);
         $range = "Monthly" if ($range =~ /^[Mm]/);
         $log->INFO("Sending $fn");
-        my $body = "Here's your $range LogZilla Report for $date";
-        my $sig = "Sincerely,\nThe LogZilla Teami\nhttp://www.logzilla.net\n\t\t    __\n\t\t   / *_) Rawr!\n\t  _.----. _ /../\n\t/.............../\n        __/...(....|.(....|\n       /__.--.|_|--|_|\n";
         my $hn = `hostname`;
         chomp ($hn);
         $options->{mailhost} = "localhost" if (!$options->{mailhost});
@@ -1489,16 +1487,51 @@ sub excel {
             'From'          => $options->{mailfrom},
             'To'            => $options->{mailto},
             'Subject'       => "$subject",
-            'Type'          => 'multipart/mixed',
+            'Type'          => 'multipart/alternative',
         );
-        $mail->attach(
-            'Type'          => 'TEXT',
-            'Data'          => "$body\n\n$sig",
+        my $html = <<"END_HTML";  
+        Here's your $range LogZilla Report for $date<br />
+        Sincerely,
+         <p><img alt="Rawr!"
+         src="http://www.logzilla.net/images/email/200x55_logzilla_logo_emailSig.png"
+         unselectable="on" height="80"></p>
+         <b>LogZilla Corporation</b><br>
+         <p style="margin: 0in 0in 7.5pt; line-height: 8.25pt;"> <a
+         href="http://www.logzilla.net/">http://www.logzilla.net</a></p>
+         <br>
+END_HTML
+        my $text = <<"END_TEXT";  
+                      ___
+                     / *_) Rawr!
+             _.---._/./
+            /......../
+         __/..(.|.(..|
+        /__.-.|_|--|_|
+                          __
+                        / *_) Rawr!
+              _.---. _ /../
+             /.........../
+          __/..(.|.(..|
+         /__.-.|_|--|_|
+END_TEXT
+        my $att_text = MIME::Lite->new(
+            Type     => 'text',
+            Data     => $text,
+            Encoding => 'quoted-printable',
         );
+        $att_text->attr('content-type'
+            => 'text/plain; charset=UTF-8');
+        $mail->attach($att_text); 
+        my $att_html = MIME::Lite->new(  
+            Type     => 'text',
+            Data     => $html,  
+            Encoding => 'quoted-printable', 
+        );  
+        $att_html->attr('content-type'   
+            => 'text/html; charset=UTF-8');  
+        $mail->attach($att_html);  
         $mail->attach(
-#'Type'          => 'application/vnd.ms-excel',
-            #'Type'          => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-            'Type'          => 'application/zip',
+            Type => 'application/zip',
             Path => $fn,
             Disposition => 'attachment',
         ) or die "Error adding $fn: $!\n";
