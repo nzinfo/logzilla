@@ -1505,7 +1505,7 @@ sub excel {
             Type => 'image/png',
             Encoding =>'base64',
             Id   => 'sig.png',
-            Path => "$ROOT_DIR/html/images/200x55_logo_email.png"
+            Path => "$ROOT_DIR/html/images/email.png"
         );
 DEBUG(1, "Path to Email Image: $ROOT_DIR/html/images/email.png");
         $mail->attach(
