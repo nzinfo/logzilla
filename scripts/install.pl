@@ -64,7 +64,7 @@ sub prompt {
 }
 
 my $version    = "4.5";
-my $subversion = ".761";
+my $subversion = ".762";
 
 # Grab the base path
 my $lzbase = getcwd;
@@ -346,7 +346,7 @@ if ($sphinx_index   =~ /[Yy]/) {
     system("(rm -f $lzbase/sphinx/data/* && cd $lzbase/sphinx && ./indexer.sh full)");
 }
 fbutton()         unless $skipfb       =~ /[Yy]/ || $0 =~ /upgrade/;
-add_ioncube()     unless $skip_ioncube =~ /[Yy]/ || $0 =~ /upgrade/;
+add_ioncube()     unless $skip_ioncube =~ /[Yy]/;
 install_license() unless $skiplic      =~ /[Yy]/ || $0 =~ /upgrade/;
 # run_tests()       unless $test    =~ /[Nn]/;
 
