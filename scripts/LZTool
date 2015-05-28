@@ -127,6 +127,7 @@ if ( $options->{help} ) {
 # Read configuration from (PHP) config file
 my $cfg = LogZilla::Config->new( path => $options->{config_file} );
 
+
 # Connect to DB and setup error handler to log to $log and then exit with error
 my $dbh = connect_to_db();
 
@@ -560,6 +561,7 @@ sub connect_to_db {
     my $dbh = DBI->connect( $cfg->db_dsn, $cfg->db_user, $cfg->db_pass,
         { HandleError => sub { $log->ERR( $_[0] ); exit(1) } } );
     $dbh->{TraceLevel} = $options->{dbi_debug};
+# DEBUG(1, "DB Name is %s",  $cfg->db_name)  && exit;
     return $dbh;
 }
 
@@ -875,7 +877,7 @@ sub ss {
         my $du = $spdsk; # define du here in case the only disk usage is from today (server only up for one day)
         $log->INFO( "Current Index Size (on disk) is approximately %s", humanBytes($spdsk) );
         store_metric( "lztool_index_diskused_KB", $spdsk );
-        $sql = "SELECT table_schema, Round(Sum(data_length + index_length) / 1024, 0) AS 'dbsize_kbytes' FROM information_schema.tables WHERE table_schema='syslog' GROUP  BY table_schema";
+        $sql = "SELECT table_schema, Round(Sum(data_length + index_length) / 1024, 0) AS 'dbsize_kbytes' FROM information_schema.tables WHERE table_schema='" . $cfg->db_name . "' GROUP  BY table_schema";
         $sth = $dbh->prepare($sql);
         DEBUG( 1, "Executing SQL Statement: $sql" );
         $sth->execute();
@@ -1041,7 +1043,7 @@ sub makeview {
             $sql = "CREATE OR REPLACE VIEW log_arch_day_$y$m$d AS SELECT `logs`.`id` AS `id`,`logs`.`host` AS `host`,`logs`.`facility` AS `facility`,`logs`.`severity` AS `severity`,`logs`.`program` AS `program`,`logs`.`msg` AS `msg`,`logs`.`mne` AS `mne`,`logs`.`eid` AS `eid`,`logs`.`suppress` AS `suppress`,`logs`.`counter` AS `counter`,`logs`.`fo` AS `fo`,`logs`.`lo` AS `lo`,`logs`.`notes` AS `notes` FROM `logs` WHERE ((`logs`.`fo` >= '$ymd 00:00:00') AND (`logs`.`fo` <= '$ymd 23:59:59'))";
             DEBUG( 1, "Executing SQL Statement: $sql" );
             $dbh->do($sql) unless $options->{dryrun};
-            $sql = "SELECT table_name FROM INFORMATION_SCHEMA.tables WHERE table_type = 'VIEW' AND table_schema = 'syslog' AND table_name LIKE 'log_arch_day_$y$m$d%'";
+            $sql = "SELECT table_name FROM INFORMATION_SCHEMA.tables WHERE table_type = 'VIEW' AND table_schema = '" . $cfg->db_name . "' AND table_name LIKE 'log_arch_day_$y$m$d%'";
             $sth = $dbh->prepare($sql);
             DEBUG( 1, "Executing SQL Statement: $sql" );
             $sth->execute();
