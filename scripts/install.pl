@@ -64,7 +64,7 @@ sub prompt {
 }
 
 my $version    = "4.5";
-my $subversion = ".762";
+my $subversion = ".764";
 
 # Grab the base path
 my $lzbase = getcwd;
@@ -1522,41 +1522,20 @@ sub install_sphinx {
 }
 
 sub setup_apparmor {
-    # Attempt to fix AppArmor
-    my $file = "/etc/apparmor.d/usr.sbin.mysqld";
-    if ( -e "$file" ) {
-        open FILE, "<$file";
-        my @lines = <FILE>;
-        close FILE;
-        if ( !grep( /logzilla_import/, @lines ) ) {
-            print("\n\033[1m\n\n========================================\033[0m\n");
-            print("\n\033[1m\tAppArmor Setup\n\033[0m");
-            print("\n\033[1m========================================\n\n\033[0m\n\n");
-            print "In order for MySQL to import and export data, you must take measures to allow it access from AppArmor.\n";
-            print "Install will attempt do do this for you, but please be sure to check /etc/apparmor.d/usr.sbin.mysqld and also to restart the AppArmor daemon once install completes.\n";
-            if ( $set_apparmor !~ /[YyNn]/ ) { # i.e. undefined in .lzrc
-                $set_apparmor = &getYN( "Ok to continue?", "y" );
-            }
-            if ( $set_apparmor =~ /[Yy]/ ) {
-                print "Adding the following to lines to $file:\n";
-                print "/tmp/logzilla_import.txt r,\n$lzbase/exports/** rw,\n";
-                open my $config, '+<', "$file" or warn "FAILED: $!\n";
-                my @all = <$config>;
-                seek $config, 0, 0;
-                splice @all, -1, 0, "# <lzconfig> (please do not remove this line)\n  /tmp/logzilla_import.txt r,\n  $lzbase/exports/** rw,\n  /tmp/** r,\n# </lzconfig> (please do not remove this line)\n";
-                print $config @all;
-                close $config;
-            }
-            if ( $apparmor_restart !~ /[YyNn]/ ) { # i.e. undefined in .lzrc
-                print "\n\nAppArmor must be restarted, would you like to restart it now?\n";
-                $apparmor_restart  = &getYN( "Ok to continue?", "y" );
-            }
-            if ( $apparmor_restart =~ /[Yy]/ ) {
-                unless ( grep( /nohup/, @ARGV ) ) {
-                    my $r = `/etc/init.d/apparmor restart`;
-                }
-            } else {
-                print("\033[1m\n\tPlease be sure to restart apparmor..\n\033[0m");
+    if ( $ostype =~ /Ubuntu/ ) {
+        # Attempt to fix AppArmor
+        # cdukes: 2015-06-15 - just disable the mysqld profile, apparmor sucks.
+        my $file = "/etc/apparmor.d/disable/usr.sbin.mysqld";
+        if ( -e "$file" ) {
+            print("\033[1m\n\tApparmor profile is already configured properly.\n\033[0m");
+        } else {
+            print("\033[1m\n\tDisabling Apparmor profile for MySQL (so we can import data).\n\033[0m");
+            system ("ln -s /etc/apparmor.d/usr.sbin.mysqld /etc/apparmor.d/disable/");
+            system ("apparmor_parser -R /etc/apparmor.d/usr.sbin.mysqld");
+            my $chk = `aa-status | grep mysql`;
+            chomp($chk);
+            if ($chk) {
+                print "Unable to disable Apparmor's mysql profile, you will need to manually do it\n";
             }
         }
     }
