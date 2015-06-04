@@ -190,8 +190,8 @@ if ($options->{delhost}) {
     exit;
 }
 if ($options->{rename}) {
-    $log->INFO("Renaming Hostname '%s' to Hostname '%s'", $options->{from}, $options->{to});
-    renhost( "$options->{from}", "$options->{to}");
+    $log->INFO("Renaming Hostname '%s' to Hostname '%s'", $options->{renfrom}, $options->{rento});
+    renhost( "$options->{renfrom}", "$options->{rento}");
     exit;
 }
 if ($options->{topn}) {
