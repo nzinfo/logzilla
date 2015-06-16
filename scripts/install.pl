@@ -64,7 +64,7 @@ sub prompt {
 }
 
 my $version    = "4.5";
-my $subversion = ".765";
+my $subversion = ".767";
 
 # Grab the base path
 my $lzbase = getcwd;
@@ -1531,7 +1531,9 @@ sub setup_apparmor {
         } else {
             print("\033[1m\n\tDisabling Apparmor profile for MySQL (so we can import data).\n\033[0m");
             system ("ln -s /etc/apparmor.d/usr.sbin.mysqld /etc/apparmor.d/disable/");
-            system ("apparmor_parser -R /etc/apparmor.d/usr.sbin.mysqld");
+            # Using -R will not stick across reboots
+            #system ("apparmor_parser -R /etc/apparmor.d/usr.sbin.mysqld");
+            system ("service restart");
             my $chk = `aa-status | grep mysql`;
             chomp($chk);
             if ($chk) {
