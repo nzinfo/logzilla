@@ -64,7 +64,7 @@ sub prompt {
 }
 
 my $version    = "4.5";
-my $subversion = ".767";
+my $subversion = ".768";
 
 # Grab the base path
 my $lzbase = getcwd;
@@ -335,10 +335,10 @@ if ( $skipdb !~ /[Yy]/ ) {
     update_version();
 }
 add_logrotate()   unless $skiplogrot =~ /[Yy]/ || $0 =~ /upgrade/;
-add_syslog_conf() unless $skipsysng  =~ /[Yy]/ || $0 =~ /upgrade/;
-setup_cron()      unless $skipcron   =~ /[Yy]/ || $0 =~ /upgrade/;
+add_syslog_conf() unless $skipsysng  =~ /[Yy]/;
+setup_cron()      unless $skipcron   =~ /[Yy]/;
 setup_sudo()      unless $skipsudo   =~ /[Yy]/ || $0 =~ /upgrade/;
-setup_apparmor()  unless $skipapparmor   =~ /[Yy]/ || $0 =~ /upgrade/;
+setup_apparmor()  unless $skipapparmor   =~ /[Yy]/;
 install_sphinx()  unless $sphinx_compile   =~ /[Nn]/ || $0 =~ /upgrade/;
 insert_test() unless ( grep( /notest/, @ARGV ) || $0 =~ /upgrade/ ); 
 if ($sphinx_index   =~ /[Yy]/) {
@@ -1527,18 +1527,21 @@ sub setup_apparmor {
         # cdukes: 2015-06-15 - just disable the mysqld profile, apparmor sucks.
         my $file = "/etc/apparmor.d/disable/usr.sbin.mysqld";
         if ( -e "$file" ) {
-            print("\033[1m\n\tApparmor profile is already configured properly.\n\033[0m");
+            print("\033[1m\n\tApparmor profile exists, checking status...\n\033[0m");
         } else {
             print("\033[1m\n\tDisabling Apparmor profile for MySQL (so we can import data).\n\033[0m");
             system ("ln -s /etc/apparmor.d/usr.sbin.mysqld /etc/apparmor.d/disable/");
-            # Using -R will not stick across reboots
-            #system ("apparmor_parser -R /etc/apparmor.d/usr.sbin.mysqld");
-            system ("service restart");
-            my $chk = `aa-status | grep mysql`;
-            chomp($chk);
-            if ($chk) {
-                print "Unable to disable Apparmor's mysql profile, you will need to manually do it\n";
-            }
+        }
+        # Using -R will not stick across reboots
+        #system ("apparmor_parser -R /etc/apparmor.d/usr.sbin.mysqld");
+        system ("service apparmor restart");
+        my $chk = `aa-unconfined | grep mysql`;
+        chomp($chk);
+        if ($chk) {
+            print("\033[1m\n\tApparmor profile is set properly.\n\033[0m");
+        } else {
+            print("\033[1m\n\tUnable to disable Apparmor's mysql profile, you will need to manually do it.\n\033[0m");
+            print "$chk\n";
         }
     }
 }
