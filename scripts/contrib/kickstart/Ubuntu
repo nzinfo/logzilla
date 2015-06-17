@@ -101,7 +101,7 @@ my $sngpath = $osver;
 $sngpath = "trusty" if $osver eq 14.04;
     print "Making sure OS is up to date...\n";
     system("printf '# Replacement for the default syslog-ng included in Ubuntu as that one has a memory leak\ndeb http://packages.madhouse-project.org/ubuntu $sngpath syslog-ng-3.6\n' > /etc/apt/sources.list.d/syslog-ng_logzilla.list");
-    system("wget --no-check-certificate https://packages.madhouse-project.org/debian/archive-key.txt");
+    system("wget http://packages.madhouse-project.org/debian/archive-key.txt");
     system("apt-key add archive-key.txt");
     system("apt-get update && apt-get -y upgrade");
     system("apt-get -y purge rsyslog && apt-get -y install syslog-ng");
@@ -136,6 +136,9 @@ if($exit_code!=0) {
 # Download code from subversion
 if ( $options->{checkout} > 0 ) {
     my ( $svnroot, $install_dir ) = $options->{lzroot} =~ /(.*)\/(.*)$/;
+    my $rawr=`wget -q -O - http://www.logzilla.net/pingme`;
+    chomp($rawr);
+    print $rawr . "\n";
     print "Downloading LogZilla\n";
     system("cd $svnroot && svn co https://subversion.assembla.com/svn/logzilla/ $install_dir 2>&1");
 }
