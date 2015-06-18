@@ -1,5 +1,4 @@
 #!/usr/bin/perl
-
 #
 #
 # Auto MySQL config Generator 
@@ -25,8 +24,6 @@ $| = 1;
 my $osver = `lsb_release -d -s | awk '{print \$2}' | cut -d '.' -f1-2`;
 chomp($osver);
 printf "Sorry, this script is only meant to work on Ubuntu 12-14\n" && exit if ( $osver !~ /12|14/ );
-print "Work in progress, don't run unless you REALLY know what you are doing!\n";
-exit;
 
 my $checkprocess = `ps -C mysqld -o pid=`;
 my $mysqlver = 0;
@@ -43,9 +40,12 @@ if ($checkprocess) {
     exit;
 }
 
-my $autoextend = qq{
-# innodb_data_file_path           = ibdata1:128M;ibdata2:10M:autoextend
-};
+# TODO: Autodetect if this is a new install and add the autoextend option
+my $autoextend = "";
+#$autoextend = qq{innodb_data_file_path           = ibdata1:128M;ibdata2:10M:autoextend};
+$autoextend = qq{# innodb_data_file_path           = ibdata1:128M;ibdata2:10M:autoextend};
+
+
 
 sub chk_ib_logs {
     my @f = </var/lib/mysql/ib_logfile*>;
@@ -74,14 +74,11 @@ sub chk_ib_data {
         print "You must dump all databases, delete /var/lib/mysql/ib*, and start mysql\n";
         my $bf = basename($f);
         # system("mv $f /tmp/$bf.orig");
-    } else {
-        $autoextend = qq{
-        innodb_data_file_path           = ibdata1:128M;ibdata2:10M:autoextend
-        };
     }
 }
 my ($innodb_log_file_size);
 my $iothreads   = "";
+#TODO: Add iops test to get better guess for the server it's going on
 my $diskio      = 100;
 my $sqldisk     = `df -P /var/lib/mysql | tail -1 | cut -d' ' -f 1`;
 chomp ($sqldisk);
@@ -94,15 +91,6 @@ sub setup_mycnf {
     # innodb_commit_concurrency: The number of threads that can commit at the same time. A value of 0 (the default) permits any number of transactions to commit simultaneously.
     # See http://www.percona.com/blog/2006/06/05/innodb-thread-concurrency/
     my $innodb_commit_concurrency = $numdisks * 4; 
-    # Below just grabs IOPS for the fastest disk, which we assume is where MySQL is running from...hopefully
-    if (-e '/usr/bin/fio' && -x _) {
-        # Disabled, it crashed the test server's disk. Need to investigate
-        # $diskio = `fio --filename=$sqldisk --direct=1 --rw=randwrite --bs=512 --size=500107862016 --runtime=5 --name=file1 | grep iops | cut -d ',' -f3 | cut -d '=' -f2`;
-        # chomp($diskio);
-        # $diskio = sprintf("%.0f", $diskio);
-    } else {
-        # printf "fio is not installed, skipping disk IOPS test...\n";
-    }
     my $cpu_cores = `cat /proc/cpuinfo | grep processor | wc -l`;
     my $cores2x   = $cpu_cores * 2;
     my $sysmem    = `cat /proc/meminfo |  grep "MemTotal" | awk '{print \$2}'`;
@@ -125,7 +113,7 @@ sub setup_mycnf {
         $query_cache_limit = "512K";
     }
 
-# Global Buffers: key_buffer_size, innodb_buffer_pool_size, innodb_log_buffer_size, innodb_additional_mem_pool_size, net_buffer_size, query_cache_size
+    # Global Buffers: key_buffer_size, innodb_buffer_pool_size, innodb_log_buffer_size, innodb_additional_mem_pool_size, net_buffer_size, query_cache_size
     my $innodb_buffer_pool_size             = ( $sysmem * 15 / 100 ); # Set to 15%
     printf ("Calculated InnoDB Buffer Pool Size is %s\n", humanBytes($innodb_buffer_pool_size));
     my $key_buffer_size                     = 128000000; # No need to calc this because we don't use MyISAM
@@ -153,11 +141,13 @@ sub setup_mycnf {
     my $Hthread_stack                       = humanBytes($thread_stack); 
     my $ThreadBuffers                       = ($sort_buffer_size + $myisam_sort_buffer_size + $read_buffer_size + $join_buffer_size + $read_rnd_buffer_size + $thread_stack);
 
-# Available RAM = Global Buffers + (Thread Buffers x max_connections)
-# max_connections = (Available RAM - Global Buffers) / Thread Buffers
+    # Available RAM = Global Buffers + (Thread Buffers x max_connections)
+    # max_connections = (Available RAM - Global Buffers) / Thread Buffers
     printf ("Calculated Global Buffer Size is %s\n", humanBytes($GlobalBuffers));
     printf ("Calculated Global Thread Size is %s\n", humanBytes($ThreadBuffers));
-    my $max_connections                     = sprintf("%.0f", ($innodb_buffer_pool_size - $GlobalBuffers / $ThreadBuffers));
+    # my $max_connections                     = sprintf("%.0f", ($innodb_buffer_pool_size - $GlobalBuffers / $ThreadBuffers));
+    #TODO: Manual says to use (Available RAM - Global Buffers) / Thread Buffers, but that seems like serious overkill...
+    my $max_connections                     = 1000;
     my $thread_cache_size                   = sprintf("%.0f", ($max_connections * 5 / 100)); # 5% of max_connections  - thread_cache_size = (0.05)($max_connections)
 
     if ($mysqlverSub eq 1) {
@@ -167,26 +157,26 @@ sub setup_mycnf {
 #--------------------------------------
 innodb_file_io_threads         = 16
 };
-}
+                }
 
-if ($mysqlverSub ge 5) {
-    $iothreads = qq{
+                if ($mysqlverSub ge 5) {
+                    $iothreads = qq{
 #--------------------------------------
 ## InnoDB IO settings -  5.5.x and greater
 #--------------------------------------
 innodb_write_io_threads         = 64
 innodb_read_io_threads          = 64
 };
-}
+    }
 
-if ( -e "$file" ) {
-    my $bfile = basename($file);
-    print "$file already exists, moving it to /tmp/$bfile-$$.bak\n";
-    system("mv $file /tmp/$bfile-$$.bak");
-}
-print "Creating MySQL config for LogZilla at $file\n";
-open FILE, ">$file" or die $!;
-my $newconf = qq{
+    if ( -e "$file" ) {
+        my $bfile = basename($file);
+        print "$file already exists, moving it to /tmp/$bfile-$$.bak\n";
+        system("mv $file /tmp/$bfile-$$.bak");
+    }
+    print "Creating MySQL config for LogZilla at $file\n";
+    open FILE, ">$file" or die $!;
+    my $newconf = qq{
 #<lzconfig> BEGIN LogZilla settings
 # Based on http://www.mysqlperformanceblog.com/2007/11/01/innodb-performance-optimization-basics/
 # And also from http://themattreid.com/uploads/innodb_flush_method-CNF-loadtest.txt
@@ -203,6 +193,10 @@ innodb_file_per_table
 skip-name-resolve
 event_scheduler             = on
 symbolic-links              = 0
+# TODO: Figure out why this had to be added to avoid:
+# 150526 23:59:00  InnoDB: Warning: io_setup() failed with EAGAIN. Will make 5 attempts before giving up.
+# InnoDB: Warning: io_setup() attempt 1 failed.
+innodb_use_native_aio       = 0
 
 #--------------------------------------
 # Logging
@@ -288,10 +282,8 @@ key_buffer_size                 = $Hkey_buffer_size  # This is the MyISAM equiva
 ## InnoDB IO Capacity - 5.1.x plugin, 5.5.x
 # http://dev.mysql.com/doc/refman/5.5/en/innodb-parameters.html#sysvar_innodb_io_capacity
 #--------------------------------------
-# IO Capacity of based on fio - you need fio installed to use it, otherwise we default to 100 because Amazon EC2 is so slow on low end servers
-# The command to get iops for the disk using MySQL is:
-# WIP: DO NOT USE THIS COMMAND OR YOU WILL LOSE DISK DATA!
-# fio --filename=$sqldisk --direct=1 --rw=randwrite --bs=512 --size=500107862016 --runtime=5 --name=file1 | grep iops | cut -d ',' -f3 | cut -d '=' -f2
+# Default to 100 because Amazon EC2 is so slow on low end servers
+# You should test your iops and set this better
 innodb_io_capacity              = $diskio
 
 $iothreads
@@ -321,7 +313,7 @@ innodb_log_buffer_size          = $Hinnodb_log_buffer_size # Global buffer = 1/8
 innodb_lock_wait_timeout        = 60
 innodb_thread_concurrency       = $cores2x    # recommend 2x core quantity
 innodb_commit_concurrency       = $innodb_commit_concurrency    # recommend 4x num disks - see http://www.percona.com/blog/2006/06/05/innodb-thread-concurrency/
-innodb_flush_method             = O_DIRECT # use O_DIRECT if you have raid with bbu. Options: O_DIRECT, O_DSYNC, blank for fdatasync (default)
+# innodb_flush_method             = O_DIRECT # use O_DIRECT if you have raid with bbu. Options: O_DIRECT, O_DSYNC, blank for fdatasync (default)
 innodb_support_xa               = false #recommend 0 on read-only slave, disable xa to negate extra disk flush
 skip-innodb-doublewrite
 skip_innodb_checksums
@@ -340,39 +332,39 @@ skip_innodb_checksums
 #</lzconfig> END LogZilla settings
 };
 print FILE $newconf;
-    }
-    my $needed = `apt-cache policy libjemalloc1 | grep none`;
-    chomp ($needed);
-    if ($needed) {
-        print "Installing new memory allocater for MySQL - see https://www.assembla.com/wiki/show/LogZillaWiki/MySQL_Tuning\n";
-        system("apt-get -y install libjemalloc1");
-        print "Adding memory allocator load to /etc/init/mysql.conf - see https://www.assembla.com/wiki/show/LogZillaWiki/MySQL_Tuning\n";
-        system("perl -i -pe 's|env HOME=/etc/mysql|env HOME=/etc/mysql\nenv LD_PRELOAD=/usr/lib/libjemalloc.so.1\n|g' /etc/init/mysql.conf");
-    }
+}
+my $needed = `apt-cache policy libjemalloc1 | grep none`;
+chomp ($needed);
+if ($needed) {
+    print "Installing new memory allocater for MySQL - see https://www.assembla.com/wiki/show/LogZillaWiki/MySQL_Tuning\n";
+    system("apt-get -y install libjemalloc1");
+    print "Adding memory allocator load to /etc/init/mysql.conf - see https://www.assembla.com/wiki/show/LogZillaWiki/MySQL_Tuning\n";
+    system("perl -i -pe 's|env HOME=/etc/mysql|env HOME=/etc/mysql\nenv LD_PRELOAD=/usr/lib/libjemalloc.so.1\n|g' /etc/init/mysql.conf");
+}
 
-    sub humanBytes {
-        my $bytes = shift();
-        if ( $bytes > 1099511627776 )    #   TB: 1024 GiB
-        {
-            return sprintf( "%.0fT", $bytes / 1099511627776 );
-        }
-        elsif ( $bytes > 1073741824 )    #   GB: 1024 MiB
-        {
-            return sprintf( "%.0fG", $bytes / 1073741824 );
-        }
-        elsif ( $bytes > 1048576 )       #   MB: 1024 KiB
-        {
-            return sprintf( "%.0fM", $bytes / 1048576 );
-        }
-        elsif ( $bytes > 1024 )          #   KB: 1024 B
-        {
-            return sprintf( "%.0fK", $bytes / 1024 );
-        }
-        else                             #   bytes
-        {
-            return "$bytes" . ( $bytes == 1 ? "" : "s" );
-        }
+sub humanBytes {
+    my $bytes = shift();
+    if ( $bytes > 1099511627776 )    #   TB: 1024 GiB
+    {
+        return sprintf( "%.0fT", $bytes / 1099511627776 );
     }
+    elsif ( $bytes > 1073741824 )    #   GB: 1024 MiB
+    {
+        return sprintf( "%.0fG", $bytes / 1073741824 );
+    }
+    elsif ( $bytes > 1048576 )       #   MB: 1024 KiB
+    {
+        return sprintf( "%.0fM", $bytes / 1048576 );
+    }
+    elsif ( $bytes > 1024 )          #   KB: 1024 B
+    {
+        return sprintf( "%.0fK", $bytes / 1024 );
+    }
+    else                             #   bytes
+    {
+        return "$bytes" . ( $bytes == 1 ? "" : "s" );
+    }
+}
 &chk_ib_logs;
 &chk_ib_data;
 &setup_mycnf("/etc/mysql/conf.d/logzilla.cnf");
@@ -384,10 +376,15 @@ if (!$checkprocess) {
 $checkprocess = `ps -C mysqld -o pid=`;
 if (!$checkprocess) {
     my $file = "/var/log/mysql/error.log";
-    open my $fh, '<', $file;
-    seek $fh, -1000, 2;
-    my @lines = <$fh>;
-    close $fh;
-    print "Something went wrong\n";
-    print "Last 50 lines of $file are: ", @lines[-50 .. -1];
+    if ( -e "$file" ) {
+        open my $fh, '<', $file;
+        seek $fh, -1000, 2;
+        my @lines = <$fh>;
+        close $fh;
+        print "Something went wrong\n";
+        print "Last 50 lines of $file are: ", @lines[-50 .. -1];
+    } else {
+        print "Something went wrong\n";
+        print "Please check your mysql error log\n";
+    }
 }
