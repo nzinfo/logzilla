@@ -243,6 +243,7 @@ system("cd $options->{lzroot} && chown -R www-data:www-data html/ 2>&1");
 # Modify the .lzrc so that sphinx_compile is disabled on subsequent upgrades
 print "Disabling Sphinx compile for future upgrades\n";
 system("perl -i -pe 's|\\\$sphinx_compile = \"Y\"|\\\$sphinx_compile = \"N\"|g' $options->{lzroot}/scripts/.lzrc 2>&1");
+system("perl -i -pe 's|\\\$sphinx_index = \"Y\"|\\\$sphinx_index = \"N\"|g' $options->{lzroot}/scripts/.lzrc 2>&1");
 system("perl -i -pe 's|\\\$skiplic = \"Y\"|\\\$skiplic = \"N\"|g' $options->{lzroot}/scripts/.lzrc 2>&1");
 
 if ( $options->{vmbanner} > 0 ) {
