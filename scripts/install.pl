@@ -64,7 +64,7 @@ sub prompt {
 }
 
 my $version    = "4.5";
-my $subversion = ".769";
+my $subversion = ".772";
 
 # Grab the base path
 my $lzbase = getcwd;
@@ -83,7 +83,7 @@ my ( $year, $mon, $mday ) = Date::Calc::Add_Delta_Days( $curyear, $curmon, $curm
 my $pAdd = "p" . $year . sprintf( "%02d", $mon ) . sprintf( "%02d", $mday );
 my $dateTomorrow = $year . "-" . sprintf( "%02d", $mon ) . "-" . sprintf( "%02d", $mday );
 my ( $dbroot, $dbrootpass, $dbname, $dbtable, $dbhost, $dbport, $dbadmin, $dbadminpw, $siteadmin, $siteadminpw, $email, $sitename, $url, $logpath, $retention, $snare, $j4, $arch, $skipcron, $skipdb, $skipsysng, $skiplogrot, $skipsudo, $skipfb, $skiplic, $sphinx_compile, $sphinx_index, $skip_ioncube,$skipapparmor, $syslogng_conf, $webuser, $syslogng_source, $upgrade, $test, $autoyes, $spx_cores );
-my ( $installdb, $logrotate, $docron, $do_hup_syslog, $do_hup_cron, $set_sudo, $set_apparmor, $apparmor_restart, $do_fback, $do_ioncube, $restart_php, $do_sphinx_compile );
+my ( $installdb, $logrotate, $docron, $do_hup_syslog, $do_hup_cron, $set_sudo, $set_apparmor, $apparmor_restart, $do_fback, $do_ioncube, $restart_php, $do_sphinx_compile, $licensed_if );
 
 
 sub getYN {
@@ -2446,12 +2446,14 @@ sub install_license {
     if ( $ok =~ /[Yy]/ ) {
         my ($ip, $mac);
         # Attempt to get the main interface
-        my $int = `cat /proc/net/route | sort -t' ' -nk3 | awk '{print \$1}' | head -1`;
-        chomp($int);
+        unless ( $licensed_if ) {
+            $licensed_if = `cat /proc/net/route | sort -t' ' -nk3 | awk '{print \$1}' | head -1`;
+        }
+        chomp($licensed_if);
         # Below uses getIf sub instead of unreliable ifconfig -a to get the IP
-        $ip = getIf($int);
+        $ip = getIf($licensed_if);
         print "getIf Reported IP: $ip\n" if ($ip);
-        my $mac = `cat /sys/class/net/$int/address`;
+        my $mac = `cat /sys/class/net/$licensed_if/address`;
         chomp($mac);
         $mac = lc($mac);
         print "Found MAC ($mac)\n";

@@ -330,7 +330,7 @@ if ($checkprocess) {
 &chk_ib_logs;
 # Use the contrib script instead of here so we don't maintain two separate copies
 # &setup_mycnf("/etc/mysql/conf.d/logzilla.cnf");
-system("(cd $options->{lzroot}/scripts/contrib/Ubuntu_MySQL_Conf_Gen && ./Ubuntu12_my.cnf_gen.pl)");
+system("(cd $options->{lzroot}/scripts/contrib/MySQL-Autoconfig && ./mysql-autoconfig.pl)");
 
 if ($checkprocess) {
     print "Starting MySQL\n";
