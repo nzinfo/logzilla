@@ -181,7 +181,7 @@ innodb_read_io_threads          = 64
 # Based on http://www.mysqlperformanceblog.com/2007/11/01/innodb-performance-optimization-basics/
 # And also from http://themattreid.com/uploads/innodb_flush_method-CNF-loadtest.txt
 # Do not depend on these settings to be correct for your server. Please consult your DBA
-# You can also run /path_to_logzilla/scripts/tools/mysqltuner.pl for help.
+# You can also run /var/www/logzilla/scripts/tools/mysqltuner.pl for help.
 #
 #
 [mysqld]
