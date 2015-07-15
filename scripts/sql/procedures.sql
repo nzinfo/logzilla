@@ -196,6 +196,8 @@ END$$
 -- then value of this variable is used - while on production (when this variable is not set)
 -- it returns standard current_date() value.
 CREATE FUNCTION get_current_date() RETURNS date
+READS SQL DATA
+DETERMINISTIC
 BEGIN
     RETURN coalesce( @test_current_date, current_date() );
 END$$
