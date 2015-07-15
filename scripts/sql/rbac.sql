@@ -64,7 +64,7 @@ UNLOCK TABLES;
 /*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
 /*!50003 SET sql_mode              = '' */ ;
 DELIMITER ;;
-/*!50003 CREATE*/ /*!50020 DEFINER=`root`@`localhost`*/ /*!50003 FUNCTION `rbac`(have decimal(11,0), should decimal(11,0)) RETURNS tinyint(1) return ((have&should)/should)=1 */;;
+/*!50003 CREATE*/ /*!50020 DEFINER=`root`@`localhost`*/ /*!50003 FUNCTION `rbac`(have decimal(11,0), should decimal(11,0)) RETURNS tinyint(1) READS SQL DATA DETERMINISTIC return ((have&should)/should)=1 */;;
 DELIMITER ;
 /*!50003 SET sql_mode              = @saved_sql_mode */ ;
 /*!50003 SET character_set_client  = @saved_cs_client */ ;
