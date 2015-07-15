@@ -4,6 +4,7 @@ DROP PROCEDURE IF EXISTS `log_arch_daily_proc`;
 DROP PROCEDURE IF EXISTS `manage_logs_partitions`;
 DROP PROCEDURE IF EXISTS `debug`;
 DROP FUNCTION IF EXISTS `get_current_date`;
+DROP FUNCTION IF EXISTS `rbac`;
 
 DELIMITER $$
 
@@ -202,6 +203,11 @@ BEGIN
     RETURN coalesce( @test_current_date, current_date() );
 END$$
 
--- ===============================================================================================
+CREATE FUNCTION rbac(have decimal(11,0), should decimal(11,0)) RETURNS tinyint(1)
+READS SQL DATA
+DETERMINISTIC
+BEGIN
+    RETURN ((have&should)/should)=1;
+END$$
 
 DELIMITER ;
