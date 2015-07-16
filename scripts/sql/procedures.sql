@@ -204,7 +204,7 @@ BEGIN
 END$$
 
 CREATE DEFINER=`root`@`localhost` FUNCTION `rbac`(have decimal(11,0), should decimal(11,0)) RETURNS tinyint(1)
-READS SQL DATA
+NO SQL
 DETERMINISTIC
 BEGIN
     RETURN ((have&should)/should)=1;
