@@ -203,7 +203,7 @@ BEGIN
     RETURN coalesce( @test_current_date, current_date() );
 END$$
 
-CREATE FUNCTION rbac(have decimal(11,0), should decimal(11,0)) RETURNS tinyint(1)
+CREATE DEFINER=`root`@`localhost` FUNCTION `rbac`(have decimal(11,0), should decimal(11,0)) RETURNS tinyint(1)
 READS SQL DATA
 DETERMINISTIC
 BEGIN
