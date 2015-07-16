@@ -886,7 +886,7 @@ sub make_dbuser {
     print "Adding $dbadmin to $localip\n";
 
     # Grant access to $dbadmin
-    $grant = qq{GRANT SELECT, INSERT, UPDATE, DELETE, CREATE, DROP, GRANT OPTION, REFERENCES, INDEX, ALTER, CREATE TEMPORARY TABLES, LOCK TABLES, CREATE VIEW, SHOW VIEW, CREATE ROUTINE, ALTER ROUTINE, EXECUTE, EVENT, TRIGGER ON `$dbname`.* TO '$dbadmin'\@'$localip'  IDENTIFIED BY '$dbadminpw'};
+    $grant = qq{GRANT SELECT, INSERT, UPDATE, DELETE, CREATE, REFERENCES, INDEX, ALTER, CREATE TEMPORARY TABLES, LOCK TABLES, CREATE VIEW, SHOW VIEW, EXECUTE, EVENT, TRIGGER ON `$dbname`.* TO '$dbadmin'\@'$localip'  IDENTIFIED BY '$dbadminpw'};
 
     $sth = $dbh->prepare( "
         $grant
@@ -917,7 +917,7 @@ sub make_dbuser {
 
     # Grant access to $dbadmin
     print "Adding $dbadmin to localhost\n";
-    $grant = qq{GRANT SELECT, INSERT, UPDATE, DELETE, CREATE, DROP, GRANT OPTION, REFERENCES, INDEX, ALTER, CREATE TEMPORARY TABLES, LOCK TABLES, CREATE VIEW, SHOW VIEW, CREATE ROUTINE, ALTER ROUTINE, EXECUTE, EVENT, TRIGGER ON `$dbname`.* TO '$dbadmin'\@'localhost'  IDENTIFIED BY '$dbadminpw'};
+    $grant = qq{GRANT SELECT, INSERT, UPDATE, DELETE, CREATE, REFERENCES, INDEX, ALTER, CREATE TEMPORARY TABLES, LOCK TABLES, CREATE VIEW, SHOW VIEW, EXECUTE, EVENT, TRIGGER ON `$dbname`.* TO '$dbadmin'\@'localhost'  IDENTIFIED BY '$dbadminpw'};
 
     $sth = $dbh->prepare( "
         $grant
