@@ -64,7 +64,7 @@ sub prompt {
 }
 
 my $version    = "4.5";
-my $subversion = ".780";
+my $subversion = ".781";
 
 # Grab the base path
 my $lzbase = getcwd;
@@ -1552,6 +1552,10 @@ sub setup_rclocal {
             print "Creating LogZilla init script at /etc/default/logzilla\n";
             system("cp $lzbase/init/logzilla.ubuntu /etc/init.d/logzilla && update-rc.d logzilla defaults");
             my $file = "/etc/default/logzilla";
+            if ( -f "$file") {
+                print "$file already exists, moving $file to $file.orig\n";
+                system("mv $file $file.orig");
+            }
             my $conf = qq{# LogZilla Defaults
 #
 LZ_PATH="$lzbase"
@@ -1561,7 +1565,7 @@ SPOPTS="--cpustats --iostats"
 #SPOPTS="--cpustats --iostats --logdebugv"
 
 # Set Banner to false if you don't want your server console to be updated with the local LogZilla install/help information
-BANNER=false
+BANNER=true
 
 # Set quiet to false for searchd return values at startup
 QUIET=true
