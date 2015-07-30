@@ -1523,6 +1523,7 @@ sub install_sphinx {
 
 sub setup_apparmor {
     if ( $ostype =~ /Ubuntu/ ) {
+	    system("apt-get -qqy install apparmor-utils");
         # Attempt to fix AppArmor
         # cdukes: 2015-06-15 - just disable the mysqld profile, apparmor sucks.
         my $file = "/etc/apparmor.d/disable/usr.sbin.mysqld";
@@ -1533,7 +1534,7 @@ sub setup_apparmor {
             system ("ln -s /etc/apparmor.d/usr.sbin.mysqld /etc/apparmor.d/disable/");
         }
         # Using -R will not stick across reboots
-        #system ("apparmor_parser -R /etc/apparmor.d/usr.sbin.mysqld");
+        system ("apparmor_parser -R /etc/apparmor.d/usr.sbin.mysqld");
         system ("service apparmor restart");
         my $chk = `aa-unconfined | grep mysql`;
         chomp($chk);
