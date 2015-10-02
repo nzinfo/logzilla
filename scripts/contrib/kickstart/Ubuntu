@@ -29,8 +29,8 @@ my $options = {
     apache      => 1,
     ng          => 1,
     license     => 1,
-    agree       => 0,
-    vmbanner    => 0,
+    agree       => 1,
+    vmbanner    => 1,
     alias       => 1,
     mypass      => "mysql",
 };
