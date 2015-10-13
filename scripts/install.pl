@@ -1531,7 +1531,8 @@ sub setup_apparmor {
             print("\033[1m\n\tApparmor profile exists, checking status...\n\033[0m");
         } else {
             print("\033[1m\n\tDisabling Apparmor profile for MySQL (so we can import data).\n\033[0m");
-            system ("ln -s /etc/apparmor.d/usr.sbin.mysqld /etc/apparmor.d/disable/");
+            system ("aa-disable mysqld");
+            #system ("ln -s /etc/apparmor.d/usr.sbin.mysqld /etc/apparmor.d/disable/");
         }
         # Using -R will not stick across reboots
         system ("apparmor_parser -R /etc/apparmor.d/usr.sbin.mysqld");
