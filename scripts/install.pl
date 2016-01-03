@@ -306,11 +306,12 @@ if ( $skipdb !~ /[Yy]/ ) {
                 &rm_config_block("/etc/php5/apache2/php.ini");
                 my ( $major, $minor, $sub ) = getVer();
                 print "Your Version: $major.$minor.$sub\n";
-                print "New Version: $version" . "$subversion\n";
-                my $t = $subversion;
-                $t =~ s/\.(\d+)/$1/;
+		my $svnsub = `svn info $lzbase  | grep '[Rr]evision' | head -1 | awk '{print \$2}'`;
+                chomp($svnsub);
+                print "New Version: $version." . "$svnsub\n";
+		$subversion = ".$svnsub";
 
-                if ( $sub =~ $t ) {
+                if ( $sub =~ $svnsub ) {
                     print "DB is already at the lastest revision, no need to upgrade.\n";
                 } else {
                     # print "VERSION = $major $minor $sub\n";
