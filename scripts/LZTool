@@ -147,9 +147,8 @@ if ( $options->{dryrun} ) {
 }
 
 $log->INFO("LogZilla Version $lzmajor.$lzminor.$lzsub" );
-$svnsub = `svn info $settings->{PATH_BASE}  | grep 'vision' | head -1`;
+$svnsub = `svn info $ROOT_DIR  | grep '[Rr]evision' | head -1 | awk '{print \$2}'`;
 chomp($svnsub);
-$svnsub =~ s/.*?ision.*?:.*?(\d+).*?/$1/;
 my $vdiff = ($svnsub - $lzsub);
 
 $log->ERR("Your version of LogZilla is %s revisions behind, please upgrade using: (cd $settings->{PATH_BASE}/scripts && sudo ./upgrade)", $vdiff) if  ($lzsub < $svnsub);
