@@ -64,7 +64,7 @@ sub prompt {
 }
 
 my $version    = "4.5";
-my $subversion = ".795";
+my $subversion = ".796";
 
 # Grab the base path
 my $lzbase = getcwd;
@@ -348,9 +348,10 @@ if ($sphinx_index   =~ /[Yy]/) {
 }
 fbutton()         unless $skipfb       =~ /[Yy]/ || $0 =~ /upgrade/;
 add_ioncube()     unless $skip_ioncube =~ /[Yy]/;
-install_license() unless $skiplic      =~ /[Yy]/ || $0 =~ /upgrade/;
+install_license() unless $skiplic      =~ /[Yy]/;
 # run_tests()       unless $test    =~ /[Nn]/;
 
+add_ulimits();
 setup_rclocal();
 hup_syslog() unless ( grep( /nohup/, @ARGV ) );
 
@@ -1510,9 +1511,11 @@ sub install_sphinx {
         system("tar xzvf $lzbase/sphinx/sphinx_source.tgz --strip-components=1 -C $lzbase/sphinx/src");
         if ( -d "$lzbase/sphinx/src") {
             system("cd $lzbase/sphinx/src && ./configure --enable-id64 --with-syslog --prefix `pwd`/.. && $makecmd");
-            if ( $sphinx_index =~ /[Yy]/ ) {
-                print "Starting Sphinx search daemon and re-indexing data...\n";
-                system("(rm -f $lzbase/sphinx/data/* && cd $lzbase/sphinx && ./indexer.sh full)");
+            if ( $0 !~ /upgrade/ ) {
+                if ( $sphinx_index =~ /[Yy]/ ) {
+                    print "Starting Sphinx search daemon and re-indexing data...\n";
+                    system("(rm -f $lzbase/sphinx/data/* && cd $lzbase/sphinx && ./indexer.sh full)");
+                }
             }
         } else {
             print "The Unable to locate $lzbase/sphinx/src, did the tarball fail to extract?\n";
@@ -1549,6 +1552,9 @@ sub setup_apparmor {
     }
 }
 
+sub add_ulimits {
+    system("cp $lzbase/init/ulimits.conf /etc/security/limits.d/logzilla.conf");
+}
 sub setup_rclocal {
     if ( -f "$lzbase/init/logzilla.ubuntu") {
         if ( $ostype =~ /Ubuntu/ ) {
